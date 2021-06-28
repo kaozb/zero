@@ -15,6 +15,7 @@
         }
         return n
     }
+
     function n(o) {
         function t(n, r, i) {
             var c;
@@ -98,6 +99,31 @@ var comm_list = [{
                     }
                 ]
             }, {
+                tag: "视频",
+                link: [{
+                        name: "优酷",
+                        url: "https://www.youku.com/"
+                    }, {
+                        name: "爱奇艺",
+                        url: "https://www.iqiyi.com/"
+                    }, {
+                        name: "腾讯视频",
+                        url: "https://v.qq.com/"
+                    }, {
+                        name: "哔哩哔哩",
+                        url: "https://www.bilibili.com/"
+                    }, {
+                        name: "YouTube",
+                        url: "https://www.youtube.com/"
+                    }, {
+                        name: "斗鱼直播",
+                        url: "https://www.douyu.com/"
+                    }, {
+                        name: "虎牙直播",
+                        url: "https://www.huya.com/"
+                    }
+                ]
+            }, {
                 tag: "网盘",
                 link: [{
                         name: "百度网盘",
@@ -172,45 +198,21 @@ var comm_list = [{
                         url: "https://mo.fish/"
                     }
                 ]
-            }, {
-                tag: "视频",
-                link: [{
-                        name: "优酷",
-                        url: "https://www.youku.com/"
-                    }, {
-                        name: "爱奇艺",
-                        url: "https://www.iqiyi.com/"
-                    }, {
-                        name: "腾讯视频",
-                        url: "https://v.qq.com/"
-                    }, {
-                        name: "哔哩哔哩",
-                        url: "https://www.bilibili.com/"
-                    }, {
-                        name: "YouTube",
-                        url: "https://www.youtube.com/"
-                    }, {
-                        name: "斗鱼直播",
-                        url: "https://www.douyu.com/"
-                    }, {
-                        name: "虎牙直播",
-                        url: "https://www.huya.com/"
-                    }
-                ]
+
             }, {
                 tag: "工作",
                 link: [{
-                        name: "领英",
-                        url: "https://cn.linkedin.com/"
+                        name: "博客园",
+                        url: "https://www.cnblogs.com/"
                     }, {
-                        name: "拉勾网",
-                        url: "https://www.lagou.com/"
+                        name: "CSDN博客",
+                        url: "https://blog.csdn.net/"
                     }, {
-                        name: "智联招聘",
-                        url: "https://www.zhaopin.com/"
+                        name: "51cto",
+                        url: "https://blog.51cto.com/"
                     }, {
-                        name: "前程无忧",
-                        url: "https://www.51job.com/"
+                        name: "bbsmax",
+                        url: "https://www.bbsmax.com/"
                     }, {
                         name: "应届生",
                         url: "http://www.yingjiesheng.com/"
@@ -223,13 +225,13 @@ var comm_list = [{
                     }
                 ]
             }, {
-                tag: "生活",
+                tag: "盗版软件",
                 link: [{
-                        name: "美团",
-                        url: "https://www.meituan.com/"
+                        name: "异星",
+                        url: "http://www.yxssp.com/"
                     }, {
-                        name: "大众点评",
-                        url: "https://www.dianping.com/"
+                        name: "极客空间",
+                        url: "https://www.cuiuc.com/"
                     }, {
                         name: "携程",
                         url: "https://www.ctrip.com/"
@@ -280,10 +282,10 @@ var comm_list = [{
                 tag: "PYthon",
                 link: [{
                         name: "pycharm用法",
-                        url: "https://bigkiss.gitee.io/zero/py/pycharm/index.html"
+                        url: "./py/pycharm/index.html"
                     }, {
                         name: "Py黑魔法",
-                        url: "https://bigkiss.gitee.io/zero/py/magic-python/index.html"
+                        url: "./py/magic-python/index.html"
                     }, {
                         name: "堆糖",
                         url: "https://www.duitang.com/"
@@ -1324,6 +1326,7 @@ var comm_list = [{
                     })
                 } else o(".work-link").css("opacity", "1").find(".info").hide().html(a).fadeIn(200)
         }
+
         function i(o) {
             var t = {
                 bkgd: "#ededed",
@@ -1334,14 +1337,17 @@ var comm_list = [{
             }
             return Cookies.get(o) || t[o]
         }
+
         function e(o, t, i) {
             Cookies.set(o, t, {
                 expires: i || 3650
             })
         }
+
         function n(t) {
             o("body").css("background", t)
         }
+
         function a(t) {
             if (o(t).addClass("active").siblings(".active").removeClass("active"), o(".search-hidden").remove(), o(t).hasClass("baidu")) o(".search-form").attr("action", "https://www.baidu.com/s"), o(".search-keyword").attr({
                     name: "word",
