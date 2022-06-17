@@ -76,8 +76,8 @@ var comm_list = [{
         list: [{
                 tag: "热门",
                 link: [{
-                        name: "新闻",
-                        url: "./rece/news.txt"
+                        name: "干饭",
+                        url: "../zero_how2cook/"
                     }, {
                         name: "谷歌翻译",
                         url: "https://translate.google.cn/"
@@ -282,7 +282,7 @@ var comm_list = [{
                 tag: "PYthon",
                 link: [{
                         name: "专栏课",
-                        url: "https://haml.xyz:8012/abusb320/%E4%B8%93%E6%A0%8F%E8%AF%BE.html"
+                        url: ""
                     }, {
                         name: "Py黑魔法",
                         url: "rece/py/magic-python/index.html"
