@@ -77,7 +77,7 @@ var comm_list = [{
                 tag: "热门",
                 link: [{
                         name: "干饭",
-                        url: "../zero_how2cook/"
+                        url: "../zero_how2cook/"//别的仓库
                     }, {
                         name: "谷歌翻译",
                         url: "https://translate.google.cn/"
@@ -99,32 +99,32 @@ var comm_list = [{
                     }
                 ]
             }, {
-                tag: "视频",
+                tag: "休闲",
                 link: [{
-                        name: "优酷",
-                        url: "https://www.youku.com/"
+                        name: "腾讯",
+                        url: "https://v.qq.com/"
                     }, {
                         name: "爱奇艺",
                         url: "https://www.iqiyi.com/"
                     }, {
-                        name: "腾讯视频",
-                        url: "https://v.qq.com/"
+                        name: "优酷",
+                        url: "https://www.youku.com/"
                     }, {
-                        name: "哔哩哔哩",
+                        name: "B站",
                         url: "https://www.bilibili.com/"
                     }, {
-                        name: "YouTube",
-                        url: "https://www.youtube.com/"
+                        name: "知乎",
+                        url: "https://www.zhihu.com/"
                     }, {
-                        name: "斗鱼直播",
-                        url: "https://www.douyu.com/"
+                        name: "鱼塘",
+                        url: "https://mo.fish/"
                     }, {
-                        name: "虎牙直播",
-                        url: "https://www.huya.com/"
+                        name: "热榜",
+                        url: "https://dig.chouti.com/"
                     }
                 ]
             }, {
-                tag: "网盘",
+                tag: "工具",
                 link: [{
                         name: "百度网盘",
                         url: "https://pan.baidu.com/"
@@ -135,30 +135,30 @@ var comm_list = [{
                         name: "坚果云",
                         url: "https://www.jianguoyun.com/"
                     }, {
-                        name: "蓝奏云",
-                        url: "https://pc.woozooo.com/mydisk.php"
+                        name: "局域网传文件",
+                        url: "https://snapdrop.net"
                     }, {
-                        name: "天翼云盘",
-                        url: "https://cloud.189.cn/main.action"
+                        name: "剪切板",
+                        url: "https://txtpad.cn/cOIDW-XASA9123"
                     }, {
-                        name: "微云",
-                        url: "https://www.weiyun.com/disk"
+                        name: "临时邮箱",
+                        url: "https://www.moakt.com/"
                     }, {
-                        name: "百度企业盘",
-                        url: "https://eyun.baidu.com/enterprise/home"
+                        name: "在线转换",
+                        url: "https://cn.office-converter.com/"
                     }
                 ]
             }, {
-                tag: "工具",
+                tag: "高级工具",///////////////////////////////////////////
                 link: [{
-                        name: "局域网传文件",
-                        url: "https://snapdrop.net"
+                        name: "计算器",
+                        url: "rece/calculator/index.html"
                     }, {
                         name: "正则匹配",
                         url: "https://regex101.com/"
                     }, {
-                        name: "linux命令",
-                        url: "https://www.linuxcool.com/"
+                        name: "秒表",
+                        url: "rece/stopwatch/"
                     }, {
                         name: "剪切板",
                         url: "https://txtpad.cn/cOIDW-XASA9123"
@@ -174,16 +174,16 @@ var comm_list = [{
                     }
                 ]
             }, {
-                tag: "摸鱼",
+                tag: "本地",//////////////////
                 link: [{
-                        name: "知乎",
-                        url: "https://www.zhihu.com/"
+                        name: "计算器",
+                        url: "rece/calculator/index.html"
                     }, {
-                        name: "BinMT",
-                        url: "https://bbs.binmt.cc/"
+                        name: "AWK 语法",
+                        url: "rece/awk-cn.pdf"
                     }, {
-                        name: "热榜",
-                        url: "https://tophub.today/"
+                        name: "Py黑魔法",
+                        url: "rece/py/magic-python/index.html"
                     }, {
                         name: "热榜2",
                         url: "https://dig.chouti.com/"
@@ -279,7 +279,7 @@ var comm_list = [{
     }, {
         slug: "amuse",
         list: [{
-                tag: "PYthon",
+                tag: "本地库",
                 link: [{
                         name: "专栏课",
                         url: ""
@@ -287,8 +287,8 @@ var comm_list = [{
                         name: "Py黑魔法",
                         url: "rece/py/magic-python/index.html"
                     }, {
-                        name: "堆糖",
-                        url: "https://www.duitang.com/"
+                        name: "AWK 语法",
+                        url: "rece/awk-cn.pdf"
                     }, {
                         name: "糗事百科",
                         url: "https://www.qiushibaike.com/"
