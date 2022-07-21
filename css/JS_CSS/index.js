@@ -77,19 +77,19 @@ var comm_list = [{
                 tag: "热门",
                 link: [{
                         name: "干饭",
-                        url: "../zero_how2cook/"//别的仓库
+                        url: "https://kaozb.github.io/zero_how2cook"//别的仓库
                     }, {
                         name: "谷歌翻译",
                         url: "https://translate.google.cn/"
                     }, {
-                        name: "BBSMAX",
-                        url: "https://www.bbsmax.com/"
+                        name: "我的笔记",
+                        url: "https://kaozb.github.io/notebook/"
                     }, {
                         name: "知道",
                         url: "https://zh.wikihow.com"
                     }, {
                         name: "linuxCMD",
-                        url: "./rece/linux-command"
+                        url: "https://kaozb.github.io/zero/rece/linux-command"
                     }, {
                         name: "今日头条",
                         url: "https://www.toutiao.com/"
