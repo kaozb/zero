@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理器 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="执行原生 SQL 查询" href="sql.html" />
+    <link rel="prev" title="搜索" href="search.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="search.html" title="搜索">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="sql.html" title="执行原生 SQL 查询">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-managers">
+            
+  <div class="section" id="s-managers">
+<span id="managers"></span><h1>管理器<a class="headerlink" href="#managers" title="永久链接至标题">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.models.Manager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Manager</span></code><a class="headerlink" href="#django.db.models.Manager" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">Manager</span></code> 是一种接口，它赋予了 Django 模型操作数据库的能力。Django 应用中每个模型拥有至少一个 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">Manager</span></code> 类的文档介绍位于 <a class="reference internal" href="queries.html"><span class="doc">执行查询</span></a>；本页着重介绍自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 行为的模型选项。</p>
+<div class="section" id="s-manager-names">
+<span id="s-id1"></span><span id="manager-names"></span><span id="id1"></span><h2>管理器名称<a class="headerlink" href="#manager-names" title="永久链接至标题">¶</a></h2>
+<p>默认情况下，Django 为每个模型类添加了一个名为 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>。不过，若你想将 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 用作字段名，或想使用 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 以外的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 名字，就要在模型基类中重命名。要为指定类重命名 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>，在该模型中定义一个类型为 <code class="docutils literal notranslate"><span class="pre">models.Manager</span></code> 的属性。例如:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="n">people</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>使用这个实例模型时， <code class="docutils literal notranslate"><span class="pre">Person.objects</span></code> 会产生一个 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> 异常，而 <code class="docutils literal notranslate"><span class="pre">Person.people.all()</span></code> 会返回包含所有 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 对象的列表。</p>
+</div>
+<div class="section" id="s-custom-managers">
+<span id="s-id2"></span><span id="custom-managers"></span><span id="id2"></span><h2>自定义管理器<a class="headerlink" href="#custom-managers" title="永久链接至标题">¶</a></h2>
+<p>继承基类 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>，在模型中实例化自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>，你就可以在该模型中使用自定义的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>。</p>
+<p>有两种原因可能使你想要自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>：添加额外的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 方法，修改 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 返回的原始 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>。</p>
+<div class="section" id="s-adding-extra-manager-methods">
+<span id="adding-extra-manager-methods"></span><h3>添加额外的管理器方法<a class="headerlink" href="#adding-extra-manager-methods" title="永久链接至标题">¶</a></h3>
+<p>添加额外的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 方法一般是为模型添加 “表级” 功能的更好方法。（对于 “行级” 功能 —— 即，只操作单个模型对象 —— 通过 <a class="reference internal" href="models.html#model-methods"><span class="std std-ref">模型方法</span></a>，而不是自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 的方法。）</p>
+<p>For example, this custom <code class="docutils literal notranslate"><span class="pre">Manager</span></code> adds a method <code class="docutils literal notranslate"><span class="pre">with_counts()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.db.models.functions</span> <span class="kn">import</span> <span class="n">Coalesce</span>
+
+
+<span class="k">class</span> <span class="nc">PollManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">with_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_responses</span><span class="o">=</span><span class="n">Coalesce</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;response&quot;</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">OpinionPoll</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">question</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">PollManager</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Response</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">poll</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">OpinionPoll</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>With this example, you'd use <code class="docutils literal notranslate"><span class="pre">OpinionPoll.objects.with_counts()</span></code> to get a
+<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> of <code class="docutils literal notranslate"><span class="pre">OpinionPoll</span></code> objects with the extra <code class="docutils literal notranslate"><span class="pre">num_responses</span></code>
+attribute attached.</p>
+<p>自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 方法能返回任何东西，没有强制它必须返回一个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>。</p>
+<p>Another thing to note is that <code class="docutils literal notranslate"><span class="pre">Manager</span></code> methods can access <code class="docutils literal notranslate"><span class="pre">self.model</span></code> to
+get the model class to which they're attached.</p>
+</div>
+<div class="section" id="s-modifying-a-manager-s-initial-queryset">
+<span id="modifying-a-manager-s-initial-queryset"></span><h3>修改管理器的初始 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code><a class="headerlink" href="#modifying-a-manager-s-initial-queryset" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Manager</span></code> 的基础 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 会返回系统中所有的对象。例如，使用以下模型:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Book</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>……语句 <code class="docutils literal notranslate"><span class="pre">Book.objects.all()</span></code> 会返回数据库中所有的书。</p>
+<p>你可以通过重写 <code class="docutils literal notranslate"><span class="pre">Manager.get_queryset()</span></code> 方法来覆盖 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 的基础 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>。 <code class="docutils literal notranslate"><span class="pre">get_queryset()</span></code> 返回的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 应该包含你需要的属性。</p>
+<p>例如，以下模型有 <em>两个</em> <code class="docutils literal notranslate"><span class="pre">Manager</span></code> —— 一个返回所有对象，另一个仅返回 Roald Dahl 写的书:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># First, define the Manager subclass.</span>
+<span class="k">class</span> <span class="nc">DahlBookManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="s2">&quot;Roald Dahl&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Then hook it into the Book model explicitly.</span>
+<span class="k">class</span> <span class="nc">Book</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>  <span class="c1"># The default manager.</span>
+    <span class="n">dahl_objects</span> <span class="o">=</span> <span class="n">DahlBookManager</span><span class="p">()</span>  <span class="c1"># The Dahl-specific manager.</span>
+</pre></div>
+</div>
+<p>使用这个实例模型时， <code class="docutils literal notranslate"><span class="pre">Book.objects.all()</span></code> 会返回数据库中所有的书，而 <code class="docutils literal notranslate"><span class="pre">Book.dahl_objects.all()</span></code> 仅返回 Roald Dahl 写的书。</p>
+<p>因为 <code class="docutils literal notranslate"><span class="pre">get_queryset()</span></code> 返回一个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 对象，你可以在上面调用 <code class="docutils literal notranslate"><span class="pre">filter()</span></code>， <code class="docutils literal notranslate"><span class="pre">exclude()</span></code> 和其它的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法。所以，以下语句是等效的:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Book</span><span class="o">.</span><span class="n">dahl_objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="n">Book</span><span class="o">.</span><span class="n">dahl_objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Matilda&quot;</span><span class="p">)</span>
+<span class="n">Book</span><span class="o">.</span><span class="n">dahl_objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>本例同时介绍了另一个有趣的技巧：在一个模型中使用多个管理器。你可以为一个模型添加任意多个 <code class="docutils literal notranslate"><span class="pre">Manager()</span></code>。为模型定义通用 &quot;filters&quot; 的非重复方式。</p>
+<p>例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AuthorManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">EditorManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;E&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Author&quot;</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Editor&quot;</span><span class="p">))]</span>
+    <span class="p">)</span>
+    <span class="n">people</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">AuthorManager</span><span class="p">()</span>
+    <span class="n">editors</span> <span class="o">=</span> <span class="n">EditorManager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>本例允许你调用 <code class="docutils literal notranslate"><span class="pre">Person.authors.all()</span></code>， <code class="docutils literal notranslate"><span class="pre">Person.editors.all()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Person.people.all()</span></code>，返回符合期望的结果。</p>
+</div>
+<div class="section" id="s-default-managers">
+<span id="s-id3"></span><span id="default-managers"></span><span id="id3"></span><h3>默认管理器<a class="headerlink" href="#default-managers" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.Model._default_manager">
+<code class="sig-prename descclassname"><span class="pre">Model.</span></code><code class="sig-name descname"><span class="pre">_default_manager</span></code><a class="headerlink" href="#django.db.models.Model._default_manager" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>若你使用自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 对象，注意 Django 遇到的第一个 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> （按照你在模型中定义的顺序）会拥有一个独特的状态。Django 将类定义中的第一个 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 视作 “默认” <code class="docutils literal notranslate"><span class="pre">Manager</span></code>，Django 的几个组件（包括 <a class="reference internal" href="../../ref/django-admin.html#django-admin-dumpdata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">dumpdata</span></code></a>）在用到该模型时会独立地调用该 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>。故此，选择默认管理器时要万分小心，避免遇到重写的 <code class="docutils literal notranslate"><span class="pre">get_queryset()</span></code> 无法获取期望的结果这种情况。</p>
+<p>你可以通过 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.default_manager_name" title="django.db.models.Options.default_manager_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.default_manager_name</span></code></a> 指定一个自定义的默认管理器。</p>
+<p>若你正在编写的代码必须处理未知模型，例如，在实现了通用视图的第三方应用中使用这个管理器（或 <a class="reference internal" href="#django.db.models.Model._base_manager" title="django.db.models.Model._base_manager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">_base_manager</span></code></a>），而不是假定该模型有一个名为 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 的管理器。</p>
+</div>
+<div class="section" id="s-base-managers">
+<span id="base-managers"></span><h3>基础管理器<a class="headerlink" href="#base-managers" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.Model._base_manager">
+<code class="sig-prename descclassname"><span class="pre">Model.</span></code><code class="sig-name descname"><span class="pre">_base_manager</span></code><a class="headerlink" href="#django.db.models.Model._base_manager" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="s-using-managers-for-related-object-access">
+<span id="s-managers-for-related-objects"></span><span id="using-managers-for-related-object-access"></span><span id="managers-for-related-objects"></span><h4>用于访问关联对象的管理器<a class="headerlink" href="#using-managers-for-related-object-access" title="永久链接至标题">¶</a></h4>
+<p>默认情况下，Django 访问关联对象（即 <code class="docutils literal notranslate"><span class="pre">choice.question</span></code>）时使用 <code class="docutils literal notranslate"><span class="pre">Model._base_manager</span></code> 管理器类的实例，而不是关联对象的 <code class="docutils literal notranslate"><span class="pre">_default_manager</span></code>。这是因为 Django 要检索那些可能被默认管理器筛选掉（所以无法访问）的关联对象。</p>
+<p>若基本管理器类 (<a class="reference internal" href="#django.db.models.Manager" title="django.db.models.Manager"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.Manager</span></code></a>) 无法满足需求，你可以通过设置 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.base_manager_name" title="django.db.models.Options.base_manager_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.base_manager_name</span></code></a> 告诉 Django 使用哪个类。</p>
+<p>在关联模型上执行查询时不会使用基础管理器，或者当访问一对多或多对多关系( <a class="reference internal" href="queries.html#backwards-related-objects"><span class="std std-ref">accessing a one-to-many or many-to-many relationship</span></a> )。例如，若 <a class="reference internal" href="../../intro/tutorial02.html#creating-models"><span class="std std-ref">来自教程</span></a> 的模型 <code class="docutils literal notranslate"><span class="pre">Question</span></code> 有个 <code class="docutils literal notranslate"><span class="pre">deleted</span></code> 字段，还有一个基础管理器，用于过滤掉 <code class="docutils literal notranslate"><span class="pre">deleted=True</span></code> 的实例。由 <code class="docutils literal notranslate"><span class="pre">Choice.objects.filter(question__name__startswith='What')</span></code> 返回的查询结果集会包含关联至已删除的问题的选项。</p>
+</div>
+<div class="section" id="s-don-t-filter-away-any-results-in-this-type-of-manager-subclass">
+<span id="don-t-filter-away-any-results-in-this-type-of-manager-subclass"></span><h4>不要在这类管理器子类中过滤掉任何结果<a class="headerlink" href="#don-t-filter-away-any-results-in-this-type-of-manager-subclass" title="永久链接至标题">¶</a></h4>
+<p>该管理器用于访问由其它模型关联过来的对象。这些情况下，Django 要能访问待获取模型的全部对象，这样就能检索出其指向的 <em>任何东西</em>。</p>
+<p>因此，你不应该覆盖 <code class="docutils literal notranslate"><span class="pre">get_queryset()</span></code> 来过滤任何rows。如果你这么做，Django 会返回不完整的结果。</p>
+</div>
+</div>
+<div class="section" id="s-calling-custom-queryset-methods-from-the-manager">
+<span id="s-calling-custom-queryset-methods-from-manager"></span><span id="calling-custom-queryset-methods-from-the-manager"></span><span id="calling-custom-queryset-methods-from-manager"></span><h3>管理器调用自定义 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法<a class="headerlink" href="#calling-custom-queryset-methods-from-the-manager" title="永久链接至标题">¶</a></h3>
+<p>因为大部分的标准 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法能直接从 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 访问，这个实例仅适用于你在自定义 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中定义了额外方法，且在 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 中实现了它们:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PersonQuerySet</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">QuerySet</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">authors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">editors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">&quot;E&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">PersonManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PersonQuerySet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">using</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_db</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">authors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">authors</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">editors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">editors</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Author&quot;</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Editor&quot;</span><span class="p">))]</span>
+    <span class="p">)</span>
+    <span class="n">people</span> <span class="o">=</span> <span class="n">PersonManager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>本例允许你从管理器 <code class="docutils literal notranslate"><span class="pre">Person.people</span></code> 直接调用 <code class="docutils literal notranslate"><span class="pre">authors()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">editors()</span></code>。</p>
+</div>
+<div class="section" id="s-creating-a-manager-with-queryset-methods">
+<span id="s-create-manager-with-queryset-methods"></span><span id="creating-a-manager-with-queryset-methods"></span><span id="create-manager-with-queryset-methods"></span><h3>创建带有 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法的管理器<a class="headerlink" href="#creating-a-manager-with-queryset-methods" title="永久链接至标题">¶</a></h3>
+<p>要替换前面的要求复制 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Manager</span></code>  方法的方案， 可以用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.as_manager" title="django.db.models.query.QuerySet.as_manager"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.as_manager()</span></code></a> 创建一个 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 实例，拷贝了自定义 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的方法:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">people</span> <span class="o">=</span> <span class="n">PersonQuerySet</span><span class="o">.</span><span class="n">as_manager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>由 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.as_manager" title="django.db.models.query.QuerySet.as_manager"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.as_manager()</span></code></a> 创建的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 实例实质上等价于前面例子中的 <code class="docutils literal notranslate"><span class="pre">PersonManager</span></code>。</p>
+<p>不是每个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法在 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 层都是有意义的；例如，我们故意阻止 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.delete" title="django.db.models.query.QuerySet.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.delete()</span></code></a> 被拷贝进 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 类中。</p>
+<p>方法拷贝规则如下：</p>
+<ul class="simple">
+<li>公开方法默认会被拷贝。</li>
+<li>私有方法（以下划线打头）默认不会被复制。</li>
+<li><code class="docutils literal notranslate"><span class="pre">queryset_only</span></code> 属性值为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 的方法总是会被复制。</li>
+<li><code class="docutils literal notranslate"><span class="pre">queryset_only</span></code> 属性值为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 的方法永远不会被复制。</li>
+</ul>
+<p>例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CustomQuerySet</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">QuerySet</span><span class="p">):</span>
+    <span class="c1"># Available on both Manager and QuerySet.</span>
+    <span class="k">def</span> <span class="nf">public_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Available only on QuerySet.</span>
+    <span class="k">def</span> <span class="nf">_private_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Available only on QuerySet.</span>
+    <span class="k">def</span> <span class="nf">opted_out_public_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">opted_out_public_method</span><span class="o">.</span><span class="n">queryset_only</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Available on both Manager and QuerySet.</span>
+    <span class="k">def</span> <span class="nf">_opted_in_private_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">_opted_in_private_method</span><span class="o">.</span><span class="n">queryset_only</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<div class="section" id="s-from-queryset">
+<span id="from-queryset"></span><h4><code class="docutils literal notranslate"><span class="pre">from_queryset()</span></code><a class="headerlink" href="#from-queryset" title="永久链接至标题">¶</a></h4>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.db.models.from_queryset">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">from_queryset</span></code>(<em><span class="n"><span class="pre">queryset_class</span></span></em>)<a class="headerlink" href="#django.db.models.from_queryset" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>对于进阶用法，你可能同时要一个自定义 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 和一个自定义 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>。你可以通过调用 <code class="docutils literal notranslate"><span class="pre">Manager.from_queryset()</span></code> 达成目的，这将会返回一个自定义基础 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 的子类，带有一份自定义 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法的拷贝:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CustomManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">manager_only_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+
+
+<span class="k">class</span> <span class="nc">CustomQuerySet</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">QuerySet</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">manager_and_queryset_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">CustomManager</span><span class="o">.</span><span class="n">from_queryset</span><span class="p">(</span><span class="n">CustomQuerySet</span><span class="p">)()</span>
+</pre></div>
+</div>
+<p>还可以将生成的类存储到变量中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MyManager</span> <span class="o">=</span> <span class="n">CustomManager</span><span class="o">.</span><span class="n">from_queryset</span><span class="p">(</span><span class="n">CustomQuerySet</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">MyManager</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-custom-managers-and-model-inheritance">
+<span id="s-custom-managers-and-inheritance"></span><span id="custom-managers-and-model-inheritance"></span><span id="custom-managers-and-inheritance"></span><h3>自定义管理器和模型继承<a class="headerlink" href="#custom-managers-and-model-inheritance" title="永久链接至标题">¶</a></h3>
+<p>下面是 Django 如何处理自定义管理器和 <a class="reference internal" href="models.html#model-inheritance"><span class="std std-ref">模型继承</span></a>：</p>
+<ol class="arabic simple">
+<li>基类的管理器总是被子类以 Python 的普通名称解析顺序继承（子类上的属性会覆盖所有父类上的同名属性；直接父类会覆盖更上一级的，以此类推）。</li>
+<li>如果没有在模型或其父类申明管理器，Django 会自动创建 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 管理器。</li>
+<li>一个类的默认管理器要么由 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.default_manager_name" title="django.db.models.Options.default_manager_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.default_manager_name</span></code></a> 指定，要么是模型中申明的第一个管理器，或者是直接父模型的默认管理器。</li>
+</ol>
+<p>如果您想通过抽象基类在一组模型上安装自定义管理器，但仍能自定义默认管理器，这些规则提供了必要的灵活性。例如，假设有此基类:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AbstractBase</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">CustomManager</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>如果您在子类中直接使用这一点，如果您在基类中没有声明任何管理器，那么 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 将是默认的管理器：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ChildA</span><span class="p">(</span><span class="n">AbstractBase</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># This class has CustomManager as the default manager.</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>如果您想继承 <code class="docutils literal notranslate"><span class="pre">AbstractBase</span></code>，但提供不同的默认管理器，则可以在子类上提供该默认管理器:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ChildB</span><span class="p">(</span><span class="n">AbstractBase</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># An explicit default manager.</span>
+    <span class="n">default_manager</span> <span class="o">=</span> <span class="n">OtherManager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>这里的 <code class="docutils literal notranslate"><span class="pre">default_manager</span></code> 是默认的。 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 管理器仍然可用，因为它是继承的，但没有被当做默认管理器。</p>
+<p>最后，对于这个示例，假设您想要向子类中添加额外的管理器，但是仍然使用来自 <code class="docutils literal notranslate"><span class="pre">AbstractBase</span></code> 的默认管理器。您不能直接在子类中添加新的管理器，因为这将覆盖默认管理器，并且您还必须显式地申明来自抽象基类的所有管理器。解决方案是将这个管理器放到另一个基类中，并在默认管理器 <em>之后</em> 将其引入继承层次结构:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExtraManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">extra_manager</span> <span class="o">=</span> <span class="n">OtherManager</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">ChildC</span><span class="p">(</span><span class="n">AbstractBase</span><span class="p">,</span> <span class="n">ExtraManager</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># Default manager is CustomManager, but OtherManager is</span>
+    <span class="c1"># also available via the &quot;extra_manager&quot; attribute.</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>请注意，虽然可以在抽象模型上 <em>定义</em> 自定义管理器，但不能使用抽象模型 <em>调用</em> 任何方法。即:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ClassA</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>是合法的，但:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">AbstractBase</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">do_something</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>会引发一个异常。这是因为管理器意在封装管理映射对象集合的逻辑。因为您不能拥有抽象对象的集合，所以管理抽象对象是没有意义的。如果您有适用于抽象模型的功能，则应该将该功能放在抽象模型的 <code class="docutils literal notranslate"><span class="pre">静态方法</span></code> 或 <code class="docutils literal notranslate"><span class="pre">类方法</span></code> 中。</p>
+</div>
+<div class="section" id="s-implementation-concerns">
+<span id="implementation-concerns"></span><h3>执行关系<a class="headerlink" href="#implementation-concerns" title="永久链接至标题">¶</a></h3>
+<p>Whatever features you add to your custom <code class="docutils literal notranslate"><span class="pre">Manager</span></code>, it must be
+possible to make a shallow copy of a <code class="docutils literal notranslate"><span class="pre">Manager</span></code> instance; i.e., the
+following code must work:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">MyManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">manager</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Django 在某些查询期间对管理器对象进行浅拷贝；如果您的管理器无法被复制，那么这些查询将失败。</p>
+<p>对于大多数的资源管理器来说，这不是问题。若你只是为 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 添加简单的方法，一般不会疏忽地把 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 变的不可拷贝。但是，若重写了 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 对象用于控制对象状态的 <code class="docutils literal notranslate"><span class="pre">__getattr__</span></code> 或其它私有方法，你需要确认你的修改不会影响 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 被复制。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">管理器</a><ul>
+<li><a class="reference internal" href="#manager-names">管理器名称</a></li>
+<li><a class="reference internal" href="#custom-managers">自定义管理器</a><ul>
+<li><a class="reference internal" href="#adding-extra-manager-methods">添加额外的管理器方法</a></li>
+<li><a class="reference internal" href="#modifying-a-manager-s-initial-queryset">修改管理器的初始 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code></a></li>
+<li><a class="reference internal" href="#default-managers">默认管理器</a></li>
+<li><a class="reference internal" href="#base-managers">基础管理器</a><ul>
+<li><a class="reference internal" href="#using-managers-for-related-object-access">用于访问关联对象的管理器</a></li>
+<li><a class="reference internal" href="#don-t-filter-away-any-results-in-this-type-of-manager-subclass">不要在这类管理器子类中过滤掉任何结果</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#calling-custom-queryset-methods-from-the-manager">管理器调用自定义 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法</a></li>
+<li><a class="reference internal" href="#creating-a-manager-with-queryset-methods">创建带有 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 方法的管理器</a><ul>
+<li><a class="reference internal" href="#from-queryset"><code class="docutils literal notranslate"><span class="pre">from_queryset()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#custom-managers-and-model-inheritance">自定义管理器和模型继承</a></li>
+<li><a class="reference internal" href="#implementation-concerns">执行关系</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="search.html"
+                          title="上一章">搜索</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="sql.html"
+                          title="下一章">执行原生 SQL 查询</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/topics/db/managers.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="search.html" title="搜索">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="sql.html" title="执行原生 SQL 查询">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

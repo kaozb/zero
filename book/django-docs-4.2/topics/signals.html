@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>信号 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="系统检查框架" href="checks.html" />
+    <link rel="prev" title="Django 配置" href="settings.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="settings.html" title="Django 配置">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="checks.html" title="系统检查框架">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-signals">
+            
+  <div class="section" id="s-module-django.dispatch">
+<span id="s-signals"></span><span id="module-django.dispatch"></span><span id="signals"></span><h1>信号<a class="headerlink" href="#module-django.dispatch" title="永久链接至标题">¶</a></h1>
+<p>Django有一个“信号调度器(signal dispatcher)”，用来帮助解耦的应用获知框架内任何其他地方发生了操作。简单地说，信号允许某些 <em>发送器</em> 去通知一组 <em>接收器</em> 某些操作发生了。当许多代码段都可能对同一事件感兴趣时，信号特别有用。</p>
+<p>For example, a third-party app can register to be notified of settings
+changes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.apps</span> <span class="kn">import</span> <span class="n">AppConfig</span>
+<span class="kn">from</span> <span class="nn">django.core.signals</span> <span class="kn">import</span> <span class="n">setting_changed</span>
+
+
+<span class="k">def</span> <span class="nf">my_callback</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting changed!&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MyAppConfig</span><span class="p">(</span><span class="n">AppConfig</span><span class="p">):</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">setting_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_callback</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Django's <a class="reference internal" href="../ref/signals.html"><span class="doc">built-in signals</span></a> let user code get notified of
+certain actions.</p>
+<p>You can also define and send your own custom signals. See
+<a class="reference internal" href="#defining-and-sending-signals"><span class="std std-ref">定义和发送信号</span></a> below.</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>Signals give the appearance of loose coupling, but they can quickly lead to
+code that is hard to understand, adjust and debug.</p>
+<p class="last">Where possible you should opt for directly calling the handling code,
+rather than dispatching via a signal.</p>
+</div>
+<div class="section" id="s-listening-to-signals">
+<span id="listening-to-signals"></span><h2>监听信号<a class="headerlink" href="#listening-to-signals" title="永久链接至标题">¶</a></h2>
+<p>要接收信号，使用 <a class="reference internal" href="#django.dispatch.Signal.connect" title="django.dispatch.Signal.connect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Signal.connect()</span></code></a> 方法注册一个 <em>接收器</em> 函数。当发送信号时调用接收器。信号的所有接收器函数都按照注册时的顺序一个接一个调用。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.dispatch.Signal.connect">
+<code class="sig-prename descclassname"><span class="pre">Signal.</span></code><code class="sig-name descname"><span class="pre">connect</span></code>(<em><span class="n"><span class="pre">receiver</span></span></em>, <em><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">weak</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">dispatch_uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="reference internal" href="../modules/django/dispatch/dispatcher.html#Signal.connect"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.dispatch.Signal.connect" title="永久链接至目标">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first last simple">
+<li><strong>receiver</strong> -- 将连接到此信号的回调函数。查看 <span class="xref std std-ref">接收器函数</span> 获取更多信息。</li>
+<li><strong>sender</strong> -- 指定要从其接收信号的特定发送方。查看 <span class="xref std std-ref">连接到特定信号</span> 获取更多信息。</li>
+<li><strong>weak</strong> -- Django 默认将信号处理程序存储为弱引用。因此，如果你的接收器是本地函数，则可能会对其进行垃圾回收。要防止这种情况发生，当你要调用 <code class="docutils literal notranslate"><span class="pre">connect()</span></code> 方法时请传入 <code class="docutils literal notranslate"><span class="pre">weak=False</span></code>。</li>
+<li><strong>dispatch_uid</strong> -- 在可能发送重复信号的情况下，信号接收器的唯一标识符。查看 <a class="reference internal" href="#preventing-duplicate-signals"><span class="std std-ref">防止重复信号</span></a> 获取更多信息。</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>让我们通过注册一个在每个HTTP请求完成后被调用的信号来看看这是如何工作的。我们将连接到 <a class="reference internal" href="../ref/signals.html#django.core.signals.request_finished" title="django.core.signals.request_finished"><code class="xref py py-data docutils literal notranslate"><span class="pre">request_finished</span></code></a> 信号。</p>
+<div class="section" id="s-receiver-functions">
+<span id="s-id1"></span><span id="receiver-functions"></span><span id="id1"></span><h3>接收器函数<a class="headerlink" href="#receiver-functions" title="永久链接至标题">¶</a></h3>
+<p>首先，我们需要定义一个接收器函数。一个接收器可以是任何 Python 函数或方法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_callback</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Request finished!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>注意，该函数接收一个 <code class="docutils literal notranslate"><span class="pre">sender</span></code> 参数以及关键字参数 (<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>)；所有信号处理程序都必须接受这些参数。</p>
+<p>We'll look at senders <a class="reference internal" href="#connecting-to-specific-signals"><span class="std std-ref">a bit later</span></a>, but
+right now look at the <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> argument. All signals send keyword
+arguments, and may change those keyword arguments at any time. In the case of
+<a class="reference internal" href="../ref/signals.html#django.core.signals.request_finished" title="django.core.signals.request_finished"><code class="xref py py-data docutils literal notranslate"><span class="pre">request_finished</span></code></a>, it's documented as sending no
+arguments, which means we might be tempted to write our signal handling as
+<code class="docutils literal notranslate"><span class="pre">my_callback(sender)</span></code>.</p>
+<p>这是错误的——事实上，如果这样做，Django 将抛出一个错误。这是因为在任何时候，参数都可能被添加到信号中，而你的接收器必须能够处理这些新的参数。</p>
+</div>
+<div class="section" id="s-connecting-receiver-functions">
+<span id="s-id2"></span><span id="connecting-receiver-functions"></span><span id="id2"></span><h3>连接接收器函数<a class="headerlink" href="#connecting-receiver-functions" title="永久链接至标题">¶</a></h3>
+<p>有两种方法可以将接收器连接到信号。你可以选择手动连接线路：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.signals</span> <span class="kn">import</span> <span class="n">request_finished</span>
+
+<span class="n">request_finished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_callback</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>或者，你可以使用一个 <a class="reference internal" href="#django.dispatch.receiver" title="django.dispatch.receiver"><code class="xref py py-func docutils literal notranslate"><span class="pre">receiver()</span></code></a> 装饰器：</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.dispatch.receiver">
+<code class="sig-name descname"><span class="pre">receiver</span></code>(<em><span class="n"><span class="pre">signal</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../modules/django/dispatch/dispatcher.html#receiver"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.dispatch.receiver" title="永久链接至目标">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first last simple">
+<li><strong>signal</strong> -- 一个用于连接函数的信号或包含多个信号的列表。</li>
+<li><strong>kwargs</strong> -- Wildcard keyword arguments to pass to a
+<a class="reference internal" href="#receiver-functions"><span class="std std-ref">function</span></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>以下是你如何使用装饰器连接：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.signals</span> <span class="kn">import</span> <span class="n">request_finished</span>
+<span class="kn">from</span> <span class="nn">django.dispatch</span> <span class="kn">import</span> <span class="n">receiver</span>
+
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">request_finished</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_callback</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Request finished!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>现在，我们的 <code class="docutils literal notranslate"><span class="pre">my_callback</span></code> 函数将在每次请求完成时被调用。</p>
+<div class="admonition-where-should-this-code-live admonition">
+<p class="first admonition-title">我的代码该放在哪？</p>
+<p>严格来说，信号处理和注册的代码可以放在任何你喜欢的地方，但是推荐避免放在应用程序的根目录和 <code class="docutils literal notranslate"><span class="pre">models</span></code> 模块内以尽量减少导入代码的副作用。</p>
+<p>In practice, signal handlers are usually defined in a <code class="docutils literal notranslate"><span class="pre">signals</span></code>
+submodule of the application they relate to. Signal receivers are
+connected in the <a class="reference internal" href="../ref/applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready()</span></code></a> method of your
+application <a class="reference internal" href="../ref/applications.html#configuring-applications-ref"><span class="std std-ref">configuration class</span></a>. If
+you're using the <a class="reference internal" href="#django.dispatch.receiver" title="django.dispatch.receiver"><code class="xref py py-func docutils literal notranslate"><span class="pre">receiver()</span></code></a> decorator, import the <code class="docutils literal notranslate"><span class="pre">signals</span></code>
+submodule inside <a class="reference internal" href="../ref/applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready()</span></code></a>, this will implicitly
+connect signal handlers:</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.apps</span> <span class="kn">import</span> <span class="n">AppConfig</span>
+<span class="kn">from</span> <span class="nn">django.core.signals</span> <span class="kn">import</span> <span class="n">request_finished</span>
+
+
+<span class="k">class</span> <span class="nc">MyAppConfig</span><span class="p">(</span><span class="n">AppConfig</span><span class="p">):</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Implicitly connect signal handlers decorated with @receiver.</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">signals</span>
+
+        <span class="c1"># Explicitly connect a signal handler.</span>
+        <span class="n">request_finished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">signals</span><span class="o">.</span><span class="n">my_callback</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last"><a class="reference internal" href="../ref/applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready()</span></code></a> 方法在测试过程中可能会多次执行，因此你可能需要 <a class="reference internal" href="#preventing-duplicate-signals"><span class="std std-ref">防止重复信号</span></a>，尤其是当您计划在测试中发送信号时。</p>
+</div>
+</div>
+<div class="section" id="s-connecting-to-signals-sent-by-specific-senders">
+<span id="s-connecting-to-specific-signals"></span><span id="connecting-to-signals-sent-by-specific-senders"></span><span id="connecting-to-specific-signals"></span><h3>连接到特定发送器发送的信号<a class="headerlink" href="#connecting-to-signals-sent-by-specific-senders" title="永久链接至标题">¶</a></h3>
+<p>有些信号被多次发送，但你只对接收这些信号的某个子集感兴趣。例如，仔细考虑 <a class="reference internal" href="../ref/signals.html#django.db.models.signals.pre_save" title="django.db.models.signals.pre_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">django.db.models.signals.pre_save</span></code></a> 在模型保存之前发送的信号。大多数时候，你不需要知道 <em>任何</em> 模型何时被保存——只需要知道某个 <em>特定</em> 模型何时被保存。</p>
+<p>在这些情况下，您可以注册以接收仅由特定发送者发送的信号。在接收 <a class="reference internal" href="../ref/signals.html#django.db.models.signals.pre_save" title="django.db.models.signals.pre_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">django.db.models.signals.pre_save</span></code></a> 信号时 ，发送器会是要保存的模型类，因此你就可以表明你想要某个模型发送的信号：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models.signals</span> <span class="kn">import</span> <span class="n">pre_save</span>
+<span class="kn">from</span> <span class="nn">django.dispatch</span> <span class="kn">import</span> <span class="n">receiver</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">MyModel</span>
+
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">pre_save</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">MyModel</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_handler</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">my_handler</span></code> 函数将仅在 <code class="docutils literal notranslate"><span class="pre">MyModel</span></code> 实例保存后被调用。</p>
+<p>不同的信号使用不同的对象作为它们的发送者；你需要查阅 <a class="reference internal" href="../ref/signals.html"><span class="doc">内置信号文档</span></a> 了解每个特定信号的详细信息。</p>
+</div>
+<div class="section" id="s-preventing-duplicate-signals">
+<span id="s-id3"></span><span id="preventing-duplicate-signals"></span><span id="id3"></span><h3>防止重复信号<a class="headerlink" href="#preventing-duplicate-signals" title="永久链接至标题">¶</a></h3>
+<p>在某些情况下，连接接收器到信号的代码可能被执行多次。这可能会导致接收器函数被注册多次，因此对于一个信号事件调用同样多次。例如，<a class="reference internal" href="../ref/applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready()</span></code></a> 方法在测试期间可能被多次执行。更普遍的是，在项目的任何地方导入定义信号的模块都会发生这种情况，因为信号注册的运行次数与导入的次数相同。</p>
+<p>如果此行为会产生问题（例如在保存模型时使用信号发送电子邮件），则传递一个唯一标识符作为 <code class="docutils literal notranslate"><span class="pre">dispatch_uid</span></code> 参数来标识接收方函数。这个标识符通常是一个字符串，尽管任何可散列对象都可以。最终的结果是，对于每个唯一的 <code class="docutils literal notranslate"><span class="pre">dispatch_uid</span></code> 值，接收器函数只与信号绑定一次：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.signals</span> <span class="kn">import</span> <span class="n">request_finished</span>
+
+<span class="n">request_finished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_callback</span><span class="p">,</span> <span class="n">dispatch_uid</span><span class="o">=</span><span class="s2">&quot;my_unique_identifier&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-defining-and-sending-signals">
+<span id="s-id4"></span><span id="defining-and-sending-signals"></span><span id="id4"></span><h2>定义和发送信号<a class="headerlink" href="#defining-and-sending-signals" title="永久链接至标题">¶</a></h2>
+<p>您的应用程序可以利用信号基础设施并提供自己的信号。</p>
+<div class="admonition-when-to-use-custom-signals admonition">
+<p class="first admonition-title">何时使用自定义信号</p>
+<p class="last">信号是隐式函数调用，这使得调试更加困难。如果你的自定义信号的发送器和接收器都在你的项目内，最好使用显式函数调用。</p>
+</div>
+<div class="section" id="s-defining-signals">
+<span id="defining-signals"></span><h3>定义信号<a class="headerlink" href="#defining-signals" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.dispatch.Signal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Signal</span></code><a class="reference internal" href="../modules/django/dispatch/dispatcher.html#Signal"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.dispatch.Signal" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>所有的信号都是 <a class="reference internal" href="#django.dispatch.Signal" title="django.dispatch.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.dispatch.Signal</span></code></a> 的实例。</p>
+<p>例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">django.dispatch</span>
+
+<span class="n">pizza_done</span> <span class="o">=</span> <span class="n">django</span><span class="o">.</span><span class="n">dispatch</span><span class="o">.</span><span class="n">Signal</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>这声明了一个 <code class="docutils literal notranslate"><span class="pre">pizza_done</span></code> 信号。</p>
+</div>
+<div class="section" id="s-sending-signals">
+<span id="sending-signals"></span><h3>发送信号<a class="headerlink" href="#sending-signals" title="永久链接至标题">¶</a></h3>
+<p>在 Django 中有两种发送信号的方法。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.dispatch.Signal.send">
+<code class="sig-prename descclassname"><span class="pre">Signal.</span></code><code class="sig-name descname"><span class="pre">send</span></code>(<em><span class="n"><span class="pre">sender</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../modules/django/dispatch/dispatcher.html#Signal.send"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.dispatch.Signal.send" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.dispatch.Signal.send_robust">
+<code class="sig-prename descclassname"><span class="pre">Signal.</span></code><code class="sig-name descname"><span class="pre">send_robust</span></code>(<em><span class="n"><span class="pre">sender</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../modules/django/dispatch/dispatcher.html#Signal.send_robust"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.dispatch.Signal.send_robust" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>要发送信号，调用 <a class="reference internal" href="#django.dispatch.Signal.send" title="django.dispatch.Signal.send"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Signal.send()</span></code></a> （所有内置信号使用这个）或者 <a class="reference internal" href="#django.dispatch.Signal.send_robust" title="django.dispatch.Signal.send_robust"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Signal.send_robust()</span></code></a>。你必须提供 <code class="docutils literal notranslate"><span class="pre">sender</span></code> 参数（大多数情况下是一个类），还可以根据需要提供任意多个其他关键字参数。</p>
+<p>例如，发送 <code class="docutils literal notranslate"><span class="pre">pizza_done</span></code> 信号可能看起来如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PizzaStore</span><span class="p">:</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">send_pizza</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toppings</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="n">pizza_done</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">toppings</span><span class="o">=</span><span class="n">toppings</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">send()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">send_robust()</span></code> 都返回一个元组对列表 <code class="docutils literal notranslate"><span class="pre">[(receiver,</span> <span class="pre">response),</span> <span class="pre">...</span> <span class="pre">]</span></code>，表示被调用的接收器函数及其响应值的列表。</p>
+<p><code class="docutils literal notranslate"><span class="pre">send()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">send_robust()</span></code> 在处理接收器函数所引发异常的方式上有所不同。 <code class="docutils literal notranslate"><span class="pre">send()</span></code> <em>不</em> 捕获接收器引起的任何异常；它只是允许错误传播。因此，并非所有的接收器都会在出现错误时被通知信号。</p>
+<p><code class="docutils literal notranslate"><span class="pre">send_robust()</span></code> 捕获从 Python的 <code class="docutils literal notranslate"><span class="pre">Exception</span></code> 类派生的所有错误，并确保所有接收器都收到信号通知。如果发生错误，将在引发错误的接收器的元组对中返回错误实例。</p>
+<p>回溯出现在调用 <code class="docutils literal notranslate"><span class="pre">send_robust()</span></code> 时返回的错误中的 <code class="docutils literal notranslate"><span class="pre">__traceback__</span></code> 属性中。</p>
+</div>
+</div>
+<div class="section" id="s-disconnecting-signals">
+<span id="disconnecting-signals"></span><h2>断开信号<a class="headerlink" href="#disconnecting-signals" title="永久链接至标题">¶</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.dispatch.Signal.disconnect">
+<code class="sig-prename descclassname"><span class="pre">Signal.</span></code><code class="sig-name descname"><span class="pre">disconnect</span></code>(<em><span class="n"><span class="pre">receiver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">dispatch_uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="reference internal" href="../modules/django/dispatch/dispatcher.html#Signal.disconnect"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.dispatch.Signal.disconnect" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>To disconnect a receiver from a signal, call <a class="reference internal" href="#django.dispatch.Signal.disconnect" title="django.dispatch.Signal.disconnect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Signal.disconnect()</span></code></a>. The
+arguments are as described in <a class="reference internal" href="#django.dispatch.Signal.connect" title="django.dispatch.Signal.connect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Signal.connect()</span></code></a>. The method returns
+<code class="docutils literal notranslate"><span class="pre">True</span></code> if a receiver was disconnected and <code class="docutils literal notranslate"><span class="pre">False</span></code> if not. When <code class="docutils literal notranslate"><span class="pre">sender</span></code>
+is passed as a lazy reference to <code class="docutils literal notranslate"><span class="pre">&lt;app</span> <span class="pre">label&gt;.&lt;model&gt;</span></code>, this method always
+returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">receiver</span></code> 参数表明要断开的接收器。它可以是 <code class="docutils literal notranslate"><span class="pre">None</span></code> 如果 <code class="docutils literal notranslate"><span class="pre">dispatch_uid</span></code> 已经被用来标识接收器。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">信号</a><ul>
+<li><a class="reference internal" href="#listening-to-signals">监听信号</a><ul>
+<li><a class="reference internal" href="#receiver-functions">接收器函数</a></li>
+<li><a class="reference internal" href="#connecting-receiver-functions">连接接收器函数</a></li>
+<li><a class="reference internal" href="#connecting-to-signals-sent-by-specific-senders">连接到特定发送器发送的信号</a></li>
+<li><a class="reference internal" href="#preventing-duplicate-signals">防止重复信号</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#defining-and-sending-signals">定义和发送信号</a><ul>
+<li><a class="reference internal" href="#defining-signals">定义信号</a></li>
+<li><a class="reference internal" href="#sending-signals">发送信号</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#disconnecting-signals">断开信号</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="settings.html"
+                          title="上一章">Django 配置</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="checks.html"
+                          title="下一章">系统检查框架</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/topics/signals.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="settings.html" title="Django 配置">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="checks.html" title="系统检查框架">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

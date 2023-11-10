@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何将 Django 与旧有的数据库集成 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何配置和使用日志" href="logging.html" />
+    <link rel="prev" title="如何为模型提供初始数据" href="initial-data.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="initial-data.html" title="如何为模型提供初始数据">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="logging.html" title="如何配置和使用日志">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-legacy-databases">
+            
+  <div class="section" id="s-how-to-integrate-django-with-a-legacy-database">
+<span id="how-to-integrate-django-with-a-legacy-database"></span><h1>如何将 Django 与旧有的数据库集成<a class="headerlink" href="#how-to-integrate-django-with-a-legacy-database" title="永久链接至标题">¶</a></h1>
+<p>虽然 Django 很适合开发新应用，但也能用它集成旧数据库。Django 包含了一整套套件来尽可能自动处理类似的任务。</p>
+<p>本文假设你有 Django 基础，基础内容由 <a class="reference internal" href="../intro/tutorial01.html"><span class="doc">教程</span></a> 介绍。</p>
+<p>你配置完 Django 后，你就能跟着此常规操作去集成旧数据库了。</p>
+<div class="section" id="s-give-django-your-database-parameters">
+<span id="give-django-your-database-parameters"></span><h2>将数据库参数告诉 Django<a class="headerlink" href="#give-django-your-database-parameters" title="永久链接至标题">¶</a></h2>
+<p>你需要告诉 Django 数据库连接参数和数据库名称。通过编写 <a class="reference internal" href="../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 配置项并为 <code class="docutils literal notranslate"><span class="pre">'default'</span></code> 连接指定下列值：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a></li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-DATABASE-ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ENGINE</span></code></a></li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-USER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USER</span></code></a></li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-PASSWORD"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PASSWORD</span></code></a></li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a></li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-PORT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PORT</span></code></a></li>
+</ul>
+</div>
+<div class="section" id="s-auto-generate-the-models">
+<span id="auto-generate-the-models"></span><h2>自动生成这些模型<a class="headerlink" href="#auto-generate-the-models" title="永久链接至标题">¶</a></h2>
+<p>Django comes with a utility called <a class="reference internal" href="../ref/django-admin.html#django-admin-inspectdb"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">inspectdb</span></code></a> that can create models
+by introspecting an existing database. You can view the output by running this
+command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py inspectdb
+</pre></div>
+</div>
+<p>通过使用标准的 Unix 输出重定向，将此保存为文件：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py inspectdb &gt; models.py
+</pre></div>
+</div>
+<p>该功能仅是一个快捷方式，不是最佳的创建模型的方法。参考 <a class="reference internal" href="../ref/django-admin.html#django-admin-inspectdb"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">inspectdb</span> <span class="pre">文档</span></code></a> 获取更多信息。</p>
+<p>只要你整理完这些模型，就可以将文件重命名为 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 并将其放入持有应用的 Python 包中。随后，将应用添加至 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 配置。</p>
+<p>默认情况下， <a class="reference internal" href="../ref/django-admin.html#django-admin-inspectdb"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">inspectdb</span></code></a> 创建未托管的模型。也就是说，模型的 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 类中的 <code class="docutils literal notranslate"><span class="pre">managed</span> <span class="pre">=</span> <span class="pre">False</span></code> 告诉 Django 不要管理这些表的创建，修改和删除:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">managed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">db_table</span> <span class="o">=</span> <span class="s2">&quot;CENSUS_PERSONS&quot;</span>
+</pre></div>
+</div>
+<p>若你的确想要允许 Django 管理这些表格的生命周期，你需要将上面的 <a class="reference internal" href="../ref/models/options.html#django.db.models.Options.managed" title="django.db.models.Options.managed"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managed</span></code></a> 选项的值改为 <code class="docutils literal notranslate"><span class="pre">True</span></code> （或者删掉它，因为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 是默认值）。</p>
+</div>
+<div class="section" id="s-install-the-core-django-tables">
+<span id="install-the-core-django-tables"></span><h2>安装核心 Django 表<a class="headerlink" href="#install-the-core-django-tables" title="永久链接至标题">¶</a></h2>
+<p>Next, run the <a class="reference internal" href="../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> command to install any extra needed database
+records such as admin permissions and content types:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py migrate
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-test-and-tweak">
+<span id="test-and-tweak"></span><h2>测试和调整<a class="headerlink" href="#test-and-tweak" title="永久链接至标题">¶</a></h2>
+<p>这些是基本步骤——这样，你就能调整 Django 生成的模型，直到他们达到你的要求。试着通过 Django 数据库 API 访问数据，试着通过 Django 后台站点编辑数据，也可以直接编辑模型文件。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何将 Django 与旧有的数据库集成</a><ul>
+<li><a class="reference internal" href="#give-django-your-database-parameters">将数据库参数告诉 Django</a></li>
+<li><a class="reference internal" href="#auto-generate-the-models">自动生成这些模型</a></li>
+<li><a class="reference internal" href="#install-the-core-django-tables">安装核心 Django 表</a></li>
+<li><a class="reference internal" href="#test-and-tweak">测试和调整</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="initial-data.html"
+                          title="上一章">如何为模型提供初始数据</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="logging.html"
+                          title="下一章">如何配置和使用日志</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/howto/legacy-databases.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="initial-data.html" title="如何为模型提供初始数据">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="logging.html" title="如何配置和使用日志">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

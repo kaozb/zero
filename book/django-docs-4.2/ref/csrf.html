@@ -1,0 +1,326 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>跨站请求伪造保护 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="数据库" href="databases.html" />
+    <link rel="prev" title="Feed 聚合框架" href="contrib/syndication.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="contrib/syndication.html" title="Feed 聚合框架">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="databases.html" title="数据库">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-csrf">
+            
+  <div class="section" id="s-module-django.middleware.csrf">
+<span id="s-cross-site-request-forgery-protection"></span><span id="module-django.middleware.csrf"></span><span id="cross-site-request-forgery-protection"></span><h1>跨站请求伪造保护<a class="headerlink" href="#module-django.middleware.csrf" title="永久链接至标题">¶</a></h1>
+<p>The CSRF middleware and template tag provides easy-to-use protection against
+<a class="reference external" href="https://www.squarefree.com/securitytips/web-developers.html#CSRF">Cross Site Request Forgeries</a>. This type of attack occurs when a malicious
+website contains a link, a form button or some JavaScript that is intended to
+perform some action on your website, using the credentials of a logged-in user
+who visits the malicious site in their browser. A related type of attack,
+'login CSRF', where an attacking site tricks a user's browser into logging into
+a site with someone else's credentials, is also covered.</p>
+<p>The first defense against CSRF attacks is to ensure that GET requests (and other
+'safe' methods, as defined by <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-9.2.1"><strong>RFC 9110#section-9.2.1</strong></a>) are side effect free.
+Requests via 'unsafe' methods, such as POST, PUT, and DELETE, can then be
+protected by the steps outlined in <a class="reference internal" href="../howto/csrf.html#using-csrf"><span class="std std-ref">如何使用 Django 提供的 CSRF 防护功能</span></a>.</p>
+<div class="section" id="s-how-it-works">
+<span id="s-how-csrf-works"></span><span id="how-it-works"></span><span id="how-csrf-works"></span><h2>工作方式<a class="headerlink" href="#how-it-works" title="永久链接至标题">¶</a></h2>
+<p>CSRF 保护是基于以下几点：</p>
+<ol class="arabic">
+<li><p class="first">A CSRF cookie that is a random secret value, which other sites will not have
+access to.</p>
+<p><code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code> sends this cookie with the response whenever
+<code class="docutils literal notranslate"><span class="pre">django.middleware.csrf.get_token()</span></code> is called. It can also send it in
+other cases. For security reasons, the value of the secret is changed each
+time a user logs in.</p>
+</li>
+<li><p class="first">A hidden form field with the name 'csrfmiddlewaretoken', present in all
+outgoing POST forms.</p>
+<p>In order to protect against <a class="reference external" href="https://www.breachattack.com/">BREACH</a> attacks, the value of this field is
+not simply the secret. It is scrambled differently with each response using
+a mask. The mask is generated randomly on every call to <code class="docutils literal notranslate"><span class="pre">get_token()</span></code>, so
+the form field value is different each time.</p>
+<p>这一部分是由模板标签来完成的。</p>
+</li>
+<li><p class="first">对于所有不使用 HTTP GET、HEAD、OPTIONS 或 TRACE 的传入请求，必须存在一个 CSRF cookie，并且“csrfmiddlewaretoken”字段必须存在且正确。如果不存在，用户将得到一个 403 错误。</p>
+<p>当验证“csrfmiddlewaretoken”字段值时，只有密钥，而不是完整的令牌，会与 cookie 值中的密钥进行比较。这允许使用不断变化的令牌。虽然每个请求都可能使用自己的令牌，但密钥对所有请求都是通用的。</p>
+<p>这个检查是由 <code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code> 完成的。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code> 根据当前主机和 <a class="reference internal" href="settings.html#std-setting-CSRF_TRUSTED_ORIGINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_TRUSTED_ORIGINS</span></code></a> 的设置，验证 <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin">Origin header</a> ，如果是由浏览器提供的。这提供了对跨子域攻击的保护。</p>
+</li>
+<li><p class="first">此外，对于 HTTPS 请求，如果没有提供 <code class="docutils literal notranslate"><span class="pre">Origin</span></code> 头，<code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code> 会执行严格的来源检查。这意味着，即使一个子域可以设置或修改你的域名上的 cookie，它也不能强迫用户向你的应用程序发布，因为该请求不会来自你自己的确切域名。</p>
+<p>这也解决了在 HTTPS 下使用独立于会话的密钥时可能出现的中间人攻击问题，这是因为 HTTP <code class="docutils literal notranslate"><span class="pre">Set-Cookie</span></code> 头会被客户接受（不幸的是），即使他们在 HTTPS 下与一个网站对话。对 HTTP 请求不进行 Referer 检查，因为 HTTP 下 <code class="docutils literal notranslate"><span class="pre">Referer</span></code> 头的存在不够可靠）。</p>
+<p>如果设置了 <a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_DOMAIN"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_DOMAIN</span></code></a> 设置，则会将 referer 与之进行比较。你可以通过包含一个前导点号来允许跨子域请求。例如，<code class="docutils literal notranslate"><span class="pre">CSRF_COOKIE_DOMAIN</span> <span class="pre">=</span> <span class="pre">'.example.com'</span></code> 将允许来自 <code class="docutils literal notranslate"><span class="pre">www.example.com</span></code> 和 <code class="docutils literal notranslate"><span class="pre">api.example.com</span></code> 的 POST 请求。如果没有设置，那么 referer 必须与 HTTP <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头匹配。</p>
+<p>通过 <a class="reference internal" href="settings.html#std-setting-CSRF_TRUSTED_ORIGINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_TRUSTED_ORIGINS</span></code></a> 设置，可以将接受的 referer 扩展到当前主机或 cookie 域之外。</p>
+</li>
+</ol>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.1:</span> <p>In older versions, the CSRF cookie value was masked.</p>
+</div>
+<p>这确保了只有源自受信任域的表单才能用于 POST 回数据。</p>
+<p>It deliberately ignores GET requests (and other requests that are defined as
+'safe' by <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-9.2.1"><strong>RFC 9110#section-9.2.1</strong></a>). These requests ought never to have any
+potentially dangerous side effects, and so a CSRF attack with a GET request
+ought to be harmless. <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-9.2.1"><strong>RFC 9110#section-9.2.1</strong></a> defines POST, PUT, and DELETE
+as 'unsafe', and all other methods are also assumed to be unsafe, for maximum
+protection.</p>
+<p>CSRF 保护不能防止中间人攻击，所以使用 <a class="reference internal" href="../topics/security.html#security-recommendation-ssl"><span class="std std-ref">HTTPS</span></a> 与 <a class="reference internal" href="middleware.html#http-strict-transport-security"><span class="std std-ref">HTTP 严格传输安全</span></a>。它还假设 <a class="reference internal" href="../topics/security.html#host-headers-virtual-hosting"><span class="std std-ref">验证 HOST 头</span></a> 和你的网站上没有任何 <a class="reference internal" href="../topics/security.html#cross-site-scripting"><span class="std std-ref">跨站脚本漏洞</span></a> （因为 XSS 漏洞已经让攻击者做了 CSRF 漏洞允许的任何事情，甚至更糟）。</p>
+<div class="admonition-removing-the-referer-header admonition">
+<p class="first admonition-title">删除 <code class="docutils literal notranslate"><span class="pre">Referer</span></code> 头</p>
+<p class="last">为了避免向第三方网站透露 referrer URL，你可能想在你的网站的 <code class="docutils literal notranslate"><span class="pre">&lt;a&gt;</span></code> 标签上 <a class="reference external" href="https://www.w3.org/TR/referrer-policy/#referrer-policy-delivery">禁用 referrer</a> 。例如，你可以使用 <code class="docutils literal notranslate"><span class="pre">&lt;meta</span> <span class="pre">name=&quot;referrer&quot;</span> <span class="pre">content=&quot;no-referrer&quot;&gt;</span></code> 标签或包含 <code class="docutils literal notranslate"><span class="pre">Referrer-Policy:</span> <span class="pre">no-referrer</span></code> 头。由于 CSRF 保护对 HTTPS 请求进行严格的 referer 检查，这些技术会在使用“不安全”方法的请求上导致 CSRF 失败。取而代之的是，使用诸如 <code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">rel=&quot;noreferrer&quot;</span> <span class="pre">...&gt;&quot;</span></code> 这样的替代品来链接第三方网站。</p>
+</div>
+</div>
+<div class="section" id="s-limitations">
+<span id="s-csrf-limitations"></span><span id="limitations"></span><span id="csrf-limitations"></span><h2>限制<a class="headerlink" href="#limitations" title="永久链接至标题">¶</a></h2>
+<p>Subdomains within a site will be able to set cookies on the client for the whole
+domain. By setting the cookie and using a corresponding token, subdomains will
+be able to circumvent the CSRF protection. The only way to avoid this is to
+ensure that subdomains are controlled by trusted users (or, are at least unable
+to set cookies). Note that even without CSRF, there are other vulnerabilities,
+such as session fixation, that make giving subdomains to untrusted parties a bad
+idea, and these vulnerabilities cannot easily be fixed with current browsers.</p>
+</div>
+<div class="section" id="s-module-django.views.decorators.csrf">
+<span id="s-utilities"></span><span id="module-django.views.decorators.csrf"></span><span id="utilities"></span><h2>实用程序<a class="headerlink" href="#module-django.views.decorators.csrf" title="永久链接至标题">¶</a></h2>
+<p>下面的例子假设你使用的是基于函数的视图。如果你正在使用基于类的视图，你可以参考 <a class="reference internal" href="../topics/class-based-views/intro.html#id1"><span class="std std-ref">装饰基于类的视图</span></a>。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.csrf.csrf_exempt">
+<code class="sig-name descname"><span class="pre">csrf_exempt</span></code>(<em><span class="n"><span class="pre">view</span></span></em>)<a class="headerlink" href="#django.views.decorators.csrf.csrf_exempt" title="永久链接至目标">¶</a></dt>
+<dd><p>该装饰器标记着一个视图被免除了中间件所确保的保护。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponse</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.csrf</span> <span class="kn">import</span> <span class="n">csrf_exempt</span>
+
+
+<span class="nd">@csrf_exempt</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;Hello world&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.csrf.csrf_protect">
+<code class="sig-name descname"><span class="pre">csrf_protect</span></code>(<em><span class="n"><span class="pre">view</span></span></em>)<a class="headerlink" href="#django.views.decorators.csrf.csrf_protect" title="永久链接至目标">¶</a></dt>
+<dd><p>为视图提供 <code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code> 保护的装饰器。</p>
+<p>用法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.csrf</span> <span class="kn">import</span> <span class="n">csrf_protect</span>
+
+
+<span class="nd">@csrf_protect</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># ...</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;a_template.html&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.csrf.requires_csrf_token">
+<code class="sig-name descname"><span class="pre">requires_csrf_token</span></code>(<em><span class="n"><span class="pre">view</span></span></em>)<a class="headerlink" href="#django.views.decorators.csrf.requires_csrf_token" title="永久链接至目标">¶</a></dt>
+<dd><p>通常情况下，如果 <code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware.process_view</span></code> 或类似 <code class="docutils literal notranslate"><span class="pre">csrf_protect</span></code> 这样的等价物没有运行， <a class="reference internal" href="templates/builtins.html#std-templatetag-csrf_token"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">csrf_token</span></code></a> 模板标签将无法工作。视图装饰器 <code class="docutils literal notranslate"><span class="pre">requires_csrf_token</span></code> 可以用来确保模板标签工作。这个装饰器的工作原理与 <code class="docutils literal notranslate"><span class="pre">csrf_protect</span></code> 类似，但绝不会拒绝接收到的请求。</p>
+<p>举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.csrf</span> <span class="kn">import</span> <span class="n">requires_csrf_token</span>
+
+
+<span class="nd">@requires_csrf_token</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># ...</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;a_template.html&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.csrf.ensure_csrf_cookie">
+<code class="sig-name descname"><span class="pre">ensure_csrf_cookie</span></code>(<em><span class="n"><span class="pre">view</span></span></em>)<a class="headerlink" href="#django.views.decorators.csrf.ensure_csrf_cookie" title="永久链接至目标">¶</a></dt>
+<dd><p>该装饰器强制视图发送 CSRF cookie。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-settings">
+<span id="settings"></span><h2>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h2>
+<p>一些配置可以用来控制Django 的 CSRF 行为：</p>
+<ul class="simple">
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_AGE</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_DOMAIN"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_DOMAIN</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_HTTPONLY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_HTTPONLY</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_NAME</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_PATH</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_SAMESITE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_SAMESITE</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_SECURE</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_FAILURE_VIEW"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_FAILURE_VIEW</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_HEADER_NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_HEADER_NAME</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_TRUSTED_ORIGINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_TRUSTED_ORIGINS</span></code></a></li>
+<li><a class="reference internal" href="settings.html#std-setting-CSRF_USE_SESSIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_USE_SESSIONS</span></code></a></li>
+</ul>
+</div>
+<div class="section" id="s-frequently-asked-questions">
+<span id="frequently-asked-questions"></span><h2>常问问题<a class="headerlink" href="#frequently-asked-questions" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability">
+<span id="is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability"></span><h3>可以提交任意的 CSRF 令牌对（cookie 和 POST 数据）是漏洞吗？<a class="headerlink" href="#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability" title="永久链接至标题">¶</a></h3>
+<p>不，这是设计好的。如果没有中间人攻击，攻击者就没有办法向受害者的浏览器发送 CSRF 令牌 cookie，所以成功的攻击需要通过 XSS 或类似的方式获得受害者浏览器的 cookie，在这种情况下，攻击者通常不需要 CSRF 攻击。</p>
+<p>一些安全审计工具将此标记为问题，但如前所述，攻击者无法窃取用户浏览器的 CSRF cookie。使用 Firebug、Chrome 开发工具等“窃取”或修改 <em>自己的</em> 令牌并不是漏洞。</p>
+</div>
+<div class="section" id="s-is-it-a-problem-that-django-s-csrf-protection-isn-t-linked-to-a-session-by-default">
+<span id="is-it-a-problem-that-django-s-csrf-protection-isn-t-linked-to-a-session-by-default"></span><h3>Django 的 CSRF 保护默认不与会话关联，是不是有问题？<a class="headerlink" href="#is-it-a-problem-that-django-s-csrf-protection-isn-t-linked-to-a-session-by-default" title="永久链接至标题">¶</a></h3>
+<p>不，这是设计好的。不将 CSRF 保护与会话联系起来，就可以在诸如 <em>pastebin</em> 这样允许匿名用户提交的网站上使用保护，而这些用户并没有会话。</p>
+<p>如果你希望在用户的会话中存储 CSRF 令牌，请使用 <a class="reference internal" href="settings.html#std-setting-CSRF_USE_SESSIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_USE_SESSIONS</span></code></a> 设置。</p>
+</div>
+<div class="section" id="s-why-might-a-user-encounter-a-csrf-validation-failure-after-logging-in">
+<span id="why-might-a-user-encounter-a-csrf-validation-failure-after-logging-in"></span><h3>为什么用户登录后会遇到 CSRF 验证失败？<a class="headerlink" href="#why-might-a-user-encounter-a-csrf-validation-failure-after-logging-in" title="永久链接至标题">¶</a></h3>
+<p>出于安全考虑，每次用户登录时，CSRF 令牌都会轮换。任何在登录前生成表单的页面都会有一个旧的、无效的 CSRF 令牌，需要重新加载。如果用户在登录后使用后退按钮或在不同的浏览器标签页中登录，可能会发生这种情况。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">跨站请求伪造保护</a><ul>
+<li><a class="reference internal" href="#how-it-works">工作方式</a></li>
+<li><a class="reference internal" href="#limitations">限制</a></li>
+<li><a class="reference internal" href="#module-django.views.decorators.csrf">实用程序</a></li>
+<li><a class="reference internal" href="#settings">配置</a></li>
+<li><a class="reference internal" href="#frequently-asked-questions">常问问题</a><ul>
+<li><a class="reference internal" href="#is-posting-an-arbitrary-csrf-token-pair-cookie-and-post-data-a-vulnerability">可以提交任意的 CSRF 令牌对（cookie 和 POST 数据）是漏洞吗？</a></li>
+<li><a class="reference internal" href="#is-it-a-problem-that-django-s-csrf-protection-isn-t-linked-to-a-session-by-default">Django 的 CSRF 保护默认不与会话关联，是不是有问题？</a></li>
+<li><a class="reference internal" href="#why-might-a-user-encounter-a-csrf-validation-failure-after-logging-in">为什么用户登录后会遇到 CSRF 验证失败？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="contrib/syndication.html"
+                          title="上一章">Feed 聚合框架</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="databases.html"
+                          title="下一章">数据库</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/ref/csrf.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="contrib/syndication.html" title="Feed 聚合框架">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="databases.html" title="数据库">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

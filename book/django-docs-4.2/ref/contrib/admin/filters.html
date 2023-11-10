@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModelAdmin List Filters &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../static/documentation_options.js"></script>
+    <script src="../../../static/jquery.js"></script>
+    <script src="../../../static/underscore.js"></script>
+    <script src="../../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="Django 管理文档生成器" href="admindocs.html" />
+    <link rel="prev" title="管理动作" href="actions.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="actions.html" title="管理动作">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="admindocs.html" title="Django 管理文档生成器">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-admin-filters">
+            
+  <div class="section" id="s-modeladmin-list-filters">
+<span id="s-id1"></span><span id="modeladmin-list-filters"></span><span id="id1"></span><h1><code class="docutils literal notranslate"><span class="pre">ModelAdmin</span></code> List Filters<a class="headerlink" href="#modeladmin-list-filters" title="永久链接至标题">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">ModelAdmin</span></code> classes can define list filters that appear in the right sidebar
+of the change list page of the admin, as illustrated in the following
+screenshot:</p>
+<img alt="../../../images/list_filter.png" src="../../../images/list_filter.png" />
+<p>To activate per-field filtering, set <a class="reference internal" href="index.html#django.contrib.admin.ModelAdmin.list_filter" title="django.contrib.admin.ModelAdmin.list_filter"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ModelAdmin.list_filter</span></code></a> to a list
+or tuple of elements, where each element is one of the following types:</p>
+<ul class="simple">
+<li>A field name.</li>
+<li>A subclass of <code class="docutils literal notranslate"><span class="pre">django.contrib.admin.SimpleListFilter</span></code>.</li>
+<li>A 2-tuple containing a field name and a subclass of
+<code class="docutils literal notranslate"><span class="pre">django.contrib.admin.FieldListFilter</span></code>.</li>
+</ul>
+<p>See the examples below for discussion of each of these options for defining
+<code class="docutils literal notranslate"><span class="pre">list_filter</span></code>.</p>
+<div class="section" id="s-using-a-field-name">
+<span id="using-a-field-name"></span><h2>Using a field name<a class="headerlink" href="#using-a-field-name" title="永久链接至标题">¶</a></h2>
+<p>The simplest option is to specify the required field names from your model.</p>
+<p>Each specified field should be either a <code class="docutils literal notranslate"><span class="pre">BooleanField</span></code>, <code class="docutils literal notranslate"><span class="pre">CharField</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DateField</span></code>, <code class="docutils literal notranslate"><span class="pre">DateTimeField</span></code>, <code class="docutils literal notranslate"><span class="pre">IntegerField</span></code>, <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> or
+<code class="docutils literal notranslate"><span class="pre">ManyToManyField</span></code>, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PersonAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;is_staff&quot;</span><span class="p">,</span> <span class="s2">&quot;company&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">list_filter</span></code> 中的字段名也可以使用 <code class="docutils literal notranslate"><span class="pre">__</span></code> 查找来跨越关系，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PersonAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">UserAdmin</span><span class="p">):</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;company__name&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-using-a-simplelistfilter">
+<span id="using-a-simplelistfilter"></span><h2>Using a <code class="docutils literal notranslate"><span class="pre">SimpleListFilter</span></code><a class="headerlink" href="#using-a-simplelistfilter" title="永久链接至标题">¶</a></h2>
+<p>For custom filtering, you can define your own list filter by subclassing
+<code class="docutils literal notranslate"><span class="pre">django.contrib.admin.SimpleListFilter</span></code>. You need to provide the <code class="docutils literal notranslate"><span class="pre">title</span></code>
+and <code class="docutils literal notranslate"><span class="pre">parameter_name</span></code> attributes, and override the <code class="docutils literal notranslate"><span class="pre">lookups</span></code> and
+<code class="docutils literal notranslate"><span class="pre">queryset</span></code> methods, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+
+<span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">gettext_lazy</span> <span class="k">as</span> <span class="n">_</span>
+
+
+<span class="k">class</span> <span class="nc">DecadeBornListFilter</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">SimpleListFilter</span><span class="p">):</span>
+    <span class="c1"># Human-readable title which will be displayed in the</span>
+    <span class="c1"># right admin sidebar just above the filter options.</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;decade born&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Parameter for the filter that will be used in the URL query.</span>
+    <span class="n">parameter_name</span> <span class="o">=</span> <span class="s2">&quot;decade&quot;</span>
+
+    <span class="k">def</span> <span class="nf">lookups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">model_admin</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of tuples. The first element in each</span>
+<span class="sd">        tuple is the coded value for the option that will</span>
+<span class="sd">        appear in the URL query. The second element is the</span>
+<span class="sd">        human-readable name for the option that will appear</span>
+<span class="sd">        in the right sidebar.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;80s&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;in the eighties&quot;</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;90s&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;in the nineties&quot;</span><span class="p">)),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the filtered queryset based on the value</span>
+<span class="sd">        provided in the query string and retrievable via</span>
+<span class="sd">        `self.value()`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compare the requested value (either &#39;80s&#39; or &#39;90s&#39;)</span>
+        <span class="c1"># to decide how to filter the queryset.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;80s&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">queryset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">birthday__gte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1980</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">birthday__lte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1989</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;90s&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">queryset</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">birthday__gte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1990</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">birthday__lte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1999</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+            <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">PersonAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span><span class="n">DecadeBornListFilter</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>为方便起见，<code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code> 对象被传递给 <code class="docutils literal notranslate"><span class="pre">lookups</span></code> 和 <code class="docutils literal notranslate"><span class="pre">queryset</span></code> 方法，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AuthDecadeBornListFilter</span><span class="p">(</span><span class="n">DecadeBornListFilter</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">lookups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">model_admin</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_superuser</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">lookups</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">model_admin</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">queryset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_superuser</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">queryset</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>另外，为了方便起见，<code class="docutils literal notranslate"><span class="pre">ModelAdmin</span></code> 对象被传递给 <code class="docutils literal notranslate"><span class="pre">lookups</span></code> 方法，例如，如果你想根据现有数据进行查找：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AdvancedDecadeBornListFilter</span><span class="p">(</span><span class="n">DecadeBornListFilter</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">lookups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">model_admin</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Only show the lookups if there actually is</span>
+<span class="sd">        anyone born in the corresponding decades.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="n">model_admin</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">qs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">birthday__gte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1980</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">birthday__lte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1989</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s2">&quot;80s&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;in the eighties&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">qs</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">birthday__gte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1990</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">birthday__lte</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1999</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="s2">&quot;90s&quot;</span><span class="p">,</span> <span class="n">_</span><span class="p">(</span><span class="s2">&quot;in the nineties&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-using-a-field-name-and-an-explicit-fieldlistfilter">
+<span id="using-a-field-name-and-an-explicit-fieldlistfilter"></span><h2>Using a field name and an explicit <code class="docutils literal notranslate"><span class="pre">FieldListFilter</span></code><a class="headerlink" href="#using-a-field-name-and-an-explicit-fieldlistfilter" title="永久链接至标题">¶</a></h2>
+<p>Finally, if you wish to specify an explicit filter type to use with a field you
+may provide a <code class="docutils literal notranslate"><span class="pre">list_filter</span></code> item as a 2-tuple, where the first element is a
+field name and the second element is a class inheriting from
+<code class="docutils literal notranslate"><span class="pre">django.contrib.admin.FieldListFilter</span></code>, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PersonAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;is_staff&quot;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">BooleanFieldListFilter</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>Here the <code class="docutils literal notranslate"><span class="pre">is_staff</span></code> field will use the <code class="docutils literal notranslate"><span class="pre">BooleanFieldListFilter</span></code>. Specifying
+only the field name, fields will automatically use the appropriate filter for
+most cases, but this format allows you to control the filter used.</p>
+<p>The following examples show available filter classes that you need to opt-in
+to use.</p>
+<p>你可以使用 <code class="docutils literal notranslate"><span class="pre">RelatedOnlyFieldListFilter</span></code> 将相关模型的选择限制在该关系所涉及的对象上：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BookAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;author&quot;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">RelatedOnlyFieldListFilter</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>Assuming <code class="docutils literal notranslate"><span class="pre">author</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> to a <code class="docutils literal notranslate"><span class="pre">User</span></code> model, this will
+limit the <code class="docutils literal notranslate"><span class="pre">list_filter</span></code> choices to the users who have written a book,
+instead of listing all users.</p>
+<p>你可以使用 <code class="docutils literal notranslate"><span class="pre">EmptyFieldListFilter</span></code> 来过滤空值，它既可以过滤空字符串也可以过滤空值，这取决于字段允许存储的内容：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">BookAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">list_filter</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">EmptyFieldListFilter</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>By defining a filter using the <code class="docutils literal notranslate"><span class="pre">__in</span></code> lookup, it is possible to filter for
+any of a group of values. You need to override the <code class="docutils literal notranslate"><span class="pre">expected_parameters</span></code>
+method, and the specify the <code class="docutils literal notranslate"><span class="pre">lookup_kwargs</span></code> attribute with the appropriate
+field name. By default, multiple values in the query string will be separated
+with commas, but this can be customized via the <code class="docutils literal notranslate"><span class="pre">list_separator</span></code> attribute.
+The following example shows such a filter using the vertical-pipe character as
+the separator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">FilterWithCustomSeparator</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">FieldListFilter</span><span class="p">):</span>
+    <span class="c1"># custom list separator that should be used to separate values.</span>
+    <span class="n">list_separator</span> <span class="o">=</span> <span class="s2">&quot;|&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">model_admin</span><span class="p">,</span> <span class="n">field_path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lookup_kwarg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">__in&quot;</span> <span class="o">%</span> <span class="n">field_path</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">model_admin</span><span class="p">,</span> <span class="n">field_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">expected_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lookup_kwarg</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">不支持 <code class="xref py py-class docutils literal notranslate"><span class="pre">GenericForeignKey</span></code> 字段。</p>
+</div>
+<p>List filters typically appear only if the filter has more than one choice. A
+filter's <code class="docutils literal notranslate"><span class="pre">has_output()</span></code> method controls whether or not it appears.</p>
+<p>可以指定一个自定义模板来呈现列表过滤器：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">FilterWithCustomTemplate</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">SimpleListFilter</span><span class="p">):</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;custom_template.html&quot;</span>
+</pre></div>
+</div>
+<p>具体的例子请看 Django 提供的默认模板（<code class="docutils literal notranslate"><span class="pre">admin/filter.html</span></code>）。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">ModelAdmin</span></code> List Filters</a><ul>
+<li><a class="reference internal" href="#using-a-field-name">Using a field name</a></li>
+<li><a class="reference internal" href="#using-a-simplelistfilter">Using a <code class="docutils literal notranslate"><span class="pre">SimpleListFilter</span></code></a></li>
+<li><a class="reference internal" href="#using-a-field-name-and-an-explicit-fieldlistfilter">Using a field name and an explicit <code class="docutils literal notranslate"><span class="pre">FieldListFilter</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="actions.html"
+                          title="上一章">管理动作</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="admindocs.html"
+                          title="下一章">Django 管理文档生成器</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../sources/ref/contrib/admin/filters.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="actions.html" title="管理动作">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="admindocs.html" title="Django 管理文档生成器">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>表单和字段验证 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="日志" href="../logging.html" />
+    <link rel="prev" title="部件" href="widgets.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="widgets.html" title="部件">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="../logging.html" title="日志">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-forms-validation">
+            
+  <div class="section" id="s-form-and-field-validation">
+<span id="form-and-field-validation"></span><h1>表单和字段验证<a class="headerlink" href="#form-and-field-validation" title="永久链接至标题">¶</a></h1>
+<p>表单验证发生在清理数据的时候。如果你想自定义这个过程，有各种地方可以进行更改，每个地方都有不同的目的。在表单处理过程中会运行三种类型的清理方法。这些方法通常在调用表单上的 <code class="docutils literal notranslate"><span class="pre">is_valid()</span></code> 方法时执行。还有其他一些事情也可以触发清理和验证（访问 <code class="docutils literal notranslate"><span class="pre">errors</span></code> 属性或直接调用 <code class="docutils literal notranslate"><span class="pre">full_clean()</span></code>），但通常不需要。</p>
+<p>一般来说，任何清理方法都可以在处理的数据出现问题时引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>，将相关信息传递给 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 构造函数。 <a class="reference internal" href="#raising-validation-error"><span class="std std-ref">参见下文</span></a> 关于引发 ``ValidationError` 的最佳实践。如果没有引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>，该方法应该将清理后（规范化）的数据作为 Python 对象返回。</p>
+<p>大多数验证可以使用 <a class="reference internal" href="#validators">validators</a> —— 可以重复使用的辅助功能来完成。验证器是函数（或可调用对象），它只接受一个参数，并在无效输入时引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。验证器在字段的 <code class="docutils literal notranslate"><span class="pre">to_python</span></code> 和 <code class="docutils literal notranslate"><span class="pre">validate</span></code> 方法被调用后运行。</p>
+<p>表单的验证分为几个步骤，可以自定义或覆盖：</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">Field</span></code> 上的 <code class="docutils literal notranslate"><span class="pre">to_python()</span></code> 方法是每次验证的第一步。它强制将值转换为正确的数据类型，并在不可能的情况下引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。该方法接受来自部件的原始值并返回转换后的值。例如，一个 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 将把数据变成 Python <code class="docutils literal notranslate"><span class="pre">float</span></code> 或引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">Field</span></code> 上的 <code class="docutils literal notranslate"><span class="pre">validate()</span></code> 方法处理不适合验证器的特定字段验证。它接受一个被强制为正确数据类型的值，并在任何错误时引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。这个方法不会返回任何东西，也不应该改变值。你应该覆盖它来处理你不能或不想放在验证器中的验证逻辑。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">Field</span></code> 上的 <code class="docutils literal notranslate"><span class="pre">run_validators()</span></code> 方法会运行该字段的所有验证器，并将所有错误汇总到一个 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。你不应该需要覆盖这个方法。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">Field</span></code> 子类上的 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法负责以正确的顺序运行 <code class="docutils literal notranslate"><span class="pre">to_python()</span></code>、<code class="docutils literal notranslate"><span class="pre">validate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">run_validators()</span></code> 并传播它们的错误。如果在任何时候，任何一个方法引发了 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>，验证就会停止，并引发该错误。该方法返回干净的数据，然后将其插入到表单的 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 字典中。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">clean_&lt;fieldname&gt;()</span></code> 方法是在表单子类上调用的——其中 <code class="docutils literal notranslate"><span class="pre">&lt;fieldname&gt;</span></code> 被替换为表单字段属性的名称。这个方法做任何特定属性的清理工作，与字段的类型无关。这个方法不传递任何参数。你需要在 <code class="docutils literal notranslate"><span class="pre">self.cleaned_data</span></code> 中查找字段的值，并且记住，此时它将是一个 Python 对象，而不是在表单中提交的原始字符串（它将在 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 中，因为上面的一般字段 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法已经清理了一次数据）。</p>
+<p>例如，如果你想验证一个叫 <code class="docutils literal notranslate"><span class="pre">serialnumber</span></code> 的 <code class="docutils literal notranslate"><span class="pre">CharField</span></code> 的内容是唯一的，<code class="docutils literal notranslate"><span class="pre">clean_serialnumber()</span></code> 就可以做这件事。你不需要一个特定的字段（它是一个 <code class="docutils literal notranslate"><span class="pre">CharField</span></code>），但你需要一个特定字段的验证，可能的话，清理／规范数据。</p>
+<p>这个方法的返回值会替换 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 中的现有值，所以它必须是 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 中的字段值（即使这个方法没有改变它）或一个新的干净值。</p>
+</li>
+<li><p class="first">表单子类的 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法可以执行需要访问多个表单字段的验证。在这里，你可以放入诸如“如果提供了字段 <code class="docutils literal notranslate"><span class="pre">A</span></code>，字段 <code class="docutils literal notranslate"><span class="pre">B</span></code> 必须包含一个有效的电子邮件地址”这样的检查。如果你愿意，这个方法可以返回一个完全不同的字典，这个字典将被用作 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code>。</p>
+<p>因为在调用 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 时，字段验证方法已经运行，所以你也可以访问表单的 <code class="docutils literal notranslate"><span class="pre">errors</span></code> 属性，它包含了所有清理单个字段时产生的错误。</p>
+<p>请注意，任何由 <a class="reference internal" href="api.html#django.forms.Form.clean" title="django.forms.Form.clean"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Form.clean()</span></code></a> 覆盖引起的错误都不会与任何特定的字段相关联。它们会进入一个特殊的“字段”（称为 <code class="docutils literal notranslate"><span class="pre">__all__</span></code>），如果需要的话，你可以通过 <a class="reference internal" href="api.html#django.forms.Form.non_field_errors" title="django.forms.Form.non_field_errors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">non_field_errors()</span></code></a> 方法来访问。如果你想将错误附加到表单中的某个特定字段，你需要调用 <a class="reference internal" href="api.html#django.forms.Form.add_error" title="django.forms.Form.add_error"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_error()</span></code></a>。</p>
+<p>还需要注意的是，当覆盖 <code class="docutils literal notranslate"><span class="pre">ModelForm</span></code> 子类的 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法时，有一些特殊的注意事项。（更多信息见 <a class="reference internal" href="../../topics/forms/modelforms.html#overriding-modelform-clean-method"><span class="std std-ref">模型表单文档</span></a>）</p>
+</li>
+</ul>
+<p>这些方法按上述顺序运行，每次只运行一个字段。 也就是说，对于表单中的每一个字段（按照表单定义中声明的顺序），先运行 <code class="docutils literal notranslate"><span class="pre">Field.clean()</span></code> 方法（或其覆盖），然后运行 <code class="docutils literal notranslate"><span class="pre">clean_()</span></code>。最后，一旦这两个方法对每个字段都被运行，无论前面的方法是否出错，都会执行 <code class="xref py py-meth docutils literal notranslate"><span class="pre">Form.clean()`()</span></code> 方法或其覆盖。</p>
+<p>以下是这些方法的例子。</p>
+<p>如上所述，这些方法中的任何一种都可能引起 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。对于任何字段，如果 <code class="docutils literal notranslate"><span class="pre">Field.clean()</span></code> 方法引起 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>，则不调用任何特定字段的清理方法。但是，所有其余字段的清理方法仍然会被执行。</p>
+<div class="section" id="s-raising-validationerror">
+<span id="s-raising-validation-error"></span><span id="raising-validationerror"></span><span id="raising-validation-error"></span><h2>引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code><a class="headerlink" href="#raising-validationerror" title="永久链接至标题">¶</a></h2>
+<p>为了使错误信息灵活且易于覆盖，请考虑以下准则：</p>
+<ul>
+<li><p class="first">为构造函数提供一个描述性错误 <code class="docutils literal notranslate"><span class="pre">code</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good</span>
+<span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value&quot;</span><span class="p">),</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;invalid&quot;</span><span class="p">)</span>
+
+<span class="c1"># Bad</span>
+<span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">不要在信息中强行加入变量；使用占位符和构造函数的 <code class="docutils literal notranslate"><span class="pre">params</span></code> 参数：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good</span>
+<span class="n">ValidationError</span><span class="p">(</span>
+    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value: </span><span class="si">%(value)s</span><span class="s2">&quot;</span><span class="p">),</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;42&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c1"># Bad</span>
+<span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">使用映射键代替位置格式化。这样可以在重写信息时，将变量按任何顺序排列或完全省略：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good</span>
+<span class="n">ValidationError</span><span class="p">(</span>
+    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value: </span><span class="si">%(value)s</span><span class="s2">&quot;</span><span class="p">),</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;42&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c1"># Bad</span>
+<span class="n">ValidationError</span><span class="p">(</span>
+    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">),</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;42&quot;</span><span class="p">,),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">用 <code class="docutils literal notranslate"><span class="pre">gettext</span></code> 包装信息，以启用翻译：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good</span>
+<span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value&quot;</span><span class="p">))</span>
+
+<span class="c1"># Bad</span>
+<span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;Invalid value&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>把它放在一起：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+    <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value: </span><span class="si">%(value)s</span><span class="s2">&quot;</span><span class="p">),</span>
+    <span class="n">code</span><span class="o">=</span><span class="s2">&quot;invalid&quot;</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;42&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>如果你写的是可重用的表单、表单字段和模型字段，那么遵循这些准则是特别必要的。</p>
+<p>虽然不建议使用，但如果你处于验证链的末端（即你的表单 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法），并且你知道你将永远不需要覆盖你的错误信息，你仍然可以选择不那么啰嗦的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Invalid value: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="api.html#django.forms.Form.errors.as_data" title="django.forms.Form.errors.as_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Form.errors.as_data()</span></code></a> 和 <a class="reference internal" href="api.html#django.forms.Form.errors.as_json" title="django.forms.Form.errors.as_json"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Form.errors.as_json()</span></code></a> 方法极大地受益于功能齐全的 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> （带有 <code class="docutils literal notranslate"><span class="pre">code</span></code> 名称和 <code class="docutils literal notranslate"><span class="pre">params</span></code> 字典）。</p>
+<div class="section" id="s-raising-multiple-errors">
+<span id="raising-multiple-errors"></span><h3>引发多个错误<a class="headerlink" href="#raising-multiple-errors" title="永久链接至标题">¶</a></h3>
+<p>如果在清理方法中检测到多个错误，并希望向表单提交者发出所有错误信号，可以将错误列表传递给 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 构造函数。</p>
+<p>如上所述，建议传递一个带有 <code class="docutils literal notranslate"><span class="pre">code</span></code> 和 <code class="docutils literal notranslate"><span class="pre">params</span></code> 的 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 实例列表，但一个字符串列表也可以：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good</span>
+<span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Error 1&quot;</span><span class="p">),</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;error1&quot;</span><span class="p">),</span>
+        <span class="n">ValidationError</span><span class="p">(</span><span class="n">_</span><span class="p">(</span><span class="s2">&quot;Error 2&quot;</span><span class="p">),</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;error2&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Bad</span>
+<span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Error 1&quot;</span><span class="p">),</span>
+        <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Error 2&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-using-validation-in-practice">
+<span id="using-validation-in-practice"></span><h2>在实践中使用验证<a class="headerlink" href="#using-validation-in-practice" title="永久链接至标题">¶</a></h2>
+<p>前面的章节解释了一般表单的验证是如何工作的。由于有时通过看到每个功能的使用，可以更容易地将事情落实到位，这里有一系列使用前面每个功能的小例子。</p>
+<div class="section" id="s-using-validators">
+<span id="s-validators"></span><span id="using-validators"></span><span id="validators"></span><h3>使用验证器<a class="headerlink" href="#using-validators" title="永久链接至标题">¶</a></h3>
+<p>Django 的表单（和模型）字段支持使用被称为验证器的实用函数和类。验证器是一个可调用对象或函数，它接收一个值，如果该值有效则不返回任何内容，如果无效则引发一个 <a class="reference internal" href="../exceptions.html#django.core.exceptions.ValidationError" title="django.core.exceptions.ValidationError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValidationError</span></code></a>。这些可以通过字段的 <code class="docutils literal notranslate"><span class="pre">validators</span></code> 参数传递给字段的构造函数，或者在 <a class="reference internal" href="fields.html#django.forms.Field" title="django.forms.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a> 类本身的 <code class="docutils literal notranslate"><span class="pre">default_validators</span></code> 属性中定义。</p>
+<p>验证器可以用来验证字段内部的值，我们来看看 Django 的 <code class="docutils literal notranslate"><span class="pre">SlugField</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core</span> <span class="kn">import</span> <span class="n">validators</span>
+<span class="kn">from</span> <span class="nn">django.forms</span> <span class="kn">import</span> <span class="n">CharField</span>
+
+
+<span class="k">class</span> <span class="nc">SlugField</span><span class="p">(</span><span class="n">CharField</span><span class="p">):</span>
+    <span class="n">default_validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">validators</span><span class="o">.</span><span class="n">validate_slug</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>正如你所看到的，<code class="docutils literal notranslate"><span class="pre">SlugField</span></code> 是一个带有自定义验证器的 <code class="docutils literal notranslate"><span class="pre">CharField</span></code>，它可以验证提交的文本是否符合某些字符规则。这也可以在字段定义中完成：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">slug</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">SlugField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>相当于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">slug</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">validators</span><span class="o">=</span><span class="p">[</span><span class="n">validators</span><span class="o">.</span><span class="n">validate_slug</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>常见的情况下，如对电子邮件或正则表达式进行验证，可以使用 Django 中现有的验证器类来处理。例如，<code class="docutils literal notranslate"><span class="pre">validators.validate_slug</span></code> 是一个 <a class="reference internal" href="../validators.html#django.core.validators.RegexValidator" title="django.core.validators.RegexValidator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegexValidator</span></code></a> 的实例，它的第一个参数是模式：<code class="docutils literal notranslate"><span class="pre">^[-a-zA-Z0-9_]+$`</span></code>。参见 <a class="reference internal" href="../validators.html"><span class="doc">编写验证器</span></a> 一节，查看已有验证器的列表，以及如何编写验证器的例子。</p>
+</div>
+<div class="section" id="s-form-field-default-cleaning">
+<span id="form-field-default-cleaning"></span><h3>表单字段默认清理<a class="headerlink" href="#form-field-default-cleaning" title="永久链接至标题">¶</a></h3>
+<p>首先让我们创建一个自定义表单字段，验证其输入是包含逗号分隔的电子邮件地址的字符串。完整的类是这样的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="kn">from</span> <span class="nn">django.core.validators</span> <span class="kn">import</span> <span class="n">validate_email</span>
+
+
+<span class="k">class</span> <span class="nc">MultiEmailField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Field</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Normalize data to a list of strings.&quot;&quot;&quot;</span>
+        <span class="c1"># Return an empty list if no input was given.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if value consists only of valid emails.&quot;&quot;&quot;</span>
+        <span class="c1"># Use the parent&#39;s handling of required fields, etc.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">email</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">validate_email</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>每个使用该字段的表单在对字段的数据进行任何操作之前，都会运行这些方法。这是专门针对这种类型的字段进行的清理，不管它随后如何使用。</p>
+<p>让我们创建一个 <code class="docutils literal notranslate"><span class="pre">ContactForm</span></code> 来演示如何使用这个字段：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">()</span>
+    <span class="n">sender</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+    <span class="n">recipients</span> <span class="o">=</span> <span class="n">MultiEmailField</span><span class="p">()</span>
+    <span class="n">cc_myself</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>像使用其他表单字段一样使用 <code class="docutils literal notranslate"><span class="pre">MultiEmailField</span></code>。当在表单上调用 <code class="docutils literal notranslate"><span class="pre">is_valid()</span></code> 方法时，<code class="docutils literal notranslate"><span class="pre">MultiEmailField.clean()</span></code> 方法将作为清理过程的一部分被运行，它将反过来调用自定义的 <code class="docutils literal notranslate"><span class="pre">to_python()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">validate()</span></code> 方法。</p>
+</div>
+<div class="section" id="s-cleaning-a-specific-field-attribute">
+<span id="cleaning-a-specific-field-attribute"></span><h3>清理一个特定的字段属性<a class="headerlink" href="#cleaning-a-specific-field-attribute" title="永久链接至标题">¶</a></h3>
+<p>继续上一个例子，假设在我们的 <code class="docutils literal notranslate"><span class="pre">ContactForm</span></code> 中，我们想确保 <code class="docutils literal notranslate"><span class="pre">recipients</span></code> 字段总是包含地址 <code class="docutils literal notranslate"><span class="pre">&quot;fred&#64;example.com&quot;</span></code>。这是我们的表单所特有的验证，所以我们不想把它放到一般的 <code class="docutils literal notranslate"><span class="pre">MultiEmailField</span></code> 类中。取而代之的是，我们写了一个清理方法，对 <code class="docutils literal notranslate"><span class="pre">recipients</span></code> 字段进行操作，就像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ValidationError</span>
+
+
+<span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="c1"># Everything as before.</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">clean_recipients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s2">&quot;recipients&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;fred@example.com&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;You have forgotten about Fred!&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Always return a value to use as the new cleaned data, even if</span>
+        <span class="c1"># this method didn&#39;t change it.</span>
+        <span class="k">return</span> <span class="n">data</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-cleaning-and-validating-fields-that-depend-on-each-other">
+<span id="s-validating-fields-with-clean"></span><span id="cleaning-and-validating-fields-that-depend-on-each-other"></span><span id="validating-fields-with-clean"></span><h3>清理和验证相互依赖的字段<a class="headerlink" href="#cleaning-and-validating-fields-that-depend-on-each-other" title="永久链接至标题">¶</a></h3>
+<p>假设我们在联系表单中添加了另一个要求：如果 <code class="docutils literal notranslate"><span class="pre">cc_myself</span></code> 字段为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则 <code class="docutils literal notranslate"><span class="pre">subject</span></code> 必须包含 <code class="docutils literal notranslate"><span class="pre">&quot;help&quot;</span></code> 一词。我们同时对多个字段进行验证，所以表单的 <a class="reference internal" href="api.html#django.forms.Form.clean" title="django.forms.Form.clean"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clean()</span></code></a> 方法是一个很好的地方。注意，我们这里说的是表单上的 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法，而前面我们是在一个字段上写一个 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法。在研究验证东西的位置时，明确字段和表单的区别是很重要的。字段是单个数据点，表单是字段的集合。</p>
+<p>当表单的 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法被调用时，所有的单独字段清理方法都会被运行（前面两节），所以 <code class="docutils literal notranslate"><span class="pre">self.cleaned_data</span></code> 将被填充到目前为止存活的任何数据中。所以你还需要记住，要验证的字段可能没有通过最初的单个字段检查。</p>
+<p>有两种方法可以报告这一步的任何错误。最常见的方法可能是在表单顶部显示错误。要创建这样一个错误，你可以从 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法中引发一个 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ValidationError</span>
+
+
+<span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="c1"># Everything as before.</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cleaned_data</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+        <span class="n">cc_myself</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cc_myself&quot;</span><span class="p">)</span>
+        <span class="n">subject</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subject&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cc_myself</span> <span class="ow">and</span> <span class="n">subject</span><span class="p">:</span>
+            <span class="c1"># Only do something if both fields are valid so far.</span>
+            <span class="k">if</span> <span class="s2">&quot;help&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">subject</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                    <span class="s2">&quot;Did not send for &#39;help&#39; in the subject despite &quot;</span> <span class="s2">&quot;CC&#39;ing yourself.&quot;</span>
+                <span class="p">)</span>
+</pre></div>
+</div>
+<p>在这段代码中，如果出现验证错误，表单将在表单顶部显示错误信息（通常），描述问题。这种错误属于非字段错误，在模板中用 <code class="docutils literal notranslate"><span class="pre">{form.non_field_errors</span> <span class="pre">}}</span></code> 显示。</p>
+<p>示例代码中对 <code class="docutils literal notranslate"><span class="pre">super().clean()</span></code> 的调用确保了父类中的任何验证逻辑得到了维护。如果你的表单继承了另一个没有在其 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法中返回 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 字典的表单（这样做是可选的），那么不要给 <code class="docutils literal notranslate"><span class="pre">super()</span></code> 调用的结果分配 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code>，而使用 <code class="docutils literal notranslate"><span class="pre">self.cleaned_data</span></code> 来代替：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+    <span class="n">cc_myself</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cc_myself&quot;</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>第二种报告验证错误的方法可能涉及到将错误信息分配给其中一个字段。在这种情况下，让我们为表单显示中的“subject”和“cc_myself”行分配一条错误信息。在实际操作时要小心，因为这会导致混乱的表单输出。我们在这里展示的是可能的情况，而让你和你的设计师们自己去研究在你的特定情况下如何有效地工作。我们的新代码（替换了之前的示例）看起来像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+
+
+<span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="c1"># Everything as before.</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cleaned_data</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+        <span class="n">cc_myself</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cc_myself&quot;</span><span class="p">)</span>
+        <span class="n">subject</span> <span class="o">=</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subject&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cc_myself</span> <span class="ow">and</span> <span class="n">subject</span> <span class="ow">and</span> <span class="s2">&quot;help&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">subject</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Must put &#39;help&#39; in subject when cc&#39;ing yourself.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_error</span><span class="p">(</span><span class="s2">&quot;cc_myself&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_error</span><span class="p">(</span><span class="s2">&quot;subject&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">add_error()</span></code> 的第二个参数可以是一个字符串，或者最好是 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 的一个实例。更多细节请参见 <a class="reference internal" href="#raising-validation-error"><span class="std std-ref">引发 ValidationError</span></a>。请注意，<code class="docutils literal notranslate"><span class="pre">add_error()</span></code> 会自动从 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 中删除该字段。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">表单和字段验证</a><ul>
+<li><a class="reference internal" href="#raising-validationerror">引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code></a><ul>
+<li><a class="reference internal" href="#raising-multiple-errors">引发多个错误</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-validation-in-practice">在实践中使用验证</a><ul>
+<li><a class="reference internal" href="#using-validators">使用验证器</a></li>
+<li><a class="reference internal" href="#form-field-default-cleaning">表单字段默认清理</a></li>
+<li><a class="reference internal" href="#cleaning-a-specific-field-attribute">清理一个特定的字段属性</a></li>
+<li><a class="reference internal" href="#cleaning-and-validating-fields-that-depend-on-each-other">清理和验证相互依赖的字段</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="widgets.html"
+                          title="上一章">部件</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../logging.html"
+                          title="下一章">日志</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/ref/forms/validation.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="widgets.html" title="部件">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="../logging.html" title="日志">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

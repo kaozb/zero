@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何编写自定义的查询器 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何编写一个自定义的模板后端" href="custom-template-backend.html" />
+    <link rel="prev" title="编写自定义模型字段" href="custom-model-fields.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="custom-model-fields.html" title="编写自定义模型字段">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="custom-template-backend.html" title="如何编写一个自定义的模板后端">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-custom-lookups">
+            
+  <div class="section" id="s-how-to-write-custom-lookups">
+<span id="how-to-write-custom-lookups"></span><h1>如何编写自定义的查询器<a class="headerlink" href="#how-to-write-custom-lookups" title="永久链接至标题">¶</a></h1>
+<p>Django 提供了各种各样的 <a class="reference internal" href="../ref/models/querysets.html#field-lookups"><span class="std std-ref">内置查询器</span></a> （例如， <code class="docutils literal notranslate"><span class="pre">exact</span></code> 和 <code class="docutils literal notranslate"><span class="pre">icontains</span></code> ）。本文档解释了如何编写自定义查询器以及如何更改已有查询器的工作方式。 有关 lookup 的 API 参考，请参阅 <a class="reference internal" href="../ref/models/lookups.html"><span class="doc">查找 API 参考</span></a>。</p>
+<div class="section" id="s-a-lookup-example">
+<span id="a-lookup-example"></span><h2>一个查询器示例。<a class="headerlink" href="#a-lookup-example" title="永久链接至标题">¶</a></h2>
+<p>让我们以一个小巧的自定义查询器为例。我们将书写一个名为 <code class="docutils literal notranslate"><span class="pre">ne</span></code> 的自定义查询器，它的效果与 <code class="docutils literal notranslate"><span class="pre">exact</span></code> 相反。语句 <code class="docutils literal notranslate"><span class="pre">Author.objects.filter(name__ne='Jack')</span></code>&nbsp; 将会翻译为下面的 SQL 语句：</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="ss">&quot;author&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">&#39;Jack&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>SQL 会自动适配不同的后端，所以我们不需要为使用不同的数据库而担心。</p>
+<p>要让它生效需要两个步骤，首先我们需要实现该查询器，然后我们需要告诉 Django 有关它的信息。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Lookup</span>
+
+
+<span class="k">class</span> <span class="nc">NotEqual</span><span class="p">(</span><span class="n">Lookup</span><span class="p">):</span>
+    <span class="n">lookup_name</span> <span class="o">=</span> <span class="s2">&quot;ne&quot;</span>
+
+    <span class="k">def</span> <span class="nf">as_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">):</span>
+        <span class="n">lhs</span><span class="p">,</span> <span class="n">lhs_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_lhs</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span>
+        <span class="n">rhs</span><span class="p">,</span> <span class="n">rhs_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_rhs</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">lhs_params</span> <span class="o">+</span> <span class="n">rhs_params</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> &lt;&gt; </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">),</span> <span class="n">params</span>
+</pre></div>
+</div>
+<p>为了注册  <code class="docutils literal notranslate"><span class="pre">NotEqual</span></code> 查询器，我们需要在对应需要该查询器的字段类中调用  <code class="docutils literal notranslate"><span class="pre">register_lookup</span></code> 方法。在该情形下，该查询器作用在所有的 <code class="docutils literal notranslate"><span class="pre">Field</span></code> 子类，所以我们直接将它注册在 <code class="docutils literal notranslate"><span class="pre">Field</span></code> 中:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Field</span>
+
+<span class="n">Field</span><span class="o">.</span><span class="n">register_lookup</span><span class="p">(</span><span class="n">NotEqual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>查询器注册也可以用修饰模式来完成:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Field</span>
+
+
+<span class="nd">@Field</span><span class="o">.</span><span class="n">register_lookup</span>
+<span class="k">class</span> <span class="nc">NotEqualLookup</span><span class="p">(</span><span class="n">Lookup</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>现在我们可以用 <code class="docutils literal notranslate"><span class="pre">foo__ne</span></code> 来代表 <code class="docutils literal notranslate"><span class="pre">foo</span></code> 的任意字段。你需要确保注册行为发生在创建任意的 queryset 之前。你可以在 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件内设置它，或者在 <code class="docutils literal notranslate"><span class="pre">AppConfig</span></code> 的 <code class="docutils literal notranslate"><span class="pre">ready()</span></code> 方法中注册它。</p>
+<p>仔细观察实现过程，第一个要求的属性是 <code class="docutils literal notranslate"><span class="pre">lookup_name</span></code>。它能让 ORM 理解如何编译 <code class="docutils literal notranslate"><span class="pre">name_ne</span></code> 并使用 <code class="docutils literal notranslate"><span class="pre">NotEqual</span></code> 来建立 SQL 语句。按照惯例，这些名字应该总是仅包含小写字母的字符串，但是绝对不能包含双下划线 <code class="docutils literal notranslate"><span class="pre">__</span></code>。</p>
+<p>之后我们需要定义 <code class="docutils literal notranslate"><span class="pre">as_sql</span></code> 方法。此方法需要一个 <code class="docutils literal notranslate"><span class="pre">SQLCompiler</span></code> 对象, 被叫做 <code class="docutils literal notranslate"><span class="pre">compiler</span></code>，和一个有效的数据库连接。<code class="docutils literal notranslate"><span class="pre">SQLCompller</span></code> 对象没有文档，我们只需要知道它有一个 <code class="docutils literal notranslate"><span class="pre">compile()</span></code> 方法可以返回一个包括 SQL 字符串的元组，和插入这个字符串的参数。大部分情况下，你不需要直接使用这个对象你可以把它传送给 <code class="docutils literal notranslate"><span class="pre">process_lhs()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">process_rhs()</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">Lookup</span></code> 工作依靠两个值，<code class="docutils literal notranslate"><span class="pre">lhs</span></code> 和 <code class="docutils literal notranslate"><span class="pre">rhs</span></code>，代表左右两边，左边是一个字段参考，它可以是任何实现了 <a class="reference internal" href="../ref/models/lookups.html#query-expression"><span class="std std-ref">查询表达式 API</span></a> 的实例。右边是一个用户给定的数值。举个例子： <code class="docutils literal notranslate"><span class="pre">Author.objects.filter(name__ne='Jack')</span></code>，左边是 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 模型的 <code class="docutils literal notranslate"><span class="pre">name</span></code> 字段，右边是 <code class="docutils literal notranslate"><span class="pre">'Jack'</span></code>。</p>
+<p>我们利用 <code class="docutils literal notranslate"><span class="pre">process_lhs</span></code> 和 <code class="docutils literal notranslate"><span class="pre">process_rhs</span></code> 将他们转换为我们期望值，用于之前介绍的 <code class="docutils literal notranslate"><span class="pre">compiler</span></code> 对象执行 SQL。这俩方法返回一个元组，包含一些 SQL 语句和插入 SQL 语句一些参数，就像是 <code class="docutils literal notranslate"><span class="pre">as_sql</span></code> 方法需要返回的。前文所述的例子中，<code class="docutils literal notranslate"><span class="pre">process_lhs</span></code> 返回 <code class="docutils literal notranslate"><span class="pre">('&quot;author&quot;.&quot;name&quot;',</span> <span class="pre">[])</span></code>，<code class="docutils literal notranslate"><span class="pre">process_lhs</span></code> 返回 <code class="docutils literal notranslate"><span class="pre">('&quot;%s&quot;',</span> <span class="pre">['Jack'])</span></code>。在这个例子里面没有手边的参数，这需要看情况而定，所以我们仍需要在返回结果时包括这些参数。</p>
+<p>最后，我们将这些部分组合成一个带有 <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> 的 SQL 表达式，并提供查询的所有参数。 然后我们返回一个包含生成的 SQL 字符串和参数的元组。</p>
+</div>
+<div class="section" id="s-a-transformer-example">
+<span id="a-transformer-example"></span><h2>一个转换器示例。<a class="headerlink" href="#a-transformer-example" title="永久链接至标题">¶</a></h2>
+<p>上面的自定义查询器没问题，但在某些情况下，您可能希望能够将一些查询器链接在一起。 例如，假设我们正在构建一个使用 <code class="docutils literal notranslate"><span class="pre">abs()</span></code> 运算的应用程序。我们有一个 <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> 模型，它记录起始值，结束值和差值（起始 - 结束）。 我们想找到 change 属性等于某个数值的所有 Experiment 对象(<code class="docutils literal notranslate"><span class="pre">Experiment.objects.filter(change__abs</span> <span class="pre">=</span> <span class="pre">27)</span></code>)，change属性没有超过一定数量的 Experiment 对象(<code class="docutils literal notranslate"><span class="pre">Experiment.objects.filter(change__abs__lt=</span> <span class="pre">27)</span></code>)。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">这个例子有点刻意，但它很好地演示了以数据库后端独立方式可能实现的功能范围，并且没有重复 Django 中的功能。</p>
+</div>
+<p>我们将从编写一个 <code class="docutils literal notranslate"><span class="pre">AbsoluteValue</span></code> 变换器开始。 这将使用 SQL 中的 <code class="docutils literal notranslate"><span class="pre">ABS()</span></code> 函数在比较进行之前转换值:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Transform</span>
+
+
+<span class="k">class</span> <span class="nc">AbsoluteValue</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+    <span class="n">lookup_name</span> <span class="o">=</span> <span class="s2">&quot;abs&quot;</span>
+    <span class="n">function</span> <span class="o">=</span> <span class="s2">&quot;ABS&quot;</span>
+</pre></div>
+</div>
+<p>下一步，让我们为其注册 <code class="docutils literal notranslate"><span class="pre">IntrgerField</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">IntegerField</span>
+
+<span class="n">IntegerField</span><span class="o">.</span><span class="n">register_lookup</span><span class="p">(</span><span class="n">AbsoluteValue</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>现在可以运行我们先前已有的查询了。<code class="docutils literal notranslate"><span class="pre">Experiment.objects.filter(change__abs=27)</span></code> 将生成下面的 SQL 语句:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">ABS</span><span class="p">(</span><span class="ss">&quot;experiments&quot;</span><span class="p">.</span><span class="ss">&quot;change&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">27</span><span class="w"></span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">Transform</span></code> 代替 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code> 意味着我们可以在后面联锁更多的查询，所以 <code class="docutils literal notranslate"><span class="pre">Experiment.objects.filter(change__abs__lt=27)</span></code> 将会生成下面的 SQL：</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">ABS</span><span class="p">(</span><span class="ss">&quot;experiments&quot;</span><span class="p">.</span><span class="ss">&quot;change&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">27</span><span class="w"></span>
+</pre></div>
+</div>
+<p>请注意，如果没有指定其他查找定义，Django则会将 <code class="docutils literal notranslate"><span class="pre">change__abs=27</span></code> 解析为 <code class="docutils literal notranslate"><span class="pre">change__abs__exact=27</span></code>。</p>
+<p>这也允许把结果用在 <code class="docutils literal notranslate"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 和 <code class="docutils literal notranslate"><span class="pre">DISTINCT</span> <span class="pre">ON</span></code> 子句中。例如 <code class="docutils literal notranslate"><span class="pre">Experiment.objects.order_by('change__abs')</span></code> 生成:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">ABS</span><span class="p">(</span><span class="ss">&quot;experiments&quot;</span><span class="p">.</span><span class="ss">&quot;change&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">ASC</span><span class="w"></span>
+</pre></div>
+</div>
+<p>并且在支持对字段使用 distinct 的数据库中（比如 PostgreSQL），<code class="docutils literal notranslate"><span class="pre">Experiment.objects.distinct('change__abs')</span></code> 会产生：</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="k">DISTINCT</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">ABS</span><span class="p">(</span><span class="ss">&quot;experiments&quot;</span><span class="p">.</span><span class="ss">&quot;change&quot;</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>当我们在应用 <code class="docutils literal notranslate"><span class="pre">Transform</span></code> 之后查找允许执行哪些查找时，Django 使用 <code class="docutils literal notranslate"><span class="pre">output_field</span></code> 属性。 我们不需要在这里指定它，因为它没有改变，但假设我们将 <code class="docutils literal notranslate"><span class="pre">AbsoluteValue</span></code> 应用于某个字段，该字段表示更复杂的类型（例如，相对于原点的点或复数） 那么我们可能想要指定转换返回一个 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 类型以进行进一步的查找。 这可以通过在变换中添加 <code class="docutils literal notranslate"><span class="pre">output_field</span></code> 属性来完成:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">FloatField</span><span class="p">,</span> <span class="n">Transform</span>
+
+
+<span class="k">class</span> <span class="nc">AbsoluteValue</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+    <span class="n">lookup_name</span> <span class="o">=</span> <span class="s2">&quot;abs&quot;</span>
+    <span class="n">function</span> <span class="o">=</span> <span class="s2">&quot;ABS&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FloatField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>这确保了像 <code class="docutils literal notranslate"><span class="pre">abs__lte</span></code> 这样的进一步查找与对 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 一致。</p>
+</div>
+<div class="section" id="s-writing-an-efficient-abs-lt-lookup">
+<span id="writing-an-efficient-abs-lt-lookup"></span><h2>编写一个高效的 <code class="docutils literal notranslate"><span class="pre">abs__lt</span></code> 查找<a class="headerlink" href="#writing-an-efficient-abs-lt-lookup" title="永久链接至标题">¶</a></h2>
+<p>当使用上面写的 <code class="docutils literal notranslate"><span class="pre">abs</span></code> 查找时，生成的 SQL 在某些情况下不会有效地使用索引。 特别是，当我们使用 <code class="docutils literal notranslate"><span class="pre">change__abs__lt=27</span></code> 时，这相当于 <code class="docutils literal notranslate"><span class="pre">change__gt=-27</span></code> 和 <code class="docutils literal notranslate"><span class="pre">change__lt=27</span></code>。（对于 <code class="docutils literal notranslate"><span class="pre">lte</span></code> 情况，我们可以使用 SQL <code class="docutils literal notranslate"><span class="pre">BETWEEN</span></code>）。</p>
+<p>所以我们期望 <code class="docutils literal notranslate"><span class="pre">Experiment.objects.filter(change__abs__lt=27)</span></code>&nbsp; 会生成下列 SQL 语句</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="p">..</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="ss">&quot;experiments&quot;</span><span class="p">.</span><span class="ss">&quot;change&quot;</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">27</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="ss">&quot;experiments&quot;</span><span class="p">.</span><span class="ss">&quot;change&quot;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">-</span><span class="mi">27</span><span class="w"></span>
+</pre></div>
+</div>
+<p>实现方式是:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Lookup</span>
+
+
+<span class="k">class</span> <span class="nc">AbsoluteValueLessThan</span><span class="p">(</span><span class="n">Lookup</span><span class="p">):</span>
+    <span class="n">lookup_name</span> <span class="o">=</span> <span class="s2">&quot;lt&quot;</span>
+
+    <span class="k">def</span> <span class="nf">as_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">):</span>
+        <span class="n">lhs</span><span class="p">,</span> <span class="n">lhs_params</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span>
+        <span class="n">rhs</span><span class="p">,</span> <span class="n">rhs_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_rhs</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">lhs_params</span> <span class="o">+</span> <span class="n">rhs_params</span> <span class="o">+</span> <span class="n">lhs_params</span> <span class="o">+</span> <span class="n">rhs_params</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> &lt; </span><span class="si">%s</span><span class="s2"> AND </span><span class="si">%s</span><span class="s2"> &gt; -</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">),</span> <span class="n">params</span>
+
+
+<span class="n">AbsoluteValue</span><span class="o">.</span><span class="n">register_lookup</span><span class="p">(</span><span class="n">AbsoluteValueLessThan</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这里有几件值得注意的事情。首先，<code class="docutils literal notranslate"><span class="pre">AbsoluteValueLessThan</span></code> 没有调用 <code class="docutils literal notranslate"><span class="pre">process_lhs()</span></code>。 相反，它会跳过由 <code class="docutils literal notranslate"><span class="pre">AbsoluteValue</span></code> 完成的 <code class="docutils literal notranslate"><span class="pre">lhs</span></code> 的转换，并使用原始的 <code class="docutils literal notranslate"><span class="pre">lhs</span></code>。也就是说，我们希望得到 <code class="docutils literal notranslate"><span class="pre">&quot;experiments&quot;.&quot;change&quot;</span></code>，而不是 <code class="docutils literal notranslate"><span class="pre">ABS(&quot;experiments&quot;.&quot;change&quot;)</span></code> 。直接引用 <code class="docutils literal notranslate"><span class="pre">self.lhs.lhs</span></code> 是安全的，因为 <code class="docutils literal notranslate"><span class="pre">AbsoluteValueLessThan</span></code> 只能从 <code class="docutils literal notranslate"><span class="pre">AbsoluteValue</span></code> lookup 访问，即 <code class="docutils literal notranslate"><span class="pre">lhs</span></code> 总是 <code class="docutils literal notranslate"><span class="pre">AbsoluteValue</span></code> 的实例。</p>
+<p>另请注意，由于在查询中多次使用两边，所以需要多次包含 <code class="docutils literal notranslate"><span class="pre">lhs_params</span></code> 和 <code class="docutils literal notranslate"><span class="pre">rhs_params</span></code> 参数。</p>
+<p>最后的查询直接在数据库中进行反转（ 27 到 -27 ）。 这样做的原因是，如果 <code class="docutils literal notranslate"><span class="pre">self.rhs</span></code> 不是普通的整数值（例如 F() 引用），我们就不能在 Python 中进行转换。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">实际上，大多数的利用 <code class="docutils literal notranslate"><span class="pre">__abs</span></code> 的查找都可以被转换为类似此的范围查找，且在大多数数据库后端来说，这样做能更好的利用索引。不过，对于 PostgreSQL，你可能会为 <code class="docutils literal notranslate"><span class="pre">abs(change)</span></code> 添加索引，这会使查找更加高效。</p>
+</div>
+</div>
+<div class="section" id="s-a-bilateral-transformer-example">
+<span id="a-bilateral-transformer-example"></span><h2>一个双向转换器示例<a class="headerlink" href="#a-bilateral-transformer-example" title="永久链接至标题">¶</a></h2>
+<p>前文所述的 <code class="docutils literal notranslate"><span class="pre">AbsoluteValue</span></code> 例子实现了左侧查询。在某些场景下，你期望转换器同时作用于左侧和右侧。例如，如果你想在左侧基于等式进行过滤，而右侧对于某些 SQL 函数不敏感。</p>
+<p>让我们在此测试这个大小写转换器。实际上这个转换器不是非常实用，因为 Django 已经内置了一系列大小写敏感相关的查询器，但它将是双向转换的一个很好的演示，且通过与数据库无关的方式来演示。</p>
+<p>我们定义了一个 <code class="docutils literal notranslate"><span class="pre">UpperCase</span></code> 转换器，使用了 SQL 函数 <code class="docutils literal notranslate"><span class="pre">UPPER()</span></code>，在比较之前转换值。我们定义了:attr:bilateral = True &lt;django.db.models.Transform.bilateral&gt; 指明此转换应同时用于 <code class="docutils literal notranslate"><span class="pre">lhs</span></code> 和 <code class="docutils literal notranslate"><span class="pre">rhs</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Transform</span>
+
+
+<span class="k">class</span> <span class="nc">UpperCase</span><span class="p">(</span><span class="n">Transform</span><span class="p">):</span>
+    <span class="n">lookup_name</span> <span class="o">=</span> <span class="s2">&quot;upper&quot;</span>
+    <span class="n">function</span> <span class="o">=</span> <span class="s2">&quot;UPPER&quot;</span>
+    <span class="n">bilateral</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>下一步, 让我们注册它:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">CharField</span><span class="p">,</span> <span class="n">TextField</span>
+
+<span class="n">CharField</span><span class="o">.</span><span class="n">register_lookup</span><span class="p">(</span><span class="n">UpperCase</span><span class="p">)</span>
+<span class="n">TextField</span><span class="o">.</span><span class="n">register_lookup</span><span class="p">(</span><span class="n">UpperCase</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>现在， <code class="docutils literal notranslate"><span class="pre">Author.objects.filter(name__upper=&quot;doe&quot;)</span></code> 将会产生一个不区分大小写的查询如下：</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="k">UPPER</span><span class="p">(</span><span class="ss">&quot;author&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">UPPER</span><span class="p">(</span><span class="s1">&#39;doe&#39;</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-writing-alternative-implementations-for-existing-lookups">
+<span id="writing-alternative-implementations-for-existing-lookups"></span><h2>为现有的查找编写代替实现<a class="headerlink" href="#writing-alternative-implementations-for-existing-lookups" title="永久链接至标题">¶</a></h2>
+<p>有时候，不同的数据库提供商对相同的操作要求不同的 SQL 语句。针对此例子，我们会为 MySQL 重写 NotEqual 操作符。使用 <code class="docutils literal notranslate"><span class="pre">!=</span></code> 操作符替代 <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code>。（注意，实际上几乎所有的数据两者都支持，包括 Django 支持的所有正式数据库）。</p>
+<p>我们可以通过使用 <code class="docutils literal notranslate"><span class="pre">as_mysql</span></code> 方法创建 <code class="docutils literal notranslate"><span class="pre">NotEqual</span></code> 的子类来更改特定后端的行为:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MySQLNotEqual</span><span class="p">(</span><span class="n">NotEqual</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">as_mysql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_context</span><span class="p">):</span>
+        <span class="n">lhs</span><span class="p">,</span> <span class="n">lhs_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_lhs</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span>
+        <span class="n">rhs</span><span class="p">,</span> <span class="n">rhs_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_rhs</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">lhs_params</span> <span class="o">+</span> <span class="n">rhs_params</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> != </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">),</span> <span class="n">params</span>
+
+
+<span class="n">Field</span><span class="o">.</span><span class="n">register_lookup</span><span class="p">(</span><span class="n">MySQLNotEqual</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>接着，我们可以里利用 <code class="docutils literal notranslate"><span class="pre">Field</span></code> 注册它。它会替换之前的 <code class="docutils literal notranslate"><span class="pre">NotEqual</span></code> 类，因为拥有相同的 <code class="docutils literal notranslate"><span class="pre">lookup_name</span></code>。</p>
+<p>编译查询指令是，Django 先查找 <code class="docutils literal notranslate"><span class="pre">as_%s</span> <span class="pre">%</span> <span class="pre">connection.vendor</span></code> 方法，其次 <code class="docutils literal notranslate"><span class="pre">as_sql</span></code>。内置后端的提供商名为 <code class="docutils literal notranslate"><span class="pre">sqlite</span></code>，<code class="docutils literal notranslate"><span class="pre">postgresql</span></code>，<code class="docutils literal notranslate"><span class="pre">oracle</span></code> 和 <code class="docutils literal notranslate"><span class="pre">mysql</span></code>。</p>
+</div>
+<div class="section" id="s-how-django-determines-the-lookups-and-transforms-which-are-used">
+<span id="how-django-determines-the-lookups-and-transforms-which-are-used"></span><h2>Django 是如何取舍查询器和转换器的<a class="headerlink" href="#how-django-determines-the-lookups-and-transforms-which-are-used" title="永久链接至标题">¶</a></h2>
+<p>某些场景下，你可能期望基于传入的名字动态地返回 <code class="docutils literal notranslate"><span class="pre">Transform</span></code> 或 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code>，而不是指定。例如，有一个字段，存储了一些坐标或尺寸，期望使用以下语法 <code class="docutils literal notranslate"><span class="pre">.filter(coords__x7=4)</span></code> 返回第七个值为 4 的坐标。为此，你需要用以下内容重写 <code class="docutils literal notranslate"><span class="pre">get_lookup</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CoordinatesField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lookup_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">lookup_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dimension</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookup_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">get_coordinate_lookup</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_lookup</span><span class="p">(</span><span class="n">lookup_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>随后你需要定义 <code class="docutils literal notranslate"><span class="pre">get_coordinate_lookup</span></code> 正确地返回一个 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code> 子类，用于处理 <code class="docutils literal notranslate"><span class="pre">dimension</span></code> 的相关值。</p>
+<p>有个类似的名字叫做 <code class="docutils literal notranslate"><span class="pre">get_transform()</span></code>。<code class="docutils literal notranslate"><span class="pre">get_lookup()</span></code> 总是要返回 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code> 子类，而 <code class="docutils literal notranslate"><span class="pre">get_transform</span></code> 要返回 <code class="docutils literal notranslate"><span class="pre">Transform</span></code> 子类。千万牢记，<code class="docutils literal notranslate"><span class="pre">Transform</span></code> 对象能被进一步过滤，而 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code> 对象不能。</p>
+<p>过滤时，若只能找到一个名字，我们会查找 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code>。如果有多个名字，将会寻找 <code class="docutils literal notranslate"><span class="pre">Transform</span></code>。在某种情况下，仅有一个名字，且未找到 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code>，我们将查找 <code class="docutils literal notranslate"><span class="pre">Transform</span></code>，并附加 <code class="docutils literal notranslate"><span class="pre">exact</span></code> 查询器。所以的系列调用都以一个 <code class="docutils literal notranslate"><span class="pre">Lookup</span></code> 结束。简单说明：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">.filter(myfield__mylookup)</span></code> 将会调用 <code class="docutils literal notranslate"><span class="pre">myfield.get_lookup('mylookup')</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">.filter(myfield__mytransform__mylookup)</span></code> 将会调用 <code class="docutils literal notranslate"><span class="pre">myfield.get_transform('mytransform')</span></code>, 接着调用 <code class="docutils literal notranslate"><span class="pre">mytransform.get_lookup('mylookup')</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">.filter(myfield__mytransform)</span></code> 会先调用 <code class="docutils literal notranslate"><span class="pre">myfield.get_lookup('mytransform')</span></code>，失败，然后回滚调用 <code class="docutils literal notranslate"><span class="pre">myfield.get_transform('mytransform')</span></code>，随后返回 <code class="docutils literal notranslate"><span class="pre">mytransform.get_lookup('exact')</span></code>。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何编写自定义的查询器</a><ul>
+<li><a class="reference internal" href="#a-lookup-example">一个查询器示例。</a></li>
+<li><a class="reference internal" href="#a-transformer-example">一个转换器示例。</a></li>
+<li><a class="reference internal" href="#writing-an-efficient-abs-lt-lookup">编写一个高效的 <code class="docutils literal notranslate"><span class="pre">abs__lt</span></code> 查找</a></li>
+<li><a class="reference internal" href="#a-bilateral-transformer-example">一个双向转换器示例</a></li>
+<li><a class="reference internal" href="#writing-alternative-implementations-for-existing-lookups">为现有的查找编写代替实现</a></li>
+<li><a class="reference internal" href="#how-django-determines-the-lookups-and-transforms-which-are-used">Django 是如何取舍查询器和转换器的</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="custom-model-fields.html"
+                          title="上一章">编写自定义模型字段</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="custom-template-backend.html"
+                          title="下一章">如何编写一个自定义的模板后端</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/howto/custom-lookups.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="custom-model-fields.html" title="编写自定义模型字段">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="custom-template-backend.html" title="如何编写一个自定义的模板后端">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

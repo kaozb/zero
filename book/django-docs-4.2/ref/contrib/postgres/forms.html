@@ -1,0 +1,400 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PostgreSQL 特有表单字段和部件 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../static/documentation_options.js"></script>
+    <script src="../../../static/jquery.js"></script>
+    <script src="../../../static/underscore.js"></script>
+    <script src="../../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="PostgreSQL 特有数据库函数" href="functions.html" />
+    <link rel="prev" title="PostgreSQL 特有模型字段" href="fields.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="fields.html" title="PostgreSQL 特有模型字段">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="functions.html" title="PostgreSQL 特有数据库函数">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-postgres-forms">
+            
+  <div class="section" id="s-postgresql-specific-form-fields-and-widgets">
+<span id="postgresql-specific-form-fields-and-widgets"></span><h1>PostgreSQL 特有表单字段和部件<a class="headerlink" href="#postgresql-specific-form-fields-and-widgets" title="永久链接至标题">¶</a></h1>
+<p>所有这些字段和部件都可以从 <code class="docutils literal notranslate"><span class="pre">django.contrib.postgres.forms</span></code> 模块中获得。</p>
+<div class="section" id="s-fields">
+<span id="fields"></span><h2>字段<a class="headerlink" href="#fields" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-simplearrayfield">
+<span id="simplearrayfield"></span><h3><code class="docutils literal notranslate"><span class="pre">SimpleArrayField</span></code><a class="headerlink" href="#simplearrayfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SimpleArrayField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SimpleArrayField</span></code>(<em><span class="n"><span class="pre">base_field</span></span></em>, <em><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">','</span></span></em>, <em><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.forms.SimpleArrayField" title="永久链接至目标">¶</a></dt>
+<dd><p>一个映射到数组的字段。它由一个 HTML <code class="docutils literal notranslate"><span class="pre">&lt;input&gt;</span></code> 表示。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SimpleArrayField.base_field">
+<code class="sig-name descname"><span class="pre">base_field</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SimpleArrayField.base_field" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个必要的参数。</p>
+<p>It specifies the underlying form field for the array. This is not used
+to render any HTML, but it is used to process the submitted data and
+validate it. For example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.postgres.forms</span> <span class="kn">import</span> <span class="n">SimpleArrayField</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">NumberListForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">numbers</span> <span class="o">=</span> <span class="n">SimpleArrayField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">())</span>
+<span class="gp">...</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span> <span class="o">=</span> <span class="n">NumberListForm</span><span class="p">({</span><span class="s2">&quot;numbers&quot;</span><span class="p">:</span> <span class="s2">&quot;1,2,3&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span>
+<span class="go">{&#39;numbers&#39;: [1, 2, 3]}</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span> <span class="o">=</span> <span class="n">NumberListForm</span><span class="p">({</span><span class="s2">&quot;numbers&quot;</span><span class="p">:</span> <span class="s2">&quot;1,2,a&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SimpleArrayField.delimiter">
+<code class="sig-name descname"><span class="pre">delimiter</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SimpleArrayField.delimiter" title="永久链接至目标">¶</a></dt>
+<dd><p>This is an optional argument which defaults to a comma: <code class="docutils literal notranslate"><span class="pre">,</span></code>. This
+value is used to split the submitted data. It allows you to chain
+<code class="docutils literal notranslate"><span class="pre">SimpleArrayField</span></code> for multidimensional data:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.postgres.forms</span> <span class="kn">import</span> <span class="n">SimpleArrayField</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">GridForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">places</span> <span class="o">=</span> <span class="n">SimpleArrayField</span><span class="p">(</span><span class="n">SimpleArrayField</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">()),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span> <span class="o">=</span> <span class="n">GridForm</span><span class="p">({</span><span class="s2">&quot;places&quot;</span><span class="p">:</span> <span class="s2">&quot;1,2|2,1|4,3&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span>
+<span class="go">{&#39;places&#39;: [[1, 2], [2, 1], [4, 3]]}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">该字段不支持定界符的转义，所以当定界符是底层字段中的有效字符时，要小心。定界符不需要只用一个字符。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SimpleArrayField.max_length">
+<code class="sig-name descname"><span class="pre">max_length</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SimpleArrayField.max_length" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个可选的参数，用于验证数组的长度是否超过了规定的长度。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SimpleArrayField.min_length">
+<code class="sig-name descname"><span class="pre">min_length</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SimpleArrayField.min_length" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个可选的参数，用于验证数组是否至少达到了指定的长度。</p>
+</dd></dl>
+
+<div class="admonition-user-friendly-forms admonition">
+<p class="first admonition-title">用户友好的表单</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">SimpleArrayField</span></code> 在大多数情况下并不是特别方便用户使用，但是它是一种有用的方式来格式化来自客户端部件的数据以提交给服务器。</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-splitarrayfield">
+<span id="splitarrayfield"></span><h3><code class="docutils literal notranslate"><span class="pre">SplitArrayField</span></code><a class="headerlink" href="#splitarrayfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SplitArrayField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SplitArrayField</span></code>(<em><span class="n"><span class="pre">base_field</span></span></em>, <em><span class="n"><span class="pre">size</span></span></em>, <em><span class="n"><span class="pre">remove_trailing_nulls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.forms.SplitArrayField" title="永久链接至目标">¶</a></dt>
+<dd><p>这个字段通过重现底层字段固定的次数来处理数组。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SplitArrayField.base_field">
+<code class="sig-name descname"><span class="pre">base_field</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SplitArrayField.base_field" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个必要的参数。它指定了要重复的表单字段。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SplitArrayField.size">
+<code class="sig-name descname"><span class="pre">size</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SplitArrayField.size" title="永久链接至目标">¶</a></dt>
+<dd><p>这是基础字段的固定使用次数。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.SplitArrayField.remove_trailing_nulls">
+<code class="sig-name descname"><span class="pre">remove_trailing_nulls</span></code><a class="headerlink" href="#django.contrib.postgres.forms.SplitArrayField.remove_trailing_nulls" title="永久链接至目标">¶</a></dt>
+<dd><p>默认情况下，这被设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>。当 <code class="docutils literal notranslate"><span class="pre">False</span></code> 时，重复字段的每个值都会被存储。当设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，任何尾部为空白的值将从结果中删除。如果底层字段有 <code class="docutils literal notranslate"><span class="pre">required=True</span></code>，但 <code class="docutils literal notranslate"><span class="pre">remove_trailing_nulls</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，那么只有在最后才允许有空值，并且空值会被消除。</p>
+<p>一些例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SplitArrayField</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">remove_trailing_nulls</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2, 3]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; ValidationError - third entry required.</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; ValidationError - second entry required.</span>
+<span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; ValidationError - first and third entries required.</span>
+
+<span class="n">SplitArrayField</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">remove_trailing_nulls</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2, 3]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2, None]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, None, 3]</span>
+<span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [None, 2, None]</span>
+
+<span class="n">SplitArrayField</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">remove_trailing_nulls</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2, 3]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; ValidationError - second entry required.</span>
+<span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; ValidationError - first entry required.</span>
+
+<span class="n">SplitArrayField</span><span class="p">(</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">remove_trailing_nulls</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2, 3]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, 2]</span>
+<span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [1, None, 3]</span>
+<span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># -&gt; [None, 2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-hstorefield">
+<span id="hstorefield"></span><h3><code class="docutils literal notranslate"><span class="pre">HStoreField</span></code><a class="headerlink" href="#hstorefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.HStoreField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">HStoreField</span></code><a class="headerlink" href="#django.contrib.postgres.forms.HStoreField" title="永久链接至目标">¶</a></dt>
+<dd><p>一个为 <a class="reference internal" href="fields.html#django.contrib.postgres.fields.HStoreField" title="django.contrib.postgres.fields.HStoreField"><code class="xref py py-class docutils literal notranslate"><span class="pre">HStoreField</span></code></a> 接受 JSON 编码数据的字段。它将所有的值（除了空值）转换为字符串。它由一个 HTML <code class="docutils literal notranslate"><span class="pre">&lt;textarea&gt;</span></code> 表示。</p>
+<div class="admonition-user-friendly-forms admonition">
+<p class="first admonition-title">用户友好的表单</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">HStoreField</span></code> 在大多数情况下对用户不是特别友好，但是它是一种有用的方式来格式化来自客户端部件的数据以提交给服务器。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在某些情况下，可能需要要求或限制对某个字段有效的键。这可以使用 <a class="reference internal" href="validators.html#django.contrib.postgres.validators.KeysValidator" title="django.contrib.postgres.validators.KeysValidator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KeysValidator</span></code></a> 来完成。</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-range-fields">
+<span id="range-fields"></span><h3>范围字段<a class="headerlink" href="#range-fields" title="永久链接至标题">¶</a></h3>
+<p>这组字段在接受范围数据方面都有类似的功能。它们基于 <a class="reference internal" href="../../forms/fields.html#django.forms.MultiValueField" title="django.forms.MultiValueField"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiValueField</span></code></a>。它们将一个省略的值视为一个无边界的范围。它们还验证了下限不大于上限。所有这些字段都使用 <a class="reference internal" href="#django.contrib.postgres.forms.RangeWidget" title="django.contrib.postgres.forms.RangeWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangeWidget</span></code></a>。</p>
+<div class="section" id="s-integerrangefield">
+<span id="integerrangefield"></span><h4><code class="docutils literal notranslate"><span class="pre">IntegerRangeField</span></code><a class="headerlink" href="#integerrangefield" title="永久链接至标题">¶</a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.IntegerRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">IntegerRangeField</span></code><a class="headerlink" href="#django.contrib.postgres.forms.IntegerRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>Based on <a class="reference internal" href="../../forms/fields.html#django.forms.IntegerField" title="django.forms.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a> and translates its input into
+<code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.NumericRange</span></code>. Default for
+<a class="reference internal" href="fields.html#django.contrib.postgres.fields.IntegerRangeField" title="django.contrib.postgres.fields.IntegerRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerRangeField</span></code></a> and
+<a class="reference internal" href="fields.html#django.contrib.postgres.fields.BigIntegerRangeField" title="django.contrib.postgres.fields.BigIntegerRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BigIntegerRangeField</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-decimalrangefield">
+<span id="decimalrangefield"></span><h4><code class="docutils literal notranslate"><span class="pre">DecimalRangeField</span></code><a class="headerlink" href="#decimalrangefield" title="永久链接至标题">¶</a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.DecimalRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DecimalRangeField</span></code><a class="headerlink" href="#django.contrib.postgres.forms.DecimalRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>Based on <a class="reference internal" href="../../forms/fields.html#django.forms.DecimalField" title="django.forms.DecimalField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecimalField</span></code></a> and translates its input into
+<code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.NumericRange</span></code>. Default for
+<a class="reference internal" href="fields.html#django.contrib.postgres.fields.DecimalRangeField" title="django.contrib.postgres.fields.DecimalRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecimalRangeField</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-datetimerangefield">
+<span id="datetimerangefield"></span><h4><code class="docutils literal notranslate"><span class="pre">DateTimeRangeField</span></code><a class="headerlink" href="#datetimerangefield" title="永久链接至标题">¶</a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.DateTimeRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DateTimeRangeField</span></code><a class="headerlink" href="#django.contrib.postgres.forms.DateTimeRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>Based on <a class="reference internal" href="../../forms/fields.html#django.forms.DateTimeField" title="django.forms.DateTimeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeField</span></code></a> and translates its input into
+<code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.DateTimeTZRange</span></code>. Default for
+<a class="reference internal" href="fields.html#django.contrib.postgres.fields.DateTimeRangeField" title="django.contrib.postgres.fields.DateTimeRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeRangeField</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-daterangefield">
+<span id="daterangefield"></span><h4><code class="docutils literal notranslate"><span class="pre">DateRangeField</span></code><a class="headerlink" href="#daterangefield" title="永久链接至标题">¶</a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.DateRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DateRangeField</span></code><a class="headerlink" href="#django.contrib.postgres.forms.DateRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>Based on <a class="reference internal" href="../../forms/fields.html#django.forms.DateField" title="django.forms.DateField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateField</span></code></a> and translates its input into
+<code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.DateRange</span></code>. Default for
+<a class="reference internal" href="fields.html#django.contrib.postgres.fields.DateRangeField" title="django.contrib.postgres.fields.DateRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateRangeField</span></code></a>.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="s-widgets">
+<span id="widgets"></span><h2>部件<a class="headerlink" href="#widgets" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-rangewidget">
+<span id="rangewidget"></span><h3><code class="docutils literal notranslate"><span class="pre">RangeWidget</span></code><a class="headerlink" href="#rangewidget" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.RangeWidget">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RangeWidget</span></code>(<em><span class="n"><span class="pre">base_widget</span></span></em>, <em><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.forms.RangeWidget" title="永久链接至目标">¶</a></dt>
+<dd><p>所有范围字段都使用的部件。基于 <a class="reference internal" href="../../forms/widgets.html#django.forms.MultiWidget" title="django.forms.MultiWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiWidget</span></code></a>。</p>
+<p><a class="reference internal" href="#django.contrib.postgres.forms.RangeWidget" title="django.contrib.postgres.forms.RangeWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangeWidget</span></code></a> 有一个必要的参数：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.RangeWidget.base_widget">
+<code class="sig-name descname"><span class="pre">base_widget</span></code><a class="headerlink" href="#django.contrib.postgres.forms.RangeWidget.base_widget" title="永久链接至目标">¶</a></dt>
+<dd><p>一个 <a class="reference internal" href="#django.contrib.postgres.forms.RangeWidget" title="django.contrib.postgres.forms.RangeWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangeWidget</span></code></a> 由 <code class="docutils literal notranslate"><span class="pre">base_widget</span></code> 的二元元组组成。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.postgres.forms.RangeWidget.decompress">
+<code class="sig-name descname"><span class="pre">decompress</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.forms.RangeWidget.decompress" title="永久链接至目标">¶</a></dt>
+<dd><p>取一个字段的单个“压缩”值，例如一个 <a class="reference internal" href="fields.html#django.contrib.postgres.fields.DateRangeField" title="django.contrib.postgres.fields.DateRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateRangeField</span></code></a>，并返回一个元组，代表一个下界和上界。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">PostgreSQL 特有表单字段和部件</a><ul>
+<li><a class="reference internal" href="#fields">字段</a><ul>
+<li><a class="reference internal" href="#simplearrayfield"><code class="docutils literal notranslate"><span class="pre">SimpleArrayField</span></code></a></li>
+<li><a class="reference internal" href="#splitarrayfield"><code class="docutils literal notranslate"><span class="pre">SplitArrayField</span></code></a></li>
+<li><a class="reference internal" href="#hstorefield"><code class="docutils literal notranslate"><span class="pre">HStoreField</span></code></a></li>
+<li><a class="reference internal" href="#range-fields">范围字段</a><ul>
+<li><a class="reference internal" href="#integerrangefield"><code class="docutils literal notranslate"><span class="pre">IntegerRangeField</span></code></a></li>
+<li><a class="reference internal" href="#decimalrangefield"><code class="docutils literal notranslate"><span class="pre">DecimalRangeField</span></code></a></li>
+<li><a class="reference internal" href="#datetimerangefield"><code class="docutils literal notranslate"><span class="pre">DateTimeRangeField</span></code></a></li>
+<li><a class="reference internal" href="#daterangefield"><code class="docutils literal notranslate"><span class="pre">DateRangeField</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#widgets">部件</a><ul>
+<li><a class="reference internal" href="#rangewidget"><code class="docutils literal notranslate"><span class="pre">RangeWidget</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="fields.html"
+                          title="上一章">PostgreSQL 特有模型字段</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="functions.html"
+                          title="下一章">PostgreSQL 特有数据库函数</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../sources/ref/contrib/postgres/forms.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="fields.html" title="PostgreSQL 特有模型字段">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="functions.html" title="PostgreSQL 特有数据库函数">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1186 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>模型 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="执行查询" href="queries.html" />
+    <link rel="prev" title="模型和数据库" href="index.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="index.html" title="模型和数据库">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="queries.html" title="执行查询">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-models">
+            
+  <div class="section" id="s-module-django.db.models">
+<span id="s-models"></span><span id="module-django.db.models"></span><span id="models"></span><h1>模型<a class="headerlink" href="#module-django.db.models" title="永久链接至标题">¶</a></h1>
+<p>模型准确且唯一的描述了数据。它包含您储存的数据的重要字段和行为。一般来说，每一个模型都映射一张数据库表。</p>
+<p>基础：</p>
+<ul class="simple">
+<li>每个模型都是一个 Python 的类，这些类继承 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model" title="django.db.models.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.Model</span></code></a></li>
+<li>模型类的每个属性都相当于一个数据库的字段。</li>
+<li>利用这些，Django 提供了一个自动生成访问数据库的 API；请参阅 <a class="reference internal" href="queries.html"><span class="doc">执行查询</span></a>。</li>
+</ul>
+<div class="section" id="s-quick-example">
+<span id="quick-example"></span><h2>快速上手<a class="headerlink" href="#quick-example" title="永久链接至标题">¶</a></h2>
+<p>这个样例定义了一个 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 模型，拥有 <code class="docutils literal notranslate"><span class="pre">first_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">last_name</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">first_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">last_name</span></code> 是模型的 <a class="reference internal" href="#fields">字段</a>。每个字段都被指定为一个类属性，并且每个属性映射为一个数据库列。</p>
+<p>上面的 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 模型会创建一个如下的数据库表：</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">myapp_person</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;id&quot;</span><span class="w"> </span><span class="nb">bigint</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="k">GENERATED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">IDENTITY</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;first_name&quot;</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;last_name&quot;</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"></span>
+<span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>一些技术上的说明：</p>
+<ul class="simple">
+<li>该表的名称 <code class="docutils literal notranslate"><span class="pre">myapp_person</span></code> 是自动从某些模型元数据中派生出来，但可以被改写。参阅 <a class="reference internal" href="../../ref/models/options.html#table-names"><span class="std std-ref">表名称</span></a> 获取更多信息。</li>
+<li>一个 <code class="docutils literal notranslate"><span class="pre">id</span></code> 字段会被自动添加，但是这种行为可以被改写。请参阅 <a class="reference internal" href="#automatic-primary-key-fields"><span class="std std-ref">自动设置主键</span></a>。</li>
+<li>本例子中 <code class="docutils literal notranslate"><span class="pre">创建数据表</span></code> 的语法是 PostgreSQL 格式的。值得注意的是，Django 依据你在 <a class="reference internal" href="../settings.html"><span class="doc">配置文件</span></a> 中指定的数据库后端生成对应的 SQL 语句。</li>
+</ul>
+</div>
+<div class="section" id="s-using-models">
+<span id="using-models"></span><h2>使用模型<a class="headerlink" href="#using-models" title="永久链接至标题">¶</a></h2>
+<p>一旦你定义了你的模型，你需要告诉 Django 你准备 <em>使用</em> 这些模型。你需要修改设置文件中的 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> ，在这个设置中添加包含  <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件的模块名称。</p>
+<p>例如，若模型位于项目中的 <code class="docutils literal notranslate"><span class="pre">myapp.models</span></code> 模块（ 此包结构由 <a class="reference internal" href="../../ref/django-admin.html#django-admin-startapp"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">startapp</span></code></a> 命令创建）， <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 应设置如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;myapp&quot;</span><span class="p">,</span>
+    <span class="c1"># ...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>当你向 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 添加新的应用的时候，请务必运行 <a class="reference internal" href="../../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code></a>，此外你也可以先使用以下命令进行迁移 <a class="reference internal" href="../../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">makemigrations</span></code></a>。</p>
+</div>
+<div class="section" id="s-fields">
+<span id="fields"></span><h2>字段<a class="headerlink" href="#fields" title="永久链接至标题">¶</a></h2>
+<p>模型中最重要且唯一必要的是数据库的字段定义。字段在类属性中定义。定义字段名时应小心避免使用与 <a class="reference internal" href="../../ref/models/instances.html"><span class="doc">模型 API</span></a> 冲突的名称， 如 <code class="docutils literal notranslate"><span class="pre">clean</span></code>, <code class="docutils literal notranslate"><span class="pre">save</span></code>, or <code class="docutils literal notranslate"><span class="pre">delete</span></code> 等.</p>
+<p>举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Musician</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">instrument</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Album</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">artist</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Musician</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">release_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">num_stars</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="s-field-types">
+<span id="field-types"></span><h3>字段类型<a class="headerlink" href="#field-types" title="永久链接至标题">¶</a></h3>
+<p>模型中每一个字段都应该是某个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field" title="django.db.models.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a> 类的实例， Django 利用这些字段类来实现以下功能：</p>
+<ul class="simple">
+<li>字段类型用以指定数据库数据类型（如：<code class="docutils literal notranslate"><span class="pre">INTEGER</span></code>, <code class="docutils literal notranslate"><span class="pre">VARCHAR</span></code>, <code class="docutils literal notranslate"><span class="pre">TEXT</span></code>）。</li>
+<li>在渲染表单字段时默认使用的 HTML <a class="reference internal" href="../../ref/forms/widgets.html"><span class="doc">视图</span></a>  (如： <code class="docutils literal notranslate"><span class="pre">&lt;input</span> <span class="pre">type=&quot;text&quot;&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;select&gt;</span></code>)。</li>
+<li>基本的有效性验证功能，用于 Django 后台和自动生成的表单。</li>
+</ul>
+<p>Django 内置了数十种字段类型；你可以在 <a class="reference internal" href="../../ref/models/fields.html#model-field-types"><span class="std std-ref">模型字段参考</span></a> 中看到完整列表。如果 Django 内置类型不能满足你的需求，你可以很轻松地编写自定义的字段类型；参见 <a class="reference internal" href="../../howto/custom-model-fields.html"><span class="doc">编写自定义模型字段</span></a>。</p>
+</div>
+<div class="section" id="s-field-options">
+<span id="field-options"></span><h3>字段选项<a class="headerlink" href="#field-options" title="永久链接至标题">¶</a></h3>
+<p>每一种字段都需要指定一些特定的参数（参考 <a class="reference internal" href="../../ref/models/fields.html#model-field-types"><span class="std std-ref">模型字段</span></a> ）。 例如， <a class="reference internal" href="../../ref/models/fields.html#django.db.models.CharField" title="django.db.models.CharField"><code class="xref py py-class docutils literal notranslate"><span class="pre">CharField</span></code></a> （以及它的子类）需要接收一个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.CharField.max_length" title="django.db.models.CharField.max_length"><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_length</span></code></a> 参数，用以指定数据库存储 <code class="docutils literal notranslate"><span class="pre">VARCHAR</span></code> 数据时用的字节数。</p>
+<p>一些可选的参数是通用的，可以用于任何字段类型，详情请见 <a class="reference internal" href="../../ref/models/fields.html#common-model-field-options"><span class="std std-ref">参考</span></a> ，下面介绍一部分经常用到的通用参数：</p>
+<dl class="docutils">
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.null" title="django.db.models.Field.null"><code class="xref py py-attr docutils literal notranslate"><span class="pre">null</span></code></a></dt><dd>如果设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，当该字段为空时，Django 会将数据库中该字段设置为 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。默认为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 。</dd>
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.blank" title="django.db.models.Field.blank"><code class="xref py py-attr docutils literal notranslate"><span class="pre">blank</span></code></a></dt><dd><p>如果设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，该字段允许为空。默认为 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+<p>注意该选项与 <code class="docutils literal notranslate"><span class="pre">null</span></code> 不同， <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.null" title="django.db.models.Field.null"><code class="xref py py-attr docutils literal notranslate"><span class="pre">null</span></code></a> 选项仅仅是数据库层面的设置，而 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.blank" title="django.db.models.Field.blank"><code class="xref py py-attr docutils literal notranslate"><span class="pre">blank</span></code></a> 是涉及表单验证方面。如果一个字段设置为 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.blank" title="django.db.models.Field.blank"><code class="xref py py-attr docutils literal notranslate"><span class="pre">blank=True</span></code></a> ，在进行表单验证时，接收的数据该字段值允许为空，而设置为 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.blank" title="django.db.models.Field.blank"><code class="xref py py-attr docutils literal notranslate"><span class="pre">blank=False</span></code></a> 时，不允许为空。</p>
+</dd>
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.choices" title="django.db.models.Field.choices"><code class="xref py py-attr docutils literal notranslate"><span class="pre">choices</span></code></a></dt><dd><p>一系列二元组，用作此字段的选项。如果提供了二元组，默认表单小部件是一个选择框，而不是标准文本字段，并将限制给出的选项。</p>
+<p>一个选项列表：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">YEAR_IN_SCHOOL_CHOICES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;FR&quot;</span><span class="p">,</span> <span class="s2">&quot;Freshman&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;SO&quot;</span><span class="p">,</span> <span class="s2">&quot;Sophomore&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;JR&quot;</span><span class="p">,</span> <span class="s2">&quot;Junior&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;SR&quot;</span><span class="p">,</span> <span class="s2">&quot;Senior&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;GR&quot;</span><span class="p">,</span> <span class="s2">&quot;Graduate&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">每当 <code class="docutils literal notranslate"><span class="pre">choices</span></code> 的顺序变动时将会创建新的迁移。</p>
+</div>
+<p>每个二元组的第一个值会储存在数据库中，而第二个值将只会用于在表单中显示。</p>
+<p>对于一个模型实例，要获取该字段二元组中相对应的第二个值，使用 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.get_FOO_display" title="django.db.models.Model.get_FOO_display"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_FOO_display()</span></code></a> 方法。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">SHIRT_SIZES</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="s2">&quot;Small&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;Medium&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;Large&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+    <span class="n">shirt_size</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">SHIRT_SIZES</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Fred Flintstone&quot;</span><span class="p">,</span> <span class="n">shirt_size</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">shirt_size</span>
+<span class="go">&#39;L&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">get_shirt_size_display</span><span class="p">()</span>
+<span class="go">&#39;Large&#39;</span>
+</pre></div>
+</div>
+<p>你也可以使用枚举类以简洁的方式来定义 <code class="docutils literal notranslate"><span class="pre">choices</span></code> ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Runner</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">MedalType</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextChoices</span><span class="p">(</span><span class="s2">&quot;MedalType&quot;</span><span class="p">,</span> <span class="s2">&quot;GOLD SILVER BRONZE&quot;</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+    <span class="n">medal</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">MedalType</span><span class="o">.</span><span class="n">choices</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../ref/models/fields.html#field-choices"><span class="std std-ref">model field reference</span></a> 中定义了更多的示例。</p>
+</dd>
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.default" title="django.db.models.Field.default"><code class="xref py py-attr docutils literal notranslate"><span class="pre">default</span></code></a></dt><dd>该字段的默认值。可以是一个值或者是个可调用的对象，如果是个可调用对象，每次实例化模型时都会调用该对象。</dd>
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.help_text" title="django.db.models.Field.help_text"><code class="xref py py-attr docutils literal notranslate"><span class="pre">help_text</span></code></a></dt><dd>额外的“帮助”文本，随表单控件一同显示。即便你的字段未用于表单，它对于生成文档也是很有用的。</dd>
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.primary_key" title="django.db.models.Field.primary_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">primary_key</span></code></a></dt><dd><p>如果设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> ，将该字段设置为该模型的主键。</p>
+<p>在一个模型中，如果你没有对任何一个字段设置 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.primary_key" title="django.db.models.Field.primary_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">primary_key=True</span></code></a> 选项。 Django 会自动添加一个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.IntegerField" title="django.db.models.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a> 字段，并设置为主键，因此除非你想重写 Django 默认的主键设置行为，你可以不手动设置主键。详情请见 <a class="reference internal" href="#automatic-primary-key-fields"><span class="std std-ref">自动设置主键</span></a> 。</p>
+<p>主键字段是只可读的，如果你修改一个模型实例的主键并保存，这等同于创建了一个新的模型实例。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Fruit</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fruit</span> <span class="o">=</span> <span class="n">Fruit</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Apple&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fruit</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Pear&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fruit</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fruit</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&#39;Apple&#39;, &#39;Pear&#39;]&gt;</span>
+</pre></div>
+</div>
+</dd>
+<dt><a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.unique" title="django.db.models.Field.unique"><code class="xref py py-attr docutils literal notranslate"><span class="pre">unique</span></code></a></dt><dd>如果设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，这个字段的值必须在整个表中保持唯一。</dd>
+</dl>
+<p>再次声明，以上只是一些通用参数的简略描述。你可以在 <a class="reference internal" href="../../ref/models/fields.html#common-model-field-options"><span class="std std-ref">通用可选参数参考</span></a> 中找到完整的介绍。</p>
+</div>
+<div class="section" id="s-automatic-primary-key-fields">
+<span id="s-id1"></span><span id="automatic-primary-key-fields"></span><span id="id1"></span><h3>自动设置主键<a class="headerlink" href="#automatic-primary-key-fields" title="永久链接至标题">¶</a></h3>
+<p>默认情况下，Django 给每个模型一个自动递增的主键，其类型在 <a class="reference internal" href="../../ref/applications.html#django.apps.AppConfig.default_auto_field" title="django.apps.AppConfig.default_auto_field"><code class="xref py py-attr docutils literal notranslate"><span class="pre">AppConfig.default_auto_field</span></code></a> 中指定，或者在 <a class="reference internal" href="../../ref/settings.html#std-setting-DEFAULT_AUTO_FIELD"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEFAULT_AUTO_FIELD</span></code></a> 配置中全局指定。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BigAutoField</span><span class="p">(</span><span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果你想自己指定主键， 在你想要设置为主键的字段上设置参数 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.primary_key" title="django.db.models.Field.primary_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">primary_key=True</span></code></a>。如果 Django 看到你显式地设置了 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.primary_key" title="django.db.models.Field.primary_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Field.primary_key</span></code></a>，将不会自动在表（模型）中添加 <code class="docutils literal notranslate"><span class="pre">id</span></code> 列。</p>
+<p>每个模型都需要拥有一个设置了 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.primary_key" title="django.db.models.Field.primary_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">primary_key=True</span></code></a> 的字段（无论是显式的设置还是 Django 自动设置）。</p>
+</div>
+<div class="section" id="s-verbose-field-names">
+<span id="s-id2"></span><span id="verbose-field-names"></span><span id="id2"></span><h3>字段备注名<a class="headerlink" href="#verbose-field-names" title="永久链接至标题">¶</a></h3>
+<p>除了  <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a>， <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 和 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a>，任何字段类型都接收一个可选的位置参数 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.verbose_name" title="django.db.models.Field.verbose_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">verbose_name</span></code></a>，如果未指定该参数值， Django 会自动使用字段的属性名作为该参数值，并且把下划线转换为空格。</p>
+<p>在该例中：备注名为 <code class="docutils literal notranslate"><span class="pre">&quot;person's</span> <span class="pre">first</span> <span class="pre">name&quot;</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s2">&quot;person&#39;s first name&quot;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>在该例中：备注名为 <code class="docutils literal notranslate"><span class="pre">&quot;first</span> <span class="pre">name&quot;</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a>, <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> and <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 接收的第一个参数为模型的类名，后面可以添加一个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.verbose_name" title="django.db.models.Field.verbose_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">verbose_name</span></code></a> 参数：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">poll</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+    <span class="n">Poll</span><span class="p">,</span>
+    <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span>
+    <span class="n">verbose_name</span><span class="o">=</span><span class="s2">&quot;the related poll&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">sites</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Site</span><span class="p">,</span> <span class="n">verbose_name</span><span class="o">=</span><span class="s2">&quot;list of sites&quot;</span><span class="p">)</span>
+<span class="n">place</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">OneToOneField</span><span class="p">(</span>
+    <span class="n">Place</span><span class="p">,</span>
+    <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span>
+    <span class="n">verbose_name</span><span class="o">=</span><span class="s2">&quot;related place&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>惯例是不将 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.verbose_name" title="django.db.models.Field.verbose_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">verbose_name</span></code></a> 的首字母大写，必要时 Django 会自动把首字母转换为大写。</p>
+</div>
+<div class="section" id="s-relationships">
+<span id="relationships"></span><h3>关联关系<a class="headerlink" href="#relationships" title="永久链接至标题">¶</a></h3>
+<p>显然，关系型数据库的强大之处在于各表之间的关联关系。 Django 提供了定义三种最常见的数据库关联关系的方法：多对一，多对多，一对一。</p>
+<div class="section" id="s-many-to-one-relationships">
+<span id="many-to-one-relationships"></span><h4>多对一关联<a class="headerlink" href="#many-to-one-relationships" title="永久链接至标题">¶</a></h4>
+<p>定义一个多对一的关联关系，使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.ForeignKey</span></code></a> 类。就和其它 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field" title="django.db.models.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a> 字段类型一样，只需要在你模型中添加一个值为该类的属性。</p>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 类需要添加一个位置参数，即你想要关联的模型类名。</p>
+<p>例如，如果一个 <code class="docutils literal notranslate"><span class="pre">Car</span></code> 模型有一个制造者 <code class="docutils literal notranslate"><span class="pre">Manufacturer</span></code> --就是说一个 <code class="docutils literal notranslate"><span class="pre">Manufacturer</span></code> 制造许多辆车，但是每辆车都仅有一个制造者-- 那么使用下面的方法定义这个关系：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Manufacturer</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">Car</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">manufacturer</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Manufacturer</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>你也可以创建 <a class="reference internal" href="../../ref/models/fields.html#recursive-relationships"><span class="std std-ref">自关联关系</span></a> （一个模型与它本身有多对一的关系）和 <a class="reference internal" href="../../ref/models/fields.html#lazy-relationships"><span class="std std-ref">与未定义的模型间的关联关系</span></a> ；详情请见  <a class="reference internal" href="../../ref/models/fields.html#ref-foreignkey"><span class="std std-ref">模型字段参考</span></a> 。</p>
+<p>建议设置 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 字段名（上例中的 <code class="docutils literal notranslate"><span class="pre">manufacturer</span></code> ）为想要关联的模型名，但是你也可以随意设置为你想要的名称，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Car</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">company_that_makes_it</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+        <span class="n">Manufacturer</span><span class="p">,</span>
+        <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 字段还可以接收一些其他的参数，详见 <a class="reference internal" href="../../ref/models/fields.html#foreign-key-arguments"><span class="std std-ref">模型字段参考</span></a> ，这些可选的参数可以更深入的规定关联关系的具体实现。</p>
+<p>关于反向关联对象的细节，参见 <a class="reference internal" href="queries.html#backwards-related-objects"><span class="std std-ref">反向关联例子</span></a>。</p>
+<p class="last">如要查看相关示例代码，详见 <a class="reference internal" href="examples/many_to_one.html"><span class="doc">模型多对一关联实例</span></a> 。</p>
+</div>
+</div>
+<div class="section" id="s-many-to-many-relationships">
+<span id="many-to-many-relationships"></span><h4>多对多关联<a class="headerlink" href="#many-to-many-relationships" title="永久链接至标题">¶</a></h4>
+<p>定义一个多对多的关联关系，使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.ManyToManyField</span></code></a> 类。就和其他 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field" title="django.db.models.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a> 字段类型一样，只需要在你模型中添加一个值为该类的属性。</p>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 类需要添加一个位置参数，即你想要关联的模型类名。</p>
+<p>例如：如果 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 含有多种 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> （配料） -- 也就是一种 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 可能存在于多个 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 中，并且每个 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 含有多种 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> --那么可以这样表示这种关系：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Topping</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">Pizza</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="n">toppings</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Topping</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>和 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 类一样，你也可以创建 <a class="reference internal" href="../../ref/models/fields.html#recursive-relationships"><span class="std std-ref">自关联关系</span></a> （一个对象与他本身有着多对多的关系）和 <a class="reference internal" href="../../ref/models/fields.html#lazy-relationships"><span class="std std-ref">与未定义的模型的关系</span></a> 。</p>
+<p>建议设置 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 字段名（上例中的 <code class="docutils literal notranslate"><span class="pre">toppings</span></code> ）为一个复数名词，表示所要关联的模型对象的集合。</p>
+<p>对于多对多关联关系的两个模型，可以在任何一个模型中添加 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 字段，但只能选择一个模型设置该字段，即不能同时在两模型中添加该字段。</p>
+<p>一般来讲，应该把 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 实例放到需要在表单中被编辑的对象中。在之前的例子中， <code class="docutils literal notranslate"><span class="pre">toppings</span></code> 被放在 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 当中（而不是 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 中有指向 <code class="docutils literal notranslate"><span class="pre">pizzas</span></code> 的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 实例 ）因为相较于配料被放在不同的披萨当中，披萨当中有很多种配料更加符合常理。按照先前说的，在编辑 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 的表单时用户可以选择多种配料。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">如要查看完整示例代码，详见 <a class="reference internal" href="examples/many_to_many.html"><span class="doc">模型多对多关联实例</span></a>。</p>
+</div>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 字段也接受一些 <a class="reference internal" href="../../ref/models/fields.html#manytomany-arguments"><span class="std std-ref">模型字段参考</span></a> 中介绍的参数。这些可选的参数可以更深入地规定关联关系的具体实现。</p>
+</div>
+<div class="section" id="s-extra-fields-on-many-to-many-relationships">
+<span id="s-intermediary-manytomany"></span><span id="extra-fields-on-many-to-many-relationships"></span><span id="intermediary-manytomany"></span><h4>在多对多(many-to-many)关系中添加添加额外的属性字段<a class="headerlink" href="#extra-fields-on-many-to-many-relationships" title="永久链接至标题">¶</a></h4>
+<p>如果你只是想要一个类似于记录披萨和配料之间混合和搭配的多对多关系，标准的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 就足够你用了。但是，有时你可能需要将数据与两个模型之间的关系相关联。</p>
+<p>举例来讲，考虑一个需要跟踪音乐人属于哪个音乐组的应用程序。在人和他们所在的组之间有一个多对多关系，你可以使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 来代表这个关系。然而，你想要记录更多的信息在这样的关联关系当中，比如你想要记录某人是何时加入一个组的。</p>
+<p>对于这些情况，Django 允许你指定用于控制多对多关系的模型。你可以在中间模型当中添加额外的字段。在实例化 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 的时候使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField.through" title="django.db.models.ManyToManyField.through"><code class="xref py py-attr docutils literal notranslate"><span class="pre">through</span></code></a> 参数指定多对多关系使用哪个中间模型。对于我们举的音乐家的例子，代码如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+
+<span class="k">class</span> <span class="nc">Group</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+    <span class="n">members</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Person</span><span class="p">,</span> <span class="n">through</span><span class="o">=</span><span class="s2">&quot;Membership&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+
+<span class="k">class</span> <span class="nc">Membership</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">person</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Person</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Group</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">date_joined</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">invite_reason</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>你需要在设置中间模型的时候，显式地为多对多关系中涉及的中间模型指定外键。这种显式声明定义了这两个模型之间是如何关联的。</p>
+<p>在中间模型当中有一些限制条件：</p>
+<ul class="simple">
+<li>你的中间模型要么有且 <em>仅</em> 有一个指向源模型（我们例子当中的 <code class="docutils literal notranslate"><span class="pre">Group</span></code> ）的外键，要么你必须通过 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField.through_fields" title="django.db.models.ManyToManyField.through_fields"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ManyToManyField.through_fields</span></code></a> 参数在多个外键当中手动选择一个外键，如果有多个外健且没有用 <code class="docutils literal notranslate"><span class="pre">through_fields</span></code>&nbsp;参数选择一个的话，会出现验证错误。对于指向目标模型（我们例子当中的 <code class="docutils literal notranslate"><span class="pre">Person</span></code> ）的外键也有同样的限制。</li>
+<li>在一个用于描述模型当中自己指向自己的多对多关系的中间模型当中，可以有两个指向同一个模型的外健，但这两个外健分表代表多对多关系（不同）的两端。如果外健的个数 <em>超过</em> 两个，你必须和上面一样指定 <code class="docutils literal notranslate"><span class="pre">through_fields</span></code> 参数，要不然会出现验证错误。</li>
+</ul>
+<p>Now that you have set up your <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> to use
+your intermediary model (<code class="docutils literal notranslate"><span class="pre">Membership</span></code>, in this case), you're ready to start
+creating some many-to-many relationships. You do this by creating instances of
+the intermediate model:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ringo</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Ringo Starr&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paul</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Paul McCartney&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span> <span class="o">=</span> <span class="n">Group</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;The Beatles&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m1</span> <span class="o">=</span> <span class="n">Membership</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">person</span><span class="o">=</span><span class="n">ringo</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">group</span><span class="o">=</span><span class="n">beatles</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">date_joined</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1962</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">invite_reason</span><span class="o">=</span><span class="s2">&quot;Needed a new drummer.&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m1</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet [&lt;Person: Ringo Starr&gt;]&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ringo</span><span class="o">.</span><span class="n">group_set</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet [&lt;Group: The Beatles&gt;]&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m2</span> <span class="o">=</span> <span class="n">Membership</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">person</span><span class="o">=</span><span class="n">paul</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">group</span><span class="o">=</span><span class="n">beatles</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">date_joined</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">invite_reason</span><span class="o">=</span><span class="s2">&quot;Wanted to form a band.&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet [&lt;Person: Ringo Starr&gt;, &lt;Person: Paul McCartney&gt;]&gt;</span>
+</pre></div>
+</div>
+<p>You can also use <a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.add" title="django.db.models.fields.related.RelatedManager.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a>,
+<a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.create" title="django.db.models.fields.related.RelatedManager.create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create()</span></code></a>, or
+<a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.set" title="django.db.models.fields.related.RelatedManager.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a> to create
+relationships, as long as you specify <code class="docutils literal notranslate"><span class="pre">through_defaults</span></code> for any required
+fields:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">john</span><span class="p">,</span> <span class="n">through_defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;date_joined&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;George Harrison&quot;</span><span class="p">,</span> <span class="n">through_defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;date_joined&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">john</span><span class="p">,</span> <span class="n">paul</span><span class="p">,</span> <span class="n">ringo</span><span class="p">,</span> <span class="n">george</span><span class="p">],</span> <span class="n">through_defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;date_joined&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">(</span><span class="mi">1960</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>你可能更倾向直接创建中间模型。</p>
+<p>If the custom through table defined by the intermediate model does not enforce
+uniqueness on the <code class="docutils literal notranslate"><span class="pre">(model1,</span> <span class="pre">model2)</span></code> pair, allowing multiple values, the
+<a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.remove" title="django.db.models.fields.related.RelatedManager.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove()</span></code></a> call will
+remove all intermediate model instances:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Membership</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">person</span><span class="o">=</span><span class="n">ringo</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">group</span><span class="o">=</span><span class="n">beatles</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">date_joined</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1968</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">invite_reason</span><span class="o">=</span><span class="s2">&quot;You&#39;ve been gone for a month and we miss you.&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet [&lt;Person: Ringo Starr&gt;, &lt;Person: Paul McCartney&gt;, &lt;Person: Ringo Starr&gt;]&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># This deletes both of the intermediate model instances for Ringo Starr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ringo</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet [&lt;Person: Paul McCartney&gt;]&gt;</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.clear" title="django.db.models.fields.related.RelatedManager.clear"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clear()</span></code></a>
+method can be used to remove all many-to-many relationships for an instance:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Beatles have broken up</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">beatles</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Note that this deletes the intermediate model instances</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Membership</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+<span class="go">&lt;QuerySet []&gt;</span>
+</pre></div>
+</div>
+<p>Once you have established the many-to-many relationships, you can issue
+queries. Just as with normal many-to-many relationships, you can query using
+the attributes of the many-to-many-related model:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="go"># Find all the groups with a member whose name starts with &#39;Paul&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Group</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">members__name__startswith</span><span class="o">=</span><span class="s2">&quot;Paul&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Group: The Beatles&gt;]&gt;</span>
+</pre></div>
+</div>
+<p>As you are using an intermediate model, you can also query on its attributes:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="go"># Find all the members of the Beatles that joined after 1 Jan 1961</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Person</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">group__name</span><span class="o">=</span><span class="s2">&quot;The Beatles&quot;</span><span class="p">,</span> <span class="n">membership__date_joined__gt</span><span class="o">=</span><span class="n">date</span><span class="p">(</span><span class="mi">1961</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Person: Ringo Starr]&gt;</span>
+</pre></div>
+</div>
+<p>If you need to access a membership's information you may do so by directly
+querying the <code class="docutils literal notranslate"><span class="pre">Membership</span></code> model:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ringos_membership</span> <span class="o">=</span> <span class="n">Membership</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">beatles</span><span class="p">,</span> <span class="n">person</span><span class="o">=</span><span class="n">ringo</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ringos_membership</span><span class="o">.</span><span class="n">date_joined</span>
+<span class="go">datetime.date(1962, 8, 16)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ringos_membership</span><span class="o">.</span><span class="n">invite_reason</span>
+<span class="go">&#39;Needed a new drummer.&#39;</span>
+</pre></div>
+</div>
+<p>Another way to access the same information is by querying the
+<a class="reference internal" href="queries.html#m2m-reverse-relationships"><span class="std std-ref">many-to-many reverse relationship</span></a> from a
+<code class="docutils literal notranslate"><span class="pre">Person</span></code> object:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ringos_membership</span> <span class="o">=</span> <span class="n">ringo</span><span class="o">.</span><span class="n">membership_set</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">beatles</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ringos_membership</span><span class="o">.</span><span class="n">date_joined</span>
+<span class="go">datetime.date(1962, 8, 16)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ringos_membership</span><span class="o">.</span><span class="n">invite_reason</span>
+<span class="go">&#39;Needed a new drummer.&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-one-to-one-relationships">
+<span id="one-to-one-relationships"></span><h4>一对一关联<a class="headerlink" href="#one-to-one-relationships" title="永久链接至标题">¶</a></h4>
+<p>使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 来定义一对一关系。就像使用其他类型的 <code class="docutils literal notranslate"><span class="pre">Field</span></code> 一样：在模型属性中包含它。</p>
+<p>当一个对象以某种方式“继承”另一个对象时，这对该对象的主键非常有用。</p>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 需要一个位置参数：与模型相关的类。</p>
+<p>例如，当你要建立一个有关“位置”信息的数据库时，你可能会包含通常的地址，电话等字段。接着，如果你想接着建立一个关于关于餐厅的数据库，除了将位置数据库当中的字段复制到 <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code> 模型，你也可以将一个指向 <code class="docutils literal notranslate"><span class="pre">Place</span></code> <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 放到 <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code> 当中（因为餐厅“是一个”地点）；事实上，在处理这样的情况时最好使用 <a class="reference internal" href="#model-inheritance"><span class="std std-ref">模型继承</span></a> ，它隐含的包括了一个一对一关系。</p>
+<p>和  <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 一样，可以创建 <a class="reference internal" href="../../ref/models/fields.html#recursive-relationships"><span class="std std-ref">自关联关系</span></a> 也可以创建 <a class="reference internal" href="../../ref/models/fields.html#lazy-relationships"><span class="std std-ref">与尚未定义的模型的关系</span></a> 。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">点击文档 <a class="reference internal" href="examples/one_to_one.html"><span class="doc">一对一关联模型实例</span></a> 来查看完整的例子。</p>
+</div>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 字段还接受一个可选的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField.parent_link" title="django.db.models.OneToOneField.parent_link"><code class="xref py py-attr docutils literal notranslate"><span class="pre">parent_link</span></code></a> 参数。</p>
+<p><a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 类通常自动的成为模型的主键，这条规则现在不再使用了（然而你可以手动指定 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.primary_key" title="django.db.models.Field.primary_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">primary_key</span></code></a> 参数）。因此，现在可以在单个模型当中指定多个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 字段。</p>
+</div>
+</div>
+<div class="section" id="s-models-across-files">
+<span id="models-across-files"></span><h3>跨文件模型<a class="headerlink" href="#models-across-files" title="永久链接至标题">¶</a></h3>
+<p>关联另一个应用中的模型是当然可以的。为了实现这一点，在定义模型的文件开头导入需要被关联的模型。接着就可以在其他有需要的模型类当中关联它了。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">geography.models</span> <span class="kn">import</span> <span class="n">ZipCode</span>
+
+
+<span class="k">class</span> <span class="nc">Restaurant</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="n">zip_code</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span>
+        <span class="n">ZipCode</span><span class="p">,</span>
+        <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">SET_NULL</span><span class="p">,</span>
+        <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-field-name-restrictions">
+<span id="field-name-restrictions"></span><h3>字段命名限制<a class="headerlink" href="#field-name-restrictions" title="永久链接至标题">¶</a></h3>
+<p>Django 对模型的字段名有一些限制：</p>
+<ol class="arabic">
+<li><p class="first">A field name cannot be a Python reserved word, because that would result
+in a Python syntax error. For example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>class Example(models.Model):
+    pass = models.IntegerField() # &#39;pass&#39; is a reserved word!
+</pre></div>
+</div>
+</li>
+<li><p class="first">一个字段名称不能包含连续的多个下划线，原因在于 Django 查询语法的工作方式。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Example</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">foo__bar</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>  <span class="c1"># &#39;foo__bar&#39; has two underscores!</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">字段名不能以下划线结尾，原因同上。</p>
+</li>
+</ol>
+<p>但是，这些限制是可以被解决的，因为字段名没要求和数据库列名一样。查看 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.db_column" title="django.db.models.Field.db_column"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_column</span></code></a> 选项。</p>
+<p>SQL保留字，例如 <code class="docutils literal notranslate"><span class="pre">join</span></code>， <code class="docutils literal notranslate"><span class="pre">where</span></code> 或 <code class="docutils literal notranslate"><span class="pre">select</span></code>， <em>是</em> 可以被用在模型字段名当中的，因为 Django 在对底层的 SQL 查询当中清洗了所有的数据库表名和字段名，通过使用特定数据库引擎的引用语法。</p>
+</div>
+<div class="section" id="s-custom-field-types">
+<span id="custom-field-types"></span><h3>自定义的字段类型<a class="headerlink" href="#custom-field-types" title="永久链接至标题">¶</a></h3>
+<p>如果已经存在的模型字段不能满足你的需求，或者你希望支持一些不太常见的数据库列类型，你可以创建自己的字段类。在 <a class="reference internal" href="../../howto/custom-model-fields.html"><span class="doc">编写自定义模型字段</span></a> 中提供了创建自定义字段的各方面内容。</p>
+</div>
+</div>
+<div class="section" id="s-meta-options">
+<span id="s-id3"></span><span id="meta-options"></span><span id="id3"></span><h2><code class="docutils literal notranslate"><span class="pre">Meta</span></code> 选项<a class="headerlink" href="#meta-options" title="永久链接至标题">¶</a></h2>
+<p>使用内部 <code class="docutils literal notranslate"><span class="pre">Meta类</span></code> 来给模型赋予元数据，就像：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Ox</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">horn_length</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;horn_length&quot;</span><span class="p">]</span>
+        <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="s2">&quot;oxen&quot;</span>
+</pre></div>
+</div>
+<p>模型的元数据即“所有不是字段的东西”，比如排序选项（ <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.ordering" title="django.db.models.Options.ordering"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ordering</span></code></a> ），数据库表名（ <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.db_table" title="django.db.models.Options.db_table"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_table</span></code></a> ），或是阅读友好的单复数名（ <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.verbose_name" title="django.db.models.Options.verbose_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">verbose_name</span></code></a> 和 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.verbose_name_plural" title="django.db.models.Options.verbose_name_plural"><code class="xref py py-attr docutils literal notranslate"><span class="pre">verbose_name_plural</span></code></a> ）。这些都不是必须的，并且在模型当中添加 <code class="docutils literal notranslate"><span class="pre">Meta类</span></code> 也完全是可选的。</p>
+<p>在 <a class="reference internal" href="../../ref/models/options.html"><span class="doc">模型可选参数参考</span></a> 中列出了 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 可使用的全部选项。</p>
+</div>
+<div class="section" id="s-model-attributes">
+<span id="s-id4"></span><span id="model-attributes"></span><span id="id4"></span><h2>模型属性<a class="headerlink" href="#model-attributes" title="永久链接至标题">¶</a></h2>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">objects</span></code></dt><dd>模型当中最重要的属性是 <a class="reference internal" href="managers.html#django.db.models.Manager" title="django.db.models.Manager"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manager</span></code></a>。它是 Django 模型和数据库查询操作之间的接口，并且它被用作从数据库当中 <a class="reference internal" href="queries.html#retrieving-objects"><span class="std std-ref">获取实例</span></a>，如果没有指定自定义的 <code class="docutils literal notranslate"><span class="pre">Manager</span></code> 默认名称是 <a class="reference internal" href="../../ref/models/class.html#django.db.models.Model.objects" title="django.db.models.Model.objects"><code class="xref py py-attr docutils literal notranslate"><span class="pre">objects</span></code></a>。Manager 只能通过模型类来访问，不能通过模型实例来访问。</dd>
+</dl>
+</div>
+<div class="section" id="s-model-methods">
+<span id="s-id5"></span><span id="model-methods"></span><span id="id5"></span><h2>模型方法<a class="headerlink" href="#model-methods" title="永久链接至标题">¶</a></h2>
+<p>在模型中添加自定义方法会给你的对象提供自定义的“行级”操作能力。与之对应的是类 <a class="reference internal" href="managers.html#django.db.models.Manager" title="django.db.models.Manager"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manager</span></code></a> 的方法意在提供“表级”的操作，模型方法应该在某个对象实例上生效。</p>
+<p>这是一个将相关逻辑代码放在一个地方的技巧——模型。</p>
+<p>比如，该模型有一些自定义方法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">birth_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">baby_boomer_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Returns the person&#39;s baby-boomer status.&quot;</span>
+        <span class="kn">import</span> <span class="nn">datetime</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_date</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">1945</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;Pre-boomer&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">birth_date</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">1965</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;Baby boomer&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Post-boomer&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">full_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Returns the person&#39;s full name.&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">first_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_name</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>例子中最后一个方法是 <a class="reference internal" href="../../glossary.html#term-property"><span class="xref std std-term">property</span></a>。</p>
+<p>文档 <a class="reference internal" href="../../ref/models/instances.html"><span class="doc">模型实例参考</span></a> 包含了 <a class="reference internal" href="../../ref/models/instances.html#model-instance-methods"><span class="std std-ref">自动提供给每个模型的方法</span></a> 的完整列表。你可以复写大部分的方法，参考下面的 <a class="reference internal" href="#overriding-predefined-model-methods">overriding predefined model methods</a> ——下面介绍两个你最可能期望复写的：</p>
+<dl class="docutils">
+<dt><a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.__str__" title="django.db.models.Model.__str__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code></a></dt><dd><p>一个 Python 的“魔法方法”，返回值友好地展示了一个对象。Python 和 Django 在要将模型实例展示为纯文本时调用。最有可能的应用场景是交互式控制台或后台。</p>
+<p>你将会经常定义此方法；默认提供的不是很好用。</p>
+</dd>
+<dt><a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.get_absolute_url" title="django.db.models.Model.get_absolute_url"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_absolute_url()</span></code></a></dt><dd><p>该方法告诉 Django 如何计算一个对象的 URL。Django 在后台接口使用此方法，或任意时间它需要计算一个对象的 URL。</p>
+<p>任何需要一个唯一 URL 的对象需要定义此方法。</p>
+</dd>
+</dl>
+<div class="section" id="s-overriding-predefined-model-methods">
+<span id="s-overriding-model-methods"></span><span id="overriding-predefined-model-methods"></span><span id="overriding-model-methods"></span><h3>重写之前定义的模型方法<a class="headerlink" href="#overriding-predefined-model-methods" title="永久链接至标题">¶</a></h3>
+<p>还有一个 <a class="reference internal" href="../../ref/models/instances.html#model-instance-methods"><span class="std std-ref">模型方法</span></a> 的集合，包含了一些你可能自定义的数据库行为。尤其是这两个你最有可能定制的方法 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> 和 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.delete" title="django.db.models.Model.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code></a>。</p>
+<p>你可以随意地重写这些方法（或其它模型方法）来更改方法的行为。</p>
+<p>一个典型的重写内置方法的场景是你想在保存对象时额外做些事。比如（查看文档 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> 了解其接受的参数）:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">do_something</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># Call the &quot;real&quot; save() method.</span>
+        <span class="n">do_something_else</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>你也可以阻止保存:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">tagline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;Yoko Ono&#39;s blog&quot;</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># Yoko shall never have her own blog!</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># Call the &quot;real&quot; save() method.</span>
+</pre></div>
+</div>
+<p>调用父类的方法非常重要——这里指 <code class="docutils literal notranslate"><span class="pre">super().save(*args,</span> <span class="pre">**kwargs)</span></code> ——确保对象正确的写入数据库。若你忘记调用父类方法，默认行为不会被触发，数据库也不会被操作。</p>
+<p>同时传递模型方法接受的参数也很重要—— <code class="docutils literal notranslate"><span class="pre">*args,</span> <span class="pre">**kwargs</span></code> 会接受这些参数。Django 会不时地扩展模型内置方法的功能，也会添加新参数。如果你在重写的方法中使用了 <code class="docutils literal notranslate"><span class="pre">*args,</span> <span class="pre">**kwargs</span></code>，这将确保你的方法能接受这些新加的参数。</p>
+<p>If you wish to update a field value in the <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> method, you may
+also want to have this field added to the <code class="docutils literal notranslate"><span class="pre">update_fields</span></code> keyword argument.
+This will ensure the field is saved when <code class="docutils literal notranslate"><span class="pre">update_fields</span></code> is specified. For
+example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.utils.text</span> <span class="kn">import</span> <span class="n">slugify</span>
+
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">slug</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">force_insert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_update</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_fields</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slug</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_fields</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">update_fields</span><span class="p">:</span>
+            <span class="n">update_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;slug&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">update_fields</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="n">force_insert</span><span class="o">=</span><span class="n">force_insert</span><span class="p">,</span>
+            <span class="n">force_update</span><span class="o">=</span><span class="n">force_update</span><span class="p">,</span>
+            <span class="n">using</span><span class="o">=</span><span class="n">using</span><span class="p">,</span>
+            <span class="n">update_fields</span><span class="o">=</span><span class="n">update_fields</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="../../ref/models/instances.html#ref-models-update-fields"><span class="std std-ref">指定要保存的字段</span></a> for more details.</p>
+<div class="admonition-overridden-model-methods-are-not-called-on-bulk-operations admonition">
+<p class="first admonition-title">重写的模型方法不会在批量操作中调用</p>
+<p>注意，删除一个模型对象不总是要调用 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.delete" title="django.db.models.Model.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code></a> 方法。例如， ref:使用 QuerySet 批量删除对象 &lt;topics-db-queries-delete&gt; 和 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.on_delete" title="django.db.models.ForeignKey.on_delete"><code class="xref py py-attr docutils literal notranslate"><span class="pre">级联删除</span></code></a>。为了确保自定义的删除逻辑被执行，你可以使用 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.pre_delete" title="django.db.models.signals.pre_delete"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_delete</span></code></a> 和 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_delete" title="django.db.models.signals.post_delete"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_delete</span></code></a> 信号。</p>
+<p class="last">不幸的是，批量 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_create" title="django.db.models.query.QuerySet.bulk_create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">creating</span></code></a> 和 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.update" title="django.db.models.query.QuerySet.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">updating</span></code></a> 操作不支持上述操作，因为这两种操作未调用 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a>，<a class="reference internal" href="../../ref/signals.html#django.db.models.signals.pre_save" title="django.db.models.signals.pre_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_save</span></code></a> 和 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_save" title="django.db.models.signals.post_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_save</span></code></a>。</p>
+</div>
+</div>
+<div class="section" id="s-executing-custom-sql">
+<span id="executing-custom-sql"></span><h3>执行自定义 SQL<a class="headerlink" href="#executing-custom-sql" title="永久链接至标题">¶</a></h3>
+<p>另一个常见的模式是在模型方法和模块方法中编写自定义 SQL 语句。更多关于使用原生 SQL的细节，参见文档 <a class="reference internal" href="sql.html"><span class="doc">使用原生 SQL</span></a>。</p>
+</div>
+</div>
+<div class="section" id="s-model-inheritance">
+<span id="s-id6"></span><span id="model-inheritance"></span><span id="id6"></span><h2>模型继承<a class="headerlink" href="#model-inheritance" title="永久链接至标题">¶</a></h2>
+<p>模型继承在 Django 中与普通类继承在 Python 中的工作方式几乎完全相同，但也仍应遵循本页开头的内容。这意味着其基类应该继承自 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model" title="django.db.models.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.models.Model</span></code></a>。</p>
+<p>你只需要决定父类模型是否需要拥有它们的权利（拥有它们的数据表），或者父类仅作为承载仅子类中可见的公共信息的载体。</p>
+<p>Django 有三种可用的集成风格。</p>
+<ol class="arabic simple">
+<li>常见情况下，你仅将父类用于子类公共信息的载体，因为你不会想在每个子类中把这些代码都敲一遍。这样的父类永远都不会单独使用，所以 <a class="reference internal" href="#abstract-base-classes"><span class="std std-ref">抽象基类</span></a> 是你需要的。</li>
+<li>若你继承了一个模型（可能来源其它应用），且想要每个模型都有对应的数据表，客官这边请 <a class="reference internal" href="#multi-table-inheritance"><span class="std std-ref">多表继承</span></a>。</li>
+<li>最后，若你只想修改模型的 Python 级行为，而不是以任何形式修改模型字段， <a class="reference internal" href="#proxy-models"><span class="std std-ref">代理模型</span></a> 会是你的菜。</li>
+</ol>
+<div class="section" id="s-abstract-base-classes">
+<span id="s-id7"></span><span id="abstract-base-classes"></span><span id="id7"></span><h3>抽象基类<a class="headerlink" href="#abstract-base-classes" title="永久链接至标题">¶</a></h3>
+<p>抽象基类在你要将公共信息放入很多模型时会很有用。编写你的基类，并在 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 类中填入 <code class="docutils literal notranslate"><span class="pre">abstract=True</span></code>。该模型将不会创建任何数据表。当其用作其它模型类的基类时，它的字段会自动添加至子类。</p>
+<p>一个例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">CommonInfo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PositiveIntegerField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="n">CommonInfo</span><span class="p">):</span>
+    <span class="n">home_group</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Student</span></code> 模型拥有3个字段： <code class="docutils literal notranslate"><span class="pre">name</span></code>， <code class="docutils literal notranslate"><span class="pre">age</span></code> 和 <code class="docutils literal notranslate"><span class="pre">home_group</span></code>。 <code class="docutils literal notranslate"><span class="pre">CommonInfo</span></code> 模型不能用作普通的 Django 模型，因为它是一个抽象基类。它不会生成数据表，也没有管理器，也不能被实例化和保存。</p>
+<p>从抽象基类继承来的字段可被其它字段或值重写，或用 <code class="docutils literal notranslate"><span class="pre">None</span></code> 删除。</p>
+<p>对很多用户来说，这种继承可能就是你想要的。它提供了一种在 Python 级抽出公共信息的方法，但仍会在子类模型中创建数据表。</p>
+<div class="section" id="s-meta-inheritance">
+<span id="meta-inheritance"></span><h4><code class="docutils literal notranslate"><span class="pre">Meta</span></code> 继承<a class="headerlink" href="#meta-inheritance" title="永久链接至标题">¶</a></h4>
+<p>当一个抽象基类被建立，Django 将所有你在基类中申明的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 内部类以属性的形式提供。若子类未定义自己的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 类，它会继承父类的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a>。当然，子类也可继承父类的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a>，比如:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">CommonInfo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="n">CommonInfo</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">(</span><span class="n">CommonInfo</span><span class="o">.</span><span class="n">Meta</span><span class="p">):</span>
+        <span class="n">db_table</span> <span class="o">=</span> <span class="s2">&quot;student_info&quot;</span>
+</pre></div>
+</div>
+<p>Django 在安装 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 属性前，对抽象基类的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 做了一个调整——设置 <code class="docutils literal notranslate"><span class="pre">abstract=False</span></code>。这意味着抽象基类的子类不会自动地变成抽象类。为了继承一个抽象基类创建另一个抽象基类，你需要在子类上显式地设置 <code class="docutils literal notranslate"><span class="pre">abstract=True</span></code>。</p>
+<p>抽象基类的某些 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 属性对子类是没用的。比如，包含 <code class="docutils literal notranslate"><span class="pre">db_table</span></code> 意味着所有的子类（你并未在子类中指定它们的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a>）会使用同一张数据表，这肯定不是你想要的。</p>
+<p>由于Python继承的工作方式，如果子类从多个抽象基类继承，则默认情况下仅继承第一个列出的类的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 选项。为了从多个抽象类中继承 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 选项，必须显式地声明 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 继承。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">CommonInfo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PositiveIntegerField</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">Unmanaged</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">managed</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="n">CommonInfo</span><span class="p">,</span> <span class="n">Unmanaged</span><span class="p">):</span>
+    <span class="n">home_group</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">(</span><span class="n">CommonInfo</span><span class="o">.</span><span class="n">Meta</span><span class="p">,</span> <span class="n">Unmanaged</span><span class="o">.</span><span class="n">Meta</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-be-careful-with-related-name-and-related-query-name">
+<span id="s-abstract-related-name"></span><span id="be-careful-with-related-name-and-related-query-name"></span><span id="abstract-related-name"></span><h4>对  <code class="docutils literal notranslate"><span class="pre">related_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">related_query_name</span></code> 要格外小心<a class="headerlink" href="#be-careful-with-related-name-and-related-query-name" title="永久链接至标题">¶</a></h4>
+<p>若你在 <code class="docutils literal notranslate"><span class="pre">外键</span></code> 或 <code class="docutils literal notranslate"><span class="pre">多对多字段</span></code> 使用了 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_name" title="django.db.models.ForeignKey.related_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_name</span></code></a> 或 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_query_name" title="django.db.models.ForeignKey.related_query_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_query_name</span></code></a>，你必须为该字段提供一个 <em>独一无二</em> 的反向名字和查询名字。这在抽象基类中一般会引发问题，因为基类中的字段都被子类继承，且保持了同样的值（包括 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_name" title="django.db.models.ForeignKey.related_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_name</span></code></a> 和 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_query_name" title="django.db.models.ForeignKey.related_query_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_query_name</span></code></a>）。</p>
+<p>为了解决此问题，当你在抽象基类中（也只能是在抽象基类中）使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_name" title="django.db.models.ForeignKey.related_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_name</span></code></a> 和 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_query_name" title="django.db.models.ForeignKey.related_query_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_query_name</span></code></a>，部分值需要包含 <code class="docutils literal notranslate"><span class="pre">'%(app_label)s'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'%(class)s'</span></code>。</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">'%(class)s'</span></code> 用使用了该字段的子类的小写类名替换。</li>
+<li><code class="docutils literal notranslate"><span class="pre">'%(app_label)s'</span></code> 用小写的包含子类的应用名替换。每个安装的应用名必须是唯一的，应用内的每个模型类名也必须是唯一的。因此，替换后的名字也是唯一的。</li>
+</ul>
+<p>举个例子，有个应用 <code class="docutils literal notranslate"><span class="pre">common/models.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">m2m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span>
+        <span class="n">OtherModel</span><span class="p">,</span>
+        <span class="n">related_name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(app_label)s</span><span class="s2">_</span><span class="si">%(class)s</span><span class="s2">_related&quot;</span><span class="p">,</span>
+        <span class="n">related_query_name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(app_label)s</span><span class="s2">_</span><span class="si">%(class)s</span><span class="s2">s&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">ChildA</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">ChildB</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>附带另一个应用 <code class="docutils literal notranslate"><span class="pre">rare/models.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">common.models</span> <span class="kn">import</span> <span class="n">Base</span>
+
+
+<span class="k">class</span> <span class="nc">ChildB</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">common.ChildA.m2m</span></code> 字段的反转名是 <code class="docutils literal notranslate"><span class="pre">common_childa_related</span></code>，反转查询名是 <code class="docutils literal notranslate"><span class="pre">common_childas</span></code>。 <code class="docutils literal notranslate"><span class="pre">common.ChildB.m2m</span></code> 字段的反转名是 <code class="docutils literal notranslate"><span class="pre">common_childb_related</span></code>， 反转查询名是 <code class="docutils literal notranslate"><span class="pre">common_childbs</span></code>。 <code class="docutils literal notranslate"><span class="pre">rare.ChildB.m2m</span></code> 字段的反转名是 <code class="docutils literal notranslate"><span class="pre">rare_childb_related</span></code>，反转查询名是 <code class="docutils literal notranslate"><span class="pre">rare_childbs</span></code>。这决定于你如何使用 <code class="docutils literal notranslate"><span class="pre">'%(class)s'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'%(app_label)s'</span></code> 构建关联名字和关联查询名。但是，若你忘了使用它们，Django 会在你执行系统检查（或运行 <a class="reference internal" href="../../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a>）时抛出错误。</p>
+<p>如果你未指定抽象基类中的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_name" title="django.db.models.ForeignKey.related_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_name</span></code></a> 属性，默认的反转名会是子类名，后接 <code class="docutils literal notranslate"><span class="pre">'_set'</span></code> 。这名字看起来就像你在子类中定义的一样。比如，在上述代码中，若省略了 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_name" title="django.db.models.ForeignKey.related_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_name</span></code></a> 属性，  <code class="docutils literal notranslate"><span class="pre">ChildA</span></code> 的 <code class="docutils literal notranslate"><span class="pre">m2m</span></code> 字段的反转名会是 <code class="docutils literal notranslate"><span class="pre">childa_set</span></code> ， <code class="docutils literal notranslate"><span class="pre">ChildB</span></code> 的是 <code class="docutils literal notranslate"><span class="pre">childb_set</span></code>。</p>
+</div>
+</div>
+<div class="section" id="s-multi-table-inheritance">
+<span id="s-id8"></span><span id="multi-table-inheritance"></span><span id="id8"></span><h3>多表继承<a class="headerlink" href="#multi-table-inheritance" title="永久链接至标题">¶</a></h3>
+<p>Django 支持的第二种模型继承方式是层次结构中的每个模型都是一个单独的模型。每个模型都指向分离的数据表，且可被独立查询和创建。继承关系介绍了子类和父类之间的连接（通过一个自动创建的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> ）。比如:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Place</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Restaurant</span><span class="p">(</span><span class="n">Place</span><span class="p">):</span>
+    <span class="n">serves_hot_dogs</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">serves_pizza</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All of the fields of <code class="docutils literal notranslate"><span class="pre">Place</span></code> will also be available in <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code>,
+although the data will reside in a different database table. So these are both
+possible:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Place</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&#39;s Cafe&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Restaurant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Bob&#39;s Cafe&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you have a <code class="docutils literal notranslate"><span class="pre">Place</span></code> that is also a <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code>, you can get from the
+<code class="docutils literal notranslate"><span class="pre">Place</span></code> object to the <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code> object by using the lowercase version of
+the model name:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Place</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="go"># If p is a Restaurant object, this will give the child class:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">restaurant</span>
+<span class="go">&lt;Restaurant: ...&gt;</span>
+</pre></div>
+</div>
+<p>然而，若上述例子中的 <code class="docutils literal notranslate"><span class="pre">p</span></code> <em>不是</em> 一个 <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code> （它仅是个 <code class="docutils literal notranslate"><span class="pre">Place</span></code> 对象或是其它类的父类），指向 <code class="docutils literal notranslate"><span class="pre">p.restaurant</span></code> 会抛出一个 <code class="docutils literal notranslate"><span class="pre">Restaurant.DoesNotExist</span></code> 异常。</p>
+<p><code class="docutils literal notranslate"><span class="pre">Restaurant</span></code> 中自动创建的连接至 <code class="docutils literal notranslate"><span class="pre">Place</span></code> 的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 看起来像这样:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">place_ptr</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">OneToOneField</span><span class="p">(</span>
+    <span class="n">Place</span><span class="p">,</span>
+    <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span>
+    <span class="n">parent_link</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>你可以在 <code class="docutils literal notranslate"><span class="pre">Restaurant</span></code> 中重写该字段，通过申明你自己的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a>，并设置 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField.parent_link" title="django.db.models.OneToOneField.parent_link"><code class="xref py py-attr docutils literal notranslate"><span class="pre">parent_link=True</span></code></a>。</p>
+<div class="section" id="s-meta-and-multi-table-inheritance">
+<span id="s-id9"></span><span id="meta-and-multi-table-inheritance"></span><span id="id9"></span><h4><code class="docutils literal notranslate"><span class="pre">Meta</span></code> 和多表继承<a class="headerlink" href="#meta-and-multi-table-inheritance" title="永久链接至标题">¶</a></h4>
+<p>多表继承情况下，子类不会继承父类的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a>。所以的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 类选项已被应用至父类，在子类中再次应用会导致行为冲突（与抽象基类中应用场景对比，这种情况下，基类并不存在）。</p>
+<p>故，子类模型无法访问父类的 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> 类。不过，有限的几种情况下：若子类未指定 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.ordering" title="django.db.models.Options.ordering"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ordering</span></code></a> 属性或 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.get_latest_by" title="django.db.models.Options.get_latest_by"><code class="xref py py-attr docutils literal notranslate"><span class="pre">get_latest_by</span></code></a> 属性，子类会从父类继承这些。</p>
+<p>如果父类有排序，而你并不期望子类有排序，你可以显示的禁止它:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ChildModel</span><span class="p">(</span><span class="n">ParentModel</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="c1"># Remove parent&#39;s ordering effect</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-inheritance-and-reverse-relations">
+<span id="inheritance-and-reverse-relations"></span><h4>继承与反向关系<a class="headerlink" href="#inheritance-and-reverse-relations" title="永久链接至标题">¶</a></h4>
+<p>由于多表继承使用隐式的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 连接子类和父类，所以直接从父类访问子类是可能的，就像上述例子展示的那样。然而，使用的名字是 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 和 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 关系的默认值。如果你在继承父类模型的子类中添加了这些关联，你 <strong>必须</strong> 指定 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey.related_name" title="django.db.models.ForeignKey.related_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">related_name</span></code></a> 属性。假如你忘了，Django 会抛出一个合法性错误。</p>
+<p>比如，让我们用上面的 <code class="docutils literal notranslate"><span class="pre">Place</span></code> 类创建另一个子类，包含一个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Supplier</span><span class="p">(</span><span class="n">Place</span><span class="p">):</span>
+    <span class="n">customers</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Place</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This results in the error:</p>
+<div class="highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="x">Reverse query name for &#39;Supplier.customers&#39; clashes with reverse query</span>
+<span class="x">name for &#39;Supplier.place_ptr&#39;.</span>
+
+<span class="x">HINT: Add or change a related_name argument to the definition for</span>
+<span class="x">&#39;Supplier.customers&#39; or &#39;Supplier.place_ptr&#39;.</span>
+</pre></div>
+</div>
+<p>将 <code class="docutils literal notranslate"><span class="pre">related_name</span></code> 像下面这样加至 <code class="docutils literal notranslate"><span class="pre">customers</span></code> 字段能解决此错误： <code class="docutils literal notranslate"><span class="pre">models.ManyToManyField(Place,</span> <span class="pre">related_name='provider')</span></code>。</p>
+</div>
+<div class="section" id="s-specifying-the-parent-link-field">
+<span id="specifying-the-parent-link-field"></span><h4>指定父类连接字段<a class="headerlink" href="#specifying-the-parent-link-field" title="永久链接至标题">¶</a></h4>
+<p>如上所述，Django 会自动创建一个 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> ，将子类连接回非抽象的父类。如果你想修改连接回父类的属性名，你可以自己创建 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a>，并设置 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField.parent_link" title="django.db.models.OneToOneField.parent_link"><code class="xref py py-attr docutils literal notranslate"><span class="pre">parent_link=True</span></code></a>，表明该属性用于连接回父类。</p>
+</div>
+</div>
+<div class="section" id="s-proxy-models">
+<span id="s-id10"></span><span id="proxy-models"></span><span id="id10"></span><h3>代理模型<a class="headerlink" href="#proxy-models" title="永久链接至标题">¶</a></h3>
+<p>使用 <a class="reference internal" href="#multi-table-inheritance"><span class="std std-ref">多表继承</span></a> 时，每个子类模型都会创建一张新表。这一般是期望的行为，因为子类需要一个地方存储基类中不存在的额外数据字段。不过，有时候你只想修改模型的 Python 级行为——可能是修改默认管理器，或添加一个方法。</p>
+<p>这是代理模型继承的目的：为原模型创建一个 <em>代理</em>。你可以创建，删除和更新代理模型的实例，所以的数据都会存储的像你使用原模型（未代理的）一样。不同点是你可以修改代理默认的模型排序和默认管理器，而不需要修改原模型。</p>
+<p>代理模型就像普通模型一样申明。你需要告诉 Django 这是一个代理模型，通过将 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 类的 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.proxy" title="django.db.models.Options.proxy"><code class="xref py py-attr docutils literal notranslate"><span class="pre">proxy</span></code></a> 属性设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>例如，假设你想为 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 模型添加一个方法。你可以这么做:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MyPerson</span><span class="p">(</span><span class="n">Person</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">do_something</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># ...</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">MyPerson</span></code> class operates on the same database table as its parent
+<code class="docutils literal notranslate"><span class="pre">Person</span></code> class. In particular, any new instances of <code class="docutils literal notranslate"><span class="pre">Person</span></code> will also be
+accessible through <code class="docutils literal notranslate"><span class="pre">MyPerson</span></code>, and vice-versa:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Person</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">first_name</span><span class="o">=</span><span class="s2">&quot;foobar&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MyPerson</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">first_name</span><span class="o">=</span><span class="s2">&quot;foobar&quot;</span><span class="p">)</span>
+<span class="go">&lt;MyPerson: foobar&gt;</span>
+</pre></div>
+</div>
+<p>你也可以用代理模型定义模型的另一种不同的默认排序方法。你也许不期望总对 “Person” 进行排序，但是在使用代理时，总是依据 “last_name” 属性进行排序：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">OrderedPerson</span><span class="p">(</span><span class="n">Person</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">ordering</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;last_name&quot;</span><span class="p">]</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>现在，普通的 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 查询结果不会被排序，但 <code class="docutils literal notranslate"><span class="pre">OrderdPerson</span></code> 查询接轨会按 <code class="docutils literal notranslate"><span class="pre">last_name</span></code> 排序。</p>
+<p>代理模型继承“Meta”属性 <a class="reference internal" href="#meta-and-multi-table-inheritance"><span class="std std-ref">和普通模型一样</span></a>。</p>
+<div class="section" id="s-querysets-still-return-the-model-that-was-requested">
+<span id="querysets-still-return-the-model-that-was-requested"></span><h4><code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 仍会返回请求的模型<a class="headerlink" href="#querysets-still-return-the-model-that-was-requested" title="永久链接至标题">¶</a></h4>
+<p>当你用 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 对象查询时，Django 永远不会返回 <code class="docutils literal notranslate"><span class="pre">MyPerson</span></code> 对象。<code class="docutils literal notranslate"><span class="pre">Person</span></code> 对象的查询结果集总是返回对应类型。代理对象存在的全部意义是帮你复用原 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 提供的代码和自定义的功能代码（并未依赖其它代码）。不存在什么方法能在你创建完代理后，帮你替换所有 <code class="docutils literal notranslate"><span class="pre">Person</span></code> （或其它）模型。</p>
+</div>
+<div class="section" id="s-base-class-restrictions">
+<span id="base-class-restrictions"></span><h4>基类约束<a class="headerlink" href="#base-class-restrictions" title="永久链接至标题">¶</a></h4>
+<p>一个代理模型必须继承自一个非抽象模型类。你不能继承多个非抽象模型类，因为代理模型无法在不同数据表之间提供任何行间连接。一个代理模型可以继承任意数量的抽象模型类，假如他们 <em>没有</em> 定义任何的模型字段。一个代理模型也可以继承任意数量的代理模型，只需他们共享同一个非抽象父类。</p>
+</div>
+<div class="section" id="s-proxy-model-managers">
+<span id="proxy-model-managers"></span><h4>代理模型管理器<a class="headerlink" href="#proxy-model-managers" title="永久链接至标题">¶</a></h4>
+<p>若你未在代理模型中指定模型管理器，它会从父类模型中继承。如果你在代理模型中指定了管理器，它会成为默认管理器，但父类中定义的管理器仍是可用的。</p>
+<p>随着上面的例子一路走下来，你可以在查询 <code class="docutils literal notranslate"><span class="pre">Person</span></code> 模型时这样修改默认管理器:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">NewManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">MyPerson</span><span class="p">(</span><span class="n">Person</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">NewManager</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>若你在不替换已存在的默认管理器的情况下，为代理添加新管理器，你可以使用文档 <a class="reference internal" href="managers.html#custom-managers-and-inheritance"><span class="std std-ref">自定义管理器</span></a> 中介绍的技巧：创建一个包含新管理器的基类，在继承列表中，主类后追加这个基类:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an abstract class for the new manager.</span>
+<span class="k">class</span> <span class="nc">ExtraManagers</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">secondary</span> <span class="o">=</span> <span class="n">NewManager</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">MyPerson</span><span class="p">(</span><span class="n">Person</span><span class="p">,</span> <span class="n">ExtraManagers</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>通常情况下，你可能不需要这么做。然而，你需要的时候，这也是可以的。</p>
+</div>
+<div class="section" id="s-differences-between-proxy-inheritance-and-unmanaged-models">
+<span id="s-proxy-vs-unmanaged-models"></span><span id="differences-between-proxy-inheritance-and-unmanaged-models"></span><span id="proxy-vs-unmanaged-models"></span><h4>代理继承和未托管的模型间的区别<a class="headerlink" href="#differences-between-proxy-inheritance-and-unmanaged-models" title="永久链接至标题">¶</a></h4>
+<p>代理模型继承可能看起来和创建未托管的模型很类似，通过在模型的 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 类中定义 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.managed" title="django.db.models.Options.managed"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managed</span></code></a> 属性。</p>
+<p>通过小心地配置 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.db_table" title="django.db.models.Options.db_table"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.db_table</span></code></a>，你将创建一个未托管的模型，该模型将对现有模型进行阴影处理，并添加一些 Python 方法。然而，这会是个经常重复的且容易出错的过程，因为你要在做任何修改时保持两个副本的同步。</p>
+<p>另一方面，代理模型意在表现的和所代理的模型一样。它们总是与父模型保持一致，因为它们直接从福利继承字段和管理器。</p>
+<p>通用性规则：</p>
+<ol class="arabic simple">
+<li>当你克隆一个已存在模型或数据表时，并且不想要所以的原数据表列，配置 <code class="docutils literal notranslate"><span class="pre">Meta.managed=False</span></code>。这个选项在模型化未受 Django 控制的数据库视图和表格时很有用。</li>
+<li>如果你只想修改模型的 Python 行为，并保留原有字段，配置 <code class="docutils literal notranslate"><span class="pre">Meta.proxy=True</span></code>。这个配置使得代理模型在保存数据时，确保数据结构和原模型的完全一样。</li>
+</ol>
+</div>
+</div>
+<div class="section" id="s-multiple-inheritance">
+<span id="s-model-multiple-inheritance-topic"></span><span id="multiple-inheritance"></span><span id="model-multiple-inheritance-topic"></span><h3>多重继承<a class="headerlink" href="#multiple-inheritance" title="永久链接至标题">¶</a></h3>
+<p>和 Python 中的继承一样，Django 模型也能继承自多个父类模型。请记住，Python 的命名规则这里也有效。第一个出现的基类（比如 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a> ）就是会被使用的那个；举个例子，如果存在多个父类包含 <a class="reference internal" href="#meta-options"><span class="std std-ref">Meta</span></a>，只有第一个会被使用，其它的都会被忽略。</p>
+<p>一般来说，你并不会同时继承多个父类。常见的应用场景是 “混合” 类：为每个继承此类的添加额外的字段或方法。试着保持你的继承层级尽可能的简单和直接，这样未来你就不用为了确认某段信息是哪来的而拔你为数不多的头发了。</p>
+<p>注意，继承自多个包含 <code class="docutils literal notranslate"><span class="pre">id</span></code> 主键的字段会抛出错误。正确的使用多继承，你可以在基类中显示使用 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.AutoField" title="django.db.models.AutoField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoField</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">article_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">AutoField</span><span class="p">(</span><span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">Book</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">book_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">AutoField</span><span class="p">(</span><span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">BookReview</span><span class="p">(</span><span class="n">Book</span><span class="p">,</span> <span class="n">Article</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>或者在公共祖先中存储 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.AutoField" title="django.db.models.AutoField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoField</span></code></a>。这会要求为每个父类模型和公共祖先使用显式的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a>&nbsp;，避免与子类自动生成或继承的字段发生冲突:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Piece</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">Piece</span><span class="p">):</span>
+    <span class="n">article_piece</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">OneToOneField</span><span class="p">(</span>
+        <span class="n">Piece</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span> <span class="n">parent_link</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">Book</span><span class="p">(</span><span class="n">Piece</span><span class="p">):</span>
+    <span class="n">book_piece</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">OneToOneField</span><span class="p">(</span><span class="n">Piece</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span> <span class="n">parent_link</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">BookReview</span><span class="p">(</span><span class="n">Book</span><span class="p">,</span> <span class="n">Article</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-field-name-hiding-is-not-permitted">
+<span id="field-name-hiding-is-not-permitted"></span><h3>字段名 “隐藏” 是不允许的<a class="headerlink" href="#field-name-hiding-is-not-permitted" title="永久链接至标题">¶</a></h3>
+<p>在正常的 Python 类继承中，允许子类覆盖父类的任何属性。在 Django 中，模型字段通常不允许这样做。如果一个非抽象模型基类有一个名为 <code class="docutils literal notranslate"><span class="pre">author</span></code> 的字段，你就不能在继承自该基类的任何类中，创建另一个名为 <code class="docutils literal notranslate"><span class="pre">author</span></code> 的模型字段或属性。</p>
+<p>这个限制并不适用于从抽象模型继承的模型字段。这些字段可以用另一个字段或值覆盖，或者通过设置 <code class="docutils literal notranslate"><span class="pre">field_name</span> <span class="pre">=</span> <span class="pre">None</span></code> 来删除。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">模型管理器是从抽象基类中继承的。重写一个被继承的 <a class="reference internal" href="managers.html#django.db.models.Manager" title="django.db.models.Manager"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manager</span></code></a> 所引用的继承字段，可能会导致微妙的错误。参见 <a class="reference internal" href="managers.html#custom-managers-and-inheritance"><span class="std std-ref">自定义管理器和模型继承</span></a>。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>某些字段在模型内定义了额外的属性，例如 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 定义了一个额外的属性 <code class="docutils literal notranslate"><span class="pre">_id</span></code> 附加在字段名上，类似的还有外键上的 <code class="docutils literal notranslate"><span class="pre">related_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">related_query_name</span></code>。</p>
+<p class="last">这些额外的属性不能被覆盖，除非定义它的字段被改变或删除，使它不再定义额外的属性。</p>
+</div>
+<p>重写父模型中的字段会导致一些困难，比如初始化新实例（在 <code class="docutils literal notranslate"><span class="pre">Model.__init__</span></code> 中指定哪个字段被初始化）和序列化。这些都是普通的 Python 类继承所不需要处理的功能，所以 Django 模型继承和 Python 类继承之间的区别并不是任意的。</p>
+<p>这些限制只针对那些是 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field" title="django.db.models.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a> 实例的属性。普通的 Python 属性可被随便重写。它还对 Python 能识别的属性生效：如果你同时在子类和多表继承的祖先类中指定了数据表的列名（它们是两张不同的数据表中的列）。</p>
+<p>若你在祖先模型中重写了任何模型字段，Django 会抛出一个 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.FieldError" title="django.core.exceptions.FieldError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">FieldError</span></code></a>。</p>
+<p>Note that because of the way fields are resolved during class definition, model
+fields inherited from multiple abstract parent models are resolved in a strict
+depth-first order. This contrasts with standard Python MRO, which is resolved
+breadth-first in cases of diamond shaped inheritance. This difference only
+affects complex model hierarchies, which (as per the advice above) you should
+try to avoid.</p>
+</div>
+</div>
+<div class="section" id="s-organizing-models-in-a-package">
+<span id="organizing-models-in-a-package"></span><h2>在一个包中管理模型<a class="headerlink" href="#organizing-models-in-a-package" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="../../ref/django-admin.html#django-admin-startapp"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">startapp</span></code></a> 命令创建了一个应用结构，包含一个 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件。若你有很多  <code class="docutils literal notranslate"><span class="pre">models.py</span></code>  文件，用独立的文件管理它们会很实用。</p>
+<p>为了达到此目的，创建一个 <code class="docutils literal notranslate"><span class="pre">models</span></code> 包。删除 <code class="docutils literal notranslate"><span class="pre">models.py</span></code>，创建一个 <code class="docutils literal notranslate"><span class="pre">myapp/models</span></code> 目录，包含一个 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 文件和存储模型的文件。你必须在 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 文件中导入这些模块。</p>
+<p>比如，若你在 <code class="docutils literal notranslate"><span class="pre">models</span></code> 目录下有 <code class="docutils literal notranslate"><span class="pre">organic.py</span></code> 和 <code class="docutils literal notranslate"><span class="pre">synthetic.py</span></code>：</p>
+<div class="literal-block-wrapper docutils container" id="id11">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">myapp/models/__init__.py</span></code></span><a class="headerlink" href="#id11" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.organic</span> <span class="kn">import</span> <span class="n">Person</span>
+<span class="kn">from</span> <span class="nn">.synthetic</span> <span class="kn">import</span> <span class="n">Robot</span>
+</pre></div>
+</div>
+</div>
+<p>显式导入每个模块，而不是使用 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">.models</span> <span class="pre">import</span> <span class="pre">*</span></code> 有助于不打乱命名空间，使代码更具可读性，让代码分析工具更有用。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="../../ref/models/index.html"><span class="doc">模型参考</span></a></dt><dd>覆盖所有的模型关联 API，包括模型字段，关联对象和 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>。</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">模型</a><ul>
+<li><a class="reference internal" href="#quick-example">快速上手</a></li>
+<li><a class="reference internal" href="#using-models">使用模型</a></li>
+<li><a class="reference internal" href="#fields">字段</a><ul>
+<li><a class="reference internal" href="#field-types">字段类型</a></li>
+<li><a class="reference internal" href="#field-options">字段选项</a></li>
+<li><a class="reference internal" href="#automatic-primary-key-fields">自动设置主键</a></li>
+<li><a class="reference internal" href="#verbose-field-names">字段备注名</a></li>
+<li><a class="reference internal" href="#relationships">关联关系</a><ul>
+<li><a class="reference internal" href="#many-to-one-relationships">多对一关联</a></li>
+<li><a class="reference internal" href="#many-to-many-relationships">多对多关联</a></li>
+<li><a class="reference internal" href="#extra-fields-on-many-to-many-relationships">在多对多(many-to-many)关系中添加添加额外的属性字段</a></li>
+<li><a class="reference internal" href="#one-to-one-relationships">一对一关联</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#models-across-files">跨文件模型</a></li>
+<li><a class="reference internal" href="#field-name-restrictions">字段命名限制</a></li>
+<li><a class="reference internal" href="#custom-field-types">自定义的字段类型</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#meta-options"><code class="docutils literal notranslate"><span class="pre">Meta</span></code> 选项</a></li>
+<li><a class="reference internal" href="#model-attributes">模型属性</a></li>
+<li><a class="reference internal" href="#model-methods">模型方法</a><ul>
+<li><a class="reference internal" href="#overriding-predefined-model-methods">重写之前定义的模型方法</a></li>
+<li><a class="reference internal" href="#executing-custom-sql">执行自定义 SQL</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#model-inheritance">模型继承</a><ul>
+<li><a class="reference internal" href="#abstract-base-classes">抽象基类</a><ul>
+<li><a class="reference internal" href="#meta-inheritance"><code class="docutils literal notranslate"><span class="pre">Meta</span></code> 继承</a></li>
+<li><a class="reference internal" href="#be-careful-with-related-name-and-related-query-name">对  <code class="docutils literal notranslate"><span class="pre">related_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">related_query_name</span></code> 要格外小心</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multi-table-inheritance">多表继承</a><ul>
+<li><a class="reference internal" href="#meta-and-multi-table-inheritance"><code class="docutils literal notranslate"><span class="pre">Meta</span></code> 和多表继承</a></li>
+<li><a class="reference internal" href="#inheritance-and-reverse-relations">继承与反向关系</a></li>
+<li><a class="reference internal" href="#specifying-the-parent-link-field">指定父类连接字段</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#proxy-models">代理模型</a><ul>
+<li><a class="reference internal" href="#querysets-still-return-the-model-that-was-requested"><code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 仍会返回请求的模型</a></li>
+<li><a class="reference internal" href="#base-class-restrictions">基类约束</a></li>
+<li><a class="reference internal" href="#proxy-model-managers">代理模型管理器</a></li>
+<li><a class="reference internal" href="#differences-between-proxy-inheritance-and-unmanaged-models">代理继承和未托管的模型间的区别</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multiple-inheritance">多重继承</a></li>
+<li><a class="reference internal" href="#field-name-hiding-is-not-permitted">字段名 “隐藏” 是不允许的</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#organizing-models-in-a-package">在一个包中管理模型</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="index.html"
+                          title="上一章">模型和数据库</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="queries.html"
+                          title="下一章">执行查询</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/topics/db/models.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="index.html" title="模型和数据库">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="queries.html" title="执行查询">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

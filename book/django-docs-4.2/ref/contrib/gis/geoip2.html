@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>用 GeoIP2 进行地理定位 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../static/documentation_options.js"></script>
+    <script src="../../../static/jquery.js"></script>
+    <script src="../../../static/underscore.js"></script>
+    <script src="../../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="GeoDjango 实用程序" href="utils.html" />
+    <link rel="prev" title="GDAL API" href="gdal.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="gdal.html" title="GDAL API">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="utils.html" title="GeoDjango 实用程序">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-geoip2">
+            
+  <div class="section" id="s-module-django.contrib.gis.geoip2">
+<span id="s-geolocation-with-geoip2"></span><span id="module-django.contrib.gis.geoip2"></span><span id="geolocation-with-geoip2"></span><h1>用 GeoIP2 进行地理定位<a class="headerlink" href="#module-django.contrib.gis.geoip2" title="永久链接至标题">¶</a></h1>
+<p><a class="reference internal" href="#django.contrib.gis.geoip2.GeoIP2" title="django.contrib.gis.geoip2.GeoIP2"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeoIP2</span></code></a> 对象是对 <a class="reference external" href="https://geoip2.readthedocs.io/">MaxMind geoip2 Python 库</a> 的包装。<a class="footnote-reference" href="#id6" id="id1">[1]</a></p>
+<p>In order to perform IP-based geolocation, the <a class="reference internal" href="#django.contrib.gis.geoip2.GeoIP2" title="django.contrib.gis.geoip2.GeoIP2"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeoIP2</span></code></a> object requires
+the <a class="reference external" href="https://pypi.org/project/geoip2/">geoip2</a> Python package and the GeoIP <code class="docutils literal notranslate"><span class="pre">Country</span></code> and/or <code class="docutils literal notranslate"><span class="pre">City</span></code>
+datasets in binary format (the CSV files will not work!), downloaded from e.g.
+<a class="reference external" href="https://dev.maxmind.com/geoip/geolite2-free-geolocation-data">MaxMind</a> or <a class="reference external" href="https://db-ip.com/db/lite.php">DB-IP</a> websites. Grab the <code class="docutils literal notranslate"><span class="pre">GeoLite2-Country.mmdb.gz</span></code> and
+<code class="docutils literal notranslate"><span class="pre">GeoLite2-City.mmdb.gz</span></code> files and unzip them in a directory corresponding to
+the <a class="reference internal" href="#std-setting-GEOIP_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">GEOIP_PATH</span></code></a> setting.</p>
+<p>另外，建议安装 <a class="reference external" href="https://github.com/maxmind/libmaxminddb/">libmaxminddb C 库</a> ，这样 <code class="docutils literal notranslate"><span class="pre">geoip2</span></code> 就可以利用 C 库更快的速度。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>Support for <code class="docutils literal notranslate"><span class="pre">.mmdb</span></code> files downloaded from DB-IP was added.</p>
+</div>
+<div class="section" id="s-example">
+<span id="example"></span><h2>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h2>
+<p>Here is an example of its usage:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geoip2</span> <span class="kn">import</span> <span class="n">GeoIP2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">GeoIP2</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">country</span><span class="p">(</span><span class="s2">&quot;google.com&quot;</span><span class="p">)</span>
+<span class="go">{&#39;country_code&#39;: &#39;US&#39;, &#39;country_name&#39;: &#39;United States&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">city</span><span class="p">(</span><span class="s2">&quot;72.14.207.99&quot;</span><span class="p">)</span>
+<span class="go">{&#39;city&#39;: &#39;Mountain View&#39;,</span>
+<span class="go">&#39;continent_code&#39;: &#39;NA&#39;,</span>
+<span class="go">&#39;continent_name&#39;: &#39;North America&#39;,</span>
+<span class="go">&#39;country_code&#39;: &#39;US&#39;,</span>
+<span class="go">&#39;country_name&#39;: &#39;United States&#39;,</span>
+<span class="go">&#39;dma_code&#39;: 807,</span>
+<span class="go">&#39;is_in_european_union&#39;: False,</span>
+<span class="go">&#39;latitude&#39;: 37.419200897216797,</span>
+<span class="go">&#39;longitude&#39;: -122.05740356445312,</span>
+<span class="go">&#39;postal_code&#39;: &#39;94043&#39;,</span>
+<span class="go">&#39;region&#39;: &#39;CA&#39;,</span>
+<span class="go">&#39;time_zone&#39;: &#39;America/Los_Angeles&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">lat_lon</span><span class="p">(</span><span class="s2">&quot;salon.com&quot;</span><span class="p">)</span>
+<span class="go">(39.0437, -77.4875)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">lon_lat</span><span class="p">(</span><span class="s2">&quot;uh.edu&quot;</span><span class="p">)</span>
+<span class="go">(-95.4342, 29.834)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">geos</span><span class="p">(</span><span class="s2">&quot;24.124.1.80&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">wkt</span>
+<span class="go">&#39;POINT (-97 38)&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-api-reference">
+<span id="api-reference"></span><h2>API 参考<a class="headerlink" href="#api-reference" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GeoIP2</span></code>(<em><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">country</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">city</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">GeoIP</span></code> 对象不需要任何参数来使用默认设置。然而，至少 <a class="reference internal" href="#std-setting-GEOIP_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">GEOIP_PATH</span></code></a> 配置应该用你 GeoIP 数据集位置的路径来设置。以下初始化关键字可用于自定义任何默认配置。</p>
+<table class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">关键字参数</th>
+<th class="head">描述</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">path</span></code></td>
+<td>GeoIP 数据所在的基本目录或城市或国家数据文件（<code class="docutils literal notranslate"><span class="pre">.mmdb</span></code>）所在的完整路径。假设城市和国家数据集都在这个目录中；覆盖 <a class="reference internal" href="#std-setting-GEOIP_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">GEOIP_PATH</span></code></a> 配置。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">cache</span></code></td>
+<td>打开 GeoIP 数据集时的缓存配置。可以是（0、1、2、4、8）的整数，分别对应于 <code class="docutils literal notranslate"><span class="pre">MODE_AUTO</span></code>、<code class="docutils literal notranslate"><span class="pre">MODE_MMAP_EXT</span></code>、<code class="docutils literal notranslate"><span class="pre">MODE_MMAP</span></code>、<code class="docutils literal notranslate"><span class="pre">GEOIP_INDEX_CACHE</span></code> 和 <code class="docutils literal notranslate"><span class="pre">MODE_MEMORY</span></code> C API 配置。默认值为 0（<code class="docutils literal notranslate"><span class="pre">MODE_AUTO</span></code>）。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">country</span></code></td>
+<td>GeoIP 国家数据文件的名称。默认值为 <code class="docutils literal notranslate"><span class="pre">GeoLite2-Country.mmdb</span></code>。设置这个关键字会覆盖 <a class="reference internal" href="#std-setting-GEOIP_COUNTRY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">GEOIP_COUNTRY</span></code></a> 的配置。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">city</span></code></td>
+<td>GeoIP 城市数据文件的名称。默认为 <code class="docutils literal notranslate"><span class="pre">GeoLite2-City.mmdb</span></code>。设置这个关键字会覆盖 <a class="reference internal" href="#std-setting-GEOIP_CITY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">GEOIP_CITY</span></code></a> 的配置。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="s-methods">
+<span id="methods"></span><h2>方法<a class="headerlink" href="#methods" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-instantiating">
+<span id="instantiating"></span><h3>实例化<a class="headerlink" href="#instantiating" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.open">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">open</span></code>(<em><span class="n"><span class="pre">path</span></span></em>, <em><span class="n"><span class="pre">cache</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.open" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>该类方法从给定的数据库路径和给定的缓存配置中实例化 GeoIP 对象。</p>
+</div>
+<div class="section" id="s-querying">
+<span id="querying"></span><h3>查询<a class="headerlink" href="#querying" title="永久链接至标题">¶</a></h3>
+<p>以下所有的查询程序可以采用一个字符串 IP 地址或一个完全限定域名（FQDN）。例如，<code class="docutils literal notranslate"><span class="pre">'205.186.163.125'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'djangoproject.com'</span></code> 都是有效的查询参数。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.city">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">city</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.city" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回给定查询的城市信息字典。字典中的一些值可能是未定义的（<code class="docutils literal notranslate"><span class="pre">None</span></code>）。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.country">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">country</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.country" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回给定查询的国家代码和国家的字典。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.country_code">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">country_code</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.country_code" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回与查询对应的国家代码。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.country_name">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">country_name</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.country_name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回与查询对应的国家名称。</p>
+</div>
+<div class="section" id="s-coordinate-retrieval">
+<span id="coordinate-retrieval"></span><h3>坐标检索<a class="headerlink" href="#coordinate-retrieval" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.coords">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">coords</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.coords" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回 (经度, 纬度) 的坐标元组。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.lon_lat">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">lon_lat</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.lon_lat" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回 (经度, 纬度) 的坐标元组。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.lat_lon">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">lat_lon</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.lat_lon" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回 (经度, 纬度) 的坐标元组，</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2.geos">
+<code class="sig-prename descclassname"><span class="pre">GeoIP2.</span></code><code class="sig-name descname"><span class="pre">geos</span></code>(<em><span class="n"><span class="pre">query</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2.geos" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回与查询对应的 <a class="reference internal" href="geos.html#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象。</p>
+</div>
+</div>
+<div class="section" id="s-settings">
+<span id="settings"></span><h2>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-geoip-path">
+<span id="s-std-setting-GEOIP_PATH"></span><span id="s-std:setting-GEOIP_PATH"></span><span id="geoip-path"></span><span id="std-setting-GEOIP_PATH"></span><span id="std:setting-GEOIP_PATH"></span><h3><code class="docutils literal notranslate"><span class="pre">GEOIP_PATH</span></code><a class="headerlink" href="#geoip-path" title="永久链接至标题">¶</a></h3>
+<p>字符串或 <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> 指定 GeoIP 数据文件所在的目录。除非在初始化 <a class="reference internal" href="#django.contrib.gis.geoip2.GeoIP2" title="django.contrib.gis.geoip2.GeoIP2"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeoIP2</span></code></a> 对象时用 <code class="docutils literal notranslate"><span class="pre">path</span></code> 关键字手动指定，否则该配置是 <em>必须的</em>。</p>
+</div>
+<div class="section" id="s-geoip-country">
+<span id="s-std-setting-GEOIP_COUNTRY"></span><span id="s-std:setting-GEOIP_COUNTRY"></span><span id="geoip-country"></span><span id="std-setting-GEOIP_COUNTRY"></span><span id="std:setting-GEOIP_COUNTRY"></span><h3><code class="docutils literal notranslate"><span class="pre">GEOIP_COUNTRY</span></code><a class="headerlink" href="#geoip-country" title="永久链接至标题">¶</a></h3>
+<p>GeoIP 国家数据文件的基名。默认为 <code class="docutils literal notranslate"><span class="pre">'GeoLite2-Country.mmdb'</span></code>。</p>
+</div>
+<div class="section" id="s-geoip-city">
+<span id="s-std-setting-GEOIP_CITY"></span><span id="s-std:setting-GEOIP_CITY"></span><span id="geoip-city"></span><span id="std-setting-GEOIP_CITY"></span><span id="std:setting-GEOIP_CITY"></span><h3><code class="docutils literal notranslate"><span class="pre">GEOIP_CITY</span></code><a class="headerlink" href="#geoip-city" title="永久链接至标题">¶</a></h3>
+<p>GeoIP 城市数据文件的基名。默认为 <code class="docutils literal notranslate"><span class="pre">'GeoLite2-City.mmdb'</span></code>。</p>
+</div>
+</div>
+<div class="section" id="s-exceptions">
+<span id="exceptions"></span><h2>异常<a class="headerlink" href="#exceptions" title="永久链接至标题">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="django.contrib.gis.geoip2.GeoIP2Exception">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GeoIP2Exception</span></code><a class="headerlink" href="#django.contrib.gis.geoip2.GeoIP2Exception" title="永久链接至目标">¶</a></dt>
+<dd><p>当调用底层的 <code class="docutils literal notranslate"><span class="pre">geoip2</span></code> 库时发生错误而引发的异常。</p>
+</dd></dl>
+
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>GeoIP(R) 是 MaxMind, Inc 的注册商标。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">用 GeoIP2 进行地理定位</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+<li><a class="reference internal" href="#api-reference">API 参考</a></li>
+<li><a class="reference internal" href="#methods">方法</a><ul>
+<li><a class="reference internal" href="#instantiating">实例化</a></li>
+<li><a class="reference internal" href="#querying">查询</a></li>
+<li><a class="reference internal" href="#coordinate-retrieval">坐标检索</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#settings">配置</a><ul>
+<li><a class="reference internal" href="#geoip-path"><code class="docutils literal notranslate"><span class="pre">GEOIP_PATH</span></code></a></li>
+<li><a class="reference internal" href="#geoip-country"><code class="docutils literal notranslate"><span class="pre">GEOIP_COUNTRY</span></code></a></li>
+<li><a class="reference internal" href="#geoip-city"><code class="docutils literal notranslate"><span class="pre">GEOIP_CITY</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exceptions">异常</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="gdal.html"
+                          title="上一章">GDAL API</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="utils.html"
+                          title="下一章">GeoDjango 实用程序</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../sources/ref/contrib/gis/geoip2.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="gdal.html" title="GDAL API">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="utils.html" title="GeoDjango 实用程序">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

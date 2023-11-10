@@ -1,0 +1,693 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>信号 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="模板" href="templates/index.html" />
+    <link rel="prev" title="配置" href="settings.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="settings.html" title="配置">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="templates/index.html" title="模板">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-signals">
+            
+  <div class="section" id="s-signals">
+<span id="signals"></span><h1>信号<a class="headerlink" href="#signals" title="永久链接至标题">¶</a></h1>
+<p>Django 发送的所有信号的列表。所有内置的信号都是使用 <a class="reference internal" href="../topics/signals.html#django.dispatch.Signal.send" title="django.dispatch.Signal.send"><code class="xref py py-meth docutils literal notranslate"><span class="pre">send()</span></code></a> 方法发送的。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p>关于如何注册和接收信号的信息，请参见 <a class="reference internal" href="../topics/signals.html"><span class="doc">信号收发</span></a> 的文档。</p>
+<p class="last"><a class="reference internal" href="../topics/auth/index.html"><span class="doc">认证框架</span></a> 在 <a class="reference internal" href="contrib/auth.html#topics-auth-signals"><span class="std std-ref">用户登录／退出时发送信号</span></a>。</p>
+</div>
+<div class="section" id="s-module-django.db.models.signals">
+<span id="s-model-signals"></span><span id="module-django.db.models.signals"></span><span id="model-signals"></span><h2>模型信号<a class="headerlink" href="#module-django.db.models.signals" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="#module-django.db.models.signals" title="django.db.models.signals: Signals sent by the model system."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.db.models.signals</span></code></a> 模块定义了一组由模型系统发送的信号。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">Signals can make your code harder to maintain. Consider implementing a
+helper method on a <a class="reference internal" href="../topics/db/managers.html#custom-managers"><span class="std std-ref">custom manager</span></a>, to
+both update your models and perform additional logic, or else
+<a class="reference internal" href="../topics/db/models.html#overriding-model-methods"><span class="std std-ref">overriding model methods</span></a> before using
+model signals.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>这些信号中有很多是由各种模型方法发送的，比如 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 或 <a class="reference internal" href="models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a>，你可以在自己的代码中覆盖这些方法。</p>
+<p>如果你在模型上重写了这些方法，你必须调用父类的方法才能发送这些信号。</p>
+<p class="last">还需要注意的是，Django 默认将信号处理程序存储为弱引用，所以如果你的处理程序是一个本地函数，它可能会被垃圾回收。 为了防止这种情况，当你调用信号的 <a class="reference internal" href="../topics/signals.html#django.dispatch.Signal.connect" title="django.dispatch.Signal.connect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code></a> 时，传入 <code class="docutils literal notranslate"><span class="pre">weak=False</span></code>。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">模型信号 <code class="docutils literal notranslate"><span class="pre">sender</span></code> 模型可以在连接接收器时，通过指定其完整的应用程序标签进行惰性引用。例如，在 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 应用程序中定义的 <code class="docutils literal notranslate"><span class="pre">Question</span></code> 模型可以被引用为 <code class="docutils literal notranslate"><span class="pre">'polls.Question'</span></code>。在处理循环导入依赖关系和可交换模型时，这种引用可以非常方便。</p>
+</div>
+<div class="section" id="s-pre-init">
+<span id="pre-init"></span><h3><code class="docutils literal notranslate"><span class="pre">pre_init</span></code><a class="headerlink" href="#pre-init" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.signals.pre_init">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">pre_init</span></code><a class="headerlink" href="#django.db.models.signals.pre_init" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>每当你实例化一个 Django 模型时，这个信号都会在模型的 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 方法的开头发出。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>刚刚创建了一个实例的模型类。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">args</span></code></dt><dd>传递给 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 的位置参数列表。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></dt><dd>传递给 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 的关键字参数字典。</dd>
+</dl>
+<p>例如，<a class="reference internal" href="../intro/tutorial02.html"><span class="doc">教程</span></a> 有这样一行：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">q</span> <span class="o">=</span> <span class="n">Question</span><span class="p">(</span><span class="n">question_text</span><span class="o">=</span><span class="s2">&quot;What&#39;s new?&quot;</span><span class="p">,</span> <span class="n">pub_date</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>发送给 <a class="reference internal" href="#django.db.models.signals.pre_init" title="django.db.models.signals.pre_init"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_init</span></code></a> 处理程序的参数是：</p>
+<table class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">参数</th>
+<th class="head">值</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">sender</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">Question</span></code> （类本身）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">args</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">[]</span></code> （一个空列表，因为没有向 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 传递位置参数）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">{'question_text':</span> <span class="pre">&quot;What's</span> <span class="pre">new?&quot;,</span></code>
+<code class="docutils literal notranslate"><span class="pre">'pub_date':</span> <span class="pre">datetime.datetime(2012,</span> <span class="pre">2,</span> <span class="pre">26,</span> <span class="pre">13,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">775217,</span> <span class="pre">tzinfo=datetime.timezone.utc)}</span></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="s-post-init">
+<span id="post-init"></span><h3><code class="docutils literal notranslate"><span class="pre">post_init</span></code><a class="headerlink" href="#post-init" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.post_init">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">post_init</span></code><a class="headerlink" href="#django.db.models.signals.post_init" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>和 pre_init 一样，但这个是在 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 方法完成后发送的。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>如上：刚刚创建了一个实例的模型类。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instance</span></code></dt><dd><p>刚刚创建的模型的实际实例。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last"><a class="reference internal" href="models/instances.html#django.db.models.Model._state" title="django.db.models.Model._state"><code class="xref py py-attr docutils literal notranslate"><span class="pre">instance._state</span></code></a> 在发送 <code class="docutils literal notranslate"><span class="pre">post_init</span></code> 信号之前没有设置，所以 <code class="docutils literal notranslate"><span class="pre">_state</span></code> 属性总是有其默认值。例如，<code class="docutils literal notranslate"><span class="pre">_state.db</span></code> 是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</div>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">出于性能考虑，你不应该在 <code class="docutils literal notranslate"><span class="pre">pre_init</span></code> 或 <code class="docutils literal notranslate"><span class="pre">post_init</span></code> 信号的接收者中执行查询，因为在查询集迭代期间，它们会对每个返回的实例执行。</p>
+</div>
+</div>
+<div class="section" id="s-pre-save">
+<span id="pre-save"></span><h3><code class="docutils literal notranslate"><span class="pre">pre_save</span></code><a class="headerlink" href="#pre-save" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.pre_save">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">pre_save</span></code><a class="headerlink" href="#django.db.models.signals.pre_save" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>这是在模型的 <a class="reference internal" href="models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> 方法开始时发送的。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>模型类</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instance</span></code></dt><dd>实际被保存的实例。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">raw</span></code></dt><dd>A boolean; <code class="docutils literal notranslate"><span class="pre">True</span></code> if the model is saved exactly as presented
+(i.e. when loading a <a class="reference internal" href="../topics/db/fixtures.html#fixtures-explanation"><span class="std std-ref">fixture</span></a>). One should not
+query/modify other records in the database as the database might not be in
+a consistent state yet.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>正在使用的数据库别名。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">update_fields</span></code></dt><dd>传递给 <a class="reference internal" href="models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Model.save()</span></code></a> 的要更新的字段集，如果 <code class="docutils literal notranslate"><span class="pre">update_fields</span></code> 没有传递给 <code class="docutils literal notranslate"><span class="pre">save()</span></code>，则为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</dd>
+</dl>
+</div>
+<div class="section" id="s-post-save">
+<span id="post-save"></span><h3><code class="docutils literal notranslate"><span class="pre">post_save</span></code><a class="headerlink" href="#post-save" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.post_save">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">post_save</span></code><a class="headerlink" href="#django.db.models.signals.post_save" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>就像 <a class="reference internal" href="#django.db.models.signals.pre_save" title="django.db.models.signals.pre_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_save</span></code></a> 一样，但在 <a class="reference internal" href="models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> 方法的最后发送。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>模型类</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instance</span></code></dt><dd>实际被保存的实例。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">created</span></code></dt><dd>一个布尔值；<code class="docutils literal notranslate"><span class="pre">True</span></code> 如果创建了一个新记录。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">raw</span></code></dt><dd>A boolean; <code class="docutils literal notranslate"><span class="pre">True</span></code> if the model is saved exactly as presented
+(i.e. when loading a <a class="reference internal" href="../topics/db/fixtures.html#fixtures-explanation"><span class="std std-ref">fixture</span></a>). One should not
+query/modify other records in the database as the database might not be in
+a consistent state yet.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>正在使用的数据库别名。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">update_fields</span></code></dt><dd>传递给 <a class="reference internal" href="models/instances.html#django.db.models.Model.save" title="django.db.models.Model.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Model.save()</span></code></a> 的要更新的字段集，如果 <code class="docutils literal notranslate"><span class="pre">update_fields</span></code> 没有传递给 <code class="docutils literal notranslate"><span class="pre">save()</span></code>，则为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</dd>
+</dl>
+</div>
+<div class="section" id="s-pre-delete">
+<span id="pre-delete"></span><h3><code class="docutils literal notranslate"><span class="pre">pre_delete</span></code><a class="headerlink" href="#pre-delete" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.pre_delete">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">pre_delete</span></code><a class="headerlink" href="#django.db.models.signals.pre_delete" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在模型的 <code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code> 方法和查询集的 <a class="reference internal" href="models/querysets.html#django.db.models.query.QuerySet.delete" title="django.db.models.query.QuerySet.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code></a> 方法开始时发送。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>模型类</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instance</span></code></dt><dd>实际被删除的实例。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>正在使用的数据库别名。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">origin</span></code></dt><dd><div class="versionadded">
+<span class="title">New in Django 4.1.</span> </div>
+<p>The origin of the deletion being the instance of a <code class="docutils literal notranslate"><span class="pre">Model</span></code> or
+<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> class.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="s-post-delete">
+<span id="post-delete"></span><h3><code class="docutils literal notranslate"><span class="pre">post_delete</span></code><a class="headerlink" href="#post-delete" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.post_delete">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">post_delete</span></code><a class="headerlink" href="#django.db.models.signals.post_delete" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>就像 <a class="reference internal" href="#django.db.models.signals.pre_delete" title="django.db.models.signals.pre_delete"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_delete</span></code></a> 一样，但在模型的 <code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code> 方法和查询集的 <a class="reference internal" href="models/querysets.html#django.db.models.query.QuerySet.delete" title="django.db.models.query.QuerySet.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code></a> 方法结束时发送。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>模型类</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instance</span></code></dt><dd><p>实际被删除的实例。</p>
+<p>请注意，该对象将不再在数据库中，所以要非常小心地处理这个实例。</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>正在使用的数据库别名。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">origin</span></code></dt><dd><div class="versionadded">
+<span class="title">New in Django 4.1.</span> </div>
+<p>The origin of the deletion being the instance of a <code class="docutils literal notranslate"><span class="pre">Model</span></code> or
+<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> class.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="s-m2m-changed">
+<span id="m2m-changed"></span><h3><code class="docutils literal notranslate"><span class="pre">m2m_changed</span></code><a class="headerlink" href="#m2m-changed" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.m2m_changed">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">m2m_changed</span></code><a class="headerlink" href="#django.db.models.signals.m2m_changed" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当一个模型实例上的 <a class="reference internal" href="models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 被改变时发出。严格来说，这不是一个模型信号，因为它是由 <a class="reference internal" href="models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 发送的，但由于它是对 <a class="reference internal" href="#django.db.models.signals.pre_save" title="django.db.models.signals.pre_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_save</span></code></a>/<a class="reference internal" href="#django.db.models.signals.post_save" title="django.db.models.signals.post_save"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_save</span></code></a> 和 <a class="reference internal" href="#django.db.models.signals.pre_delete" title="django.db.models.signals.pre_delete"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_delete</span></code></a>/<a class="reference internal" href="#django.db.models.signals.post_delete" title="django.db.models.signals.post_delete"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_delete</span></code></a> 的补充，当涉及到跟踪模型的变化时，它被包含在这里。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>中间模型类描述 <a class="reference internal" href="models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a>。当定义了多对多字段时，这个类会自动创建；你可以使用多对多字段上的 <code class="docutils literal notranslate"><span class="pre">through</span></code> 属性来访问它。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instance</span></code></dt><dd>多对多关系被更新的实例。这可以是 <code class="docutils literal notranslate"><span class="pre">sender</span></code> 的实例，或者是 <a class="reference internal" href="models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 所关联的类的实例。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">action</span></code></dt><dd><p>表示对关系进行更新的类型的字符串。可以是以下类型之一：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;pre_add&quot;</span></code></dt><dd>在一个或多个对象被添加到关系 <em>之前</em> 发送。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;post_add&quot;</span></code></dt><dd>在一个或多个对象被添加到关系 <em>之后</em> 发送。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;pre_remove&quot;</span></code></dt><dd>在一个或多个对象从关系中删除 <em>之前</em> 发送。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;post_remove&quot;</span></code></dt><dd>在一个或多个对象从关系中删除 <em>之后</em> 发送。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;pre_clear&quot;</span></code></dt><dd>在关系被清除 <em>之前</em> 发送。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&quot;post_clear&quot;</span></code></dt><dd>在关系被清除 <em>之后</em> 发送。</dd>
+</dl>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reverse</span></code></dt><dd>表示关系的哪一面被更新（即被修改的是正向关系还是反向关系）。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">model</span></code></dt><dd>从关系中添加、删除或清除的对象的类别。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pk_set</span></code></dt><dd><p>对于 <code class="docutils literal notranslate"><span class="pre">pre_add</span></code> 和 <code class="docutils literal notranslate"><span class="pre">post_add</span></code> 动作，这是一组将被或已经被添加到关系中的主键值。这可能是提交添加的值的一个子集，因为插入必须过滤现有的值，以避免数据库 <code class="docutils literal notranslate"><span class="pre">IntegrityError</span></code>。</p>
+<p>对于 <code class="docutils literal notranslate"><span class="pre">pre_remove</span></code> 和 <code class="docutils literal notranslate"><span class="pre">post_remove</span></code> 动作来说，这是一组被提交从关系中删除的主键值。这并不取决于这些值是否会被实际删除或已经被删除。特别是，不存在的值可能会被提交，并且会出现在 <code class="docutils literal notranslate"><span class="pre">pk_set</span></code> 中，即使它们对数据库没有影响。</p>
+<p>对于 <code class="docutils literal notranslate"><span class="pre">pre_clear</span></code> 和 <code class="docutils literal notranslate"><span class="pre">post_clear</span></code> 动作，是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>正在使用的数据库别名。</dd>
+</dl>
+<p>例如，如果一个 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 可以有多个 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 对象，模型如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Topping</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">Pizza</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="n">toppings</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Topping</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果我们连接一个这样的处理程序：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models.signals</span> <span class="kn">import</span> <span class="n">m2m_changed</span>
+
+
+<span class="k">def</span> <span class="nf">toppings_changed</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># Do something</span>
+    <span class="k">pass</span>
+
+
+<span class="n">m2m_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">toppings_changed</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">Pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">through</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and then did something like this:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Pizza</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Topping</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>发送给 <a class="reference internal" href="#django.db.models.signals.m2m_changed" title="django.db.models.signals.m2m_changed"><code class="xref py py-data docutils literal notranslate"><span class="pre">m2m_changed</span></code></a> 处理程序的参数（在上面的例子中，<code class="docutils literal notranslate"><span class="pre">toppings_changed</span></code>）将是：</p>
+<table class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="82%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">参数</th>
+<th class="head">值</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">sender</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">Pizza.toppings.through</span></code> （中间的 m2m 类）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">instance</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">p</span></code> （被修改的 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 实例）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">action</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&quot;pre_add&quot;</span></code> （后面是一个单独的信号 <code class="docutils literal notranslate"><span class="pre">&quot;post_add&quot;</span></code>）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">reverse</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">False</span></code> （<code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 包含 <a class="reference internal" href="models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a>，所以这个调用修改了前向关系）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">model</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">Topping</span></code> （添加到 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 中的对象类别）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">pk_set</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">{t.id}</span></code> （因为只有 <code class="docutils literal notranslate"><span class="pre">Topping</span> <span class="pre">t</span></code> 被添加到关系中）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">using</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> （因为默认的路由器在这里发送写入）</td>
+</tr>
+</tbody>
+</table>
+<p>And if we would then do something like this:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">pizza_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>发送给 <a class="reference internal" href="#django.db.models.signals.m2m_changed" title="django.db.models.signals.m2m_changed"><code class="xref py py-data docutils literal notranslate"><span class="pre">m2m_changed</span></code></a> 处理程序的参数将是：</p>
+<table class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">参数</th>
+<th class="head">值</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">sender</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">Pizza.toppings.through</span></code> （中间的 m2m 类）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">instance</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">t</span></code> （正在修改的 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 实例）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">action</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&quot;pre_remove&quot;</span></code> （后面是一个单独的信号 <code class="docutils literal notranslate"><span class="pre">&quot;post_remove&quot;</span></code>）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">reverse</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">True</span></code> （<code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 包含 <a class="reference internal" href="models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a>，所以这个调用修改了反向关系）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">model</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">Pizza</span></code> （从 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 中删除的对象类别）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">pk_set</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">{p.id}</span></code> （因为只有 <code class="docutils literal notranslate"><span class="pre">Pizza</span> <span class="pre">p</span></code> 被从关系中删除）</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">using</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> （因为默认的路由器在这里发送写入）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="s-class-prepared">
+<span id="class-prepared"></span><h3><code class="docutils literal notranslate"><span class="pre">class_prepared</span></code><a class="headerlink" href="#class-prepared" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.class_prepared">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">class_prepared</span></code><a class="headerlink" href="#django.db.models.signals.class_prepared" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>Sent whenever a model class has been &quot;prepared&quot; -- that is, once a model has
+been defined and registered with Django's model system. Django uses this
+signal internally; it's not generally used in third-party applications.</p>
+<p>由于这个信号是在应用注册表填充过程中发出的，而 <a class="reference internal" href="applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AppConfig.ready()</span></code></a> 是在应用注册表完全填充后运行的，所以不能在该方法中连接接收器。一种可能是用 <code class="docutils literal notranslate"><span class="pre">AppConfig.__init__()</span></code> 来代替连接它们，注意不要导入模型或触发对应用注册表的调用。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>刚刚准备好的模型类。</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="s-management-signals">
+<span id="management-signals"></span><h2>管理信号<a class="headerlink" href="#management-signals" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="django-admin.html"><span class="doc">django-admin</span></a> 发出的信号。</p>
+<div class="section" id="s-pre-migrate">
+<span id="pre-migrate"></span><h3><code class="docutils literal notranslate"><span class="pre">pre_migrate</span></code><a class="headerlink" href="#pre-migrate" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.pre_migrate">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">pre_migrate</span></code><a class="headerlink" href="#django.db.models.signals.pre_migrate" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>由 <a class="reference internal" href="django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> 命令在开始安装应用程序之前发出。对于缺乏 <code class="docutils literal notranslate"><span class="pre">models</span></code> 模块的应用程序，它不会发出。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>一个 <a class="reference internal" href="applications.html#django.apps.AppConfig" title="django.apps.AppConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppConfig</span></code></a> 实例，用于即将迁移／同步的应用程序。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">app_config</span></code></dt><dd>同 <code class="docutils literal notranslate"><span class="pre">sender</span></code>。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">verbosity</span></code></dt><dd><p>Indicates how much information <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> is printing on screen. See
+the <a class="reference internal" href="django-admin.html#cmdoption-verbosity"><code class="xref std std-option docutils literal notranslate"><span class="pre">--verbosity</span></code></a> flag for details.</p>
+<p>监听 <a class="reference internal" href="#django.db.models.signals.pre_migrate" title="django.db.models.signals.pre_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">pre_migrate</span></code></a> 的函数应该根据这个参数的值来调整它们向屏幕输出的内容。</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">interactive</span></code></dt><dd><p>如果 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则可以安全地提示用户在命令行上输入东西。如果 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，则监听该信号的函数不应试图提示任何东西。</p>
+<p>例如 <a class="reference internal" href="../topics/auth/index.html#module-django.contrib.auth" title="django.contrib.auth: Django's authentication framework."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.auth</span></code></a> 应用只有在 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时才会提示创建超级用户。</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stdout</span></code></dt><dd>A stream-like object where verbose output should be redirected.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>命令将运行的数据库的别名。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">plan</span></code></dt><dd>将用于迁移运行的迁移计划。虽然计划不是公开的 API，但这允许在极少数情况下有必要知道计划。计划是一个由二元元组组成的列表，第一项是迁移类的实例，第二项显示迁移是否被回滚（<code class="docutils literal notranslate"><span class="pre">True</span></code>）或应用（<code class="docutils literal notranslate"><span class="pre">False</span></code>）。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">apps</span></code></dt><dd><a class="reference internal" href="applications.html#module-django.apps" title="django.apps"><code class="xref py py-data docutils literal notranslate"><span class="pre">Apps</span></code></a> 的实例，包含迁移运行前的项目状态。它应该代替全局 <code class="xref py py-attr docutils literal notranslate"><span class="pre">apps</span></code> 注册表来检索你要执行操作的模型。</dd>
+</dl>
+</div>
+<div class="section" id="s-post-migrate">
+<span id="post-migrate"></span><h3><code class="docutils literal notranslate"><span class="pre">post_migrate</span></code><a class="headerlink" href="#post-migrate" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.models.signals.post_migrate">
+<code class="sig-prename descclassname"><span class="pre">django.db.models.signals.</span></code><code class="sig-name descname"><span class="pre">post_migrate</span></code><a class="headerlink" href="#django.db.models.signals.post_migrate" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在 <a class="reference internal" href="django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> （即使没有运行迁移）和 <a class="reference internal" href="django-admin.html#django-admin-flush"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">flush</span></code></a> 命令结束时发出。对于缺乏 <code class="docutils literal notranslate"><span class="pre">models</span></code> 模块的应用程序，它不会被发出。</p>
+<p>该信号的处理者不能进行数据库模式的改变，因为如果在 <a class="reference internal" href="django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> 命令期间运行 <a class="reference internal" href="django-admin.html#django-admin-flush"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">flush</span></code></a> 命令，可能会导致 <a class="reference internal" href="django-admin.html#django-admin-flush"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">flush</span></code></a> 命令失败。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>一个 <code class="xref py py-class docutils literal notranslate"><span class="pre">AppConfig</span></code> 实例，用于刚刚安装的应用程序。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">app_config</span></code></dt><dd>同 <code class="docutils literal notranslate"><span class="pre">sender</span></code>。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">verbosity</span></code></dt><dd><p>Indicates how much information <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> is printing on screen. See
+the <a class="reference internal" href="django-admin.html#cmdoption-verbosity"><code class="xref std std-option docutils literal notranslate"><span class="pre">--verbosity</span></code></a> flag for details.</p>
+<p>监听 <a class="reference internal" href="#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 的函数应该根据这个参数的值来调整它们向屏幕输出的内容。</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">interactive</span></code></dt><dd><p>如果 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则可以安全地提示用户在命令行上输入东西。如果 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，则监听该信号的函数不应试图提示任何东西。</p>
+<p>例如 <a class="reference internal" href="../topics/auth/index.html#module-django.contrib.auth" title="django.contrib.auth: Django's authentication framework."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.auth</span></code></a> 应用只有在 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时才会提示创建超级用户。</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stdout</span></code></dt><dd>A stream-like object where verbose output should be redirected.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">using</span></code></dt><dd>用于同步的数据库别名。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code> 数据库。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">plan</span></code></dt><dd>迁移运行时使用的迁移计划。虽然计划不是公开的 API，但这允许在极少数情况下有必要知道计划。计划是一个由二元元组组成的列表，第一项是迁移类的实例，第二项显示迁移是否被回滚（<code class="docutils literal notranslate"><span class="pre">True</span></code>）或应用（<code class="docutils literal notranslate"><span class="pre">False</span></code>）。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">apps</span></code></dt><dd><code class="xref py py-data docutils literal notranslate"><span class="pre">Apps</span></code> 的一个实例，包含迁移运行后项目的状态。它应该代替全局的 <code class="xref py py-attr docutils literal notranslate"><span class="pre">apps</span></code> 注册表来检索你要执行操作的模型。</dd>
+</dl>
+<p>例如，你可以在一个 <code class="xref py py-class docutils literal notranslate"><span class="pre">AppConfig</span></code> 中注册一个回调，像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.apps</span> <span class="kn">import</span> <span class="n">AppConfig</span>
+<span class="kn">from</span> <span class="nn">django.db.models.signals</span> <span class="kn">import</span> <span class="n">post_migrate</span>
+
+
+<span class="k">def</span> <span class="nf">my_callback</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># Your specific logic here</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">MyAppConfig</span><span class="p">(</span><span class="n">AppConfig</span><span class="p">):</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">ready</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">post_migrate</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">my_callback</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">如果你提供了一个 <a class="reference internal" href="applications.html#django.apps.AppConfig" title="django.apps.AppConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppConfig</span></code></a> 实例作为发送者参数，请确保该信号在 <a class="reference internal" href="applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready()</span></code></a> 中注册。<code class="docutils literal notranslate"><span class="pre">AppConfig</span></code> 会被重新创建，用于使用修改过的 <a class="reference internal" href="settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 集合运行的测试（例如当配置被覆盖时），并且这种信号应该为每个新的 <code class="docutils literal notranslate"><span class="pre">AppConfig</span></code> 实例连接。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-module-django.core.signals">
+<span id="s-request-response-signals"></span><span id="module-django.core.signals"></span><span id="request-response-signals"></span><h2>请求／响应信号<a class="headerlink" href="#module-django.core.signals" title="永久链接至标题">¶</a></h2>
+<p>核心框架处理请求时发出的信号。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">Signals can make your code harder to maintain. Consider <a class="reference internal" href="../topics/http/middleware.html"><span class="doc">using a
+middleware</span></a> before using request/response
+signals.</p>
+</div>
+<div class="section" id="s-request-started">
+<span id="request-started"></span><h3><code class="docutils literal notranslate"><span class="pre">request_started</span></code><a class="headerlink" href="#request-started" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.core.signals.request_started">
+<code class="sig-prename descclassname"><span class="pre">django.core.signals.</span></code><code class="sig-name descname"><span class="pre">request_started</span></code><a class="headerlink" href="#django.core.signals.request_started" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当 Django 开始处理一个 HTTP 请求时发送。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>处理程序类 —— 例如 <code class="docutils literal notranslate"><span class="pre">django.core.handlers.wsgi.wsgiHandler</span></code> —— 处理该请求。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">environ</span></code></dt><dd>向请求提供的 <code class="docutils literal notranslate"><span class="pre">environ</span></code> 字典。</dd>
+</dl>
+</div>
+<div class="section" id="s-request-finished">
+<span id="request-finished"></span><h3><code class="docutils literal notranslate"><span class="pre">request_finished</span></code><a class="headerlink" href="#request-finished" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.core.signals.request_finished">
+<code class="sig-prename descclassname"><span class="pre">django.core.signals.</span></code><code class="sig-name descname"><span class="pre">request_finished</span></code><a class="headerlink" href="#django.core.signals.request_finished" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当 Django 完成向客户端发送 HTTP 响应时发送。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>处理程序类，同上。</dd>
+</dl>
+</div>
+<div class="section" id="s-got-request-exception">
+<span id="got-request-exception"></span><h3><code class="docutils literal notranslate"><span class="pre">got_request_exception</span></code><a class="headerlink" href="#got-request-exception" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.core.signals.got_request_exception">
+<code class="sig-prename descclassname"><span class="pre">django.core.signals.</span></code><code class="sig-name descname"><span class="pre">got_request_exception</span></code><a class="headerlink" href="#django.core.signals.got_request_exception" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当 Django 在处理一个传入的 HTTP 请求时遇到异常时，就会发出这个信号。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>未使用（总是 <code class="docutils literal notranslate"><span class="pre">None</span></code>）。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">request</span></code></dt><dd><a class="reference internal" href="request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> 对象。</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="s-module-django.test.signals">
+<span id="s-test-signals"></span><span id="module-django.test.signals"></span><span id="test-signals"></span><h2>测试信号<a class="headerlink" href="#module-django.test.signals" title="永久链接至标题">¶</a></h2>
+<p>只有当 <a class="reference internal" href="../topics/testing/overview.html#running-tests"><span class="std std-ref">运行测试</span></a> 时才会发出信号。</p>
+<div class="section" id="s-setting-changed">
+<span id="setting-changed"></span><h3><code class="docutils literal notranslate"><span class="pre">setting_changed</span></code><a class="headerlink" href="#setting-changed" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.test.signals.setting_changed">
+<code class="sig-prename descclassname"><span class="pre">django.test.signals.</span></code><code class="sig-name descname"><span class="pre">setting_changed</span></code><a class="headerlink" href="#django.test.signals.setting_changed" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当通过 <code class="docutils literal notranslate"><span class="pre">django.test.TestCase.settings()</span></code> 上下文管理器或 <a class="reference internal" href="../topics/testing/tools.html#django.test.override_settings" title="django.test.override_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.test.override_settings()</span></code></a> 装饰器／上下文管理器改变配置值时，会发出这个信号。</p>
+<p>它实际上被发送了两次：当应用新的值时（&quot;setup&quot;）和当恢复原始值时（&quot;drawdown&quot;）。使用 <code class="docutils literal notranslate"><span class="pre">enter</span></code> 参数来区分这两种情况。</p>
+<p>你也可以从 <code class="docutils literal notranslate"><span class="pre">django.core.signals</span></code> 导入这个信号，以避免在非测试情况下从 <code class="docutils literal notranslate"><span class="pre">django.test</span></code> 导入。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>配置处理程序。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">setting</span></code></dt><dd>配置的名称。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">value</span></code></dt><dd>更改后的配置值。对于最初不存在的配置，在 &quot;teardown&quot; 阶段，<code class="docutils literal notranslate"><span class="pre">value</span></code> 是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">enter</span></code></dt><dd>一个布尔值；<code class="docutils literal notranslate"><span class="pre">True</span></code> 如果配置被应用，<code class="docutils literal notranslate"><span class="pre">False</span></code> 如果恢复。</dd>
+</dl>
+</div>
+<div class="section" id="s-template-rendered">
+<span id="template-rendered"></span><h3><code class="docutils literal notranslate"><span class="pre">template_rendered</span></code><a class="headerlink" href="#template-rendered" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.test.signals.template_rendered">
+<code class="sig-prename descclassname"><span class="pre">django.test.signals.</span></code><code class="sig-name descname"><span class="pre">template_rendered</span></code><a class="headerlink" href="#django.test.signals.template_rendered" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当测试系统渲染一个模板时发出。这个信号在 Django 服务器正常运行时不会发出，只有在测试时才会发出。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>被渲染的 <a class="reference internal" href="templates/api.html#django.template.Template" title="django.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a> 对象。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">template</span></code></dt><dd>与发送器相同</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">context</span></code></dt><dd>渲染模板的 <a class="reference internal" href="templates/api.html#django.template.Context" title="django.template.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>。</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="s-module-django.db.backends">
+<span id="s-database-wrappers"></span><span id="module-django.db.backends"></span><span id="database-wrappers"></span><h2>数据库包装器<a class="headerlink" href="#module-django.db.backends" title="永久链接至标题">¶</a></h2>
+<p>当数据库连接启动时，数据库包装器发出的信号。</p>
+<div class="section" id="s-connection-created">
+<span id="connection-created"></span><h3><code class="docutils literal notranslate"><span class="pre">connection_created</span></code><a class="headerlink" href="#connection-created" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.db.backends.signals.connection_created">
+<code class="sig-prename descclassname"><span class="pre">django.db.backends.signals.</span></code><code class="sig-name descname"><span class="pre">connection_created</span></code><a class="headerlink" href="#django.db.backends.signals.connection_created" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当数据库包装器与数据库进行初始连接时发送。 如果你想向 SQL 后端发送任何连接后的命令，这一点特别有用。</p>
+<p>用此信号发送的参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">sender</span></code></dt><dd>数据库封装类 —— 即 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.DatabaseWrapper</span></code> 或 <code class="docutils literal notranslate"><span class="pre">django.db.backends.mysql.DatabaseWrapper</span></code> 等。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">connection</span></code></dt><dd>打开的数据库连接。这在多数据库配置中可以用来区分不同数据库的连接信号。</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">信号</a><ul>
+<li><a class="reference internal" href="#module-django.db.models.signals">模型信号</a><ul>
+<li><a class="reference internal" href="#pre-init"><code class="docutils literal notranslate"><span class="pre">pre_init</span></code></a></li>
+<li><a class="reference internal" href="#post-init"><code class="docutils literal notranslate"><span class="pre">post_init</span></code></a></li>
+<li><a class="reference internal" href="#pre-save"><code class="docutils literal notranslate"><span class="pre">pre_save</span></code></a></li>
+<li><a class="reference internal" href="#post-save"><code class="docutils literal notranslate"><span class="pre">post_save</span></code></a></li>
+<li><a class="reference internal" href="#pre-delete"><code class="docutils literal notranslate"><span class="pre">pre_delete</span></code></a></li>
+<li><a class="reference internal" href="#post-delete"><code class="docutils literal notranslate"><span class="pre">post_delete</span></code></a></li>
+<li><a class="reference internal" href="#m2m-changed"><code class="docutils literal notranslate"><span class="pre">m2m_changed</span></code></a></li>
+<li><a class="reference internal" href="#class-prepared"><code class="docutils literal notranslate"><span class="pre">class_prepared</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#management-signals">管理信号</a><ul>
+<li><a class="reference internal" href="#pre-migrate"><code class="docutils literal notranslate"><span class="pre">pre_migrate</span></code></a></li>
+<li><a class="reference internal" href="#post-migrate"><code class="docutils literal notranslate"><span class="pre">post_migrate</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-django.core.signals">请求／响应信号</a><ul>
+<li><a class="reference internal" href="#request-started"><code class="docutils literal notranslate"><span class="pre">request_started</span></code></a></li>
+<li><a class="reference internal" href="#request-finished"><code class="docutils literal notranslate"><span class="pre">request_finished</span></code></a></li>
+<li><a class="reference internal" href="#got-request-exception"><code class="docutils literal notranslate"><span class="pre">got_request_exception</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-django.test.signals">测试信号</a><ul>
+<li><a class="reference internal" href="#setting-changed"><code class="docutils literal notranslate"><span class="pre">setting_changed</span></code></a></li>
+<li><a class="reference internal" href="#template-rendered"><code class="docutils literal notranslate"><span class="pre">template_rendered</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-django.db.backends">数据库包装器</a><ul>
+<li><a class="reference internal" href="#connection-created"><code class="docutils literal notranslate"><span class="pre">connection_created</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="settings.html"
+                          title="上一章">配置</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="templates/index.html"
+                          title="下一章">模板</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/ref/signals.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="settings.html" title="配置">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="templates/index.html" title="模板">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

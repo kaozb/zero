@@ -1,0 +1,1181 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 实用程序 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="验证器" href="validators.html" />
+    <link rel="prev" title="URLconfs 中使用的 django.urls 函数" href="urls.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="urls.html" title="URLconfs 中使用的 &lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django.urls&lt;/span&gt;&lt;/code&gt; 函数">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="validators.html" title="验证器">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-utils">
+            
+  <div class="section" id="s-module-django.utils">
+<span id="s-django-utils"></span><span id="module-django.utils"></span><span id="django-utils"></span><h1>Django 实用程序<a class="headerlink" href="#module-django.utils" title="永久链接至标题">¶</a></h1>
+<p>本文档涵盖了 <code class="docutils literal notranslate"><span class="pre">django.utils</span></code> 中所有稳定的模块。<code class="docutils literal notranslate"><span class="pre">django.utils</span></code> 中的大部分模块都是为内部使用而设计的，只有以下部分可以被认为是稳定的，因此根据 <a class="reference internal" href="../internals/release-process.html#internal-release-deprecation-policy"><span class="std std-ref">内部发布废弃政策</span></a> 的规定，这些模块可以向后兼容。</p>
+<div class="section" id="s-module-django.utils.cache">
+<span id="s-django-utils-cache"></span><span id="module-django.utils.cache"></span><span id="django-utils-cache"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.cache</span></code><a class="headerlink" href="#module-django.utils.cache" title="永久链接至标题">¶</a></h2>
+<p>这个模块包含了控制 HTTP 缓存的辅助函数。它通过管理响应的 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头来实现。它包括直接对响应对象的头进行修补的函数，以及改变函数使其自己进行头修补的装饰器。</p>
+<p>For information on the <code class="docutils literal notranslate"><span class="pre">Vary</span></code> header, see <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-12.5.5"><strong>RFC 9110#section-12.5.5</strong></a>.</p>
+<p>本质上，<code class="docutils literal notranslate"><span class="pre">Vary</span></code> HTTP 头定义了缓存在建立缓存密钥时应该考虑哪些头信息。如果请求的路径相同，但 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 中命名的头内容不同，则需要获得不同的缓存密钥，以防止传递错误的内容。</p>
+<p>例如， <a class="reference internal" href="../topics/i18n/index.html"><span class="doc">国际化</span></a> 中间件需要通过 <code class="docutils literal notranslate"><span class="pre">Accept-language</span></code> 头来区分缓存。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.patch_cache_control">
+<code class="sig-name descname"><span class="pre">patch_cache_control</span></code>(<em><span class="n"><span class="pre">response</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.utils.cache.patch_cache_control" title="永久链接至目标">¶</a></dt>
+<dd><p>这个函数通过添加所有关键字参数来修补 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> 头。变化如下：</p>
+<ul class="simple">
+<li>所有的关键字参数名都转为小写，下划线转为连字符。</li>
+<li>如果一个参数的值是 <code class="docutils literal notranslate"><span class="pre">True</span></code> （确切地说是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，而不仅仅是一个真值），那么只有参数名称会被添加到头。</li>
+<li>所有其他参数在应用 <code class="docutils literal notranslate"><span class="pre">str()</span></code> 后，都会加上其值。</li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.get_max_age">
+<code class="sig-name descname"><span class="pre">get_max_age</span></code>(<em><span class="n"><span class="pre">response</span></span></em>)<a class="headerlink" href="#django.utils.cache.get_max_age" title="永久链接至目标">¶</a></dt>
+<dd><p>以整数形式返回响应 Cache-Control 头的最大寿命（如果没有找到或不是整数，则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>）。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.patch_response_headers">
+<code class="sig-name descname"><span class="pre">patch_response_headers</span></code>(<em><span class="n"><span class="pre">response</span></span></em>, <em><span class="n"><span class="pre">cache_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.cache.patch_response_headers" title="永久链接至目标">¶</a></dt>
+<dd><p>为给定的 <code class="docutils literal notranslate"><span class="pre">HttpResponse</span></code> 对象添加一些有用的头信息。</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">Expires</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code></li>
+</ul>
+<p>每个头只有在还没有设置的情况下才会被添加。</p>
+<p><code class="docutils literal notranslate"><span class="pre">cache_timeout</span></code> 的单位是秒。默认使用 <a class="reference internal" href="settings.html#std-setting-CACHE_MIDDLEWARE_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_SECONDS</span></code></a> 配置。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.add_never_cache_headers">
+<code class="sig-name descname"><span class="pre">add_never_cache_headers</span></code>(<em><span class="n"><span class="pre">response</span></span></em>)<a class="headerlink" href="#django.utils.cache.add_never_cache_headers" title="永久链接至目标">¶</a></dt>
+<dd><p>Adds an <code class="docutils literal notranslate"><span class="pre">Expires</span></code> header to the current date/time.</p>
+<p>在响应中添加 <code class="docutils literal notranslate"><span class="pre">Cache-Control:</span> <span class="pre">max-age=0,</span> <span class="pre">no-cache,</span> <span class="pre">no-store,</span> <span class="pre">must-revalidate,</span> <span class="pre">private</span></code> 头，以表明页面永远不会被缓存。</p>
+<p>每个头只有在还没有设置的情况下才会被添加。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.patch_vary_headers">
+<code class="sig-name descname"><span class="pre">patch_vary_headers</span></code>(<em><span class="n"><span class="pre">response</span></span></em>, <em><span class="n"><span class="pre">newheaders</span></span></em>)<a class="headerlink" href="#django.utils.cache.patch_vary_headers" title="永久链接至目标">¶</a></dt>
+<dd><p>Adds (or updates) the <code class="docutils literal notranslate"><span class="pre">Vary</span></code> header in the given <code class="docutils literal notranslate"><span class="pre">HttpResponse</span></code> object.
+<code class="docutils literal notranslate"><span class="pre">newheaders</span></code> is a list of header names that should be in <code class="docutils literal notranslate"><span class="pre">Vary</span></code>. If
+headers contains an asterisk, then <code class="docutils literal notranslate"><span class="pre">Vary</span></code> header will consist of a single
+asterisk <code class="docutils literal notranslate"><span class="pre">'*'</span></code>, according to <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-12.5.5"><strong>RFC 9110#section-12.5.5</strong></a>. Otherwise,
+existing headers in <code class="docutils literal notranslate"><span class="pre">Vary</span></code> aren't removed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.get_cache_key">
+<code class="sig-name descname"><span class="pre">get_cache_key</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">key_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GET'</span></span></em>, <em><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.cache.get_cache_key" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个基于请求路径的缓存密钥。它可以在请求阶段使用，因为它从全局路径注册表中提取要考虑的头列表，并使用这些头建立一个缓存密钥来进行检查。</p>
+<p>如果没有存储头列表，则需要重建页面，因此该函数返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.cache.learn_cache_key">
+<code class="sig-name descname"><span class="pre">learn_cache_key</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">response</span></span></em>, <em><span class="n"><span class="pre">cache_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">key_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.cache.learn_cache_key" title="永久链接至目标">¶</a></dt>
+<dd><p>从响应对象中学习某些请求路径要考虑的头信息。它将这些头存储在全局路径注册表中，这样以后访问该路径时就可以知道要考虑哪些头，而无需建立响应对象本身。头在响应的 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头中命名，但我们要防止响应生成。</p>
+<p>用于生成缓存密钥的头列表和页面本身一样存储在缓存中。如果缓存将一些数据从缓存中过期，这意味着我们必须构建一次响应，以获得 Vary 头，因此也就获得了用于缓存密钥的头列表。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.dateparse">
+<span id="s-django-utils-dateparse"></span><span id="module-django.utils.dateparse"></span><span id="django-utils-dateparse"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.dateparse</span></code><a class="headerlink" href="#module-django.utils.dateparse" title="永久链接至标题">¶</a></h2>
+<p>本模块中定义的函数共享以下属性：</p>
+<ul class="simple">
+<li>它们接受 ISO 8601 日期／时间格式的字符串（或一些接近的替代格式），并从 Python 的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#module-datetime" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">datetime</span></code></a> 模块的相应类中返回对象。</li>
+<li>如果他们的输入格式很好，但不是有效的日期或时间，他们会引发 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(在 Python v3.11)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。</li>
+<li>如果输入格式不好，则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</li>
+<li>它们接受最多皮秒精度的输入，但它们将其截断为微秒，因为这是 Python 支持的。</li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.dateparse.parse_date">
+<code class="sig-name descname"><span class="pre">parse_date</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.dateparse.parse_date" title="永久链接至目标">¶</a></dt>
+<dd><p>解析一个字符串并返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.dateparse.parse_time">
+<code class="sig-name descname"><span class="pre">parse_time</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.dateparse.parse_time" title="永久链接至目标">¶</a></dt>
+<dd><p>解析一个字符串并返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.time" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.time</span></code></a>。</p>
+<p>不支持 UTC 偏移；如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 描述的是 UTC 偏移，结果是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.dateparse.parse_datetime">
+<code class="sig-name descname"><span class="pre">parse_datetime</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.dateparse.parse_datetime" title="永久链接至目标">¶</a></dt>
+<dd><p>解析一个字符串并返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code></a>。</p>
+<p>支持 UTC 偏移；如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 描述的是 UTC 偏移，则结果的 <code class="docutils literal notranslate"><span class="pre">tzinfo</span></code> 属性是一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timezone" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timezone</span></code></a> 实例。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.dateparse.parse_duration">
+<code class="sig-name descname"><span class="pre">parse_duration</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.dateparse.parse_duration" title="永久链接至目标">¶</a></dt>
+<dd><p>解析一个字符串并返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code></a>。</p>
+<p>要求数据格式为 <code class="docutils literal notranslate"><span class="pre">&quot;DD</span> <span class="pre">HH:MM:SS.uuuuu&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;DD</span> <span class="pre">HH:MM:SS,uuuuu&quot;</span></code> 或 ISO 8601 规定的格式（例如 <code class="docutils literal notranslate"><span class="pre">P4DT1H15M20S</span></code> 相当于 <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">1:15:20</span></code>）或 PostgreSQL 的日期时间间隔格式（例如 <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">days</span> <span class="pre">04:05:06</span></code>）。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.decorators">
+<span id="s-django-utils-decorators"></span><span id="module-django.utils.decorators"></span><span id="django-utils-decorators"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.decorators</span></code><a class="headerlink" href="#module-django.utils.decorators" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.decorators.method_decorator">
+<code class="sig-name descname"><span class="pre">method_decorator</span></code>(<em><span class="n"><span class="pre">decorator</span></span></em>, <em><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>)<a class="reference internal" href="../modules/django/utils/decorators.html#method_decorator"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.decorators.method_decorator" title="永久链接至目标">¶</a></dt>
+<dd><p>将函数装饰器转换为方法装饰器。它可以用来装饰方法或类；在后一种情况下，<code class="docutils literal notranslate"><span class="pre">name</span></code> 是要装饰的方法的名称，并且是必需的。</p>
+<p><code class="docutils literal notranslate"><span class="pre">decorator</span></code> 也可以是一个函数列表或元组。它们以相反的顺序包装，因此调用顺序是函数在列表／元组中出现的顺序。</p>
+<p>参见 <a class="reference internal" href="../topics/class-based-views/intro.html#id1"><span class="std std-ref">装饰基于类的视图</span></a> 的用法示例。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.decorators.decorator_from_middleware">
+<code class="sig-name descname"><span class="pre">decorator_from_middleware</span></code>(<em><span class="n"><span class="pre">middleware_class</span></span></em>)<a class="reference internal" href="../modules/django/utils/decorators.html#decorator_from_middleware"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.decorators.decorator_from_middleware" title="永久链接至目标">¶</a></dt>
+<dd><p>给定一个中间件类，返回一个视图装饰器。这让你可以在每个视图的基础上使用中间件功能。中间件的创建不需要传递参数。</p>
+<p>它假设中间件与 Django 1.9 和更早的老式中间件兼容（有 <code class="docutils literal notranslate"><span class="pre">process_request()</span></code>、<code class="docutils literal notranslate"><span class="pre">process_exception()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">process_response()</span></code> 等方法）。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.decorators.decorator_from_middleware_with_args">
+<code class="sig-name descname"><span class="pre">decorator_from_middleware_with_args</span></code>(<em><span class="n"><span class="pre">middleware_class</span></span></em>)<a class="reference internal" href="../modules/django/utils/decorators.html#decorator_from_middleware_with_args"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.decorators.decorator_from_middleware_with_args" title="永久链接至目标">¶</a></dt>
+<dd><p>像 <code class="docutils literal notranslate"><span class="pre">decorator_from_middleware</span></code> 一样，但是返回一个接受参数的函数，传递给 middleware_class。例如，<a class="reference internal" href="../topics/cache.html#django.views.decorators.cache.cache_page" title="django.views.decorators.cache.cache_page"><code class="xref py py-func docutils literal notranslate"><span class="pre">cache_page()</span></code></a> 装饰器是从 <code class="docutils literal notranslate"><span class="pre">CacheMiddleware</span></code> 中创建的，就像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cache_page</span> <span class="o">=</span> <span class="n">decorator_from_middleware_with_args</span><span class="p">(</span><span class="n">CacheMiddleware</span><span class="p">)</span>
+
+
+<span class="nd">@cache_page</span><span class="p">(</span><span class="mi">3600</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.decorators.sync_only_middleware">
+<code class="sig-name descname"><span class="pre">sync_only_middleware</span></code>(<em><span class="n"><span class="pre">middleware</span></span></em>)<a class="reference internal" href="../modules/django/utils/decorators.html#sync_only_middleware"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.decorators.sync_only_middleware" title="永久链接至目标">¶</a></dt>
+<dd><p>将一个中间件标记为 <a class="reference internal" href="../topics/http/middleware.html#async-middleware"><span class="std std-ref">仅同步</span></a>。（Django 中的默认值，但这允许你在未来的版本中改变默认值的情况下对其进行保护。）</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.decorators.async_only_middleware">
+<code class="sig-name descname"><span class="pre">async_only_middleware</span></code>(<em><span class="n"><span class="pre">middleware</span></span></em>)<a class="reference internal" href="../modules/django/utils/decorators.html#async_only_middleware"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.decorators.async_only_middleware" title="永久链接至目标">¶</a></dt>
+<dd><p>将一个中间件标记为 <a class="reference internal" href="../topics/http/middleware.html#async-middleware"><span class="std std-ref">仅异步</span></a>。当它从 WSGI 请求路径被调用时，Django 将把它包装在异步事件循环中。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.decorators.sync_and_async_middleware">
+<code class="sig-name descname"><span class="pre">sync_and_async_middleware</span></code>(<em><span class="n"><span class="pre">middleware</span></span></em>)<a class="reference internal" href="../modules/django/utils/decorators.html#sync_and_async_middleware"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.decorators.sync_and_async_middleware" title="永久链接至目标">¶</a></dt>
+<dd><p>将中间件标记为 <a class="reference internal" href="../topics/http/middleware.html#async-middleware"><span class="std std-ref">同步和异步兼容</span></a>，这样可以避免转换请求。你必须实现对当前请求类型的检测才能使用这个装饰器。详情请看 <a class="reference internal" href="../topics/http/middleware.html#async-middleware"><span class="std std-ref">异步中间件文档</span></a>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.encoding">
+<span id="s-django-utils-encoding"></span><span id="module-django.utils.encoding"></span><span id="django-utils-encoding"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.encoding</span></code><a class="headerlink" href="#module-django.utils.encoding" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.smart_str">
+<code class="sig-name descname"><span class="pre">smart_str</span></code>(<em><span class="n"><span class="pre">s</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em><span class="n"><span class="pre">strings_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strict'</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#smart_str"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.smart_str" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个代表任意对象 <code class="docutils literal notranslate"><span class="pre">s</span></code> 的 <code class="docutils literal notranslate"><span class="pre">str</span></code> 对象。使用 <code class="docutils literal notranslate"><span class="pre">encoding</span></code> 编解码器处理字节字符串。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">strings_only</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，不要转换（一些）非字符串类对象。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.is_protected_type">
+<code class="sig-name descname"><span class="pre">is_protected_type</span></code>(<em><span class="n"><span class="pre">obj</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#is_protected_type"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.is_protected_type" title="永久链接至目标">¶</a></dt>
+<dd><p>确定对象实例是否属于一个受保护的类型。</p>
+<p>当传递给 <code class="docutils literal notranslate"><span class="pre">force_str(strings_only=True)</span></code> 时，受保护类型的对象会被原样保存。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.force_str">
+<code class="sig-name descname"><span class="pre">force_str</span></code>(<em><span class="n"><span class="pre">s</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em><span class="n"><span class="pre">strings_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strict'</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#force_str"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.force_str" title="永久链接至目标">¶</a></dt>
+<dd><p>类似于 <code class="docutils literal notranslate"><span class="pre">smart_str()</span></code>，除了惰性实例被解析为字符串，而不是作为惰性对象保存。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">strings_only</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，不要转换（一些）非字符串类对象。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.smart_bytes">
+<code class="sig-name descname"><span class="pre">smart_bytes</span></code>(<em><span class="n"><span class="pre">s</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em><span class="n"><span class="pre">strings_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strict'</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#smart_bytes"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.smart_bytes" title="永久链接至目标">¶</a></dt>
+<dd><p>返回任意对象 <code class="docutils literal notranslate"><span class="pre">s</span></code> 的字节字符串版本，按照 <code class="docutils literal notranslate"><span class="pre">encoding</span></code> 中指定的编码。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">strings_only</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，不要转换（一些）非字符串类对象。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.force_bytes">
+<code class="sig-name descname"><span class="pre">force_bytes</span></code>(<em><span class="n"><span class="pre">s</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em><span class="n"><span class="pre">strings_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strict'</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#force_bytes"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.force_bytes" title="永久链接至目标">¶</a></dt>
+<dd><p>类似于 <code class="docutils literal notranslate"><span class="pre">smart_bytes</span></code>，除了惰性实例被解析为字节字符串，而不是作为惰性对象保存。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">strings_only</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，不要转换（一些）非字符串类对象。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.iri_to_uri">
+<code class="sig-name descname"><span class="pre">iri_to_uri</span></code>(<em><span class="n"><span class="pre">iri</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#iri_to_uri"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.iri_to_uri" title="永久链接至目标">¶</a></dt>
+<dd><p>将国际化资源标识符（IRI）部分转换为适合包含在 URL 中的 URI 部分。</p>
+<p>这是 <span class="target" id="index-11"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3987.html#section-3.1"><strong>RFC 3987#section-3.1</strong></a> 中第 3.1 节的算法，由于假设输入是一个字符串而不是任意字节流，所以略作简化。</p>
+<p>取一个 IRI（字符串或 UTF-8 字节）并返回一个包含编码结果的字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.uri_to_iri">
+<code class="sig-name descname"><span class="pre">uri_to_iri</span></code>(<em><span class="n"><span class="pre">uri</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#uri_to_iri"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.uri_to_iri" title="永久链接至目标">¶</a></dt>
+<dd><p>将统一资源标识符转换为国际化资源标识符。</p>
+<p>这是 <span class="target" id="index-12"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3987.html#section-3.2"><strong>RFC 3987#section-3.2</strong></a> 第 3.2 节中的一个算法。</p>
+<p>获取一个 ASCII 字节的 URI，并返回一个包含编码结果的字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.filepath_to_uri">
+<code class="sig-name descname"><span class="pre">filepath_to_uri</span></code>(<em><span class="n"><span class="pre">path</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#filepath_to_uri"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.filepath_to_uri" title="永久链接至目标">¶</a></dt>
+<dd><p>将一个文件系统路径转换为适合包含在 URL 中的 URI 部分。路径假定为 UTF-8 字节、字符串或一个 <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>。</p>
+<p>本方法将对某些通常被识别为 URI 特殊字符的字符进行编码。 请注意，本方法不对 ' 字符进行编码，因为它是 URI 中的有效字符。更多细节请参见 <code class="docutils literal notranslate"><span class="pre">encodeURIComponent()</span></code> JavaScript 函数。</p>
+<p>返回一个包含编码结果的 ASCII 字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.encoding.escape_uri_path">
+<code class="sig-name descname"><span class="pre">escape_uri_path</span></code>(<em><span class="n"><span class="pre">path</span></span></em>)<a class="reference internal" href="../modules/django/utils/encoding.html#escape_uri_path"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.encoding.escape_uri_path" title="永久链接至目标">¶</a></dt>
+<dd><p>从统一资源标识符（URI）的路径部分转出不安全字符。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.feedgenerator">
+<span id="s-django-utils-feedgenerator"></span><span id="module-django.utils.feedgenerator"></span><span id="django-utils-feedgenerator"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.feedgenerator</span></code><a class="headerlink" href="#module-django.utils.feedgenerator" title="永久链接至标题">¶</a></h2>
+<p>Sample usage:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">feedgenerator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feed</span> <span class="o">=</span> <span class="n">feedgenerator</span><span class="o">.</span><span class="n">Rss201rev2Feed</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Poynter E-Media Tidbits&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">link</span><span class="o">=</span><span class="s2">&quot;http://www.poynter.org/column.asp?id=31&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A group blog by the sharpest minds in online media/journalism/publishing.&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feed</span><span class="o">.</span><span class="n">add_item</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">link</span><span class="o">=</span><span class="s2">&quot;http://www.holovaty.com/test/&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Testing.&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;test.rss&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">feed</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>为了简化生成器的选择，使用 <code class="docutils literal notranslate"><span class="pre">feedgenerator.DefaultFeed</span></code>，目前是 <code class="docutils literal notranslate"><span class="pre">Rss201rev2Feed</span></code>。</p>
+<p>关于不同版本的RSS的定义，参见： <a class="reference external" href="https://web.archive.org/web/20110718035220/http://diveintomark.org/archives/2004/02/04/incompatible-rss">https://web.archive.org/web/20110718035220/http://diveintomark.org/archives/2004/02/04/incompatible-rss</a>。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.get_tag_uri">
+<code class="sig-name descname"><span class="pre">get_tag_uri</span></code>(<em><span class="n"><span class="pre">url</span></span></em>, <em><span class="n"><span class="pre">date</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#get_tag_uri"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.get_tag_uri" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个 TagURI。</p>
+<p>参见 <a class="reference external" href="https://web.archive.org/web/20110514113830/http://diveintomark.org/archives/2004/05/28/howto-atom-id">https://web.archive.org/web/20110514113830/http://diveintomark.org/archives/2004/05/28/howto-atom-id</a></p>
+</dd></dl>
+
+<div class="section" id="s-syndicationfeed">
+<span id="syndicationfeed"></span><h3><code class="docutils literal notranslate"><span class="pre">SyndicationFeed</span></code><a class="headerlink" href="#syndicationfeed" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SyndicationFeed</span></code><a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed" title="永久链接至目标">¶</a></dt>
+<dd><p>Base class for all syndication feeds. Subclasses should provide
+<code class="docutils literal notranslate"><span class="pre">write()</span></code>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code>(<em><span class="n"><span class="pre">title</span></span></em>, <em><span class="n"><span class="pre">link</span></span></em>, <em><span class="n"><span class="pre">description</span></span></em>, <em><span class="n"><span class="pre">language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">author_email</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">author_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">author_link</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">subtitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">categories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">feed_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">feed_copyright</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">feed_guid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.__init__"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.__init__" title="永久链接至目标">¶</a></dt>
+<dd><p>用给定的元数据字典初始化 feed，它适用于整个 feed。</p>
+<p>你传递给 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 的任何额外的关键字参数将被存储在 <code class="docutils literal notranslate"><span class="pre">self.feed</span></code> 中。</p>
+<p>所有参数都应该是字符串，但 <code class="docutils literal notranslate"><span class="pre">categories</span></code> 除外，它应该是一个字符串序列。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.add_item">
+<code class="sig-name descname"><span class="pre">add_item</span></code>(<em><span class="n"><span class="pre">title</span></span></em>, <em><span class="n"><span class="pre">link</span></span></em>, <em><span class="n"><span class="pre">description</span></span></em>, <em><span class="n"><span class="pre">author_email</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">author_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">author_link</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">pubdate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">comments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">unique_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">categories</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em><span class="n"><span class="pre">item_copyright</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">updateddate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">enclosures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.add_item"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.add_item" title="永久链接至目标">¶</a></dt>
+<dd><p>添加一个项目到 feed 中。除了 <code class="docutils literal notranslate"><span class="pre">pubdate</span></code> 和 <code class="docutils literal notranslate"><span class="pre">updateddate</span></code> 是 <code class="docutils literal notranslate"><span class="pre">datetime.datetime</span></code> 对象和 <code class="docutils literal notranslate"><span class="pre">enclosures</span></code> 是 <code class="docutils literal notranslate"><span class="pre">Enclosure</span></code> 实例的列表外，所有参数都应该是字符串。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.num_items">
+<code class="sig-name descname"><span class="pre">num_items</span></code>()<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.num_items"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.num_items" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.root_attributes">
+<code class="sig-name descname"><span class="pre">root_attributes</span></code>()<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.root_attributes"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.root_attributes" title="永久链接至目标">¶</a></dt>
+<dd><p>返回要放在根元素（即 feed/channel）上的额外属性。从 <code class="docutils literal notranslate"><span class="pre">write()</span></code> 调用。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.add_root_elements">
+<code class="sig-name descname"><span class="pre">add_root_elements</span></code>(<em><span class="n"><span class="pre">handler</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.add_root_elements"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.add_root_elements" title="永久链接至目标">¶</a></dt>
+<dd><p>在根（即 feed/channel）元素中添加元素。由 <code class="docutils literal notranslate"><span class="pre">write()</span></code> 调用。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.item_attributes">
+<code class="sig-name descname"><span class="pre">item_attributes</span></code>(<em><span class="n"><span class="pre">item</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.item_attributes"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.item_attributes" title="永久链接至目标">¶</a></dt>
+<dd><p>返回要放在每个项目（即 item/entry）元素上的额外属性。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.add_item_elements">
+<code class="sig-name descname"><span class="pre">add_item_elements</span></code>(<em><span class="n"><span class="pre">handler</span></span></em>, <em><span class="n"><span class="pre">item</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.add_item_elements"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.add_item_elements" title="永久链接至目标">¶</a></dt>
+<dd><p>在每个项目（即 item/entry）元素上添加元素。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.write">
+<code class="sig-name descname"><span class="pre">write</span></code>(<em><span class="n"><span class="pre">outfile</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.write"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.write" title="永久链接至目标">¶</a></dt>
+<dd><p>将给定编码的 feed 输出到 <code class="docutils literal notranslate"><span class="pre">outfile</span></code>，这是一个类似文件的对象。子类应该覆盖这个。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.writeString">
+<code class="sig-name descname"><span class="pre">writeString</span></code>(<em><span class="n"><span class="pre">encoding</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.writeString"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.writeString" title="永久链接至目标">¶</a></dt>
+<dd><p>以字符串形式返回给定编码的 feed。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.SyndicationFeed.latest_post_date">
+<code class="sig-name descname"><span class="pre">latest_post_date</span></code>()<a class="reference internal" href="../modules/django/utils/feedgenerator.html#SyndicationFeed.latest_post_date"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.SyndicationFeed.latest_post_date" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 feed 中所有项目的最新 <code class="docutils literal notranslate"><span class="pre">pubdate</span></code> 或 <code class="docutils literal notranslate"><span class="pre">updateddate</span></code>。如果没有项目有这些属性，则返回当前的 UTC 日期／时间。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-enclosure">
+<span id="enclosure"></span><h3><code class="docutils literal notranslate"><span class="pre">Enclosure</span></code><a class="headerlink" href="#enclosure" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.Enclosure">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Enclosure</span></code><a class="reference internal" href="../modules/django/utils/feedgenerator.html#Enclosure"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.Enclosure" title="永久链接至目标">¶</a></dt>
+<dd><p>代表一个 RSS enclosure</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-rssfeed">
+<span id="rssfeed"></span><h3><code class="docutils literal notranslate"><span class="pre">RssFeed</span></code><a class="headerlink" href="#rssfeed" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.RssFeed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RssFeed</span></code>(<em><span class="n"><span class="pre">SyndicationFeed</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#RssFeed"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.RssFeed" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="s-rss201rev2feed">
+<span id="rss201rev2feed"></span><h3><code class="docutils literal notranslate"><span class="pre">Rss201rev2Feed</span></code><a class="headerlink" href="#rss201rev2feed" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.Rss201rev2Feed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Rss201rev2Feed</span></code>(<em><span class="n"><span class="pre">RssFeed</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#Rss201rev2Feed"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.Rss201rev2Feed" title="永久链接至目标">¶</a></dt>
+<dd><p>参见： <a class="reference external" href="https://cyber.harvard.edu/rss/rss.html">https://cyber.harvard.edu/rss/rss.html</a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-rssuserland091feed">
+<span id="rssuserland091feed"></span><h3><code class="docutils literal notranslate"><span class="pre">RssUserland091Feed</span></code><a class="headerlink" href="#rssuserland091feed" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.RssUserland091Feed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RssUserland091Feed</span></code>(<em><span class="n"><span class="pre">RssFeed</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#RssUserland091Feed"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.RssUserland091Feed" title="永久链接至目标">¶</a></dt>
+<dd><p>参见： <a class="reference external" href="http://backend.userland.com/rss091">http://backend.userland.com/rss091</a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-atom1feed">
+<span id="atom1feed"></span><h3><code class="docutils literal notranslate"><span class="pre">Atom1Feed</span></code><a class="headerlink" href="#atom1feed" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.feedgenerator.Atom1Feed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Atom1Feed</span></code>(<em><span class="n"><span class="pre">SyndicationFeed</span></span></em>)<a class="reference internal" href="../modules/django/utils/feedgenerator.html#Atom1Feed"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.feedgenerator.Atom1Feed" title="永久链接至目标">¶</a></dt>
+<dd><p>规格： <span class="target" id="index-13"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4287.html"><strong>RFC 4287</strong></a></p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-module-django.utils.functional">
+<span id="s-django-utils-functional"></span><span id="module-django.utils.functional"></span><span id="django-utils-functional"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.functional</span></code><a class="headerlink" href="#module-django.utils.functional" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.functional.cached_property">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">cached_property</span></code>(<em><span class="n"><span class="pre">func</span></span></em>, <em><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="reference internal" href="../modules/django/utils/functional.html#cached_property"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.functional.cached_property" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&#64;cached_property</span></code> 装饰器将一个方法的结果缓存起来，该方法有一个 <code class="docutils literal notranslate"><span class="pre">self</span></code> 参数作为属性。只要实例存在，缓存的结果就会持续存在，所以如果实例被传来传去，并且随后函数被调用，缓存的结果就会被返回。</p>
+<p>考虑一个典型的情况，在将模型实例放入上下文之前，视图可能需要调用模型的方法来执行一些计算，在上下文中，模板可能会再次调用该方法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the model</span>
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">friends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># expensive computation</span>
+        <span class="o">...</span>
+        <span class="k">return</span> <span class="n">friends</span>
+
+
+<span class="c1"># in the view:</span>
+<span class="k">if</span> <span class="n">person</span><span class="o">.</span><span class="n">friends</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>而在模板中，你会有：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">friend</span> <span class="k">in</span> <span class="nv">person.friends</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>在这里，<code class="docutils literal notranslate"><span class="pre">friends()</span></code> 将被调用两次。由于视图和模板中的实例 <code class="docutils literal notranslate"><span class="pre">person</span></code> 是一样的，所以用 <code class="docutils literal notranslate"><span class="pre">&#64;cached_property</span></code> 来装饰 <code class="docutils literal notranslate"><span class="pre">friends()</span></code> 方法可以避免这种情况：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.functional</span> <span class="kn">import</span> <span class="n">cached_property</span>
+
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">friends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p>请注意，由于该方法现在是一个属性，所以在 Python 代码中需要适当地访问它：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># in the view:</span>
+<span class="k">if</span> <span class="n">person</span><span class="o">.</span><span class="n">friends</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>缓存值可以像实例的普通属性一样对待：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># clear it, requiring re-computation next time it&#39;s called</span>
+<span class="k">del</span> <span class="n">person</span><span class="o">.</span><span class="n">friends</span>  <span class="c1"># or delattr(person, &quot;friends&quot;)</span>
+
+<span class="c1"># set a value manually, that will persist on the instance until cleared</span>
+<span class="n">person</span><span class="o">.</span><span class="n">friends</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Huckleberry Finn&quot;</span><span class="p">,</span> <span class="s2">&quot;Tom Sawyer&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>由于 <a class="reference external" href="https://docs.python.org/3/reference/datamodel.html#descriptor-invocation" title="(在 Python v3.11)"><span class="xref std std-ref">描述符协议</span></a> 的工作方式，在一个没有被访问过的 <code class="docutils literal notranslate"><span class="pre">cached_property</span></code> 上使用 <code class="docutils literal notranslate"><span class="pre">del</span></code> （或 <code class="docutils literal notranslate"><span class="pre">delattr</span></code>）会引起 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code>。</p>
+<p>除了提供潜在的性能优势外，<code class="docutils literal notranslate"><span class="pre">&#64;cached_property</span></code> 还可以确保一个属性的值在一个实例的生命周期内不会发生意外变化。如果一个方法的计算是基于 <code class="docutils literal notranslate"><span class="pre">datetime.now()</span></code> 的，或者如果在同一实例上的一个方法的后续调用之间的短暂间隔中，变化被其他进程保存到数据库中，就可能发生这种情况。</p>
+<p>你可以使用方法的缓存属性。例如，如果你有一个昂贵的 <code class="docutils literal notranslate"><span class="pre">get_friends()</span></code> 方法，并且想允许调用它而不检索缓存值，你可以编写：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">friends</span> <span class="o">=</span> <span class="n">cached_property</span><span class="p">(</span><span class="n">get_friends</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>虽然 <code class="docutils literal notranslate"><span class="pre">person.get_friends()</span></code> 会在每次调用时重新计算，但缓存属性的值会一直存在，直到你如上所述删除它为止：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">person</span><span class="o">.</span><span class="n">friends</span>  <span class="c1"># calls first time</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">person</span><span class="o">.</span><span class="n">get_friends</span><span class="p">()</span>  <span class="c1"># calls again</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">person</span><span class="o">.</span><span class="n">friends</span>  <span class="c1"># does not call</span>
+<span class="n">x</span> <span class="ow">is</span> <span class="n">z</span>  <span class="c1"># is True</span>
+</pre></div>
+</div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">4.1 版后已移除: </span>The <code class="docutils literal notranslate"><span class="pre">name</span></code> parameter is deprecated and will be removed in Django 5.0
+as it's unnecessary as of Python 3.6.</p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.functional.classproperty">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">classproperty</span></code>(<em><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="reference internal" href="../modules/django/utils/functional.html#classproperty"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.functional.classproperty" title="永久链接至目标">¶</a></dt>
+<dd><p>与 <a class="reference external" href="https://docs.python.org/3/library/functions.html#classmethod" title="(在 Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">&#64;classmethod</span></code></a> 类似，<code class="docutils literal notranslate"><span class="pre">&#64;classproperty</span></code> 装饰器将带有单个 <code class="docutils literal notranslate"><span class="pre">cls</span></code> 参数的方法的结果转换为可以直接从类中访问的属性。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.functional.keep_lazy">
+<code class="sig-name descname"><span class="pre">keep_lazy</span></code>(<em><span class="n"><span class="pre">func</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">resultclasses</span></span></em>)<a class="reference internal" href="../modules/django/utils/functional.html#keep_lazy"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.functional.keep_lazy" title="永久链接至目标">¶</a></dt>
+<dd><p>Django 提供了许多实用函数（特别是在 <code class="docutils literal notranslate"><span class="pre">django.utils</span></code> 中），这些函数将一个字符串作为它们的第一个参数，并对该字符串进行处理。这些函数可以被模板过滤器使用，也可以直接在其他代码中使用。</p>
+<p>如果你自己编写类似的函数并处理翻译，你会面临这样一个问题：当第一个参数是一个惰性翻译对象时，该怎么办？你不想立即将其转换为字符串，因为你可能会在视图之外使用这个函数（因此当前线程的 locale 配置将不正确）。</p>
+<p>对于这样的情况，可以使用 <code class="docutils literal notranslate"><span class="pre">django.utils.functional.keep_lazy()</span></code> 装饰器。它可以修改函数，使其在调用时，<em>如果</em> 参数是惰性翻译，则函数的执行会被延迟，直到需要将其转换为字符串。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.functional</span> <span class="kn">import</span> <span class="n">keep_lazy</span><span class="p">,</span> <span class="n">keep_lazy_text</span>
+
+
+<span class="k">def</span> <span class="nf">fancy_utility_function</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># Do some conversion on string &#39;s&#39;</span>
+    <span class="o">...</span>
+
+
+<span class="n">fancy_utility_function</span> <span class="o">=</span> <span class="n">keep_lazy</span><span class="p">(</span><span class="nb">str</span><span class="p">)(</span><span class="n">fancy_utility_function</span><span class="p">)</span>
+
+
+<span class="c1"># Or more succinctly:</span>
+<span class="nd">@keep_lazy</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fancy_utility_function</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">keep_lazy()</span></code> 装饰器需要一些额外的参数（<code class="docutils literal notranslate"><span class="pre">*args</span></code>）来指定原始函数可以返回的类型。一个常见的用例是返回文本的函数。对于这些函数，你可以将 <code class="docutils literal notranslate"><span class="pre">str</span></code> 类型传递给 <code class="docutils literal notranslate"><span class="pre">keep_lazy</span></code> （或者使用下一节描述的 <a class="reference internal" href="#django.utils.functional.keep_lazy_text" title="django.utils.functional.keep_lazy_text"><code class="xref py py-func docutils literal notranslate"><span class="pre">keep_lazy_text()</span></code></a> 装饰器）。</p>
+<p>使用这个装饰器意味着你可以编写你的函数，并假设输入是一个正确的字符串，然后在最后添加对惰性翻译对象的支持。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.functional.keep_lazy_text">
+<code class="sig-name descname"><span class="pre">keep_lazy_text</span></code>(<em><span class="n"><span class="pre">func</span></span></em>)<a class="reference internal" href="../modules/django/utils/functional.html#keep_lazy_text"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.functional.keep_lazy_text" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">keep_lazy(str)(func)</span></code> 的快捷方式。</p>
+<p>如果你有一个返回文本的函数，并且你希望能够在延迟其执行的同时接受惰性参数，你可以使用这个装饰器：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.functional</span> <span class="kn">import</span> <span class="n">keep_lazy</span><span class="p">,</span> <span class="n">keep_lazy_text</span>
+
+
+<span class="c1"># Our previous example was:</span>
+<span class="nd">@keep_lazy</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fancy_utility_function</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="o">...</span>
+
+
+<span class="c1"># Which can be rewritten as:</span>
+<span class="nd">@keep_lazy_text</span>
+<span class="k">def</span> <span class="nf">fancy_utility_function</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.html">
+<span id="s-django-utils-html"></span><span id="module-django.utils.html"></span><span id="django-utils-html"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.html</span></code><a class="headerlink" href="#module-django.utils.html" title="永久链接至标题">¶</a></h2>
+<p>通常情况下，你应该使用 Django 的模板来构建 HTML，以利用它的自动转义机制，在适当的地方使用 <a class="reference internal" href="#module-django.utils.safestring" title="django.utils.safestring: Functions and classes for working with strings that can be displayed safely without further escaping in HTML."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.utils.safestring</span></code></a> 中的实用程序。这个模块提供了一些额外的低级实用程序来处理 HTML。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.escape">
+<code class="sig-name descname"><span class="pre">escape</span></code>(<em><span class="n"><span class="pre">text</span></span></em>)<a class="headerlink" href="#django.utils.html.escape" title="永久链接至目标">¶</a></dt>
+<dd><p>返回给定的文本，并对其的符号、引号和角括号进行编码，以便在 HTML 中使用。输入的内容首先被强制为一个字符串，输出的内容被应用了 <a class="reference internal" href="#django.utils.safestring.mark_safe" title="django.utils.safestring.mark_safe"><code class="xref py py-func docutils literal notranslate"><span class="pre">mark_safe()</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.conditional_escape">
+<code class="sig-name descname"><span class="pre">conditional_escape</span></code>(<em><span class="n"><span class="pre">text</span></span></em>)<a class="headerlink" href="#django.utils.html.conditional_escape" title="永久链接至目标">¶</a></dt>
+<dd><p>Similar to <code class="docutils literal notranslate"><span class="pre">escape()</span></code>, except that it doesn't operate on preescaped
+strings, so it will not double escape.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.format_html">
+<code class="sig-name descname"><span class="pre">format_html</span></code>(<em><span class="n"><span class="pre">format_string</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.utils.html.format_html" title="永久链接至目标">¶</a></dt>
+<dd><p>This is similar to <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str.format" title="(在 Python v3.11)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a>, except that it is appropriate for
+building up HTML fragments. The first argument <code class="docutils literal notranslate"><span class="pre">format_string</span></code> is not
+escaped but all other args and kwargs are passed through
+<a class="reference internal" href="#django.utils.html.conditional_escape" title="django.utils.html.conditional_escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">conditional_escape()</span></code></a> before being passed to <code class="docutils literal notranslate"><span class="pre">str.format()</span></code>.
+Finally, the output has <a class="reference internal" href="#django.utils.safestring.mark_safe" title="django.utils.safestring.mark_safe"><code class="xref py py-func docutils literal notranslate"><span class="pre">mark_safe()</span></code></a> applied.</p>
+<p>对于构建小型 HTML 片段的情况，这个函数比直接使用 <code class="docutils literal notranslate"><span class="pre">%</span></code> 或 <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> 进行字符串插值要好，因为它对所有参数都应用了转义 —— 就像模板系统默认应用转义一样。</p>
+<p>所以，不要写：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mark_safe</span><span class="p">(</span>
+    <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> &lt;b&gt;</span><span class="si">%s</span><span class="s2">&lt;/b&gt; </span><span class="si">%s</span><span class="s2">&quot;</span>
+    <span class="o">%</span> <span class="p">(</span>
+        <span class="n">some_html</span><span class="p">,</span>
+        <span class="n">escape</span><span class="p">(</span><span class="n">some_text</span><span class="p">),</span>
+        <span class="n">escape</span><span class="p">(</span><span class="n">some_other_text</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>你应该用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">format_html</span><span class="p">(</span>
+    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> &lt;b&gt;</span><span class="si">{}</span><span class="s2">&lt;/b&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">mark_safe</span><span class="p">(</span><span class="n">some_html</span><span class="p">),</span>
+    <span class="n">some_text</span><span class="p">,</span>
+    <span class="n">some_other_text</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>这样做的好处是，你不需要对每个参数应用 <a class="reference internal" href="#django.utils.html.escape" title="django.utils.html.escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">escape()</span></code></a>，如果你忘记了一个参数，就有可能出现错误和 XSS 漏洞。</p>
+<p>请注意，虽然这个函数使用 <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> 来进行内插，但 <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> 提供的一些格式化选项（例如数字格式化）将无法使用，因为所有参数都通过 <a class="reference internal" href="#django.utils.html.conditional_escape" title="django.utils.html.conditional_escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">conditional_escape()</span></code></a>，而这个函数（最终）会调用 <a class="reference internal" href="#django.utils.encoding.force_str" title="django.utils.encoding.force_str"><code class="xref py py-func docutils literal notranslate"><span class="pre">force_str()</span></code></a> 来处理这些值。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.format_html_join">
+<code class="sig-name descname"><span class="pre">format_html_join</span></code>(<em><span class="n"><span class="pre">sep</span></span></em>, <em><span class="n"><span class="pre">format_string</span></span></em>, <em><span class="n"><span class="pre">args_generator</span></span></em>)<a class="headerlink" href="#django.utils.html.format_html_join" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.utils.html.format_html" title="django.utils.html.format_html"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_html()</span></code></a> 的一个封装器，用于常见的情况，即一组参数需要使用相同的格式字符串进行格式化，然后使用 <code class="docutils literal notranslate"><span class="pre">sep</span></code> 加入。<code class="docutils literal notranslate"><span class="pre">sep</span></code> 也通过 <a class="reference internal" href="#django.utils.html.conditional_escape" title="django.utils.html.conditional_escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">conditional_escape()</span></code></a> 传递。</p>
+<p><code class="docutils literal notranslate"><span class="pre">args_generator</span></code> 应该是一个迭代器，返回 <code class="docutils literal notranslate"><span class="pre">args</span></code> 的序列，这些序列将传递给 <a class="reference internal" href="#django.utils.html.format_html" title="django.utils.html.format_html"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_html()</span></code></a>。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">format_html_join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;li&gt;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&lt;/li&gt;&quot;</span><span class="p">,</span> <span class="p">((</span><span class="n">u</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">last_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.json_script">
+<code class="sig-name descname"><span class="pre">json_script</span></code>(<em><span class="n"><span class="pre">value</span></span></em>, <em><span class="n"><span class="pre">element_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.html.json_script" title="永久链接至目标">¶</a></dt>
+<dd><p>Escapes all HTML/XML special characters with their Unicode escapes, so
+value is safe for use with JavaScript. Also wraps the escaped JSON in a
+<code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag. If the <code class="docutils literal notranslate"><span class="pre">element_id</span></code> parameter is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
+<code class="docutils literal notranslate"><span class="pre">&lt;script&gt;</span></code> tag is given the passed id. For example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">json_script</span><span class="p">({</span><span class="s2">&quot;hello&quot;</span><span class="p">:</span> <span class="s2">&quot;world&quot;</span><span class="p">},</span> <span class="n">element_id</span><span class="o">=</span><span class="s2">&quot;hello-data&quot;</span><span class="p">)</span>
+<span class="go">&#39;&lt;script id=&quot;hello-data&quot; type=&quot;application/json&quot;&gt;{&quot;hello&quot;: &quot;world&quot;}&lt;/script&gt;&#39;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">encoder</span></code>，默认为 <a class="reference internal" href="../topics/serialization.html#django.core.serializers.json.DjangoJSONEncoder" title="django.core.serializers.json.DjangoJSONEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.serializers.json.DjangoJSONEncoder</span></code></a>，将用于序列化数据。关于这个序列化器的更多细节，请参见 <a class="reference internal" href="../topics/serialization.html#serialization-formats-json"><span class="std std-ref">JSON 序列化</span></a>。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.1:</span> <p>在更旧的版本中，参数 <code class="docutils literal notranslate"><span class="pre">element_id</span></code> 是必需的。</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>The <code class="docutils literal notranslate"><span class="pre">encoder</span></code> argument was added.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.strip_tags">
+<code class="sig-name descname"><span class="pre">strip_tags</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.html.strip_tags" title="永久链接至目标">¶</a></dt>
+<dd><p>试图从字符串中删除任何类似 HTML 标签的内容，即包含在 <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> 内的任何内容。</p>
+<p>绝对不能保证结果的字符串是 HTML 安全的。所以千万不要在没有转义的情况下将 <code class="docutils literal notranslate"><span class="pre">strip_tag</span></code> 调用的结果标记为安全，例如使用 <a class="reference internal" href="#django.utils.html.escape" title="django.utils.html.escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">escape()</span></code></a>。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">strip_tags</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是 <code class="docutils literal notranslate"><span class="pre">&quot;&lt;b&gt;Joel&lt;/b&gt;</span> <span class="pre">&lt;button&gt;is&lt;/button&gt;</span> <span class="pre">a</span> <span class="pre">&lt;span&gt;slug&lt;/span&gt;&quot;</span></code> 返回值将是 <code class="docutils literal notranslate"><span class="pre">&quot;Joel</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">slug&quot;</span></code>。</p>
+<p>If you are looking for a more robust solution, consider using a third-party
+HTML sanitizing tool.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.html.html_safe">
+<code class="sig-name descname"><span class="pre">html_safe</span></code>()<a class="headerlink" href="#django.utils.html.html_safe" title="永久链接至目标">¶</a></dt>
+<dd><p>类上的 <code class="docutils literal notranslate"><span class="pre">__html__()</span></code> 方法可以帮助非 Django 模板检测其输出不需要 HTML 转义的类。</p>
+<p>这个装饰器通过在 <a class="reference internal" href="#django.utils.safestring.mark_safe" title="django.utils.safestring.mark_safe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mark_safe()</span></code></a> 中封装 <code class="docutils literal notranslate"><span class="pre">__str__()</span></code> 来定义被装饰的类上的 <code class="docutils literal notranslate"><span class="pre">__html__()</span></code> 方法。确保 <code class="docutils literal notranslate"><span class="pre">__str__()</span></code> 方法确实返回不需要 HTML 转义的文本。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.http">
+<span id="s-django-utils-http"></span><span id="module-django.utils.http"></span><span id="django-utils-http"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.http</span></code><a class="headerlink" href="#module-django.utils.http" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.urlencode">
+<code class="sig-name descname"><span class="pre">urlencode</span></code>(<em><span class="n"><span class="pre">query</span></span></em>, <em><span class="n"><span class="pre">doseq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#urlencode"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.urlencode" title="永久链接至目标">¶</a></dt>
+<dd><p>Python 的 <a class="reference external" href="https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlencode" title="(在 Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">urllib.parse.urlencode()</span></code></a> 函数的一个版本，可以对 <code class="docutils literal notranslate"><span class="pre">MultiValueDict</span></code> 和非字符串值进行操作。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.http_date">
+<code class="sig-name descname"><span class="pre">http_date</span></code>(<em><span class="n"><span class="pre">epoch_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#http_date"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.http_date" title="永久链接至目标">¶</a></dt>
+<dd><p>Formats the time to match the <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1123.html#section-5.2.14"><strong>RFC 1123#section-5.2.14</strong></a> date format as
+specified by HTTP <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-5.6.7"><strong>RFC 9110#section-5.6.7</strong></a>.</p>
+<p>接受自 UTC 以来以秒为单位的浮点数，如 <code class="docutils literal notranslate"><span class="pre">time.time()</span></code> 输出的时间。如果设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，默认为当前时间。</p>
+<p>输出格式为 <code class="docutils literal notranslate"><span class="pre">Wdy,</span> <span class="pre">DD</span> <span class="pre">Mon</span> <span class="pre">YYYY</span> <span class="pre">HH:MM:SS</span> <span class="pre">GMT</span></code> 的字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.content_disposition_header">
+<code class="sig-name descname"><span class="pre">content_disposition_header</span></code>(<em><span class="n"><span class="pre">as_attachment</span></span></em>, <em><span class="n"><span class="pre">filename</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#content_disposition_header"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.content_disposition_header" title="永久链接至目标">¶</a></dt>
+<dd><div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p>Constructs a <code class="docutils literal notranslate"><span class="pre">Content-Disposition</span></code> HTTP header value from the given
+<code class="docutils literal notranslate"><span class="pre">filename</span></code> as specified by <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6266.html"><strong>RFC 6266</strong></a>. Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> if
+<code class="docutils literal notranslate"><span class="pre">as_attachment</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code> and <code class="docutils literal notranslate"><span class="pre">filename</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, otherwise
+returns a string suitable for the <code class="docutils literal notranslate"><span class="pre">Content-Disposition</span></code> HTTP header.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.base36_to_int">
+<code class="sig-name descname"><span class="pre">base36_to_int</span></code>(<em><span class="n"><span class="pre">s</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#base36_to_int"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.base36_to_int" title="永久链接至目标">¶</a></dt>
+<dd><p>将 base 36 的字符串转换为整数。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.int_to_base36">
+<code class="sig-name descname"><span class="pre">int_to_base36</span></code>(<em><span class="n"><span class="pre">i</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#int_to_base36"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.int_to_base36" title="永久链接至目标">¶</a></dt>
+<dd><p>将一个正整数转换为 base 36 字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.urlsafe_base64_encode">
+<code class="sig-name descname"><span class="pre">urlsafe_base64_encode</span></code>(<em><span class="n"><span class="pre">s</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#urlsafe_base64_encode"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.urlsafe_base64_encode" title="永久链接至目标">¶</a></dt>
+<dd><p>将一个字节字符串编码为 base64 字符串，用于 URL 中，去掉所有尾部的等号。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.http.urlsafe_base64_decode">
+<code class="sig-name descname"><span class="pre">urlsafe_base64_decode</span></code>(<em><span class="n"><span class="pre">s</span></span></em>)<a class="reference internal" href="../modules/django/utils/http.html#urlsafe_base64_decode"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.http.urlsafe_base64_decode" title="永久链接至目标">¶</a></dt>
+<dd><p>解码一个 base64 编码的字符串，将可能被剥离的尾部等号加回来。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.module_loading">
+<span id="s-django-utils-module-loading"></span><span id="module-django.utils.module_loading"></span><span id="django-utils-module-loading"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.module_loading</span></code><a class="headerlink" href="#module-django.utils.module_loading" title="永久链接至标题">¶</a></h2>
+<p>用于处理 Python 模块的函数。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.module_loading.import_string">
+<code class="sig-name descname"><span class="pre">import_string</span></code>(<em><span class="n"><span class="pre">dotted_path</span></span></em>)<a class="reference internal" href="../modules/django/utils/module_loading.html#import_string"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.module_loading.import_string" title="永久链接至目标">¶</a></dt>
+<dd><p>导入一个点分隔模块路径，并返回路径中最后一个名字所指定的属性／类。如果导入失败，则引发 <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.module_loading</span> <span class="kn">import</span> <span class="n">import_string</span>
+
+<span class="n">ValidationError</span> <span class="o">=</span> <span class="n">import_string</span><span class="p">(</span><span class="s2">&quot;django.core.exceptions.ValidationError&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>相当于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ValidationError</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.safestring">
+<span id="s-django-utils-safestring"></span><span id="module-django.utils.safestring"></span><span id="django-utils-safestring"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.safestring</span></code><a class="headerlink" href="#module-django.utils.safestring" title="永久链接至标题">¶</a></h2>
+<p>用于处理 “安全字符串” 的函数和类：在 HTML 中无需进一步转义就可以安全显示的字符串。将某一字符串标记为 “安全字符串” 意味着该字符串的制作者已经将那些不应该被 HTML 引擎解释的字符（例如 '&lt;'）转化为适当的实体。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.utils.safestring.SafeString">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SafeString</span></code><a class="reference internal" href="../modules/django/utils/safestring.html#SafeString"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.safestring.SafeString" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">str</span></code> 子类，为了 HTML 输出的目的，被特别标记为 “安全”（不需要进一步的转义）。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.safestring.mark_safe">
+<code class="sig-name descname"><span class="pre">mark_safe</span></code>(<em><span class="n"><span class="pre">s</span></span></em>)<a class="reference internal" href="../modules/django/utils/safestring.html#mark_safe"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.utils.safestring.mark_safe" title="永久链接至目标">¶</a></dt>
+<dd><p>为（HTML）输出目的明确标记一个字符串为安全的。返回的对象可以用在任何适合字符串的地方。</p>
+<p>可以在一个字符串上多次调用。</p>
+<p>也可作为装饰器使用。</p>
+<p>对于构建 HTML 片段，你通常应该使用 <a class="reference internal" href="#django.utils.html.format_html" title="django.utils.html.format_html"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.html.format_html()</span></code></a> 代替。</p>
+<p>String marked safe will become unsafe again if modified. For example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mystr</span> <span class="o">=</span> <span class="s2">&quot;&lt;b&gt;Hello World&lt;/b&gt;   &quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mystr</span> <span class="o">=</span> <span class="n">mark_safe</span><span class="p">(</span><span class="n">mystr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">mystr</span><span class="p">)</span>
+<span class="go">&lt;class &#39;django.utils.safestring.SafeString&#39;&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mystr</span> <span class="o">=</span> <span class="n">mystr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="c1"># removing whitespace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">mystr</span><span class="p">)</span>
+<span class="go">&lt;type &#39;str&#39;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.text">
+<span id="s-django-utils-text"></span><span id="module-django.utils.text"></span><span id="django-utils-text"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.text</span></code><a class="headerlink" href="#module-django.utils.text" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.text.format_lazy">
+<code class="sig-name descname"><span class="pre">format_lazy</span></code>(<em><span class="n"><span class="pre">format_string</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.utils.text.format_lazy" title="永久链接至目标">¶</a></dt>
+<dd><p>一个 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str.format" title="(在 Python v3.11)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a> 用于 <code class="docutils literal notranslate"><span class="pre">format_string</span></code>、args` 和／或 <code class="docutils literal notranslate"><span class="pre">kwargs</span></code> 包含惰性对象时的版本。第一个参数是要格式化的字符串。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.text</span> <span class="kn">import</span> <span class="n">format_lazy</span>
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">pgettext_lazy</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span>
+        <span class="n">format_lazy</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{person}</span><span class="s2">/&lt;int:pk&gt;/&quot;</span><span class="p">,</span> <span class="n">person</span><span class="o">=</span><span class="n">pgettext_lazy</span><span class="p">(</span><span class="s2">&quot;URL&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">)),</span>
+        <span class="n">PersonDetailView</span><span class="o">.</span><span class="n">as_view</span><span class="p">(),</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>这个例子允许翻译人员翻译部分 URL。如果 &quot;person&quot; 被翻译成 &quot;persona&quot;，正则表达式将匹配 <code class="docutils literal notranslate"><span class="pre">persona/(?P&lt;pk&gt;\d+)/$</span></code>，例如 <code class="docutils literal notranslate"><span class="pre">persona/5/</span></code>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.text.slugify">
+<code class="sig-name descname"><span class="pre">slugify</span></code>(<em><span class="n"><span class="pre">value</span></span></em>, <em><span class="n"><span class="pre">allow_unicode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.utils.text.slugify" title="永久链接至目标">¶</a></dt>
+<dd><p>通过以下方式将一个字符串转换为 URL slug。</p>
+<ol class="arabic simple">
+<li>如果 <code class="docutils literal notranslate"><span class="pre">allow_unicode</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code> （默认），则转换为 ASCII 码。</li>
+<li>转换为小写。</li>
+<li>删除非字母数字、下划线、连字符或空格的字符。</li>
+<li>将任何空格或重复的破折号替换为单破折号。</li>
+<li>Removing leading and trailing whitespace, dashes, and underscores.</li>
+</ol>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s2">&quot; Joel is a slug &quot;</span><span class="p">)</span>
+<span class="go">&#39;joel-is-a-slug&#39;</span>
+</pre></div>
+</div>
+<p>If you want to allow Unicode characters, pass <code class="docutils literal notranslate"><span class="pre">allow_unicode=True</span></code>. For
+example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">slugify</span><span class="p">(</span><span class="s2">&quot;你好 World&quot;</span><span class="p">,</span> <span class="n">allow_unicode</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&#39;你好-world&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.timezone">
+<span id="s-django-utils-timezone"></span><span id="s-time-zone-selection-functions"></span><span id="module-django.utils.timezone"></span><span id="django-utils-timezone"></span><span id="time-zone-selection-functions"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.timezone</span></code><a class="headerlink" href="#module-django.utils.timezone" title="永久链接至标题">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.utils.timezone.utc">
+<code class="sig-name descname"><span class="pre">utc</span></code><a class="headerlink" href="#django.utils.timezone.utc" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tzinfo</span></code></a> 实例，表示 UTC。</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">4.1 版后已移除: </span>This is an alias to <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timezone.utc" title="(在 Python v3.11)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">datetime.timezone.utc</span></code></a>. Use
+<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timezone.utc" title="(在 Python v3.11)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">datetime.timezone.utc</span></code></a> directly.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.get_fixed_timezone">
+<code class="sig-name descname"><span class="pre">get_fixed_timezone</span></code>(<em><span class="n"><span class="pre">offset</span></span></em>)<a class="headerlink" href="#django.utils.timezone.get_fixed_timezone" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tzinfo</span></code></a> 实例，该实例表示一个与 UTC 有固定偏移的时区。</p>
+<p><code class="docutils literal notranslate"><span class="pre">offset</span></code> 是一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code></a> 或一个整数分钟。UTC 以东的时区为正值，UTC 以西的时区为负值。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.get_default_timezone">
+<code class="sig-name descname"><span class="pre">get_default_timezone</span></code>()<a class="headerlink" href="#django.utils.timezone.get_default_timezone" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tzinfo</span></code></a> 实例，表示 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">默认时区</span></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.get_default_timezone_name">
+<code class="sig-name descname"><span class="pre">get_default_timezone_name</span></code>()<a class="headerlink" href="#django.utils.timezone.get_default_timezone_name" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">默认时区</span></a> 的名称。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.get_current_timezone">
+<code class="sig-name descname"><span class="pre">get_current_timezone</span></code>()<a class="headerlink" href="#django.utils.timezone.get_current_timezone" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tzinfo</span></code></a> 实例，表示 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.get_current_timezone_name">
+<code class="sig-name descname"><span class="pre">get_current_timezone_name</span></code>()<a class="headerlink" href="#django.utils.timezone.get_current_timezone_name" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a> 的名称。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.activate">
+<code class="sig-name descname"><span class="pre">activate</span></code>(<em><span class="n"><span class="pre">timezone</span></span></em>)<a class="headerlink" href="#django.utils.timezone.activate" title="永久链接至目标">¶</a></dt>
+<dd><p>设置 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。<code class="docutils literal notranslate"><span class="pre">timezone</span></code> 参数必须是 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tzinfo</span></code></a> 子类的实例或时区名称。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.deactivate">
+<code class="sig-name descname"><span class="pre">deactivate</span></code>()<a class="headerlink" href="#django.utils.timezone.deactivate" title="永久链接至目标">¶</a></dt>
+<dd><p>取消设置 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.override">
+<code class="sig-name descname"><span class="pre">override</span></code>(<em><span class="n"><span class="pre">timezone</span></span></em>)<a class="headerlink" href="#django.utils.timezone.override" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个 Python 上下文管理器，它在进入时通过 <a class="reference internal" href="#django.utils.timezone.activate" title="django.utils.timezone.activate"><code class="xref py py-func docutils literal notranslate"><span class="pre">activate()</span></code></a> 设置 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>，并在退出时恢复之前的活动时区。如果 <code class="docutils literal notranslate"><span class="pre">timezone</span></code> 参数是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a> 在进入时用 <a class="reference internal" href="#django.utils.timezone.deactivate" title="django.utils.timezone.deactivate"><code class="xref py py-func docutils literal notranslate"><span class="pre">deactivate()</span></code></a> 取消设置。</p>
+<p><code class="docutils literal notranslate"><span class="pre">override</span></code> 也可作为函数装饰器使用。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.localtime">
+<code class="sig-name descname"><span class="pre">localtime</span></code>(<em><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.timezone.localtime" title="永久链接至目标">¶</a></dt>
+<dd><p>将一个感知的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 转换为不同的时区，默认为 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+<p>当省略 <code class="docutils literal notranslate"><span class="pre">value</span></code> 时，默认为 <a class="reference internal" href="#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">now()</span></code></a>。</p>
+<p>这个函数不适用于 naive 的日期，请使用 <a class="reference internal" href="#django.utils.timezone.make_aware" title="django.utils.timezone.make_aware"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_aware()</span></code></a> 代替。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.localdate">
+<code class="sig-name descname"><span class="pre">localdate</span></code>(<em><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.timezone.localdate" title="永久链接至目标">¶</a></dt>
+<dd><p>使用 <a class="reference internal" href="#django.utils.timezone.localtime" title="django.utils.timezone.localtime"><code class="xref py py-func docutils literal notranslate"><span class="pre">localtime()</span></code></a> 将一个已知道的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 转换为不同时区的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime.date" title="(在 Python v3.11)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">date()</span></code></a>，默认为 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+<p>当省略 <code class="docutils literal notranslate"><span class="pre">value</span></code> 时，默认为 <a class="reference internal" href="#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">now()</span></code></a>。</p>
+<p>此功能不适用于 naive 的日期。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.now">
+<code class="sig-name descname"><span class="pre">now</span></code>()<a class="headerlink" href="#django.utils.timezone.now" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>，表示当前的时间点。具体返回什么取决于 <a class="reference internal" href="settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 的值。</p>
+<ul class="simple">
+<li>如果 <a class="reference internal" href="settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 是 <code class="docutils literal notranslate"><span class="pre">False</span></code>，这将是一个 <a class="reference internal" href="../topics/i18n/timezones.html#naive-vs-aware-datetimes"><span class="std std-ref">naive</span></a> 的日期时间（即一个没有关联时区的日期时间），代表系统当地时区的当前时间。</li>
+<li>如果 <a class="reference internal" href="settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，这将是一个 <a class="reference internal" href="../topics/i18n/timezones.html#naive-vs-aware-datetimes"><span class="std std-ref">aware</span></a> 的日期时间，代表当前的 UTC 时间。请注意，无论 <a class="reference internal" href="settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 的值是多少， <a class="reference internal" href="#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">now()</span></code></a> 将始终返回以 UTC 为单位的时间；你可以使用 <a class="reference internal" href="#django.utils.timezone.localtime" title="django.utils.timezone.localtime"><code class="xref py py-func docutils literal notranslate"><span class="pre">localtime()</span></code></a> 来获取当前时区的时间。</li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.is_aware">
+<code class="sig-name descname"><span class="pre">is_aware</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.timezone.is_aware" title="永久链接至目标">¶</a></dt>
+<dd><p>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是感知的，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>，如果是 naive 的，则返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>。本函数假设 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.is_naive">
+<code class="sig-name descname"><span class="pre">is_naive</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.utils.timezone.is_naive" title="永久链接至目标">¶</a></dt>
+<dd><p>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是 naive 的，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>，如果是感知的，则返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>。本函数假设 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.make_aware">
+<code class="sig-name descname"><span class="pre">make_aware</span></code>(<em><span class="n"><span class="pre">value</span></span></em>, <em><span class="n"><span class="pre">timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">is_dst</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.timezone.make_aware" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个感知的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>，在 <code class="docutils literal notranslate"><span class="pre">timezone</span></code> 中表示与 <code class="docutils literal notranslate"><span class="pre">value</span></code> 相同的时间点，<code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个 naive 的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>。如果 <code class="docutils literal notranslate"><span class="pre">timezone</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则默认为 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">4.0 版后已移除: </span>When using <code class="docutils literal notranslate"><span class="pre">pytz</span></code>, the <code class="docutils literal notranslate"><span class="pre">pytz.AmbiguousTimeError</span></code> exception is
+raised if you try to make <code class="docutils literal notranslate"><span class="pre">value</span></code> aware during a DST transition where
+the same time occurs twice (when reverting from DST). Setting
+<code class="docutils literal notranslate"><span class="pre">is_dst</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> will avoid the exception by
+choosing if the time is pre-transition or post-transition respectively.</p>
+<p>When using <code class="docutils literal notranslate"><span class="pre">pytz</span></code>, the <code class="docutils literal notranslate"><span class="pre">pytz.NonExistentTimeError</span></code> exception is
+raised if you try to make <code class="docutils literal notranslate"><span class="pre">value</span></code> aware during a DST transition such
+that the time never occurred. For example, if the 2:00 hour is skipped
+during a DST transition, trying to make 2:30 aware in that time zone
+will raise an exception. To avoid that you can use <code class="docutils literal notranslate"><span class="pre">is_dst</span></code> to
+specify how <code class="docutils literal notranslate"><span class="pre">make_aware()</span></code> should interpret such a nonexistent time.
+If <code class="docutils literal notranslate"><span class="pre">is_dst=True</span></code> then the above time would be interpreted as 2:30 DST
+time (equivalent to 1:30 local time). Conversely, if <code class="docutils literal notranslate"><span class="pre">is_dst=False</span></code>
+the time would be interpreted as 2:30 standard time (equivalent to 3:30
+local time).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">is_dst</span></code> parameter has no effect when using non-<code class="docutils literal notranslate"><span class="pre">pytz</span></code> timezone
+implementations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">is_dst</span></code> 参数已被废弃，将在 Django 5.0 中删除。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.timezone.make_naive">
+<code class="sig-name descname"><span class="pre">make_naive</span></code>(<em><span class="n"><span class="pre">value</span></span></em>, <em><span class="n"><span class="pre">timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.utils.timezone.make_naive" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 naive 的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>，它在 <code class="docutils literal notranslate"><span class="pre">timezone</span></code> 中表示与 <code class="docutils literal notranslate"><span class="pre">value</span></code> 相同的时间点，<code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个感知的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>。如果 <code class="docutils literal notranslate"><span class="pre">timezone</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则默认为 <a class="reference internal" href="../topics/i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.utils.translation">
+<span id="s-django-utils-translation"></span><span id="module-django.utils.translation"></span><span id="django-utils-translation"></span><h2><code class="docutils literal notranslate"><span class="pre">django.utils.translation</span></code><a class="headerlink" href="#module-django.utils.translation" title="永久链接至标题">¶</a></h2>
+<p>关于以下用法的完整讨论，请参见 <a class="reference internal" href="../topics/i18n/translation.html"><span class="doc">翻译文档</span></a>。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.gettext">
+<code class="sig-name descname"><span class="pre">gettext</span></code>(<em><span class="n"><span class="pre">message</span></span></em>)<a class="headerlink" href="#django.utils.translation.gettext" title="永久链接至目标">¶</a></dt>
+<dd><p>翻译 <code class="docutils literal notranslate"><span class="pre">message</span></code> 并以字符串形式返回。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.pgettext">
+<code class="sig-name descname"><span class="pre">pgettext</span></code>(<em><span class="n"><span class="pre">context</span></span></em>, <em><span class="n"><span class="pre">message</span></span></em>)<a class="headerlink" href="#django.utils.translation.pgettext" title="永久链接至目标">¶</a></dt>
+<dd><p>翻译 <code class="docutils literal notranslate"><span class="pre">message</span></code> 给定的 <code class="docutils literal notranslate"><span class="pre">context</span></code> 并以字符串形式返回。</p>
+<p>更多信息，见 <a class="reference internal" href="../topics/i18n/translation.html#contextual-markers"><span class="std std-ref">上下文标记</span></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.gettext_lazy">
+<code class="sig-name descname"><span class="pre">gettext_lazy</span></code>(<em><span class="n"><span class="pre">message</span></span></em>)<a class="headerlink" href="#django.utils.translation.gettext_lazy" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.pgettext_lazy">
+<code class="sig-name descname"><span class="pre">pgettext_lazy</span></code>(<em><span class="n"><span class="pre">context</span></span></em>, <em><span class="n"><span class="pre">message</span></span></em>)<a class="headerlink" href="#django.utils.translation.pgettext_lazy" title="永久链接至目标">¶</a></dt>
+<dd><p>和上面的非惰性版本一样，但使用惰性执行。</p>
+<p>参见 <a class="reference internal" href="../topics/i18n/translation.html#lazy-translations"><span class="std std-ref">惰性翻译文档</span></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.gettext_noop">
+<code class="sig-name descname"><span class="pre">gettext_noop</span></code>(<em><span class="n"><span class="pre">message</span></span></em>)<a class="headerlink" href="#django.utils.translation.gettext_noop" title="永久链接至目标">¶</a></dt>
+<dd><p>标记要翻译的字符串，但现在不翻译它们。这可以用来存储全局变量中的字符串，这些字符串应该留在基础语言中（因为它们可能会被外部使用），并在以后被翻译。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.ngettext">
+<code class="sig-name descname"><span class="pre">ngettext</span></code>(<em><span class="n"><span class="pre">singular</span></span></em>, <em><span class="n"><span class="pre">plural</span></span></em>, <em><span class="n"><span class="pre">number</span></span></em>)<a class="headerlink" href="#django.utils.translation.ngettext" title="永久链接至目标">¶</a></dt>
+<dd><p>翻译 <code class="docutils literal notranslate"><span class="pre">singular</span></code> 和 <code class="docutils literal notranslate"><span class="pre">plural</span></code>，并根据 <code class="docutils literal notranslate"><span class="pre">number</span></code> 返回相应的字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.npgettext">
+<code class="sig-name descname"><span class="pre">npgettext</span></code>(<em><span class="n"><span class="pre">context</span></span></em>, <em><span class="n"><span class="pre">singular</span></span></em>, <em><span class="n"><span class="pre">plural</span></span></em>, <em><span class="n"><span class="pre">number</span></span></em>)<a class="headerlink" href="#django.utils.translation.npgettext" title="永久链接至目标">¶</a></dt>
+<dd><p>翻译 <code class="docutils literal notranslate"><span class="pre">singular</span></code> 和 <code class="docutils literal notranslate"><span class="pre">plural</span></code>，并根据 <code class="docutils literal notranslate"><span class="pre">number</span></code> 和 <code class="docutils literal notranslate"><span class="pre">context</span></code> 返回适当的字符串。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.ngettext_lazy">
+<code class="sig-name descname"><span class="pre">ngettext_lazy</span></code>(<em><span class="n"><span class="pre">singular</span></span></em>, <em><span class="n"><span class="pre">plural</span></span></em>, <em><span class="n"><span class="pre">number</span></span></em>)<a class="headerlink" href="#django.utils.translation.ngettext_lazy" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.npgettext_lazy">
+<code class="sig-name descname"><span class="pre">npgettext_lazy</span></code>(<em><span class="n"><span class="pre">context</span></span></em>, <em><span class="n"><span class="pre">singular</span></span></em>, <em><span class="n"><span class="pre">plural</span></span></em>, <em><span class="n"><span class="pre">number</span></span></em>)<a class="headerlink" href="#django.utils.translation.npgettext_lazy" title="永久链接至目标">¶</a></dt>
+<dd><p>和上面的非惰性版本一样，但使用惰性执行。</p>
+<p>参见 <a class="reference internal" href="../topics/i18n/translation.html#lazy-translations"><span class="std std-ref">惰性翻译文档</span></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.activate">
+<code class="sig-name descname"><span class="pre">activate</span></code>(<em><span class="n"><span class="pre">language</span></span></em>)<a class="headerlink" href="#django.utils.translation.activate" title="永久链接至目标">¶</a></dt>
+<dd><p>获取给定语言的翻译对象，并将其激活为当前线程的当前翻译对象。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.deactivate">
+<code class="sig-name descname"><span class="pre">deactivate</span></code>()<a class="headerlink" href="#django.utils.translation.deactivate" title="永久链接至目标">¶</a></dt>
+<dd><p>停用当前活动的翻译对象，以便进一步的 _ 调用将再次针对默认翻译对象进行解析。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.deactivate_all">
+<code class="sig-name descname"><span class="pre">deactivate_all</span></code>()<a class="headerlink" href="#django.utils.translation.deactivate_all" title="永久链接至目标">¶</a></dt>
+<dd><p>使活动翻译对象成为 <code class="docutils literal notranslate"><span class="pre">NullTranslations()</span></code> 实例。当我们出于某种原因想让延迟翻译以原始字符串的形式出现时，这很有用。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.override">
+<code class="sig-name descname"><span class="pre">override</span></code>(<em><span class="n"><span class="pre">language</span></span></em>, <em><span class="n"><span class="pre">deactivate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.utils.translation.override" title="永久链接至目标">¶</a></dt>
+<dd><p>一个 Python 上下文管理器，它使用 <a class="reference internal" href="#django.utils.translation.activate" title="django.utils.translation.activate"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.translation.activate()</span></code></a> 获取给定语言的翻译对象，将其激活为当前线程的翻译对象，并在退出时重新激活之前的活动语言。如果 <code class="docutils literal notranslate"><span class="pre">deactivate</span></code> 参数为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则可以用 <a class="reference internal" href="#django.utils.translation.deactivate" title="django.utils.translation.deactivate"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.translation.deactivate()</span></code></a> 在退出时停用临时翻译对象。如果传递 <code class="docutils literal notranslate"><span class="pre">None</span></code> 作为语言参数，则会在上下文中激活 <code class="docutils literal notranslate"><span class="pre">NullTranslations()</span></code> 实例。</p>
+<p><code class="docutils literal notranslate"><span class="pre">override</span></code> 也可作为函数装饰器使用。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.check_for_language">
+<code class="sig-name descname"><span class="pre">check_for_language</span></code>(<em><span class="n"><span class="pre">lang_code</span></span></em>)<a class="headerlink" href="#django.utils.translation.check_for_language" title="永久链接至目标">¶</a></dt>
+<dd><p>检查是否有给定语言代码的全局语言文件（如 'fr'、'pt_BR'）。这用于决定用户提供的语言是否可用。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.get_language">
+<code class="sig-name descname"><span class="pre">get_language</span></code>()<a class="headerlink" href="#django.utils.translation.get_language" title="永久链接至目标">¶</a></dt>
+<dd><p>返回当前选择的语言代码。如果翻译被暂时停用（通过 <a class="reference internal" href="#django.utils.translation.deactivate_all" title="django.utils.translation.deactivate_all"><code class="xref py py-func docutils literal notranslate"><span class="pre">deactivate_all()</span></code></a> 或当 <code class="docutils literal notranslate"><span class="pre">None</span></code> 被传递给 <a class="reference internal" href="#django.utils.translation.override" title="django.utils.translation.override"><code class="xref py py-func docutils literal notranslate"><span class="pre">override()</span></code></a> 时），返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.get_language_bidi">
+<code class="sig-name descname"><span class="pre">get_language_bidi</span></code>()<a class="headerlink" href="#django.utils.translation.get_language_bidi" title="永久链接至目标">¶</a></dt>
+<dd><p>返回所选语言的 BiDi 布局。</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">False</span></code> = 从左到右布局</li>
+<li><code class="docutils literal notranslate"><span class="pre">True</span></code> = 从右到左布局</li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.get_language_from_request">
+<code class="sig-name descname"><span class="pre">get_language_from_request</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">check_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.utils.translation.get_language_from_request" title="永久链接至目标">¶</a></dt>
+<dd><p>分析请求，找出用户希望系统显示的语言。只考虑 settings.LANGUAGES 中列出的语言。如果用户请求的是我们有主语言的子语言，我们会发送主语言。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">check_path</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则函数首先检查请求的 URL 的路径是否以 <a class="reference internal" href="settings.html#std-setting-LANGUAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LANGUAGES</span></code></a> 配置中列出的语言代码开头。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.get_supported_language_variant">
+<code class="sig-name descname"><span class="pre">get_supported_language_variant</span></code>(<em><span class="n"><span class="pre">lang_code</span></span></em>, <em><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.utils.translation.get_supported_language_variant" title="永久链接至目标">¶</a></dt>
+<dd><p>如果在 <a class="reference internal" href="settings.html#std-setting-LANGUAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LANGUAGES</span></code></a> 配置中，则返回 <code class="docutils literal notranslate"><span class="pre">lang_code</span></code>，可能会选择一个更通用的变量。例如，如果 <code class="docutils literal notranslate"><span class="pre">lang_code</span></code> 是 <code class="docutils literal notranslate"><span class="pre">'es-ar'</span></code>，并且 <code class="docutils literal notranslate"><span class="pre">'es'</span></code> 在 <a class="reference internal" href="settings.html#std-setting-LANGUAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LANGUAGES</span></code></a> 中，但 <code class="docutils literal notranslate"><span class="pre">'es-ar'</span></code> 没有，则返回 <code class="docutils literal notranslate"><span class="pre">'es'</span></code>。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">strict</span></code> 是 <code class="docutils literal notranslate"><span class="pre">False</span></code> （默认），当语言代码和通用变体都没有找到时，可能会返回一个特定国家的变体。例如，如果 <a class="reference internal" href="settings.html#std-setting-LANGUAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LANGUAGES</span></code></a> 中只有 <code class="docutils literal notranslate"><span class="pre">'es-co'</span></code>，那么就会返回 <code class="docutils literal notranslate"><span class="pre">lang_code</span></code>，如 <code class="docutils literal notranslate"><span class="pre">'es'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'es-ar'</span></code>。如果 <code class="docutils literal notranslate"><span class="pre">strict=True</span></code>，则不会返回这些匹配。</p>
+<p>如果没有找到任何东西，会引发 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#LookupError" title="(在 Python v3.11)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">LookupError</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.to_locale">
+<code class="sig-name descname"><span class="pre">to_locale</span></code>(<em><span class="n"><span class="pre">language</span></span></em>)<a class="headerlink" href="#django.utils.translation.to_locale" title="永久链接至目标">¶</a></dt>
+<dd><p>将语言名称（en-us）转换为 locale 名称（en_US）。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.utils.translation.templatize">
+<code class="sig-name descname"><span class="pre">templatize</span></code>(<em><span class="n"><span class="pre">src</span></span></em>)<a class="headerlink" href="#django.utils.translation.templatize" title="永久链接至目标">¶</a></dt>
+<dd><p>将 Django 模板转化为能被 <code class="docutils literal notranslate"><span class="pre">xgettext</span></code> 理解的东西。它通过将 Django 翻译标签翻译成标准的 <code class="docutils literal notranslate"><span class="pre">gettext</span></code> 函数调用来实现。</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 实用程序</a><ul>
+<li><a class="reference internal" href="#module-django.utils.cache"><code class="docutils literal notranslate"><span class="pre">django.utils.cache</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.dateparse"><code class="docutils literal notranslate"><span class="pre">django.utils.dateparse</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.decorators"><code class="docutils literal notranslate"><span class="pre">django.utils.decorators</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.encoding"><code class="docutils literal notranslate"><span class="pre">django.utils.encoding</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.feedgenerator"><code class="docutils literal notranslate"><span class="pre">django.utils.feedgenerator</span></code></a><ul>
+<li><a class="reference internal" href="#syndicationfeed"><code class="docutils literal notranslate"><span class="pre">SyndicationFeed</span></code></a></li>
+<li><a class="reference internal" href="#enclosure"><code class="docutils literal notranslate"><span class="pre">Enclosure</span></code></a></li>
+<li><a class="reference internal" href="#rssfeed"><code class="docutils literal notranslate"><span class="pre">RssFeed</span></code></a></li>
+<li><a class="reference internal" href="#rss201rev2feed"><code class="docutils literal notranslate"><span class="pre">Rss201rev2Feed</span></code></a></li>
+<li><a class="reference internal" href="#rssuserland091feed"><code class="docutils literal notranslate"><span class="pre">RssUserland091Feed</span></code></a></li>
+<li><a class="reference internal" href="#atom1feed"><code class="docutils literal notranslate"><span class="pre">Atom1Feed</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-django.utils.functional"><code class="docutils literal notranslate"><span class="pre">django.utils.functional</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.html"><code class="docutils literal notranslate"><span class="pre">django.utils.html</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.http"><code class="docutils literal notranslate"><span class="pre">django.utils.http</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.module_loading"><code class="docutils literal notranslate"><span class="pre">django.utils.module_loading</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.safestring"><code class="docutils literal notranslate"><span class="pre">django.utils.safestring</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.text"><code class="docutils literal notranslate"><span class="pre">django.utils.text</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.timezone"><code class="docutils literal notranslate"><span class="pre">django.utils.timezone</span></code></a></li>
+<li><a class="reference internal" href="#module-django.utils.translation"><code class="docutils literal notranslate"><span class="pre">django.utils.translation</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="urls.html"
+                          title="上一章">URLconfs 中使用的 <code class="docutils literal notranslate"><span class="pre">django.urls</span></code> 函数</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="validators.html"
+                          title="下一章">验证器</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/ref/utils.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="urls.html" title="URLconfs 中使用的 &lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django.urls&lt;/span&gt;&lt;/code&gt; 函数">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="validators.html" title="验证器">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

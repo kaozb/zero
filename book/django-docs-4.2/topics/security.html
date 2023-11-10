@@ -1,0 +1,274 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 的安全性 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="性能和优化" href="performance.html" />
+    <link rel="prev" title="分页" href="pagination.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="pagination.html" title="分页">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="performance.html" title="性能和优化">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-security">
+            
+  <div class="section" id="s-security-in-django">
+<span id="security-in-django"></span><h1>Django 的安全性<a class="headerlink" href="#security-in-django" title="永久链接至标题">¶</a></h1>
+<p>此文档是对 Django 安全特性的概述。包含保障那些用 Django 建立的网站的安全性建议。</p>
+<div class="section" id="s-cross-site-scripting-xss-protection">
+<span id="s-cross-site-scripting"></span><span id="cross-site-scripting-xss-protection"></span><span id="cross-site-scripting"></span><h2>防御跨站脚本攻击（XSS）<a class="headerlink" href="#cross-site-scripting-xss-protection" title="永久链接至标题">¶</a></h2>
+<p>XSS 攻击允许用户将客户端脚本注入到其他用户的浏览器中。这通常是通过将恶意脚本存储在数据库中，在那里它将被检索并显示给其他用户，或者通过让用户点击一个链接，使攻击者的 JavaScript 被用户的浏览器执行来实现。然而，XSS 攻击可以来自任何不受信任的数据源，如 cookie 或网络服务，只要数据在被纳入页面之前没有被充分净化。</p>
+<p>Django 模板可以保护您免受大多数 XSS 攻击。但是了解它提供了怎样的保护，以及有什么限制是很重要的。</p>
+<p>对于 HTML 来说，Django 模板中的 <a class="reference internal" href="../ref/templates/language.html#automatic-html-escaping"><span class="std std-ref">转义特殊字符</span></a>  是尤其危险的。虽然它保护用户免受大多数恶意输入的攻击，但并非万无一失。比如，出现下面这种情况就会保护失效：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;style class={{ var }}&gt;...&lt;/style&gt;
+</pre></div>
+</div>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">var</span></code> 被设置为 <code class="docutils literal notranslate"><span class="pre">'class1</span> <span class="pre">onmouseover=javascript:func()'</span></code> ，将导致未经授权的  JavaScript 脚本执行，这取决于浏览器如何渲染有缺陷的HTML。（引用属性值可以解决这个问题）</p>
+<p>与此不相上下的还有在使用带有自定义模板标签的 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> ，<a class="reference internal" href="../ref/templates/builtins.html#std-templatefilter-safe"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">safe</span></code></a> 模板标签，<a class="reference internal" href="../ref/utils.html#module-django.utils.safestring" title="django.utils.safestring: Functions and classes for working with strings that can be displayed safely without further escaping in HTML."><code class="xref py py-mod docutils literal notranslate"><span class="pre">mark_safe</span></code></a>，以及关闭自动转义时要特别小心。</p>
+<p>此外，如果使用模板系统输出了除 HTML 之外的内容，可能会有完全独立的字符和单词需要转义。</p>
+<p>您在将 HTML 储存到数据库中时也要非常小心，特别是在检索和显示 HTML 的时候。</p>
+</div>
+<div class="section" id="s-cross-site-request-forgery-csrf-protection">
+<span id="cross-site-request-forgery-csrf-protection"></span><h2>防御跨站点请求伪造（CSRF）<a class="headerlink" href="#cross-site-request-forgery-csrf-protection" title="永久链接至标题">¶</a></h2>
+<p>发起 CSRF 攻击的人可以使用其他用户的证书执行操作，且是在其不知情或不同意的情况下。</p>
+<p>Django 内置了保护措施来防御大多数 CSRF 攻击，您需要在合适的地方 <a class="reference internal" href="../howto/csrf.html#using-csrf"><span class="std std-ref">授权并使用它</span></a>  。但和多数缓解性技术一样，它是有局限性的。比如可以全局禁用 CSRF 模块或者特定的视图。请三思而后行。如果您的网页还有脱离您控制的子域，还将会有其他 <a class="reference internal" href="../ref/csrf.html#csrf-limitations"><span class="std std-ref">限制</span></a> 。</p>
+<p><a class="reference internal" href="../ref/csrf.html#how-csrf-works"><span class="std std-ref">CSRF 保护机制</span></a> 通过检查每一个 POST 请求中的密文来实现。这保证恶意用户不能“复现”一个表单并用 POST 提交到你的网页，并让一个已登录用户无意中提交该表单。恶意用户必须知道特定于用户的密文（使用 cookie）。</p>
+<p>在部署 <a class="reference internal" href="#security-recommendation-ssl"><span class="std std-ref">HTTPS</span></a> 时，<code class="docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code> 会检查 HTTP 报文的 referer 首部是否设置为同源的 URL（包括子域和端口）。因为 HTTPS 提供了额外的安全性，所有通过转发不安全连接请求并在支持的浏览器中使用 HSTS 来确保连接在可用的地方使用了 HTTPS ，这一点是很重要的。</p>
+<p>除非绝对需要，否则对视图进行标记 <code class="docutils literal notranslate"><span class="pre">csrf_exempt</span></code> 装饰器时要极其慎重。</p>
+</div>
+<div class="section" id="s-sql-injection-protection">
+<span id="s-id1"></span><span id="sql-injection-protection"></span><span id="id1"></span><h2>防御 SQL 注入<a class="headerlink" href="#sql-injection-protection" title="永久链接至标题">¶</a></h2>
+<p>SQL 注入能让恶意用户能在数据库中执行任意 SQL 代码。这将导致记录被删除或泄露。</p>
+<p>Django 的 querysets 在被参数化查询构建出来时就被保护而免于 SQL 注入。查询的 SQL 代码与查询的参数是分开定义的。参数可能来自用户从而不安全，因此它们由底层数据库引擎进行转义。</p>
+<p>Django 也为开发者提供了书写 <a class="reference internal" href="db/sql.html#executing-raw-queries"><span class="std std-ref">原始查询</span></a> 或执行 <a class="reference internal" href="db/sql.html#executing-custom-sql"><span class="std std-ref">自定义 sql</span></a> 的权力。应当尽可能少地使用这些方法，并且您应该小心并准确地转义一切用户可控的参数。另外，在使用 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.extra" title="django.db.models.query.QuerySet.extra"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extra()</span></code></a> 和 <a class="reference internal" href="../ref/models/expressions.html#django.db.models.expressions.RawSQL" title="django.db.models.expressions.RawSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">RawSQL</span></code></a> 时应当小心谨慎。</p>
+</div>
+<div class="section" id="s-clickjacking-protection">
+<span id="clickjacking-protection"></span><h2>防御访问劫持<a class="headerlink" href="#clickjacking-protection" title="永久链接至标题">¶</a></h2>
+<p>访问劫持能让恶意网页覆盖另一个网页。可能会有毫不知情的用户被骗入目标网页并执行意料之外的操作。</p>
+<p>Django 包含 <a class="reference internal" href="../ref/clickjacking.html#clickjacking-prevention"><span class="std std-ref">访问劫持保护</span></a> ，以 <a class="reference internal" href="../ref/middleware.html#django.middleware.clickjacking.XFrameOptionsMiddleware" title="django.middleware.clickjacking.XFrameOptionsMiddleware"><code class="xref py py-mod docutils literal notranslate"><span class="pre">X-Frame-Options</span> <span class="pre">middleware</span></code></a> 的形式在支持它的浏览器中阻止一个网页被渲染在 frame 的内部。可在每个视图的基础上禁用保护，也可配置发送的确切头部值。</p>
+<p>对于任何不会被第三方网站嵌入 frame 的网页，或者只允许使用一小部分的网页来说，强烈建议使用中间件。</p>
+</div>
+<div class="section" id="s-ssl-https">
+<span id="s-security-recommendation-ssl"></span><span id="ssl-https"></span><span id="security-recommendation-ssl"></span><h2>SSL/HTTPS<a class="headerlink" href="#ssl-https" title="永久链接至标题">¶</a></h2>
+<p>通过 HTTPS 部署您的网页是保障安全的最佳办法。没有它，恶意用户就可以在客户端和服务器之间嗅探验证资格或其他信息，在某些情况下 -- 比如 <strong>主动</strong> 网络攻击者 -- 会修改发送中的数据。</p>
+<p>如果您想得到 HTTPS 的保护，且已经在您的服务器上启用了，下面还有一些额外的步骤需要执行：</p>
+<ul>
+<li><p class="first">如有必要，设置 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_PROXY_SSL_HEADER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_PROXY_SSL_HEADER</span></code></a>，确保您已经彻底的了解了它的警告提示。如果不这么做，将会导致 CSRF 漏洞，如果操作不正确，也是非常危险的。</p>
+</li>
+<li><p class="first">设置 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_SSL_REDIRECT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_SSL_REDIRECT</span></code></a> 为  <code class="docutils literal notranslate"><span class="pre">True</span></code>，这样 HTTP 的请求就会被重定向到 HTTPS。</p>
+<p>请注意 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_PROXY_SSL_HEADER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_PROXY_SSL_HEADER</span></code></a> 下的注意事项。对于反向代理的情况，配置主 Web 服务器来做重定向到 HTTPS 可能更容易或更安全。</p>
+</li>
+<li><p class="first">使用 'secure' cookies。</p>
+<p>如果浏览器使用默认的 HTTP 来实现初始连接，可能会导致已有的 cookies 泄露。因此，您应当将 <a class="reference internal" href="../ref/settings.html#std-setting-CSRF_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_SECURE</span></code></a> 和 <a class="reference internal" href="../ref/settings.html#std-setting-CSRF_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_SECURE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。这样浏览器就会仅用 HTTPS 连接来发送 cookies。注意，这会使得 sessions 不能再通过 HTTP 工作，且 CSRF 防御机制将会阻止任何通过 HTTP 接收到的 POST 数据（当然把所有 HTTP 都弄成 HTTPS 是最好的）。</p>
+</li>
+<li><p class="first">使用 <a class="reference internal" href="../ref/middleware.html#http-strict-transport-security"><span class="std std-ref">HTTP 严格传输安全</span></a> （HSTS）</p>
+<p>HSTS 是一个 HTTP 标头，它通知浏览器，所有未来连接到一个特定的网站应该始终使用 HTTPS。结合重定向 HTTP 请求到 HTTPS，这将确保连接总是享受 SSL 的额外安全，只要有一个成功的连接发生。HSTS 可以通过 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_HSTS_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_HSTS_SECONDS</span></code></a>、 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_HSTS_INCLUDE_SUBDOMAINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_HSTS_INCLUDE_SUBDOMAINS</span></code></a> 和 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_HSTS_PRELOAD"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_HSTS_PRELOAD</span></code></a> 来配置，或者在网络服务器上配置。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-host-header-validation">
+<span id="s-host-headers-virtual-hosting"></span><span id="host-header-validation"></span><span id="host-headers-virtual-hosting"></span><h2>Host 头部验证<a class="headerlink" href="#host-header-validation" title="永久链接至标题">¶</a></h2>
+<p>在某些情况下，Django 使用客户端提供的 <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头部来构造 URLs。这些值虽被清理以阻止跨站脚本攻击，但伪造 <code class="docutils literal notranslate"><span class="pre">Host</span></code> 值还是可以用于跨站请求伪造，缓存毒化攻击，以及电子邮件中的有毒链接。</p>
+<p>因为即使看起来安全的服务器配置也容易受到假的 <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头部信息的影响，Django 依靠定义在 <a class="reference internal" href="../ref/request-response.html#django.http.HttpRequest.get_host" title="django.http.HttpRequest.get_host"><code class="xref py py-meth docutils literal notranslate"><span class="pre">django.http.HttpRequest.get_host()</span></code></a> 方法中的 <a class="reference internal" href="../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 来验证 <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头部。</p>
+<p>这些验证仅通过 <a class="reference internal" href="../ref/request-response.html#django.http.HttpRequest.get_host" title="django.http.HttpRequest.get_host"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_host()</span></code></a> 来实现；如果您的代码直接从 <code class="docutils literal notranslate"><span class="pre">request.META</span></code> 得到 <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头部，您就绕过了这种安全保护机制。</p>
+<p>更多细节请参照完整的 <a class="reference internal" href="../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 文档。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">本文档的较早版本建议配置你的网络服务器，以确保它验证传入的 HTTP <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头。虽然我们现在还是这样建议，但在许多常见 Web 服务器中，看似验证了 <code class="docutils literal notranslate"><span class="pre">Host</span></code> 头的配置，实际上却没有验证。例如，即使 Apache 的配置是让你的 Django 网站从一个非默认的虚拟主机上运行，并设置了 &quot;ServerName&quot;，HTTP 请求仍然有可能匹配这个虚拟主机，并提供一个假的 &quot;Host &quot; 头。因此，Django 现在要求你显式地设置 <a class="reference internal" href="../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a>，而不是依赖 Web 服务器的配置。</p>
+</div>
+<p>另外，如果您的配置需要，Django 要求您明确启用对 <code class="docutils literal notranslate"><span class="pre">X-Forwarded-Host</span></code> 标头的支持（通过 <a class="reference internal" href="../ref/settings.html#std-setting-USE_X_FORWARDED_HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_X_FORWARDED_HOST</span></code></a> 配置）。</p>
+</div>
+<div class="section" id="s-referrer-policy">
+<span id="referrer-policy"></span><h2>Referrer 策略<a class="headerlink" href="#referrer-policy" title="永久链接至标题">¶</a></h2>
+<p>浏览器使用 <code class="docutils literal notranslate"><span class="pre">Referer</span></code> 头部来把关于用户是如何到达那里的信息发送到网站。通过设置 <em>Referrer 策略</em>，限制在哪些情况下设置 <code class="docutils literal notranslate"><span class="pre">Referer</span></code> 头部，可以保护您用户的隐私。请看 <a class="reference internal" href="../ref/middleware.html#referrer-policy"><span class="std std-ref">安全中间件参考中的 referrer 策略部分</span></a> 了解更多细节。</p>
+</div>
+<div class="section" id="s-cross-origin-opener-policy">
+<span id="cross-origin-opener-policy"></span><h2>跨源弹出式窗口策略<a class="headerlink" href="#cross-origin-opener-policy" title="永久链接至标题">¶</a></h2>
+<p>跨源弹出式窗口策略（COOP）头允许浏览器将一个顶级窗口与其他文档隔离，把它们放在不同的上下文组中，使它们不能直接与顶级窗口交互。如果一个受 COOP 保护的文档打开了一个跨源弹出窗口，该弹出窗口的 <code class="docutils literal notranslate"><span class="pre">window.opener</span></code> 属性将为 <code class="docutils literal notranslate"><span class="pre">null</span></code>。COOP 可以防止跨源攻击。详情请看 <a class="reference internal" href="../ref/middleware.html#cross-origin-opener-policy"><span class="std std-ref">安全中间件参考资料中的跨源弹出式窗口策略部分</span></a>。</p>
+</div>
+<div class="section" id="s-session-security">
+<span id="session-security"></span><h2>会话安全<a class="headerlink" href="#session-security" title="永久链接至标题">¶</a></h2>
+<p>类似于 <a class="reference internal" href="../ref/csrf.html#csrf-limitations"><span class="std std-ref">CSRF 限制</span></a> 要求一个被部署的网页应让不受信任的用户不能访问任何子域，<a class="reference internal" href="http/sessions.html#module-django.contrib.sessions" title="django.contrib.sessions: Provides session management for Django projects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code></a> 也有限制。参照 <a class="reference internal" href="http/sessions.html#topics-session-security"><span class="std std-ref">会话主题指南中关于安全的部分</span></a> 获取更多细节。</p>
+</div>
+<div class="section" id="s-user-uploaded-content">
+<span id="s-user-uploaded-content-security"></span><span id="user-uploaded-content"></span><span id="user-uploaded-content-security"></span><h2>用户上传内容<a class="headerlink" href="#user-uploaded-content" title="永久链接至标题">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">考虑从云服务或 CDN 提供静态文件服务来避免此类问题。</p>
+</div>
+<ul>
+<li><p class="first">如果你的网站接受文件上传，强烈建议你在你的网络服务器配置中把这些上传文件限制在一个合理的大小，以防止拒绝服务（DOS）攻击。在 Apache 中，可以使用 <a class="reference external" href="https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestbody">LimitRequestBody</a> 指令轻松设置。</p>
+</li>
+<li><p class="first">如果您为自己的静态文件提供服务，确保像 Apache 的 <code class="docutils literal notranslate"><span class="pre">mod_php</span></code> 这种能把静态文件当作代码来执行的处理程序已经关闭。您绝不会希望用户能够通过上传并请求特制文件来执行任意的代码。</p>
+</li>
+<li><p class="first">如果媒体文件没有遵循安全性最佳惯例，Django 的媒体上传处理会产生一些漏洞。特别的，如果一个 HTML 文件包含合法的 PNG 格式头部并附加一些恶意的 HTML，它是可以作为一个图片文件上传的。该文件将会通过 Django 用于 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ImageField" title="django.db.models.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a> 图片处理（Pillow）库的验证。当此文件随后被展示给用户时，它可以被显示为 HTML，这取决于您的服务器类型于配置。</p>
+<p>在框架级别上没有防护技术方案可以安全地验证所有用户上传的文件内容，但是您可以采取其他步骤来减轻这些攻击：</p>
+<ol class="arabic simple">
+<li>通过一直为来自不同顶级域名或二级域名的用户提供上传内容可以防御一类的攻击。这可以防止被 <a class="reference external" href="https://en.wikipedia.org/wiki/Same-origin_policy">same-origin policy</a> 保护机制阻止的任何攻击，比如跨站脚本攻击。例如您的网站是 <code class="docutils literal notranslate"><span class="pre">example.com</span></code>，您应当通过形如 <code class="docutils literal notranslate"><span class="pre">usercontent-example.com</span></code> 的方式来提供上传内容服务（配置 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a>）。仅仅从像 <code class="docutils literal notranslate"><span class="pre">usercontent.example.com</span></code> 这样的子域提供内容是*不够*的。</li>
+<li>除此之外，应用可以选择定义一个列表来限制允许用户上传的文件的扩展名，并将 Web 服务器配置为仅为此类文件服务。</li>
+</ol>
+</li>
+</ul>
+</div>
+<div class="section" id="s-additional-security-topics">
+<span id="s-id2"></span><span id="additional-security-topics"></span><span id="id2"></span><h2>其他安全性相关主题<a class="headerlink" href="#additional-security-topics" title="永久链接至标题">¶</a></h2>
+<p>虽然 Django 开箱即提供了良好的安全保护，但正确部署你的应用程序并利用网络服务器、操作系统和其他组件的安全保护仍然很重要。</p>
+<ul class="simple">
+<li>确保你的 Python 代码是在网络服务器的根目录之外。这将确保你的 Python 代码不会被意外地作为纯文本提供（或意外地执行）。</li>
+<li>小心一切 <a class="reference internal" href="../ref/models/fields.html#file-upload-security"><span class="std std-ref">用户上传的文件</span></a>。</li>
+<li>Django 不会对认证用户的请求进行节流。为了防止针对认证系统的暴力攻击，你可以考虑部署一个 Django 插件或网络服务器模块来节制这些请求。</li>
+<li>Keep your <a class="reference internal" href="../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a>, and <a class="reference internal" href="../ref/settings.html#std-setting-SECRET_KEY_FALLBACKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY_FALLBACKS</span></code></a> if in
+use, secret.</li>
+<li>用防火墙限制缓存系统和数据库的可访问性是个好主意。</li>
+<li>看一下开源 Web 应用安全计划（OWASP） <a class="reference external" href="https://owasp.org/Top10/">Top 10 list</a> ，它指定了网络应用程序中一些常见的漏洞。尽管 Django 拥有解决某些问题的工具，但在项目设计中必须考虑其他问题。</li>
+<li>Mozilla 讨论了很多与 <a class="reference external" href="https://infosec.mozilla.org/guidelines/web_security.html">web security</a> 相关的主题。他们的网页还包括适用于任何系统的安全原则。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 的安全性</a><ul>
+<li><a class="reference internal" href="#cross-site-scripting-xss-protection">防御跨站脚本攻击（XSS）</a></li>
+<li><a class="reference internal" href="#cross-site-request-forgery-csrf-protection">防御跨站点请求伪造（CSRF）</a></li>
+<li><a class="reference internal" href="#sql-injection-protection">防御 SQL 注入</a></li>
+<li><a class="reference internal" href="#clickjacking-protection">防御访问劫持</a></li>
+<li><a class="reference internal" href="#ssl-https">SSL/HTTPS</a></li>
+<li><a class="reference internal" href="#host-header-validation">Host 头部验证</a></li>
+<li><a class="reference internal" href="#referrer-policy">Referrer 策略</a></li>
+<li><a class="reference internal" href="#cross-origin-opener-policy">跨源弹出式窗口策略</a></li>
+<li><a class="reference internal" href="#session-security">会话安全</a></li>
+<li><a class="reference internal" href="#user-uploaded-content">用户上传内容</a></li>
+<li><a class="reference internal" href="#additional-security-topics">其他安全性相关主题</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="pagination.html"
+                          title="上一章">分页</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="performance.html"
+                          title="下一章">性能和优化</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/topics/security.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="pagination.html" title="分页">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="performance.html" title="性能和优化">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

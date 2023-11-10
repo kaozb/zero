@@ -1,0 +1,374 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分页器 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="请求和响应对象" href="request-response.html" />
+    <link rel="prev" title="数据库函数" href="models/database-functions.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="models/database-functions.html" title="数据库函数">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="request-response.html" title="请求和响应对象">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-paginator">
+            
+  <div class="section" id="s-paginator">
+<span id="paginator"></span><h1>分页器<a class="headerlink" href="#paginator" title="永久链接至标题">¶</a></h1>
+<p>Django 提供了一些类来帮助你管理分页数据 ——也就是说，数据被分割在几个页面上，并带有 “上一页／下一页” 的链接。这些类位于 <a class="reference external" href="https://github.com/django/django/blob/main/django/core/paginator.py">django/core/paginator.py</a> 中。</p>
+<p>For examples, see the <a class="reference internal" href="../topics/pagination.html"><span class="doc">Pagination topic guide</span></a>.</p>
+<span class="target" id="module-django.core.paginator"></span><div class="section" id="s-paginator-class">
+<span id="paginator-class"></span><h2><code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 类<a class="headerlink" href="#paginator-class" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Paginator</span></code>(<em><span class="n"><span class="pre">object_list</span></span></em>, <em><span class="n"><span class="pre">per_page</span></span></em>, <em><span class="n"><span class="pre">orphans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">allow_empty_first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>)<a class="headerlink" href="#django.core.paginator.Paginator" title="永久链接至目标">¶</a></dt>
+<dd><p>当使用 <code class="docutils literal notranslate"><span class="pre">len()</span></code> 或直接迭代时，分页器的作用就像一个 <a class="reference internal" href="#django.core.paginator.Page" title="django.core.paginator.Page"><code class="xref py py-class docutils literal notranslate"><span class="pre">Page</span></code></a> 的序列。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.object_list">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">object_list</span></code><a class="headerlink" href="#django.core.paginator.Paginator.object_list" title="永久链接至目标">¶</a></dt>
+<dd><p>必要的。一个列表、元组、<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 或其他具有 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 或 <code class="docutils literal notranslate"><span class="pre">__len__()</span></code> 方法的可切片对象。为了实现一致的分页，<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 应该是有序的，例如使用 <a class="reference internal" href="models/querysets.html#django.db.models.query.QuerySet.order_by" title="django.db.models.query.QuerySet.order_by"><code class="xref py py-meth docutils literal notranslate"><span class="pre">order_by()</span></code></a> 子句或使用模型上的默认 <a class="reference internal" href="models/options.html#django.db.models.Options.ordering" title="django.db.models.Options.ordering"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ordering</span></code></a>。</p>
+<div class="admonition-performance-issues-paginating-large-queryset-s admonition">
+<p class="first admonition-title">对大型 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 进行分页的性能问题</p>
+<p class="last">如果你使用的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 有非常多的项目，在某些数据库上请求高页数可能会很慢，因为产生的 <code class="docutils literal notranslate"><span class="pre">LIMIT</span></code> ／ <code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> 查询需要计算 <code class="docutils literal notranslate"><span class="pre">OFFSET</span></code> 记录的数量，随着页数的增加，需要的时间也就越长。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.per_page">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">per_page</span></code><a class="headerlink" href="#django.core.paginator.Paginator.per_page" title="永久链接至目标">¶</a></dt>
+<dd><p>必要的。一个页面中包含的最大项目数，不包括 orphans（参见下面的 <a class="reference internal" href="#django.core.paginator.Paginator.orphans" title="django.core.paginator.Paginator.orphans"><code class="xref py py-attr docutils literal notranslate"><span class="pre">orphans</span></code></a> 可选参数）。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.orphans">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">orphans</span></code><a class="headerlink" href="#django.core.paginator.Paginator.orphans" title="永久链接至目标">¶</a></dt>
+<dd><p>可选的。当你不希望最后一页的项目数量很少时，使用这个选项。如果最后一页的项目数量通常小于或等于 <code class="docutils literal notranslate"><span class="pre">orphans</span></code>，那么这些项目将被添加到前一页（成为最后一页），而不是让这些项目单独留在一页上。例如，如果有 23 个条目，<code class="docutils literal notranslate"><span class="pre">per_page=10</span></code>，<code class="docutils literal notranslate"><span class="pre">orphans=3</span></code>，则会有两页；第一页有 10 个条目，第二页（也是最后一页）有 13 个条目。<code class="docutils literal notranslate"><span class="pre">orphans</span></code> 默认为 0，这意味着页面永远不会合并，最后一页可能只有一个项目。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.allow_empty_first_page">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">allow_empty_first_page</span></code><a class="headerlink" href="#django.core.paginator.Paginator.allow_empty_first_page" title="永久链接至目标">¶</a></dt>
+<dd><p>可选的。是否允许第一页为空。 如果 <code class="docutils literal notranslate"><span class="pre">False</span></code> 并且 <code class="docutils literal notranslate"><span class="pre">object_list</span></code> 是空的，则会出现 <code class="docutils literal notranslate"><span class="pre">EmptyPage</span></code> 错误。</p>
+</dd></dl>
+
+<div class="section" id="s-methods">
+<span id="methods"></span><h3>方法<a class="headerlink" href="#methods" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.get_page">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">get_page</span></code>(<em><span class="n"><span class="pre">number</span></span></em>)<a class="headerlink" href="#django.core.paginator.Paginator.get_page" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个给定的基于 1 索引的 <a class="reference internal" href="#django.core.paginator.Page" title="django.core.paginator.Page"><code class="xref py py-class docutils literal notranslate"><span class="pre">Page</span></code></a> 对象，同时处理超出范围和无效的页码。</p>
+<p>如果页数不是数字，它返回第一页。如果页码为负数或大于页数，则返回最后一页。</p>
+<p>只有当你指定了 <code class="docutils literal notranslate"><span class="pre">Paginator(...,</span> <span class="pre">allow_empty_first_page=False)</span></code> 并且 <code class="docutils literal notranslate"><span class="pre">object_list</span></code> 为空时，才会引发 <a class="reference internal" href="#django.core.paginator.EmptyPage" title="django.core.paginator.EmptyPage"><code class="xref py py-exc docutils literal notranslate"><span class="pre">EmptyPage</span></code></a> 异常。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.page">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">page</span></code>(<em><span class="n"><span class="pre">number</span></span></em>)<a class="headerlink" href="#django.core.paginator.Paginator.page" title="永久链接至目标">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#django.core.paginator.Page" title="django.core.paginator.Page"><code class="xref py py-class docutils literal notranslate"><span class="pre">Page</span></code></a> object with the given 1-based index. Raises
+<a class="reference internal" href="#django.core.paginator.PageNotAnInteger" title="django.core.paginator.PageNotAnInteger"><code class="xref py py-exc docutils literal notranslate"><span class="pre">PageNotAnInteger</span></code></a> if the <code class="docutils literal notranslate"><span class="pre">number</span></code> cannot be converted to an integer
+by calling <code class="docutils literal notranslate"><span class="pre">int()</span></code>. Raises <a class="reference internal" href="#django.core.paginator.EmptyPage" title="django.core.paginator.EmptyPage"><code class="xref py py-exc docutils literal notranslate"><span class="pre">EmptyPage</span></code></a> if the given page number
+doesn't exist.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.get_elided_page_range">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">get_elided_page_range</span></code>(<em><span class="n"><span class="pre">number</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">on_each_side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em><span class="n"><span class="pre">on_ends</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>)<a class="headerlink" href="#django.core.paginator.Paginator.get_elided_page_range" title="永久链接至目标">¶</a></dt>
+<dd><p>Returns a 1-based list of page numbers similar to
+<a class="reference internal" href="#django.core.paginator.Paginator.page_range" title="django.core.paginator.Paginator.page_range"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Paginator.page_range</span></code></a>, but may add an ellipsis to either or both
+sides of the current page number when <a class="reference internal" href="#django.core.paginator.Paginator.num_pages" title="django.core.paginator.Paginator.num_pages"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Paginator.num_pages</span></code></a> is large.</p>
+<p>The number of pages to include on each side of the current page number is
+determined by the <code class="docutils literal notranslate"><span class="pre">on_each_side</span></code> argument which defaults to 3.</p>
+<p>The number of pages to include at the beginning and end of page range is
+determined by the <code class="docutils literal notranslate"><span class="pre">on_ends</span></code> argument which defaults to 2.</p>
+<p>For example, with the default values for <code class="docutils literal notranslate"><span class="pre">on_each_side</span></code> and <code class="docutils literal notranslate"><span class="pre">on_ends</span></code>,
+if the current page is 10 and there are 50 pages, the page range will be
+<code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">'…',</span> <span class="pre">7,</span> <span class="pre">8,</span> <span class="pre">9,</span> <span class="pre">10,</span> <span class="pre">11,</span> <span class="pre">12,</span> <span class="pre">13,</span> <span class="pre">'…',</span> <span class="pre">49,</span> <span class="pre">50]</span></code>. This will result in
+pages 7, 8, and 9 to the left of and 11, 12, and 13 to the right of the
+current page as well as pages 1 and 2 at the start and 49 and 50 at the
+end.</p>
+<p>Raises <a class="reference internal" href="#django.core.paginator.InvalidPage" title="django.core.paginator.InvalidPage"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InvalidPage</span></code></a> if the given page number doesn't exist.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-attributes">
+<span id="attributes"></span><h3>属性<a class="headerlink" href="#attributes" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.ELLIPSIS">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">ELLIPSIS</span></code><a class="headerlink" href="#django.core.paginator.Paginator.ELLIPSIS" title="永久链接至目标">¶</a></dt>
+<dd><p>A translatable string used as a substitute for elided page numbers in the
+page range returned by <a class="reference internal" href="#django.core.paginator.Paginator.get_elided_page_range" title="django.core.paginator.Paginator.get_elided_page_range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_elided_page_range()</span></code></a>. Default is
+<code class="docutils literal notranslate"><span class="pre">'…'</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.count">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">count</span></code><a class="headerlink" href="#django.core.paginator.Paginator.count" title="永久链接至目标">¶</a></dt>
+<dd><p>所有页面的对象总数。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在确定 <code class="docutils literal notranslate"><span class="pre">object_list</span></code> 中包含的对象数量时，<code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 将首先尝试调用 <code class="docutils literal notranslate"><span class="pre">object_list.count()</span></code>。如果 <code class="docutils literal notranslate"><span class="pre">object_list</span></code> 没有 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 方法，那么 <code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 将回到使用 <code class="docutils literal notranslate"><span class="pre">len(object_list)</span></code>。这允许对象，如 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>，在可用时使用更高效的 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 方法。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.num_pages">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">num_pages</span></code><a class="headerlink" href="#django.core.paginator.Paginator.num_pages" title="永久链接至目标">¶</a></dt>
+<dd><p>总页数。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Paginator.page_range">
+<code class="sig-prename descclassname"><span class="pre">Paginator.</span></code><code class="sig-name descname"><span class="pre">page_range</span></code><a class="headerlink" href="#django.core.paginator.Paginator.page_range" title="永久链接至目标">¶</a></dt>
+<dd><p>以 1 为基础的页码范围迭代器，例如产生 <code class="docutils literal notranslate"><span class="pre">[1，2，3，4]</span></code>。</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-page-class">
+<span id="page-class"></span><h2><code class="docutils literal notranslate"><span class="pre">Page</span></code> 类<a class="headerlink" href="#page-class" title="永久链接至标题">¶</a></h2>
+<p>你通常不会手工构建 <code class="docutils literal notranslate"><span class="pre">Page</span></code> 对象 —— 你将通过迭代 <a class="reference internal" href="#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paginator</span></code></a>，或使用 <a class="reference internal" href="#django.core.paginator.Paginator.page" title="django.core.paginator.Paginator.page"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Paginator.page()</span></code></a> 获得它们。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.paginator.Page">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Page</span></code>(<em><span class="n"><span class="pre">object_list</span></span></em>, <em><span class="n"><span class="pre">number</span></span></em>, <em><span class="n"><span class="pre">paginator</span></span></em>)<a class="headerlink" href="#django.core.paginator.Page" title="永久链接至目标">¶</a></dt>
+<dd><p>当使用 <code class="docutils literal notranslate"><span class="pre">len()</span></code> 或直接迭代时，一个页面就像一个 <a class="reference internal" href="#django.core.paginator.Page.object_list" title="django.core.paginator.Page.object_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Page.object_list</span></code></a> 的序列。</p>
+</dd></dl>
+
+<div class="section" id="s-id1">
+<span id="id1"></span><h3>方法<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.has_next">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">has_next</span></code>()<a class="headerlink" href="#django.core.paginator.Page.has_next" title="永久链接至目标">¶</a></dt>
+<dd><p>如果有下一页，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.has_previous">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">has_previous</span></code>()<a class="headerlink" href="#django.core.paginator.Page.has_previous" title="永久链接至目标">¶</a></dt>
+<dd><p>如果有上一页，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.has_other_pages">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">has_other_pages</span></code>()<a class="headerlink" href="#django.core.paginator.Page.has_other_pages" title="永久链接至目标">¶</a></dt>
+<dd><p>如果有下一页 <strong>或</strong> 上一页，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.next_page_number">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">next_page_number</span></code>()<a class="headerlink" href="#django.core.paginator.Page.next_page_number" title="永久链接至目标">¶</a></dt>
+<dd><p>返回下一页的页码。如果下一页不存在，则引发 <a class="reference internal" href="#django.core.paginator.InvalidPage" title="django.core.paginator.InvalidPage"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InvalidPage</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.previous_page_number">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">previous_page_number</span></code>()<a class="headerlink" href="#django.core.paginator.Page.previous_page_number" title="永久链接至目标">¶</a></dt>
+<dd><p>返回上一页的页码。如果上一页不存在，则引发 <a class="reference internal" href="#django.core.paginator.InvalidPage" title="django.core.paginator.InvalidPage"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InvalidPage</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.start_index">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">start_index</span></code>()<a class="headerlink" href="#django.core.paginator.Page.start_index" title="永久链接至目标">¶</a></dt>
+<dd><p>返回页面上第一个对象，相对于分页器列表中所有对象的基于 1 的索引。例如，当对一个有 5 个对象的列表进行分页时，每页有 2 个对象，第二页的 <a class="reference internal" href="#django.core.paginator.Page.start_index" title="django.core.paginator.Page.start_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start_index()</span></code></a> 将返回 <code class="docutils literal notranslate"><span class="pre">3</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.paginator.Page.end_index">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">end_index</span></code>()<a class="headerlink" href="#django.core.paginator.Page.end_index" title="永久链接至目标">¶</a></dt>
+<dd><p>返回页面上最后一个对象相对于分页器列表中所有对象的基于 1 的索引。例如，当对一个有 5 个对象的列表进行分页时，每页有 2 个对象，第二页的 <a class="reference internal" href="#django.core.paginator.Page.end_index" title="django.core.paginator.Page.end_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">end_index()</span></code></a> 将返回 <code class="docutils literal notranslate"><span class="pre">4</span></code>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-id2">
+<span id="id2"></span><h3>属性<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Page.object_list">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">object_list</span></code><a class="headerlink" href="#django.core.paginator.Page.object_list" title="永久链接至目标">¶</a></dt>
+<dd><p>此页上的对象列表。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Page.number">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">number</span></code><a class="headerlink" href="#django.core.paginator.Page.number" title="永久链接至目标">¶</a></dt>
+<dd><p>此页的基于 1 的页码。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.paginator.Page.paginator">
+<code class="sig-prename descclassname"><span class="pre">Page.</span></code><code class="sig-name descname"><span class="pre">paginator</span></code><a class="headerlink" href="#django.core.paginator.Page.paginator" title="永久链接至目标">¶</a></dt>
+<dd><p>关联的 <a class="reference internal" href="#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paginator</span></code></a> 对象。</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-exceptions">
+<span id="exceptions"></span><h2>异常<a class="headerlink" href="#exceptions" title="永久链接至标题">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="django.core.paginator.InvalidPage">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">InvalidPage</span></code><a class="headerlink" href="#django.core.paginator.InvalidPage" title="永久链接至目标">¶</a></dt>
+<dd><p>当分页器被传递一个无效的页码时引发异常的基类。</p>
+</dd></dl>
+
+<p><a class="reference internal" href="#django.core.paginator.Paginator.page" title="django.core.paginator.Paginator.page"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Paginator.page()</span></code></a> 方法在请求的页面无效（即不是整数）或不包含任何对象时引发异常。一般来说，只要捕获 <code class="docutils literal notranslate"><span class="pre">InvalidPage</span></code> 异常就够了，但如果你想要更细化，你可以捕获以下任何一种异常。</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="django.core.paginator.PageNotAnInteger">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PageNotAnInteger</span></code><a class="headerlink" href="#django.core.paginator.PageNotAnInteger" title="永久链接至目标">¶</a></dt>
+<dd><p>当 <a class="reference internal" href="#django.core.paginator.Paginator.page" title="django.core.paginator.Paginator.page"><code class="xref py py-meth docutils literal notranslate"><span class="pre">page()</span></code></a> 的值不是整数时发生该事件。</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="django.core.paginator.EmptyPage">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">EmptyPage</span></code><a class="headerlink" href="#django.core.paginator.EmptyPage" title="永久链接至目标">¶</a></dt>
+<dd><p>当 <a class="reference internal" href="#django.core.paginator.Paginator.page" title="django.core.paginator.Paginator.page"><code class="xref py py-meth docutils literal notranslate"><span class="pre">page()</span></code></a> 被赋予一个有效的值，但该页面上没有对象存在时，引发该异常。</p>
+</dd></dl>
+
+<p>这两个异常都是 <a class="reference internal" href="#django.core.paginator.InvalidPage" title="django.core.paginator.InvalidPage"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InvalidPage</span></code></a> 的子类，所以你可以用 <code class="docutils literal notranslate"><span class="pre">except</span> <span class="pre">InvalidPage</span></code> 处理这两个异常。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">分页器</a><ul>
+<li><a class="reference internal" href="#paginator-class"><code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 类</a><ul>
+<li><a class="reference internal" href="#methods">方法</a></li>
+<li><a class="reference internal" href="#attributes">属性</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#page-class"><code class="docutils literal notranslate"><span class="pre">Page</span></code> 类</a><ul>
+<li><a class="reference internal" href="#id1">方法</a></li>
+<li><a class="reference internal" href="#id2">属性</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exceptions">异常</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="models/database-functions.html"
+                          title="上一章">数据库函数</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="request-response.html"
+                          title="下一章">请求和响应对象</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/ref/paginator.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="models/database-functions.html" title="数据库函数">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="request-response.html" title="请求和响应对象">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,342 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>部署清单 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="如何将 Django 更新至新的版本" href="../upgrade-version.html" />
+    <link rel="prev" title="如何使用 Uvicorn 托管 Django" href="asgi/uvicorn.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="asgi/uvicorn.html" title="如何使用 Uvicorn 托管 Django">previous</a>
+     |
+    <a href="../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="../upgrade-version.html" title="如何将 Django 更新至新的版本">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-deployment-checklist">
+            
+  <div class="section" id="s-deployment-checklist">
+<span id="deployment-checklist"></span><h1>部署清单<a class="headerlink" href="#deployment-checklist" title="永久链接至标题">¶</a></h1>
+<p>互联网是一个恶劣的环境。在部署你的 Django 项目之前，你应该花一些时间来审查你的配置，要考虑到安全、性能和操作。</p>
+<p>Django 包含了许多 <a class="reference internal" href="../../topics/security.html"><span class="doc">安全特性</span></a>。一些是内置的并且总保持激活状态，其他的则是可选的因为它们不总是恰当的，或者因为它们不便于之后的开发。举个例子，强制的 HTTPS 并不一定适合所有网站，它对于本地开发就是不切实际的。</p>
+<p>性能优化是另一项便利性权衡的主题。例如，缓存在生成环境很有用，但是对本地开发就作用不大。错误报告的需求也大不相同。</p>
+<p>以下清单包括以下配置：</p>
+<ul class="simple">
+<li>必须正确地设置 Django 以提供预期的安全级别；</li>
+<li>期望在每个环境中都是不同的；</li>
+<li>启用可选的安全功能；</li>
+<li>启用性能优化；</li>
+<li>提供错误报告功能。</li>
+</ul>
+<p>许多配置项是敏感的，需要被当做机密对待。如果要发布项目源码，常见操作是为开发开放合适的配置项，为生产环境配置私密设置模块。</p>
+<div class="section" id="s-run-manage-py-check-deploy">
+<span id="run-manage-py-check-deploy"></span><h2>运行 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">check</span> <span class="pre">--deploy</span></code><a class="headerlink" href="#run-manage-py-check-deploy" title="永久链接至标题">¶</a></h2>
+<p>下面介绍的某些检查项会自动使用 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-check-deploy"><code class="xref std std-option docutils literal notranslate"><span class="pre">check</span> <span class="pre">--deploy</span></code></a> 选项。请确保根据选项文档中描述的生产设置文件运行它。</p>
+</div>
+<div class="section" id="s-critical-settings">
+<span id="critical-settings"></span><h2>关键配置<a class="headerlink" href="#critical-settings" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-secret-key">
+<span id="secret-key"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a><a class="headerlink" href="#secret-key" title="永久链接至标题">¶</a></h3>
+<p><strong>密码必须是一个较长的随机值，且被妥善保存。</strong></p>
+<p>确保生产环境使用的密码并未用于其它环境，且未被提交至版本控制系统。这将减少攻击者获取密码的概率。</p>
+<p>逾期将安全密码硬编码在配置模块中，不然考虑从环境变量加载它:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;SECRET_KEY&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>或者从一个文件:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/etc/secret_key.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If rotating secret keys, you may use <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY_FALLBACKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY_FALLBACKS</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CURRENT_SECRET_KEY&quot;</span><span class="p">]</span>
+<span class="n">SECRET_KEY_FALLBACKS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;OLD_SECRET_KEY&quot;</span><span class="p">],</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>Ensure that old secret keys are removed from <code class="docutils literal notranslate"><span class="pre">SECRET_KEY_FALLBACKS</span></code> in a
+timely manner.</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.1:</span> <p>The <code class="docutils literal notranslate"><span class="pre">SECRET_KEY_FALLBACKS</span></code> setting was added to support rotating secret
+keys.</p>
+</div>
+</div>
+<div class="section" id="s-debug">
+<span id="debug"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a><a class="headerlink" href="#debug" title="永久链接至标题">¶</a></h3>
+<p><strong>永远不要在生产环境打开 debug 开关。</strong></p>
+<p>开发时，你当然要配置 <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span> <span class="pre">=</span> <span class="pre">True</span></code></a>，这将方便你在浏览器启用完全回溯功能。</p>
+<p>不过，对于生产环境来说，这真是一个坏主意，因为这会泄露很多超出预期的信息：代码摘要，本地变量，配置项，使用的库，等等。</p>
+</div>
+</div>
+<div class="section" id="s-environment-specific-settings">
+<span id="environment-specific-settings"></span><h2>特定于环境的配置<a class="headerlink" href="#environment-specific-settings" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-allowed-hosts">
+<span id="allowed-hosts"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a><a class="headerlink" href="#allowed-hosts" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span> <span class="pre">=</span> <span class="pre">False</span></code></a> 时，Django 在未正确配置 <a class="reference internal" href="../../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 时无法工作。</p>
+<p>该配置避免你的站点遭受某些 CSRF 攻击。如果使用了通配符，你必须实现自定义的 <code class="docutils literal notranslate"><span class="pre">Host</span></code> HTTP 头，或者确保你不会很容易地遭受此种攻击。</p>
+<p>你还应该配置位于 Django 前面的网络服务器来验证主机。它应该用一个静态错误页面来回应，或者忽略不正确主机的请求，而不是将请求转发给 Django。这样你就可以避免在你的 Django 日志中出现虚假的错误（如果你有配置错误报告的话，也可以用电子邮件）。例如，在 nginx 上，你可以设置一个默认的服务器，在一个未识别的主机上返回“444 No Response”。</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="s">default_server</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kn">return</span><span class="w"> </span><span class="mi">444</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-caches">
+<span id="caches"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a><a class="headerlink" href="#caches" title="永久链接至标题">¶</a></h3>
+<p>若使用了缓存，开发环境的连接参数和生产环境可能不同。Djano 默认为每个进程提供 <a class="reference internal" href="../../topics/cache.html#local-memory-caching"><span class="std std-ref">本地内存缓存</span></a>，这可能与期望不同。</p>
+<p>缓存服务器一般采用弱验证。确保它们只接受来自你的应用服务器的连接。</p>
+</div>
+<div class="section" id="s-databases">
+<span id="databases"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a><a class="headerlink" href="#databases" title="永久链接至标题">¶</a></h3>
+<p>生产环境与开发环境的数据库连接参数可能是不同的。</p>
+<p>数据库密码是机密的。你应该像保护 <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> 那样保护它们。</p>
+<p>为了最大限度的安全，确保数据库只为来自你应用的连接提供服务。</p>
+<p>如果你还未为数据库设置备份，现在就做！</p>
+</div>
+<div class="section" id="s-email-backend-and-related-settings">
+<span id="email-backend-and-related-settings"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-EMAIL_BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">EMAIL_BACKEND</span></code></a> 和关联配置<a class="headerlink" href="#email-backend-and-related-settings" title="永久链接至标题">¶</a></h3>
+<p>如果你的站点发送邮件，以下值需要被正确地配置。</p>
+<p>默认情况下，Django 从 <a class="reference external" href="mailto:webmaster&#37;&#52;&#48;localhost">webmaster<span>&#64;</span>localhost</a> 和 <a class="reference external" href="mailto:root&#37;&#52;&#48;localhost">root<span>&#64;</span>localhost</a> 发送邮件。然而，某些邮件服务商拒绝来自这些地址的邮件。为了使用不同的发件人地址，修改 <a class="reference internal" href="../../ref/settings.html#std-setting-DEFAULT_FROM_EMAIL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEFAULT_FROM_EMAIL</span></code></a> 和 <a class="reference internal" href="../../ref/settings.html#std-setting-SERVER_EMAIL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SERVER_EMAIL</span></code></a> 配置。</p>
+</div>
+<div class="section" id="s-static-root-and-static-url">
+<span id="static-root-and-static-url"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a> 和 <a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a><a class="headerlink" href="#static-root-and-static-url" title="永久链接至标题">¶</a></h3>
+<p>静态文件由开发服务器自动托管。但在生产环境，你必须定义配置 <a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a> ， <a class="reference internal" href="../../ref/contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">collectstatic</span></code></a> 将会拷贝它们。</p>
+<p>查看 <a class="reference internal" href="../static-files/index.html"><span class="doc">如何管理静态文件（如图片、JavaScript、CSS）</span></a> 获得更多信息。</p>
+</div>
+<div class="section" id="s-media-root-and-media-url">
+<span id="media-root-and-media-url"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a> 和 <a class="reference internal" href="../../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a><a class="headerlink" href="#media-root-and-media-url" title="永久链接至标题">¶</a></h3>
+<p>媒体文件由用户上传。他们是不可信任的！确保 web 服务器从未尝试解析这些文件。例如，若用户上传了一个 <code class="docutils literal notranslate"><span class="pre">.php</span></code> 文件，web 服务器应该永远不要运行它。</p>
+<p>现在是检查这些文件的备份策略的好时机。</p>
+</div>
+</div>
+<div class="section" id="s-https">
+<span id="https"></span><h2>HTTPS<a class="headerlink" href="#https" title="永久链接至标题">¶</a></h2>
+<p>允许用户登录的网站应该强制站点范围的 HTTPS，避免明文传输令牌。在 Django 中，令牌包括账号/密码，会话 cookie 和重置密码的令牌。（如果你用邮件发送重置密码的令牌，那就没什么办法能保护它们。）</p>
+<p>仅保护用户账号或后台等敏感区域是不够的，因为 HTTP 和 HTTPS 使用相同的会话 cookie。Web 服务器必须将所有的 HTTP 重定向至 HTTPS，且只将 HTTPS 的请求转发给 Django。</p>
+<p>若你已经配置了 HTTPS，启用下列配置。</p>
+<div class="section" id="s-csrf-cookie-secure">
+<span id="csrf-cookie-secure"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-CSRF_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_SECURE</span></code></a><a class="headerlink" href="#csrf-cookie-secure" title="永久链接至标题">¶</a></h3>
+<p>将此设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，避免不甚用 HTTP 传输 CSRF cookie。</p>
+</div>
+<div class="section" id="s-session-cookie-secure">
+<span id="session-cookie-secure"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_SECURE</span></code></a><a class="headerlink" href="#session-cookie-secure" title="永久链接至标题">¶</a></h3>
+<p>将此设置未 <code class="docutils literal notranslate"><span class="pre">True</span></code>，避免不甚用 HTTP 传输会话 cookie。</p>
+</div>
+</div>
+<div class="section" id="s-performance-optimizations">
+<span id="performance-optimizations"></span><h2>性能优化<a class="headerlink" href="#performance-optimizations" title="永久链接至标题">¶</a></h2>
+<p>配置 <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span> <span class="pre">=</span> <span class="pre">False</span></code></a> 会禁用几个仅在开发时有用的功能。另外，你要调整下列配置。</p>
+<div class="section" id="s-sessions">
+<span id="sessions"></span><h3>会话<a class="headerlink" href="#sessions" title="永久链接至标题">¶</a></h3>
+<p>建议参考 <span class="xref std std-ref">cached sessions 1</span> 以提升性能。</p>
+<p>如果使用数据库来备份会话，参考  <span class="xref std std-ref">clear old sessions 1</span> 以避免存储不必要的数据。</p>
+</div>
+<div class="section" id="s-conn-max-age">
+<span id="conn-max-age"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-CONN_MAX_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a><a class="headerlink" href="#conn-max-age" title="永久链接至标题">¶</a></h3>
+<p>开启 <a class="reference internal" href="../../ref/databases.html#persistent-database-connections"><span class="std std-ref">持久数据库连接</span></a> 会在连接数据库账号耗费了请求处理时间的很大一部分的时候，大大提升速度。</p>
+<p>这对带宽有限的虚拟主机帮助极大。</p>
+</div>
+<div class="section" id="s-templates">
+<span id="templates"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-TEMPLATES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEMPLATES</span></code></a><a class="headerlink" href="#templates" title="永久链接至标题">¶</a></h3>
+<p>Enabling the cached template loader often improves performance drastically, as
+it avoids compiling each template every time it needs to be rendered. When
+<a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span> <span class="pre">=</span> <span class="pre">False</span></code></a>, the cached template loader is enabled
+automatically. See <a class="reference internal" href="../../ref/templates/api.html#django.template.loaders.cached.Loader" title="django.template.loaders.cached.Loader"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.template.loaders.cached.Loader</span></code></a> for more
+information.</p>
+</div>
+</div>
+<div class="section" id="s-error-reporting">
+<span id="error-reporting"></span><h2>发送错误<a class="headerlink" href="#error-reporting" title="永久链接至标题">¶</a></h2>
+<p>在你将代码推送至生产环境后，你总是期望代码是健壮的，但你并不能控制意料之外的错误。还好，Django 能捕获错误并通知你。</p>
+<div class="section" id="s-logging">
+<span id="logging"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-LOGGING"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGGING</span></code></a><a class="headerlink" href="#logging" title="永久链接至标题">¶</a></h3>
+<p>在将网站放入生产环境前，检查 logging 配置项。在你收到某些信息后，查看其是否按预期运行。</p>
+<p>查看 <a class="reference internal" href="../../topics/logging.html"><span class="doc">日志</span></a> 了解 logging 的细节。</p>
+</div>
+<div class="section" id="s-admins-and-managers">
+<span id="admins-and-managers"></span><h3><a class="reference internal" href="../../ref/settings.html#std-setting-ADMINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ADMINS</span></code></a> 和 <a class="reference internal" href="../../ref/settings.html#std-setting-MANAGERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MANAGERS</span></code></a><a class="headerlink" href="#admins-and-managers" title="永久链接至标题">¶</a></h3>
+<p>发生 500 错误时，会邮件通知 <a class="reference internal" href="../../ref/settings.html#std-setting-ADMINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ADMINS</span></code></a>。</p>
+<p>404 错误会通知 <a class="reference internal" href="../../ref/settings.html#std-setting-MANAGERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MANAGERS</span></code></a>。<a class="reference internal" href="../../ref/settings.html#std-setting-IGNORABLE_404_URLS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">IGNORABLE_404_URLS</span></code></a> 有助于过滤误报。</p>
+<p>参考  <a class="reference internal" href="../error-reporting.html"><span class="doc">如何管理错误报告</span></a> 了解邮件如何在发生错误时发送报告的细节。</p>
+<div class="admonition-error-reporting-by-email-doesn-t-scale-very-well admonition">
+<p class="first admonition-title">利用邮件报告错误的弹性并不好</p>
+<p class="last">在收件箱被报告塞满前，考虑下使用错误监控系统，类似 <a class="reference external" href="https://docs.sentry.io/">Sentry</a>。Sentry 还可以聚合日志。</p>
+</div>
+</div>
+<div class="section" id="s-customize-the-default-error-views">
+<span id="customize-the-default-error-views"></span><h3>自定义默认错误视图<a class="headerlink" href="#customize-the-default-error-views" title="永久链接至标题">¶</a></h3>
+<p>Django 包括几个 HTTP 错误代码的默认视图和模板。你可能想覆盖默认模板，在你的根模板目录下创建以下模板：<code class="docutils literal notranslate"><span class="pre">404.html</span></code>、<code class="docutils literal notranslate"><span class="pre">500.html</span></code>、<code class="docutils literal notranslate"><span class="pre">403.html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">400.html</span></code>。使用这些模板的 <a class="reference internal" href="../../ref/views.html#error-views"><span class="std std-ref">默认错误视图</span></a> 应该足以满足 99% 的网络应用，但你也可以 <a class="reference internal" href="../../topics/http/views.html#customizing-error-views"><span class="std std-ref">自定义它们</span></a>。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">部署清单</a><ul>
+<li><a class="reference internal" href="#run-manage-py-check-deploy">运行 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">check</span> <span class="pre">--deploy</span></code></a></li>
+<li><a class="reference internal" href="#critical-settings">关键配置</a><ul>
+<li><a class="reference internal" href="#secret-key"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a></li>
+<li><a class="reference internal" href="#debug"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#environment-specific-settings">特定于环境的配置</a><ul>
+<li><a class="reference internal" href="#allowed-hosts"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a></li>
+<li><a class="reference internal" href="#caches"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a></li>
+<li><a class="reference internal" href="#databases"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a></li>
+<li><a class="reference internal" href="#email-backend-and-related-settings"><code class="xref std std-setting docutils literal notranslate"><span class="pre">EMAIL_BACKEND</span></code> 和关联配置</a></li>
+<li><a class="reference internal" href="#static-root-and-static-url"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code> 和 <code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a></li>
+<li><a class="reference internal" href="#media-root-and-media-url"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code> 和 <code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#https">HTTPS</a><ul>
+<li><a class="reference internal" href="#csrf-cookie-secure"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CSRF_COOKIE_SECURE</span></code></a></li>
+<li><a class="reference internal" href="#session-cookie-secure"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_SECURE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performance-optimizations">性能优化</a><ul>
+<li><a class="reference internal" href="#sessions">会话</a></li>
+<li><a class="reference internal" href="#conn-max-age"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a></li>
+<li><a class="reference internal" href="#templates"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEMPLATES</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#error-reporting">发送错误</a><ul>
+<li><a class="reference internal" href="#logging"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGGING</span></code></a></li>
+<li><a class="reference internal" href="#admins-and-managers"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ADMINS</span></code> 和 <code class="xref std std-setting docutils literal notranslate"><span class="pre">MANAGERS</span></code></a></li>
+<li><a class="reference internal" href="#customize-the-default-error-views">自定义默认错误视图</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="asgi/uvicorn.html"
+                          title="上一章">如何使用 Uvicorn 托管 Django</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../upgrade-version.html"
+                          title="下一章">如何将 Django 更新至新的版本</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/howto/deployment/checklist.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="asgi/uvicorn.html" title="如何使用 Uvicorn 托管 Django">previous</a>
+     |
+    <a href="../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="../upgrade-version.html" title="如何将 Django 更新至新的版本">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

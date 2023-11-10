@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据库事务 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="多数据库" href="multi-db.html" />
+    <link rel="prev" title="执行原生 SQL 查询" href="sql.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="sql.html" title="执行原生 SQL 查询">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="multi-db.html" title="多数据库">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-transactions">
+            
+  <div class="section" id="s-module-django.db.transaction">
+<span id="s-database-transactions"></span><span id="module-django.db.transaction"></span><span id="database-transactions"></span><h1>数据库事务<a class="headerlink" href="#module-django.db.transaction" title="永久链接至标题">¶</a></h1>
+<p>Django 提供多种方式控制数据库事务。</p>
+<div class="section" id="s-managing-database-transactions">
+<span id="managing-database-transactions"></span><h2>管理数据库事务<a class="headerlink" href="#managing-database-transactions" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-django-s-default-transaction-behavior">
+<span id="django-s-default-transaction-behavior"></span><h3>Django 默认的事务行为<a class="headerlink" href="#django-s-default-transaction-behavior" title="永久链接至标题">¶</a></h3>
+<p>Django 默认的事务行为是自动提交。除非事务正在执行，每个查询将会马上自动提交到数据库， <a class="reference internal" href="#autocommit-details"><span class="std std-ref">详见下文</span></a>。</p>
+<p>Django 自动使用事务或还原点，以确保需多次查询的 ORM 操作的一致性，特别是 <a class="reference internal" href="queries.html#topics-db-queries-delete"><span class="std std-ref">delete()</span></a> 和 <a class="reference internal" href="queries.html#topics-db-queries-update"><span class="std std-ref">update()</span></a> 操作。</p>
+<p>由于性能原因，Django 的 <a class="reference internal" href="../testing/tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a> 类同样将每个测试用事务封装起来。</p>
+</div>
+<div class="section" id="s-tying-transactions-to-http-requests">
+<span id="s-id1"></span><span id="tying-transactions-to-http-requests"></span><span id="id1"></span><h3>连结事务与 HTTP 请求<a class="headerlink" href="#tying-transactions-to-http-requests" title="永久链接至标题">¶</a></h3>
+<p>在 Web 里，处理事务比较常用的方式是将每个请求封装在一个事务中。 在你想启用该行为的数据库中，把配置中的参数 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-ATOMIC_REQUESTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ATOMIC_REQUESTS</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>它是这样工作的：在调用视图方法前，Django 先生成一个事务。如果响应能正常生成，Django 会提交该事务。而如果视图出现异常，Django 则会回滚该事务。</p>
+<p>你可以在你的视图代码中使用还原点执行子事务，一般会使用 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 上下文管理器。但是，在视图结束时，要么所有的更改都被提交，要么所有的更改都不被提交。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">虽然这种简洁的事务模型很吸引人，但在流量增加时，也会降低效率。为每个视图打开一个事务都会带来一些开销。对性能的影响程度取决于应用执行的查询语句和数据库处理锁的能力。</p>
+</div>
+<div class="admonition-per-request-transactions-and-streaming-responses admonition">
+<p class="first admonition-title">每次请求的事务和流式响应</p>
+<p>当视图返回一个 <a class="reference internal" href="../../ref/request-response.html#django.http.StreamingHttpResponse" title="django.http.StreamingHttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamingHttpResponse</span></code></a> 时，获取该响应的内容总会执行代码，生成内容。由于早就返回了该视图，某些代码会在事务外执行。</p>
+<p class="last">一般来说，不建议在生成流式响应时写入数据库，因为在开始发送响应后，就没有能有效处理错误的方法了。</p>
+</div>
+<p>实际上，此功能只是简单地用下文介绍的 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 装饰器装饰了每个视图函数。</p>
+<p>注意，只有视图被限制在事务中执行。中间件在事务之外运行，同理，渲染模板响应也是在事务之外运行的。</p>
+<p>即便启用了 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-ATOMIC_REQUESTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ATOMIC_REQUESTS</span></code></a>，仍能避免视图在事务中运行。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.non_atomic_requests">
+<code class="sig-name descname"><span class="pre">non_atomic_requests</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.non_atomic_requests" title="永久链接至目标">¶</a></dt>
+<dd><p>该装饰器会为指定视图取消 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-ATOMIC_REQUESTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ATOMIC_REQUESTS</span></code></a> 的影响。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+
+
+<span class="nd">@transaction</span><span class="o">.</span><span class="n">non_atomic_requests</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">do_stuff</span><span class="p">()</span>
+
+
+<span class="nd">@transaction</span><span class="o">.</span><span class="n">non_atomic_requests</span><span class="p">(</span><span class="n">using</span><span class="o">=</span><span class="s2">&quot;other&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_other_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">do_stuff_on_the_other_database</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>只有在它被应用到视图时才会生效。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-controlling-transactions-explicitly">
+<span id="controlling-transactions-explicitly"></span><h3>显式控制事务<a class="headerlink" href="#controlling-transactions-explicitly" title="永久链接至标题">¶</a></h3>
+<p>Django 提供了一个 API 控制数据库事务。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.atomic">
+<code class="sig-name descname"><span class="pre">atomic</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">savepoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">durable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.db.transaction.atomic" title="永久链接至目标">¶</a></dt>
+<dd><p>原子性是数据库事务的定义属性。 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 允许创建代码块来保证数据库的原子性。如果代码块成功创建，这个变动会提交到数据库。如果有异常，变动会回滚。</p>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块可以嵌套。在这个例子里，当内部块成功完成时，如果在稍后外部块里引发了异常，则仍可回滚到最初效果。</p>
+<p>It is sometimes useful to ensure an <code class="docutils literal notranslate"><span class="pre">atomic</span></code> block is always the
+outermost <code class="docutils literal notranslate"><span class="pre">atomic</span></code> block, ensuring that any database changes are
+committed when the block is exited without errors. This is known as
+durability and can be achieved by setting <code class="docutils literal notranslate"><span class="pre">durable=True</span></code>. If the
+<code class="docutils literal notranslate"><span class="pre">atomic</span></code> block is nested within another it raises a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> 既可用作 <a class="reference external" href="https://docs.python.org/3/glossary.html#term-decorator" title="(在 Python v3.11)"><span class="xref std std-term">decorator</span></a>:: ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+
+
+<span class="nd">@transaction</span><span class="o">.</span><span class="n">atomic</span>
+<span class="k">def</span> <span class="nf">viewfunc</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="c1"># This code executes inside a transaction.</span>
+    <span class="n">do_stuff</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>也可用作 <a class="reference external" href="https://docs.python.org/3/glossary.html#term-context-manager" title="(在 Python v3.11)"><span class="xref std std-term">context manager</span></a>:: ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+
+
+<span class="k">def</span> <span class="nf">viewfunc</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="c1"># This code executes in autocommit mode (Django&#39;s default).</span>
+    <span class="n">do_stuff</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+        <span class="c1"># This code executes inside a transaction.</span>
+        <span class="n">do_more_stuff</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>在 try/except 块中使用装饰器 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 来允许自然处理完整性错误：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">IntegrityError</span><span class="p">,</span> <span class="n">transaction</span>
+
+
+<span class="nd">@transaction</span><span class="o">.</span><span class="n">atomic</span>
+<span class="k">def</span> <span class="nf">viewfunc</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">create_parent</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+            <span class="n">generate_relationships</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">IntegrityError</span><span class="p">:</span>
+        <span class="n">handle_exception</span><span class="p">()</span>
+
+    <span class="n">add_children</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>在这个例子里，虽然 <code class="docutils literal notranslate"><span class="pre">generate_relationships()</span></code> 会通过破坏完整性约束导致数据库错误，但你可以 <code class="docutils literal notranslate"><span class="pre">add_children()</span></code> 中执行查找，来自 <code class="docutils literal notranslate"><span class="pre">create_parent()</span></code> 的变化也会在这里，并且绑定到相同的事务。注意，任何试图在 <code class="docutils literal notranslate"><span class="pre">generate_relationships()</span></code> 中执行的操作在 <code class="docutils literal notranslate"><span class="pre">handle_exception()</span></code> 被调用的时候也会安全的回滚，因此异常处理也会在必要的时候在数据库上操作。</p>
+<div class="admonition-avoid-catching-exceptions-inside-atomic admonition">
+<p class="first admonition-title">要避免在 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 内部捕捉异常！</p>
+<p>当存在 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块时， Django 查看它是否正常退出或存在异常来决定是提交还是正常回滚。如果你在 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 内部捕捉并且处理异常，你可以对 Django 隐藏问题代码。这会导致一些意外的行为。</p>
+<p>这主要是 <a class="reference internal" href="../../ref/exceptions.html#django.db.DatabaseError" title="django.db.DatabaseError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DatabaseError</span></code></a> 和它的子类的一个问题（比如 <a class="reference internal" href="../../ref/exceptions.html#django.db.IntegrityError" title="django.db.IntegrityError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IntegrityError</span></code></a> ）。出现这样的错误之后，事务会奔溃，并且 Django 将在 <code class="docutils literal notranslate"><span class="pre">atomic</span></code>  块的末尾执行回滚。如果你打算在回滚发生的时候运行数据库查询，Django 将引发 <a class="reference internal" href="../../ref/exceptions.html#django.db.transaction.TransactionManagementError" title="django.db.transaction.TransactionManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionManagementError</span></code></a> 错误。当 ORM 相关的信号处理程序引发异常时，你也可能遇到这个问题。</p>
+<p>捕捉数据库错误的正确的方法是像上方所示那样围绕 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块。如有需要，为此目的可以添加额外的 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块。这个模式有别的优势：如果异常发生，它会明确界定哪些操作将回滚。</p>
+<p class="last">如果捕获由原始SQL查询引发的异常，那么Django的行为是未指定的，并且依赖于数据库。</p>
+</div>
+<div class="admonition-you-may-need-to-manually-revert-model-state-when-rolling-back-a-transaction admonition">
+<p class="first admonition-title">当回滚事务时，你可能需要手工恢复模型状态。</p>
+<p>当事务回滚时，模型字段的值不会被恢复。除非你手工恢复初始的字段值，否则这会导致模型状态不一致。</p>
+<p>例如，给定带有 <code class="docutils literal notranslate"><span class="pre">active</span></code> 字段的 <code class="docutils literal notranslate"><span class="pre">MyModel</span></code> 模型，如果在事务中更新 <code class="docutils literal notranslate"><span class="pre">active</span></code> 到 <code class="docutils literal notranslate"><span class="pre">True</span></code> 失败，那么这个片段确保最后的 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">obj.active</span></code> 检查使用正确的值：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">DatabaseError</span><span class="p">,</span> <span class="n">transaction</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">obj</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="k">except</span> <span class="n">DatabaseError</span><span class="p">:</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<p>为了保证原子性，<code class="docutils literal notranslate"><span class="pre">atomic</span></code> 禁用了一些API。在 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块中试图提交、回滚或改变数据库连接的自动提交状态将引发异常。</p>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> 带有 <code class="docutils literal notranslate"><span class="pre">using</span></code> 参数，这个参数是数据库名字。如果这个参数没有提供，Django 会使用默认数据库。</p>
+<p>在后台，Django 的事务管理代码：</p>
+<ul class="simple">
+<li>当进入最外面的 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块时打开事务；</li>
+<li>当进入 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 块内部时创建一个保存点；</li>
+<li>从块内部退出时释放或回滚保存点；</li>
+<li>离开块的最外层时提交或回滚事务。</li>
+</ul>
+<p>你可以通过设置 <code class="docutils literal notranslate"><span class="pre">savepoint</span></code> 参数为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 来为内部块禁用保存点的创建。如果发生异常，Django将在退出带有保存点的第一个父块（如果有的话）时执行回滚，否则退出最外面的块。外部事物仍保证了原子性。仅当保存点开销明显时，才应使用此选项。它的缺点是破坏了上述错误处理。</p>
+<p>当自动提交关闭时，可以使用 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 。它将只使用保存点，即使对于最外面的块也是如此。</p>
+</dd></dl>
+
+<div class="admonition-performance-considerations admonition">
+<p class="first admonition-title">性能考虑因素</p>
+<p class="last">打开事务会对数据库服务器有性能成本。尽量减少这种开销，要保持事务尽可能简短。如果正在 Django 的请求 / 响应周期之外，在长时间运行的进程中使用 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> ，这点尤其重要。</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.1:</span> <p>In older versions, the durability check was disabled in
+<a class="reference internal" href="../testing/tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.test.TestCase</span></code></a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-autocommit">
+<span id="autocommit"></span><h2>自动提交<a class="headerlink" href="#autocommit" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-why-django-uses-autocommit">
+<span id="s-autocommit-details"></span><span id="why-django-uses-autocommit"></span><span id="autocommit-details"></span><h3>为什么 Django 使用自动提交<a class="headerlink" href="#why-django-uses-autocommit" title="永久链接至标题">¶</a></h3>
+<p>在 SQL 规范中，每一个 SQL 查询会启动事务，除非一个事务已经处于活动状态。然后必须显式地提交或回滚此事务。</p>
+<p>这对开发者来说一直很头疼。为了减轻这个问题，大部分数据库提供了自动提交模式。当打开了自动提交，并且没有事务活动时，每一个 SQL 查询将被包含在自己的事务中。换句话说，每一个这种查询不仅会启动一个事务，而且事务也会被自动提交或回滚，这取决于查询是否成功。</p>
+<p><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a> （Python 数据库接口规范 v2.0）要求自动提交在初始时是关闭的。Django 会覆盖这个默认值并开启自动提交。</p>
+<p>为了避免这种情况，你可以参考 deactivate the transaction management&lt;deactivate-transaction-management&gt; ，但并不推荐这样做。</p>
+</div>
+<div class="section" id="s-deactivating-transaction-management">
+<span id="s-deactivate-transaction-management"></span><span id="deactivating-transaction-management"></span><span id="deactivate-transaction-management"></span><h3>停用事务管理<a class="headerlink" href="#deactivating-transaction-management" title="永久链接至标题">¶</a></h3>
+<p>你可以通过设置 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-AUTOCOMMIT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTOCOMMIT</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 来对数据库完全禁用 Django 事务管理。如果你这么做了，Django 将不会启动自动提交，而且不会执行任何提交。你将获得底层数据库的常规行为。</p>
+<p>这要求你显式地提交每一个事务，即使它们通过 Django 或第三方库启动。因此，这适用于当你想运行事务控制中间件或做一些非常奇怪的事情的情形。</p>
+</div>
+</div>
+<div class="section" id="s-performing-actions-after-commit">
+<span id="performing-actions-after-commit"></span><h2>提交后<a class="headerlink" href="#performing-actions-after-commit" title="永久链接至标题">¶</a></h2>
+<p>Sometimes you need to perform an action related to the current database
+transaction, but only if the transaction successfully commits. Examples might
+include a background task, an email notification, or a cache invalidation.</p>
+<p><a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a> allows you to register callbacks that will be executed after
+the open transaction is successfully committed:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.on_commit">
+<code class="sig-name descname"><span class="pre">on_commit</span></code>(<em><span class="n"><span class="pre">func</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">robust</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.db.transaction.on_commit" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass a function, or any callable, to <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+
+
+<span class="k">def</span> <span class="nf">send_welcome_email</span><span class="p">():</span>
+    <span class="o">...</span>
+
+
+<span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">send_welcome_email</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Callbacks will not be passed any arguments, but you can bind them with
+<a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.partial" title="(在 Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.partial()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+    <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">send_invite_email</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Callbacks are called after the open transaction is successfully committed. If
+the transaction is instead rolled back (typically when an unhandled exception
+is raised in an <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> block), the callback will be discarded, and
+never called.</p>
+<p>If you call <code class="docutils literal notranslate"><span class="pre">on_commit()</span></code> while there isn't an open transaction,
+the callback will be executed immediately.</p>
+<p>It's sometimes useful to register callbacks that can fail. Passing
+<code class="docutils literal notranslate"><span class="pre">robust=True</span></code> allows the next callbacks to be executed even if the current
+one throws an exception. All errors derived from Python's <code class="docutils literal notranslate"><span class="pre">Exception</span></code> class
+are caught and logged to the <code class="docutils literal notranslate"><span class="pre">django.db.backends.base</span></code> logger.</p>
+<p>You can use <a class="reference internal" href="../testing/tools.html#django.test.TestCase.captureOnCommitCallbacks" title="django.test.TestCase.captureOnCommitCallbacks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TestCase.captureOnCommitCallbacks()</span></code></a> to test callbacks
+registered with <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a>.</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>The <code class="docutils literal notranslate"><span class="pre">robust</span></code> argument was added.</p>
+</div>
+<div class="section" id="s-savepoints">
+<span id="savepoints"></span><h3>保存点<a class="headerlink" href="#savepoints" title="永久链接至标题">¶</a></h3>
+<p>正确处理保存点（即嵌套了 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 块）。也就是说，注册在保存点后的 <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a>&nbsp; 的调用（嵌套在 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a>  块）将在外部事务被提交之后调用，但如果在事务期间回滚到保存点或任何之前的保存点之前，则不会调用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>  <span class="c1"># Outer atomic, start a new transaction</span>
+    <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>  <span class="c1"># Inner atomic block, create a savepoint</span>
+        <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span>
+
+<span class="c1"># foo() and then bar() will be called when leaving the outermost block</span>
+</pre></div>
+</div>
+<p>另一方面，当保存点回滚时（因引发异常），内部调用不会被调用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>  <span class="c1"># Outer atomic, start a new transaction</span>
+    <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">atomic</span><span class="p">():</span>  <span class="c1"># Inner atomic block, create a savepoint</span>
+            <span class="n">transaction</span><span class="o">.</span><span class="n">on_commit</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SomeError</span><span class="p">()</span>  <span class="c1"># Raising an exception - abort the savepoint</span>
+    <span class="k">except</span> <span class="n">SomeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+<span class="c1"># foo() will be called, but not bar()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-order-of-execution">
+<span id="order-of-execution"></span><h3>执行顺序<a class="headerlink" href="#order-of-execution" title="永久链接至标题">¶</a></h3>
+<p>事务提交后的的回调函数执行顺序与当初注册时的顺序一致。</p>
+</div>
+<div class="section" id="s-exception-handling">
+<span id="exception-handling"></span><h3>异常处理<a class="headerlink" href="#exception-handling" title="永久链接至标题">¶</a></h3>
+<p>If one on-commit function registered with <code class="docutils literal notranslate"><span class="pre">robust=False</span></code> within a given
+transaction raises an uncaught exception, no later registered functions in that
+same transaction will run. This is the same behavior as if you'd executed the
+functions sequentially yourself without <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a>.</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>The <code class="docutils literal notranslate"><span class="pre">robust</span></code> argument was added.</p>
+</div>
+</div>
+<div class="section" id="s-timing-of-execution">
+<span id="timing-of-execution"></span><h3>执行时间<a class="headerlink" href="#timing-of-execution" title="永久链接至标题">¶</a></h3>
+<p>Your callbacks are executed <em>after</em> a successful commit, so a failure in a
+callback will not cause the transaction to roll back. They are executed
+conditionally upon the success of the transaction, but they are not <em>part</em> of
+the transaction. For the intended use cases (mail notifications, background
+tasks, etc.), this should be fine. If it's not (if your follow-up action is so
+critical that its failure should mean the failure of the transaction itself),
+then you don't want to use the <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a> hook. Instead, you may want
+<a class="reference external" href="https://en.wikipedia.org/wiki/Two-phase_commit_protocol">two-phase commit</a> such as the <a class="reference external" href="https://www.psycopg.org/psycopg3/docs/basic/transactions.html#two-phase-commit" title="(在 psycopg)"><span class="xref std std-ref">psycopg Two-Phase Commit protocol support</span></a> and the <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/#optional-two-phase-commit-extensions"><strong>optional Two-Phase Commit Extensions
+in the Python DB-API specification</strong></a>.</p>
+<p>直到在提交后的连接上恢复自动提交，调用才会运行。（因为否则在回调中完成的任何查询都会打开一个隐式事务，防止连接返回自动提交模式）</p>
+<p>当在自动提交模式并且在 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 块外时，函数会立即自动运行，而不会提交。</p>
+<p>on-commit 函数仅适用于自动提交模式（ <a class="reference internal" href="#managing-autocommit"><span class="std std-ref">autocommit mode</span></a> ），并且 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> （或 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-ATOMIC_REQUESTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ATOMIC_REQUESTS</span></code></a> ）事务API。当禁用自动提交并且当前不在原子块中时，调用 <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a> 将导致错误。</p>
+</div>
+<div class="section" id="s-use-in-tests">
+<span id="use-in-tests"></span><h3>在测试中使用<a class="headerlink" href="#use-in-tests" title="永久链接至标题">¶</a></h3>
+<p>Django's <a class="reference internal" href="../testing/tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a> class wraps each test in a transaction
+and rolls back that transaction after each test, in order to provide test
+isolation. This means that no transaction is ever actually committed, thus your
+<a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a> callbacks will never be run.</p>
+<p>You can overcome this limitation by using
+<a class="reference internal" href="../testing/tools.html#django.test.TestCase.captureOnCommitCallbacks" title="django.test.TestCase.captureOnCommitCallbacks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TestCase.captureOnCommitCallbacks()</span></code></a>. This captures your
+<a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a> callbacks in a list, allowing you to make assertions on them,
+or emulate the transaction committing by calling them.</p>
+<p>Another way to overcome the limitation is to use
+<a class="reference internal" href="../testing/tools.html#django.test.TransactionTestCase" title="django.test.TransactionTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionTestCase</span></code></a> instead of
+<a class="reference internal" href="../testing/tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a>. This will mean your transactions are committed,
+and the callbacks will run. However
+<a class="reference internal" href="../testing/tools.html#django.test.TransactionTestCase" title="django.test.TransactionTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionTestCase</span></code></a> flushes the database between tests,
+which is significantly slower than <a class="reference internal" href="../testing/tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a>'s isolation.</p>
+</div>
+<div class="section" id="s-why-no-rollback-hook">
+<span id="why-no-rollback-hook"></span><h3>为什么没有事务回滚钩子？<a class="headerlink" href="#why-no-rollback-hook" title="永久链接至标题">¶</a></h3>
+<p>事务回滚钩子相比事务提交钩子更难实现，因为各种各样的情况都可能造成隐式回滚。</p>
+<p>比如，如果数据库连接被删除，因为进程被杀而没有机会正常关闭，回滚钩子将不会运行。</p>
+<p>解决方法是：与其在执行事务时（原子操作）进行某项操作，当事务执行失败后再取消这项操作，不如使用 <a class="reference internal" href="#django.db.transaction.on_commit" title="django.db.transaction.on_commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">on_commit()</span></code></a> 来延迟该项操作，直到事务成功后再进行操作。毕竟事务成功后你才能确保之后的操作是有意义的。</p>
+</div>
+</div>
+<div class="section" id="s-low-level-apis">
+<span id="low-level-apis"></span><h2>底层API<a class="headerlink" href="#low-level-apis" title="永久链接至标题">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>应该尽可能使用 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 。它说明了每个数据库的特性，并防止了无效操作。</p>
+<p class="last">底层API只在实现事务管理时有用。</p>
+</div>
+<div class="section" id="s-managing-autocommit">
+<span id="s-id2"></span><span id="managing-autocommit"></span><span id="id2"></span><h3>自动提交<a class="headerlink" href="#managing-autocommit" title="永久链接至标题">¶</a></h3>
+<p>Django provides an API in the <a class="reference internal" href="#module-django.db.transaction" title="django.db.transaction"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.db.transaction</span></code></a> module to manage the
+autocommit state of each database connection.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.get_autocommit">
+<code class="sig-name descname"><span class="pre">get_autocommit</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.get_autocommit" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.set_autocommit">
+<code class="sig-name descname"><span class="pre">set_autocommit</span></code>(<em><span class="n"><span class="pre">autocommit</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.set_autocommit" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>这些函数使接受一个  <code class="docutils literal notranslate"><span class="pre">using</span></code> 参数表示所要操作的数据库。如果未提供，则   Django 使用 <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> 数据库。</p>
+<p>自动提交默认为开启，如果你将它关闭，自己承担后果。</p>
+<p>一旦你关闭了自动提交， Django 将无法帮助你，数据库将会按照你使用的数据库适配器的默认行为进行操作。虽然适配器的标准经过了 <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a> 详细规定，但不同适配器的实现方式并不总是一致的。你需要谨慎地查看你所使用的适配器的文档。</p>
+<p>在关闭自动提交之前，你必须确保当前没有活动的事务，通常你可以执行 <a class="reference internal" href="#django.db.transaction.commit" title="django.db.transaction.commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">commit()</span></code></a> 或者 <a class="reference internal" href="#django.db.transaction.rollback" title="django.db.transaction.rollback"><code class="xref py py-func docutils literal notranslate"><span class="pre">rollback()</span></code></a> 函数以达到该条件。</p>
+<p>当一个原子 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 事务处于活动状态时， Django 将会拒绝关闭自动提交的请求，因为这样会破坏原子性。</p>
+</div>
+<div class="section" id="s-transactions">
+<span id="transactions"></span><h3>事务<a class="headerlink" href="#transactions" title="永久链接至标题">¶</a></h3>
+<p>事务是指具有原子性的一系列数据库操作。即使你的程序崩溃，数据库也会确保这些操作要么全部完成要么全部都未执行。</p>
+<p>Django doesn't provide an API to start a transaction. The expected way to
+start a transaction is to disable autocommit with <a class="reference internal" href="#django.db.transaction.set_autocommit" title="django.db.transaction.set_autocommit"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_autocommit()</span></code></a>.</p>
+<p>进入事务后，你可以选择在 <a class="reference internal" href="#django.db.transaction.commit" title="django.db.transaction.commit"><code class="xref py py-func docutils literal notranslate"><span class="pre">commit()</span></code></a> 之前应用执行的更改，或者使用 <a class="reference internal" href="#django.db.transaction.rollback" title="django.db.transaction.rollback"><code class="xref py py-func docutils literal notranslate"><span class="pre">rollback()</span></code></a> 取消它们。这些函数在 <a class="reference internal" href="#module-django.db.transaction" title="django.db.transaction"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.db.transaction</span></code></a> 中定义。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.commit">
+<code class="sig-name descname"><span class="pre">commit</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.commit" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.rollback">
+<code class="sig-name descname"><span class="pre">rollback</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.rollback" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>这些函数使接受一个  <code class="docutils literal notranslate"><span class="pre">using</span></code> 参数表示所要操作的数据库。如果未提供，则   Django 使用 <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> 数据库。</p>
+<p>当一个原子 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 事务处于活动状态时， Django 将会拒绝进行事务提交或者事务回滚，因为这样会破坏原子性。</p>
+</div>
+<div class="section" id="s-topics-db-transactions-savepoints">
+<span id="s-id3"></span><span id="topics-db-transactions-savepoints"></span><span id="id3"></span><h3>保存点<a class="headerlink" href="#topics-db-transactions-savepoints" title="永久链接至标题">¶</a></h3>
+<p>保存点在事务中是标记物，它可以使得回滚部分乌市，而不是所有事务。 SQLite, PostgreSQL, Oracle, 和 MySQL (当使用 InnoDB 存储引擎) 后端提供了保存点。其他后端提供了保存点函数，但它们是空操作——它们实际上没有做任何事情。</p>
+<p>如果你正在使用 Django 的默认行为——自动提交，保存点并不特别有用。尽管，一旦你用 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 打开了一个事务，那么需要构建一系列的等待提交或回滚的数据库操作。如果发出回滚，那么会回滚整个事务。保存点有能力执行颗粒度级别的回滚，而不是由 <code class="docutils literal notranslate"><span class="pre">transaction.rollback()</span></code> 执行的完全回滚。</p>
+<p>当嵌套了 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 装饰器，它会创建一个保存点来允许部分提交或回滚。强烈推荐只使用 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 而不是下面描述的函数，但它们仍然是公共 API 的一部分，而且没计划要弃用它们。</p>
+<p>这里的每一个函数使用 <code class="docutils literal notranslate"><span class="pre">using</span></code> 参数，这个参数为应用的数据库名。如果没有 <code class="docutils literal notranslate"><span class="pre">using</span></code> 参数，那么会使用 <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> 数据库。</p>
+<p>保存点由 <a class="reference internal" href="#module-django.db.transaction" title="django.db.transaction"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.db.transaction</span></code></a>: 中的三个函数来控制：</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.savepoint">
+<code class="sig-name descname"><span class="pre">savepoint</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.savepoint" title="永久链接至目标">¶</a></dt>
+<dd><p>创建新的保存点。这标志着事务中已知处于“良好”状态的一个点。返回保存点ID (<code class="docutils literal notranslate"><span class="pre">sid</span></code>) 。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.savepoint_commit">
+<code class="sig-name descname"><span class="pre">savepoint_commit</span></code>(<em><span class="n"><span class="pre">sid</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.savepoint_commit" title="永久链接至目标">¶</a></dt>
+<dd><p>释放保存点 <code class="docutils literal notranslate"><span class="pre">sid</span></code> 。自保存点被创建依赖执行的更改成为事务的一部分。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.savepoint_rollback">
+<code class="sig-name descname"><span class="pre">savepoint_rollback</span></code>(<em><span class="n"><span class="pre">sid</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.savepoint_rollback" title="永久链接至目标">¶</a></dt>
+<dd><p>回滚事务来保存 <code class="docutils literal notranslate"><span class="pre">sid</span></code> 。</p>
+</dd></dl>
+
+<p>如果不支持保存点或数据库在自动模式时，这些函数不执行操作。</p>
+<p>另外，还有一个实用功能：</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.clean_savepoints">
+<code class="sig-name descname"><span class="pre">clean_savepoints</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.clean_savepoints" title="永久链接至目标">¶</a></dt>
+<dd><p>重置用于生成唯一保存点ID的计数器。</p>
+</dd></dl>
+
+<p>下面的例子演示保存点的用法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">transaction</span>
+
+
+<span class="c1"># open a transaction</span>
+<span class="nd">@transaction</span><span class="o">.</span><span class="n">atomic</span>
+<span class="k">def</span> <span class="nf">viewfunc</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="c1"># transaction now contains a.save()</span>
+
+    <span class="n">sid</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">savepoint</span><span class="p">()</span>
+
+    <span class="n">b</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="c1"># transaction now contains a.save() and b.save()</span>
+
+    <span class="k">if</span> <span class="n">want_to_keep_b</span><span class="p">:</span>
+        <span class="n">transaction</span><span class="o">.</span><span class="n">savepoint_commit</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="c1"># open transaction still contains a.save() and b.save()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">transaction</span><span class="o">.</span><span class="n">savepoint_rollback</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+        <span class="c1"># open transaction now contains only a.save()</span>
+</pre></div>
+</div>
+<p>保存点可能通过执行部分回滚来恢复数据库错误。如果你在 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 块中执行此操作，那么整个块将仍然被回滚，因为它不知道你已经处理了较低级别的情况。为了防止此发生，你可以使用下面的函数控制回滚行为。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.get_rollback">
+<code class="sig-name descname"><span class="pre">get_rollback</span></code>(<em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.get_rollback" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.transaction.set_rollback">
+<code class="sig-name descname"><span class="pre">set_rollback</span></code>(<em><span class="n"><span class="pre">rollback</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.transaction.set_rollback" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当存在内部原子块时，设置回滚标记为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 将强制回滚。这对于触发回滚而不引发异常可能很有用。</p>
+<p>将它设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 会防止这样的回滚。在这样做之前，确保你已经将事务回滚到当前原子块中一个正常的保存点。否则你会破坏原子性并且可能发生数据损坏。</p>
+</div>
+</div>
+<div class="section" id="s-database-specific-notes">
+<span id="database-specific-notes"></span><h2>特定于数据库的注释<a class="headerlink" href="#database-specific-notes" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-savepoints-in-sqlite">
+<span id="s-id4"></span><span id="savepoints-in-sqlite"></span><span id="id4"></span><h3>SQLite 中的保存点<a class="headerlink" href="#savepoints-in-sqlite" title="永久链接至标题">¶</a></h3>
+<p>虽然 SQLite 支持保存点时，但 <a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#module-sqlite3" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code></a> 模块中的一个设计缺陷使得它们几乎无法使用。</p>
+<p>当启用自动提交时，保存点没有意义。当关闭时，<a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#module-sqlite3" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code></a> 会在保存点语句之前隐式提交。（事实上，它会在除了 <code class="docutils literal notranslate"><span class="pre">SELECT</span></code>, <code class="docutils literal notranslate"><span class="pre">INSERT</span></code>, <code class="docutils literal notranslate"><span class="pre">UPDATE</span></code>, <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> and <code class="docutils literal notranslate"><span class="pre">REPLACE</span></code> 之前的任何语句之前提交）这个 Bug 有两个后果：</p>
+<ul class="simple">
+<li>The low level APIs for savepoints are only usable inside a transaction i.e.
+inside an <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> block.</li>
+<li>当关闭自动提交时，不能使用 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 。</li>
+</ul>
+</div>
+<div class="section" id="s-transactions-in-mysql">
+<span id="transactions-in-mysql"></span><h3>MySQL 中的事务<a class="headerlink" href="#transactions-in-mysql" title="永久链接至标题">¶</a></h3>
+<p>如果你正在使用 MySQL，表可能支持或不支持事务；它取决于 MySQL 版本和表的类型。（表类型是指 &quot;InnoDB&quot; 或 &quot;MyISAM&quot; 之类的东西）MySQL 事务的特性超出了本文的范围，但 MySQL 站点有 MySQL 事务的相关信息。</p>
+<p>如果 MySQL 安装时没有支持事务，然后 Django 将始终在自动提交模式中运行：语句将在它们调用的时候被执行和提交。如果 MySQL 安装时支持了事务，Django 将像本文说的那样处理事务。</p>
+</div>
+<div class="section" id="s-handling-exceptions-within-postgresql-transactions">
+<span id="handling-exceptions-within-postgresql-transactions"></span><h3>处理 PostgreSQL 事务中的异常<a class="headerlink" href="#handling-exceptions-within-postgresql-transactions" title="永久链接至标题">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">只有在实现自有的事务管理时，这部分才有用。这个问题不会发生在 Django 默认模式里，并且 <a class="reference internal" href="#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a>&nbsp; 会自动处理它。</p>
+</div>
+<p>Inside a transaction, when a call to a PostgreSQL cursor raises an exception
+(typically <code class="docutils literal notranslate"><span class="pre">IntegrityError</span></code>), all subsequent SQL in the same transaction
+will fail with the error &quot;current transaction is aborted, queries ignored
+until end of transaction block&quot;. While the basic use of <code class="docutils literal notranslate"><span class="pre">save()</span></code> is unlikely
+to raise an exception in PostgreSQL, there are more advanced usage patterns
+which might, such as saving objects with unique fields, saving using the
+<code class="docutils literal notranslate"><span class="pre">force_insert</span></code>/<code class="docutils literal notranslate"><span class="pre">force_update</span></code> flag, or invoking custom SQL.</p>
+<p>有几种方法来从这种错误中恢复。</p>
+<div class="section" id="s-transaction-rollback">
+<span id="transaction-rollback"></span><h4>事务回滚<a class="headerlink" href="#transaction-rollback" title="永久链接至标题">¶</a></h4>
+<p>第一个选项是回滚整个事务。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># Succeeds, but may be undone by transaction rollback</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">b</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># Could throw exception</span>
+<span class="k">except</span> <span class="n">IntegrityError</span><span class="p">:</span>
+    <span class="n">transaction</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+<span class="n">c</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># Succeeds, but a.save() may have been undone</span>
+</pre></div>
+</div>
+<p>调用 <code class="docutils literal notranslate"><span class="pre">transaction.rollback()</span></code> 回滚整个事务。任何未提交的数据库操作会被丢弃。在这个例子里， <code class="docutils literal notranslate"><span class="pre">a.save()</span></code> 做的改变会丢失，即使操作本身没有引发错误。</p>
+</div>
+<div class="section" id="s-savepoint-rollback">
+<span id="savepoint-rollback"></span><h4>保存点回滚<a class="headerlink" href="#savepoint-rollback" title="永久链接至标题">¶</a></h4>
+<p>你可以使用 <a class="reference internal" href="#topics-db-transactions-savepoints"><span class="std std-ref">savepoints</span></a> 来控制回滚的程度。执行可能失败的数据库操作之前，你可以设置或更新保存点；这样，如果操作失败，你可以回滚单一的错误操作，而不是回滚整个事务。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># Succeeds, and never undone by savepoint rollback</span>
+<span class="n">sid</span> <span class="o">=</span> <span class="n">transaction</span><span class="o">.</span><span class="n">savepoint</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">b</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># Could throw exception</span>
+    <span class="n">transaction</span><span class="o">.</span><span class="n">savepoint_commit</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">IntegrityError</span><span class="p">:</span>
+    <span class="n">transaction</span><span class="o">.</span><span class="n">savepoint_rollback</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>  <span class="c1"># Succeeds, and a.save() is never undone</span>
+</pre></div>
+</div>
+<p>在这个例子里， <code class="docutils literal notranslate"><span class="pre">a.save()</span></code> 将不会在 <code class="docutils literal notranslate"><span class="pre">b.save()</span></code> 引发异常的情况下被撤销。</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">数据库事务</a><ul>
+<li><a class="reference internal" href="#managing-database-transactions">管理数据库事务</a><ul>
+<li><a class="reference internal" href="#django-s-default-transaction-behavior">Django 默认的事务行为</a></li>
+<li><a class="reference internal" href="#tying-transactions-to-http-requests">连结事务与 HTTP 请求</a></li>
+<li><a class="reference internal" href="#controlling-transactions-explicitly">显式控制事务</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#autocommit">自动提交</a><ul>
+<li><a class="reference internal" href="#why-django-uses-autocommit">为什么 Django 使用自动提交</a></li>
+<li><a class="reference internal" href="#deactivating-transaction-management">停用事务管理</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#performing-actions-after-commit">提交后</a><ul>
+<li><a class="reference internal" href="#savepoints">保存点</a></li>
+<li><a class="reference internal" href="#order-of-execution">执行顺序</a></li>
+<li><a class="reference internal" href="#exception-handling">异常处理</a></li>
+<li><a class="reference internal" href="#timing-of-execution">执行时间</a></li>
+<li><a class="reference internal" href="#use-in-tests">在测试中使用</a></li>
+<li><a class="reference internal" href="#why-no-rollback-hook">为什么没有事务回滚钩子？</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#low-level-apis">底层API</a><ul>
+<li><a class="reference internal" href="#managing-autocommit">自动提交</a></li>
+<li><a class="reference internal" href="#transactions">事务</a></li>
+<li><a class="reference internal" href="#topics-db-transactions-savepoints">保存点</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#database-specific-notes">特定于数据库的注释</a><ul>
+<li><a class="reference internal" href="#savepoints-in-sqlite">SQLite 中的保存点</a></li>
+<li><a class="reference internal" href="#transactions-in-mysql">MySQL 中的事务</a></li>
+<li><a class="reference internal" href="#handling-exceptions-within-postgresql-transactions">处理 PostgreSQL 事务中的异常</a><ul>
+<li><a class="reference internal" href="#transaction-rollback">事务回滚</a></li>
+<li><a class="reference internal" href="#savepoint-rollback">保存点回滚</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="sql.html"
+                          title="上一章">执行原生 SQL 查询</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="multi-db.html"
+                          title="下一章">多数据库</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/topics/db/transactions.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="sql.html" title="执行原生 SQL 查询">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="multi-db.html" title="多数据库">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>通用编辑视图 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="通用日期视图" href="generic-date-based.html" />
+    <link rel="prev" title="通用显示视图" href="generic-display.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="generic-display.html" title="通用显示视图">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="generic-date-based.html" title="通用日期视图">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-class-based-views-generic-editing">
+            
+  <div class="section" id="s-generic-editing-views">
+<span id="generic-editing-views"></span><h1>通用编辑视图<a class="headerlink" href="#generic-editing-views" title="永久链接至标题">¶</a></h1>
+<p>本页介绍了以下视图，为编辑内容奠定了基础。</p>
+<ul class="simple">
+<li><a class="reference internal" href="#django.views.generic.edit.FormView" title="django.views.generic.edit.FormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormView</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.CreateView" title="django.views.generic.edit.CreateView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.CreateView</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.UpdateView" title="django.views.generic.edit.UpdateView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.UpdateView</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.DeleteView" title="django.views.generic.edit.DeleteView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.DeleteView</span></code></a></li>
+</ul>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last"><a class="reference internal" href="../contrib/messages.html"><span class="doc">消息框架</span></a> 中包含了 <a class="reference internal" href="../contrib/messages.html#django.contrib.messages.views.SuccessMessageMixin" title="django.contrib.messages.views.SuccessMessageMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">SuccessMessageMixin</span></code></a>，它方便呈现关于成功提交表单的消息。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>本页的一些例子假定 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 模型已在 <code class="docutils literal notranslate"><span class="pre">myapp/models.py</span></code> 中定义如下：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">reverse</span>
+
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_absolute_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">reverse</span><span class="p">(</span><span class="s2">&quot;author-detail&quot;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pk&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-formview">
+<span id="formview"></span><h2><code class="docutils literal notranslate"><span class="pre">FormView</span></code><a class="headerlink" href="#formview" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.FormView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">FormView</span></code><a class="headerlink" href="#django.views.generic.edit.FormView" title="永久链接至目标">¶</a></dt>
+<dd><p>一个显示表单的视图。错误时，重新显示验证错误的表单；成功时，重定向到一个新的 URL。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.TemplateResponseMixin" title="django.views.generic.base.TemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.TemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.BaseFormView" title="django.views.generic.edit.BaseFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.BaseFormView</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.FormMixin" title="django.views.generic.edit.FormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ProcessFormView" title="django.views.generic.edit.ProcessFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ProcessFormView</span></code></a></li>
+<li><a class="reference internal" href="base.html#django.views.generic.base.View" title="django.views.generic.base.View"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.View</span></code></a></li>
+</ul>
+<p><strong>示例 myapp/forms.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+
+
+<span class="k">class</span> <span class="nc">ContactForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">()</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">Textarea</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">send_email</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># send email using the self.cleaned_data dictionary</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p><strong>示例 myapp/views.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">myapp.forms</span> <span class="kn">import</span> <span class="n">ContactForm</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">FormView</span>
+
+
+<span class="k">class</span> <span class="nc">ContactFormView</span><span class="p">(</span><span class="n">FormView</span><span class="p">):</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;contact.html&quot;</span>
+    <span class="n">form_class</span> <span class="o">=</span> <span class="n">ContactForm</span>
+    <span class="n">success_url</span> <span class="o">=</span> <span class="s2">&quot;/thanks/&quot;</span>
+
+    <span class="k">def</span> <span class="nf">form_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">):</span>
+        <span class="c1"># This method is called when valid form data has been POSTed.</span>
+        <span class="c1"># It should return an HttpResponse.</span>
+        <span class="n">form</span><span class="o">.</span><span class="n">send_email</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">form_valid</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>示例 myapp/contact.html</strong>：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="p">&gt;</span><span class="cp">{%</span> <span class="k">csrf_token</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">form.as_p</span> <span class="cp">}}</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;Send message&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseFormView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">BaseFormView</span></code><a class="headerlink" href="#django.views.generic.edit.BaseFormView" title="永久链接至目标">¶</a></dt>
+<dd><p>一个用于显示表单的基础视图。它不打算直接使用，而是作为 <code class="xref py py-class docutils literal notranslate"><span class="pre">django.view.generic.edit.FormView</span></code> 或其他显示表单的视图的父类。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.FormMixin" title="django.views.generic.edit.FormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ProcessFormView" title="django.views.generic.edit.ProcessFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ProcessFormView</span></code></a></li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="s-createview">
+<span id="createview"></span><h2><code class="docutils literal notranslate"><span class="pre">CreateView</span></code><a class="headerlink" href="#createview" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.CreateView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">CreateView</span></code><a class="headerlink" href="#django.views.generic.edit.CreateView" title="永久链接至目标">¶</a></dt>
+<dd><p>一个显示表单的视图，用于创建对象，重新显示带有验证错误（如果有）的表单并保存对象。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-single-object.html#django.views.generic.detail.SingleObjectTemplateResponseMixin" title="django.views.generic.detail.SingleObjectTemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.SingleObjectTemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.TemplateResponseMixin" title="django.views.generic.base.TemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.TemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.BaseCreateView" title="django.views.generic.edit.BaseCreateView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.BaseCreateView</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ModelFormMixin" title="django.views.generic.edit.ModelFormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ModelFormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.FormMixin" title="django.views.generic.edit.FormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-single-object.html#django.views.generic.detail.SingleObjectMixin" title="django.views.generic.detail.SingleObjectMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.SingleObjectMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ProcessFormView" title="django.views.generic.edit.ProcessFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ProcessFormView</span></code></a></li>
+<li><a class="reference internal" href="base.html#django.views.generic.base.View" title="django.views.generic.base.View"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.View</span></code></a></li>
+</ul>
+<p><strong>属性</strong></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.edit.CreateView.template_name_suffix">
+<code class="sig-name descname"><span class="pre">template_name_suffix</span></code><a class="headerlink" href="#django.views.generic.edit.CreateView.template_name_suffix" title="永久链接至目标">¶</a></dt>
+<dd><p>对 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求显示的 <code class="docutils literal notranslate"><span class="pre">CreateView</span></code> 页面使用 <code class="docutils literal notranslate"><span class="pre">'_form'</span></code> 的 <code class="docutils literal notranslate"><span class="pre">template_name_suffix</span></code>。例如，将这个属性改为 <code class="docutils literal notranslate"><span class="pre">'_create_form'</span></code>，为 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 模型创建对象的视图将导致默认的 <code class="docutils literal notranslate"><span class="pre">template_name</span></code> 为 <code class="docutils literal notranslate"><span class="pre">'myapp/author_create_form.html'</span></code>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.edit.CreateView.object">
+<code class="sig-name descname"><span class="pre">object</span></code><a class="headerlink" href="#django.views.generic.edit.CreateView.object" title="永久链接至目标">¶</a></dt>
+<dd><p>当使用 <code class="docutils literal notranslate"><span class="pre">CreateView</span></code> 时，你可以访问 <code class="docutils literal notranslate"><span class="pre">self.object</span></code>，也就是正在创建的对象。如果对象还没有被创建，其值将是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+<p><strong>示例 myapp/views.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">CreateView</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Author</span>
+
+
+<span class="k">class</span> <span class="nc">AuthorCreateView</span><span class="p">(</span><span class="n">CreateView</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Author</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>示例 myapp/author_form.html</strong>：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="p">&gt;</span><span class="cp">{%</span> <span class="k">csrf_token</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">form.as_p</span> <span class="cp">}}</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;Save&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseCreateView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">BaseCreateView</span></code><a class="headerlink" href="#django.views.generic.edit.BaseCreateView" title="永久链接至目标">¶</a></dt>
+<dd><p>一个用于创建新对象实例的基础视图。它不打算直接使用，而是作为 <code class="xref py py-class docutils literal notranslate"><span class="pre">django.view.generic.edit.CreateView</span></code> 的父类。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ModelFormMixin" title="django.views.generic.edit.ModelFormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ModelFormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ProcessFormView" title="django.views.generic.edit.ProcessFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ProcessFormView</span></code></a></li>
+</ul>
+<p><strong>方法</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseCreateView.get">
+<code class="sig-name descname"><span class="pre">get</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.views.generic.edit.BaseCreateView.get" title="永久链接至目标">¶</a></dt>
+<dd><p>将当前对象实例（<code class="docutils literal notranslate"><span class="pre">self.object</span></code>）设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseCreateView.post">
+<code class="sig-name descname"><span class="pre">post</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.views.generic.edit.BaseCreateView.post" title="永久链接至目标">¶</a></dt>
+<dd><p>将当前对象实例（<code class="docutils literal notranslate"><span class="pre">self.object</span></code>）设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-updateview">
+<span id="updateview"></span><h2><code class="docutils literal notranslate"><span class="pre">UpdateView</span></code><a class="headerlink" href="#updateview" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.UpdateView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">UpdateView</span></code><a class="headerlink" href="#django.views.generic.edit.UpdateView" title="永久链接至目标">¶</a></dt>
+<dd><p>显示用于编辑现有对象的表单视图，重新显示带有验证错误（如果有）的表单并保存对对象的更改。该视图使用从对象的模型类自动生成的表单（除非手动指定了表单类）。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-single-object.html#django.views.generic.detail.SingleObjectTemplateResponseMixin" title="django.views.generic.detail.SingleObjectTemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.SingleObjectTemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.TemplateResponseMixin" title="django.views.generic.base.TemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.TemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.BaseUpdateView" title="django.views.generic.edit.BaseUpdateView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.BaseUpdateView</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ModelFormMixin" title="django.views.generic.edit.ModelFormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ModelFormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.FormMixin" title="django.views.generic.edit.FormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-single-object.html#django.views.generic.detail.SingleObjectMixin" title="django.views.generic.detail.SingleObjectMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.SingleObjectMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ProcessFormView" title="django.views.generic.edit.ProcessFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ProcessFormView</span></code></a></li>
+<li><a class="reference internal" href="base.html#django.views.generic.base.View" title="django.views.generic.base.View"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.View</span></code></a></li>
+</ul>
+<p><strong>属性</strong></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.edit.UpdateView.template_name_suffix">
+<code class="sig-name descname"><span class="pre">template_name_suffix</span></code><a class="headerlink" href="#django.views.generic.edit.UpdateView.template_name_suffix" title="永久链接至目标">¶</a></dt>
+<dd><p>显示在 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求中的 <code class="docutils literal notranslate"><span class="pre">UpdateView</span></code> 页面使用 <code class="docutils literal notranslate"><span class="pre">'_form'</span></code> 的 <code class="docutils literal notranslate"><span class="pre">template_name_suffix</span></code>。例如，将这个属性改为 <code class="docutils literal notranslate"><span class="pre">'_update_form'</span></code>，对于一个更新对象的视图，例如 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 模型，将导致默认的 <code class="docutils literal notranslate"><span class="pre">template_name</span></code> 为``'myapp/author_update_form.html'<a href="#id1"><span class="problematic" id="id2">``</span></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.edit.UpdateView.object">
+<code class="sig-name descname"><span class="pre">object</span></code><a class="headerlink" href="#django.views.generic.edit.UpdateView.object" title="永久链接至目标">¶</a></dt>
+<dd><p>当使用 <code class="docutils literal notranslate"><span class="pre">UpdateView</span></code> 时，你可以访问 <code class="docutils literal notranslate"><span class="pre">self.object</span></code>，也就是被更新的对象。</p>
+</dd></dl>
+
+<p><strong>示例 myapp/views.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">UpdateView</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Author</span>
+
+
+<span class="k">class</span> <span class="nc">AuthorUpdateView</span><span class="p">(</span><span class="n">UpdateView</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Author</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+    <span class="n">template_name_suffix</span> <span class="o">=</span> <span class="s2">&quot;_update_form&quot;</span>
+</pre></div>
+</div>
+<p><strong>示例 myapp/author_update_form.html</strong>：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="p">&gt;</span><span class="cp">{%</span> <span class="k">csrf_token</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">form.as_p</span> <span class="cp">}}</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;Update&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseUpdateView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">BaseUpdateView</span></code><a class="headerlink" href="#django.views.generic.edit.BaseUpdateView" title="永久链接至目标">¶</a></dt>
+<dd><p>一个用于更新现有对象实例的基础视图。它不打算直接使用，而是作为 <code class="xref py py-class docutils literal notranslate"><span class="pre">django.view.generic.edit.UpdateView</span></code> 的父类</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ModelFormMixin" title="django.views.generic.edit.ModelFormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ModelFormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.ProcessFormView" title="django.views.generic.edit.ProcessFormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.ProcessFormView</span></code></a></li>
+</ul>
+<p><strong>方法</strong></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseUpdateView.get">
+<code class="sig-name descname"><span class="pre">get</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.views.generic.edit.BaseUpdateView.get" title="永久链接至目标">¶</a></dt>
+<dd><p>设置当前对象实例（<code class="docutils literal notranslate"><span class="pre">self.object</span></code>）。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseUpdateView.post">
+<code class="sig-name descname"><span class="pre">post</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.views.generic.edit.BaseUpdateView.post" title="永久链接至目标">¶</a></dt>
+<dd><p>设置当前对象实例（<code class="docutils literal notranslate"><span class="pre">self.object</span></code>）。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-deleteview">
+<span id="deleteview"></span><h2><code class="docutils literal notranslate"><span class="pre">DeleteView</span></code><a class="headerlink" href="#deleteview" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.DeleteView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">DeleteView</span></code><a class="headerlink" href="#django.views.generic.edit.DeleteView" title="永久链接至目标">¶</a></dt>
+<dd><p>显示确认页面并删除现有对象的视图。只有当请求方法是 <code class="docutils literal notranslate"><span class="pre">POST</span></code> 时，给定的对象才会被删除。如果这个视图是通过 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 获取的，它将显示一个确认页面，该页面应该包含一个 POST 到同一 URL 的表单。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-single-object.html#django.views.generic.detail.SingleObjectTemplateResponseMixin" title="django.views.generic.detail.SingleObjectTemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.SingleObjectTemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.TemplateResponseMixin" title="django.views.generic.base.TemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.TemplateResponseMixin</span></code></a></li>
+<li><a class="reference internal" href="#django.views.generic.edit.BaseDeleteView" title="django.views.generic.edit.BaseDeleteView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.BaseDeleteView</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.DeletionMixin" title="django.views.generic.edit.DeletionMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.DeletionMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.FormMixin" title="django.views.generic.edit.FormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.ContextMixin" title="django.views.generic.base.ContextMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.ContextMixin</span></code></a></li>
+<li><a class="reference internal" href="generic-display.html#django.views.generic.detail.BaseDetailView" title="django.views.generic.detail.BaseDetailView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.BaseDetailView</span></code></a></li>
+<li><a class="reference internal" href="mixins-single-object.html#django.views.generic.detail.SingleObjectMixin" title="django.views.generic.detail.SingleObjectMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.SingleObjectMixin</span></code></a></li>
+<li><a class="reference internal" href="base.html#django.views.generic.base.View" title="django.views.generic.base.View"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.View</span></code></a></li>
+</ul>
+<p><strong>属性</strong></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.edit.DeleteView.form_class">
+<code class="sig-name descname"><span class="pre">form_class</span></code><a class="headerlink" href="#django.views.generic.edit.DeleteView.form_class" title="永久链接至目标">¶</a></dt>
+<dd><p>从 <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDeleteView</span></code> 继承而来。将用于确认请求的表单类。默认 <a class="reference internal" href="../forms/api.html#django.forms.Form" title="django.forms.Form"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.forms.Form</span></code></a>，结果是一个空的表单，总是有效的。</p>
+<p>通过提供你自己的 <code class="docutils literal notranslate"><span class="pre">Form</span></code> 子类，你可以添加额外的要求，比如说，确认复选框。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.edit.DeleteView.template_name_suffix">
+<code class="sig-name descname"><span class="pre">template_name_suffix</span></code><a class="headerlink" href="#django.views.generic.edit.DeleteView.template_name_suffix" title="永久链接至目标">¶</a></dt>
+<dd><p>对 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求显示的 <code class="docutils literal notranslate"><span class="pre">DeleteView</span></code> 页面使用 <code class="docutils literal notranslate"><span class="pre">'_confirm_delete'</span></code> 的 <code class="docutils literal notranslate"><span class="pre">template_name_suffix</span></code>。例如，将这个属性改为 <code class="docutils literal notranslate"><span class="pre">'_check_delete'</span></code>，对于一个为 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 模型删除对象的视图，将导致默认的 <code class="docutils literal notranslate"><span class="pre">template_name</span></code> 为 <code class="docutils literal notranslate"><span class="pre">'myapp/author_check_delete.html'</span></code>。</p>
+</dd></dl>
+
+<p><strong>示例 myapp/views.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">reverse_lazy</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">DeleteView</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Author</span>
+
+
+<span class="k">class</span> <span class="nc">AuthorDeleteView</span><span class="p">(</span><span class="n">DeleteView</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Author</span>
+    <span class="n">success_url</span> <span class="o">=</span> <span class="n">reverse_lazy</span><span class="p">(</span><span class="s2">&quot;author-list&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>示例 myapp/author_confirm_delete.html</strong>：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="p">&gt;</span><span class="cp">{%</span> <span class="k">csrf_token</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Are you sure you want to delete &quot;<span class="cp">{{</span> <span class="nv">object</span> <span class="cp">}}</span>&quot;?<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{{</span> <span class="nv">form</span> <span class="cp">}}</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;Confirm&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.edit.BaseDeleteView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.edit.</span></code><code class="sig-name descname"><span class="pre">BaseDeleteView</span></code><a class="headerlink" href="#django.views.generic.edit.BaseDeleteView" title="永久链接至目标">¶</a></dt>
+<dd><p>一个用于删除对象实例的基础视图。它不打算直接使用，而是作为 <code class="xref py py-class docutils literal notranslate"><span class="pre">django.view.generic.edit.DeleteView</span></code> 的父类。</p>
+<p><strong>祖先（MRO）</strong></p>
+<p>该视图从以下视图继承方法和属性。</p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.DeletionMixin" title="django.views.generic.edit.DeletionMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.DeletionMixin</span></code></a></li>
+<li><a class="reference internal" href="mixins-editing.html#django.views.generic.edit.FormMixin" title="django.views.generic.edit.FormMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.edit.FormMixin</span></code></a></li>
+<li><a class="reference internal" href="generic-display.html#django.views.generic.detail.BaseDetailView" title="django.views.generic.detail.BaseDetailView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.detail.BaseDetailView</span></code></a></li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">通用编辑视图</a><ul>
+<li><a class="reference internal" href="#formview"><code class="docutils literal notranslate"><span class="pre">FormView</span></code></a></li>
+<li><a class="reference internal" href="#createview"><code class="docutils literal notranslate"><span class="pre">CreateView</span></code></a></li>
+<li><a class="reference internal" href="#updateview"><code class="docutils literal notranslate"><span class="pre">UpdateView</span></code></a></li>
+<li><a class="reference internal" href="#deleteview"><code class="docutils literal notranslate"><span class="pre">DeleteView</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="generic-display.html"
+                          title="上一章">通用显示视图</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="generic-date-based.html"
+                          title="下一章">通用日期视图</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/ref/class-based-views/generic-editing.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="generic-display.html" title="通用显示视图">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="generic-date-based.html" title="通用日期视图">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

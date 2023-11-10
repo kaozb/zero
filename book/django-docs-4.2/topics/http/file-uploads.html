@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文件上传 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="Django 便捷函数" href="shortcuts.html" />
+    <link rel="prev" title="视图装饰器" href="decorators.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="decorators.html" title="视图装饰器">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="shortcuts.html" title="Django 便捷函数">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-http-file-uploads">
+            
+  <div class="section" id="s-file-uploads">
+<span id="file-uploads"></span><h1>文件上传<a class="headerlink" href="#file-uploads" title="永久链接至标题">¶</a></h1>
+<p>当 Django 处理文件上传时，文件数据最终会被放置在 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.FILES" title="django.http.HttpRequest.FILES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.FILES</span></code></a> （关于 <code class="docutils literal notranslate"><span class="pre">request</span></code> 对象的更多信息，请参见 <a class="reference internal" href="../../ref/request-response.html"><span class="doc">request 和 response 对象</span></a> 的文档）。本文档解释了文件如何存储在磁盘和内存中，以及如何自定义默认行为。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">如果接收不受信任的用户的上传会有安全隐患， 请阅读 <a class="reference internal" href="../security.html#user-uploaded-content-security"><span class="std std-ref">用户上传内容</span></a> 获取详情。</p>
+</div>
+<div class="section" id="s-basic-file-uploads">
+<span id="basic-file-uploads"></span><h2>简单文件上传<a class="headerlink" href="#basic-file-uploads" title="永久链接至标题">¶</a></h2>
+<p>考虑一个包含 <a class="reference internal" href="../../ref/forms/fields.html#django.forms.FileField" title="django.forms.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 的表单：</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">forms.py</span></code></span><a class="headerlink" href="#id3" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+
+
+<span class="k">class</span> <span class="nc">UploadFileForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">FileField</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>处理这个表单的视图将在 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.FILES" title="django.http.HttpRequest.FILES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.FILES</span></code></a> 中接收文件数据，它是一个字典，包含表单中每个 <a class="reference internal" href="../../ref/forms/fields.html#django.forms.FileField" title="django.forms.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> （或 <a class="reference internal" href="../../ref/forms/fields.html#django.forms.ImageField" title="django.forms.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a>，或其他 <a class="reference internal" href="../../ref/forms/fields.html#django.forms.FileField" title="django.forms.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 子类）的键。所以上述表单中的数据将以 <code class="docutils literal notranslate"><span class="pre">request.FILES['file']</span></code> 的形式被访问。</p>
+<p>注意 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.FILES" title="django.http.HttpRequest.FILES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.FILES</span></code></a> 只有当请求方法是 <code class="docutils literal notranslate"><span class="pre">POST</span></code>，至少有一个文件字段被实际发布，并且发布请求的 <code class="docutils literal notranslate"><span class="pre">&lt;form&gt;</span></code> 有 <code class="docutils literal notranslate"><span class="pre">enctype=&quot;multipart/form-data&quot;</span></code> 属性时，才会包含数据。否则 <code class="docutils literal notranslate"><span class="pre">request.FILES</span></code> 将为空。</p>
+<p>大多数情况下，你需要像 <a class="reference internal" href="../../ref/forms/api.html#binding-uploaded-files"><span class="std std-ref">将上传的文件绑定到表单中</span></a> 里描述的那样将文件数据从 <code class="docutils literal notranslate"><span class="pre">request</span></code> 传递给表单。示例如下：</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">views.py</span></code></span><a class="headerlink" href="#id4" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponseRedirect</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">.forms</span> <span class="kn">import</span> <span class="n">UploadFileForm</span>
+
+<span class="c1"># Imaginary function to handle an uploaded file.</span>
+<span class="kn">from</span> <span class="nn">somewhere</span> <span class="kn">import</span> <span class="n">handle_uploaded_file</span>
+
+
+<span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">UploadFileForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">FILES</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">handle_uploaded_file</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">FILES</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">HttpResponseRedirect</span><span class="p">(</span><span class="s2">&quot;/success/url/&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">UploadFileForm</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;upload.html&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;form&quot;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<p>注意我们必须将 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.FILES" title="django.http.HttpRequest.FILES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.FILES</span></code></a> 传入到表单的
+构造方法中，只有这样文件数据才能绑定到表单中。</p>
+<p>我们通常可能像这样处理上传文件：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">handle_uploaded_file</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;some/file/name.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;wb+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">destination</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">chunks</span><span class="p">():</span>
+            <span class="n">destination</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">UploadedFile.chunks()</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">read()</span></code> 是为了确保即使是大文件又不会将我们系统的内存占满。</p>
+<p>There are a few other methods and attributes available on <code class="docutils literal notranslate"><span class="pre">UploadedFile</span></code>
+objects; see <a class="reference internal" href="../../ref/files/uploads.html#django.core.files.uploadedfile.UploadedFile" title="django.core.files.uploadedfile.UploadedFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">UploadedFile</span></code></a> for a complete reference.</p>
+<div class="section" id="s-handling-uploaded-files-with-a-model">
+<span id="handling-uploaded-files-with-a-model"></span><h3>通过模型来处理上传的文件<a class="headerlink" href="#handling-uploaded-files-with-a-model" title="永久链接至标题">¶</a></h3>
+<p>如果想要在 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 上的 <a class="reference internal" href="../../ref/models/instances.html#django.db.models.Model" title="django.db.models.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> 保存文件，使用 <a class="reference internal" href="../forms/modelforms.html#django.forms.ModelForm" title="django.forms.ModelForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelForm</span></code></a> 会让这一过程变得简单。当调用 <code class="docutils literal notranslate"><span class="pre">form.save()</span></code> 时，文件对象将会被保存在对相应 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.FileField.upload_to" title="django.db.models.FileField.upload_to"><code class="xref py py-attr docutils literal notranslate"><span class="pre">upload_to</span></code></a> 参数所指定的地方：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponseRedirect</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">.forms</span> <span class="kn">import</span> <span class="n">ModelFormWithFileField</span>
+
+
+<span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">ModelFormWithFileField</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">FILES</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="c1"># file is saved</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">HttpResponseRedirect</span><span class="p">(</span><span class="s2">&quot;/success/url/&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">ModelFormWithFileField</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;upload.html&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;form&quot;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>如果你准备手工构建对象，你可以指定来自 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.FILES" title="django.http.HttpRequest.FILES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.FILES</span></code></a> 的文件对象到模型里的文件对象：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponseRedirect</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">.forms</span> <span class="kn">import</span> <span class="n">UploadFileForm</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">ModelWithFileField</span>
+
+
+<span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">UploadFileForm</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">FILES</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="n">ModelWithFileField</span><span class="p">(</span><span class="n">file_field</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">FILES</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">])</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">HttpResponseRedirect</span><span class="p">(</span><span class="s2">&quot;/success/url/&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">UploadFileForm</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;upload.html&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;form&quot;</span><span class="p">:</span> <span class="n">form</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>If you are constructing an object manually outside of a request, you can assign
+a <a class="reference internal" href="../../ref/files/file.html#django.core.files.File" title="django.core.files.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">File</span></code></a> like object to the
+<a class="reference internal" href="../../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">BaseCommand</span>
+<span class="kn">from</span> <span class="nn">django.core.files.base</span> <span class="kn">import</span> <span class="n">ContentFile</span>
+
+
+<span class="k">class</span> <span class="nc">MyCommand</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">content_file</span> <span class="o">=</span> <span class="n">ContentFile</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hello-world.txt&quot;</span><span class="p">)</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">ModelWithFileField</span><span class="p">(</span><span class="n">file_field</span><span class="o">=</span><span class="n">content_file</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-uploading-multiple-files">
+<span id="s-id1"></span><span id="uploading-multiple-files"></span><span id="id1"></span><h3>上传多个文件<a class="headerlink" href="#uploading-multiple-files" title="永久链接至标题">¶</a></h3>
+<p>If you want to upload multiple files using one form field, create a subclass
+of the field's widget and set the <code class="docutils literal notranslate"><span class="pre">allow_multiple_selected</span></code> attribute on it
+to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>In order for such files to be all validated by your form (and have the value of
+the field include them all), you will also have to subclass <code class="docutils literal notranslate"><span class="pre">FileField</span></code>. See
+below for an example.</p>
+<div class="admonition-multiple-file-field admonition">
+<p class="first admonition-title">Multiple file field</p>
+<p class="last">Django is likely to have a proper multiple file field support at some point
+in the future.</p>
+</div>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">forms.py</span></code></span><a class="headerlink" href="#id5" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+
+
+<span class="k">class</span> <span class="nc">MultipleFileInput</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ClearableFileInput</span><span class="p">):</span>
+    <span class="n">allow_multiple_selected</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">MultipleFileField</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">FileField</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;widget&quot;</span><span class="p">,</span> <span class="n">MultipleFileInput</span><span class="p">())</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">single_file_clean</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">clean</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">single_file_clean</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">initial</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">single_file_clean</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">initial</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">class</span> <span class="nc">FileFieldForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">file_field</span> <span class="o">=</span> <span class="n">MultipleFileField</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>然后覆盖 <a class="reference internal" href="../../ref/class-based-views/generic-editing.html#django.views.generic.edit.FormView" title="django.views.generic.edit.FormView"><code class="xref py py-class docutils literal notranslate"><span class="pre">FormView</span></code></a> 子类的 <code class="docutils literal notranslate"><span class="pre">post</span></code> 方法来控制多个文件上传：</p>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">views.py</span></code></span><a class="headerlink" href="#id6" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">FormView</span>
+<span class="kn">from</span> <span class="nn">.forms</span> <span class="kn">import</span> <span class="n">FileFieldForm</span>
+
+
+<span class="k">class</span> <span class="nc">FileFieldFormView</span><span class="p">(</span><span class="n">FormView</span><span class="p">):</span>
+    <span class="n">form_class</span> <span class="o">=</span> <span class="n">FileFieldForm</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;upload.html&quot;</span>  <span class="c1"># Replace with your template.</span>
+    <span class="n">success_url</span> <span class="o">=</span> <span class="s2">&quot;...&quot;</span>  <span class="c1"># Replace with your URL or reverse().</span>
+
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">form_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_form_class</span><span class="p">()</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_form</span><span class="p">(</span><span class="n">form_class</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_valid</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">form_invalid</span><span class="p">(</span><span class="n">form</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">form_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">cleaned_data</span><span class="p">[</span><span class="s2">&quot;file_field&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="o">...</span>  <span class="c1"># Do something with each file.</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">form_valid</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">This will allow you to handle multiple files at the form level only. Be
+aware that you cannot use it to put multiple files on a single model
+instance (in a single field), for example, even if the custom widget is used
+with a form field related to a model <code class="docutils literal notranslate"><span class="pre">FileField</span></code>.</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 3.2.19:</span> <p>In previous versions, there was no support for the <code class="docutils literal notranslate"><span class="pre">allow_multiple_selected</span></code>
+class attribute, and users were advised to create the widget with the HTML
+attribute <code class="docutils literal notranslate"><span class="pre">multiple</span></code> set through the <code class="docutils literal notranslate"><span class="pre">attrs</span></code> argument. However, this
+caused validation of the form field to be applied only to the last file
+submitted, which could have adverse security implications.</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-upload-handlers">
+<span id="upload-handlers"></span><h2>上传 Handlers<a class="headerlink" href="#upload-handlers" title="永久链接至标题">¶</a></h2>
+<p>当一个用户上传文件时，Django 会把文件数据传递给 <em>upload handler</em> —— 这是一个很小的类，它用来在上传时处理文件数据。上传处理模块最初定义在 <a class="reference internal" href="../../ref/settings.html#std-setting-FILE_UPLOAD_HANDLERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">FILE_UPLOAD_HANDLERS</span></code></a> 里，默认为：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="s2">&quot;django.core.files.uploadhandler.MemoryFileUploadHandler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.core.files.uploadhandler.TemporaryFileUploadHandler&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../ref/files/uploads.html#django.core.files.uploadhandler.MemoryFileUploadHandler" title="django.core.files.uploadhandler.MemoryFileUploadHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemoryFileUploadHandler</span></code></a> 和 <a class="reference internal" href="../../ref/files/uploads.html#django.core.files.uploadhandler.TemporaryFileUploadHandler" title="django.core.files.uploadhandler.TemporaryFileUploadHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemporaryFileUploadHandler</span></code></a> 提供 Django 默认文件上传行为，小文件读入内存，大文件存在磁盘上。</p>
+<p>你可以编写自定义的 handlers 来自定义 Django 如何处理文件。比如，你可以使用自定义的 handlers 来强制处理用户层面的配额，动态压缩数据，渲染进度条，甚至可以将数据发送到其他存储地址而不是本地。查看 <a class="reference internal" href="../../ref/files/uploads.html#custom-upload-handlers"><span class="std std-ref">编写自定义上传处理程序</span></a> 来了解你如何自定义或者完全替换上传行为。</p>
+<div class="section" id="s-where-uploaded-data-is-stored">
+<span id="where-uploaded-data-is-stored"></span><h3>上传数据的存储<a class="headerlink" href="#where-uploaded-data-is-stored" title="永久链接至标题">¶</a></h3>
+<p>在保存上传的文件之前，数据需要保存到某处。</p>
+<p>默认情况下，如果上传的文件小于2.5兆，Django 将把文件的所有内容保存到内存里。这意味着保存文件只涉及从内存中读取和写入磁盘，因此这很快。</p>
+<p>但如果上传的文件很大，Django 会把文件写入系统临时目录的临时文件里存储。在类 Unix 平台里这意味着 Django 会生成一个类似名为 <code class="docutils literal notranslate"><span class="pre">/tmp/tmpzfp6I6.upload</span></code> 的文件。如果上传的文件非常大，你可以查看这个文件的大小增长，因为 Django 将数据流式传输到磁盘上。</p>
+<p>2.5 megabytes; <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>; 等这些细节只是合理的默认值，在下一节要介绍它们如何被自定义。</p>
+</div>
+<div class="section" id="s-changing-upload-handler-behavior">
+<span id="changing-upload-handler-behavior"></span><h3>改变上传处理行为<a class="headerlink" href="#changing-upload-handler-behavior" title="永久链接至标题">¶</a></h3>
+<p>这里有一些控制 Django 文件上传行为的配置，请查看 <a class="reference internal" href="../../ref/settings.html#file-upload-settings"><span class="std std-ref">File Upload Settings</span></a> 。</p>
+</div>
+<div class="section" id="s-modifying-upload-handlers-on-the-fly">
+<span id="s-id2"></span><span id="modifying-upload-handlers-on-the-fly"></span><span id="id2"></span><h3>动态修改上传处理程序<a class="headerlink" href="#modifying-upload-handlers-on-the-fly" title="永久链接至标题">¶</a></h3>
+<p>有时候某些视图需要不同的上传行为。在这些例子里，你可以基于每个请求覆盖上传处理程序。默认情况下，这个列表将包含由 <a class="reference internal" href="../../ref/settings.html#std-setting-FILE_UPLOAD_HANDLERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">FILE_UPLOAD_HANDLERS</span></code></a> 设置的上传处理程序，但你可以像修改其他列表一样修改这个列表。</p>
+<p>比如，假设你正在编写 <code class="docutils literal notranslate"><span class="pre">ProgressBarUploadHandler</span></code> ，来提供在上传过程中的反馈给 Ajax widget。你需要添加这个处理程序到你的上传处理模块：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">upload_handlers</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ProgressBarUploadHandler</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>你或许想在这里使用 <code class="docutils literal notranslate"><span class="pre">list.insert()</span></code> （而不是 <code class="docutils literal notranslate"><span class="pre">append()</span></code> ），因为进度条处理程序需要在其他处理程序之前使用。记住，上传处理程序是按顺序处理的。</p>
+<p>如果你想完全替换上传处理程序，你需要指定新列表：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">upload_handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">ProgressBarUploadHandler</span><span class="p">(</span><span class="n">request</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>你只能在访问 <code class="docutils literal notranslate"><span class="pre">request.POST</span></code> 或 <code class="docutils literal notranslate"><span class="pre">request.FILES</span></code> 之前修改上传处理程序，开始上传处理后修改上传处理程序没有意义。如果你从读取 <code class="docutils literal notranslate"><span class="pre">request.POST</span></code> 或 <code class="docutils literal notranslate"><span class="pre">request.FILES</span></code> 之后尝试修改 <code class="docutils literal notranslate"><span class="pre">request.upload_handlers</span></code> ，Django 会报错。</p>
+<p>因此，你要尽早在视图里修改上传处理程序。</p>
+<p>而且， <code class="docutils literal notranslate"><span class="pre">request.POST</span></code> 由 <a class="reference internal" href="../../ref/middleware.html#django.middleware.csrf.CsrfViewMiddleware" title="django.middleware.csrf.CsrfViewMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">CsrfViewMiddleware</span></code></a> 访问，默认情况下已开启。这意味着你需要在视图上使用 <a class="reference internal" href="../../ref/csrf.html#django.views.decorators.csrf.csrf_exempt" title="django.views.decorators.csrf.csrf_exempt"><code class="xref py py-func docutils literal notranslate"><span class="pre">csrf_exempt()</span></code></a> 来允许你改变上传处理程序。然后你需要在实际处理请求的函数上使用 <a class="reference internal" href="../../ref/csrf.html#django.views.decorators.csrf.csrf_protect" title="django.views.decorators.csrf.csrf_protect"><code class="xref py py-func docutils literal notranslate"><span class="pre">csrf_protect()</span></code></a> 。注意这可能会让处理程序在 CSRF 检测完成之前开始接受文件上传。示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.csrf</span> <span class="kn">import</span> <span class="n">csrf_exempt</span><span class="p">,</span> <span class="n">csrf_protect</span>
+
+
+<span class="nd">@csrf_exempt</span>
+<span class="k">def</span> <span class="nf">upload_file_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">upload_handlers</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ProgressBarUploadHandler</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_upload_file_view</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+
+<span class="nd">@csrf_protect</span>
+<span class="k">def</span> <span class="nf">_upload_file_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>  <span class="c1"># Process request</span>
+</pre></div>
+</div>
+<p>如果你使用的是基于类的视图，你需要在其 <code class="xref py py-meth docutils literal notranslate"><span class="pre">csrf_exempt()</span></code> 方法上使用 <code class="xref py py-func docutils literal notranslate"><span class="pre">dispatch()</span></code>，并在实际处理请求的方法上使用 <code class="xref py py-func docutils literal notranslate"><span class="pre">csrf_protect()</span></code>。示例代码：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.decorators</span> <span class="kn">import</span> <span class="n">method_decorator</span>
+<span class="kn">from</span> <span class="nn">django.views</span> <span class="kn">import</span> <span class="n">View</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.csrf</span> <span class="kn">import</span> <span class="n">csrf_exempt</span><span class="p">,</span> <span class="n">csrf_protect</span>
+
+
+<span class="nd">@method_decorator</span><span class="p">(</span><span class="n">csrf_exempt</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dispatch&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">UploadFileView</span><span class="p">(</span><span class="n">View</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">upload_handlers</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ProgressBarUploadHandler</span><span class="p">(</span><span class="n">request</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@method_decorator</span><span class="p">(</span><span class="n">csrf_protect</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="o">...</span>  <span class="c1"># Process request</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">文件上传</a><ul>
+<li><a class="reference internal" href="#basic-file-uploads">简单文件上传</a><ul>
+<li><a class="reference internal" href="#handling-uploaded-files-with-a-model">通过模型来处理上传的文件</a></li>
+<li><a class="reference internal" href="#uploading-multiple-files">上传多个文件</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#upload-handlers">上传 Handlers</a><ul>
+<li><a class="reference internal" href="#where-uploaded-data-is-stored">上传数据的存储</a></li>
+<li><a class="reference internal" href="#changing-upload-handler-behavior">改变上传处理行为</a></li>
+<li><a class="reference internal" href="#modifying-upload-handlers-on-the-fly">动态修改上传处理程序</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="decorators.html"
+                          title="上一章">视图装饰器</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="shortcuts.html"
+                          title="下一章">Django 便捷函数</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/topics/http/file-uploads.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="decorators.html" title="视图装饰器">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="shortcuts.html" title="Django 便捷函数">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

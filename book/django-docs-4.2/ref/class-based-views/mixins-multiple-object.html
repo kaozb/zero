@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>多对象混入 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="编辑混入" href="mixins-editing.html" />
+    <link rel="prev" title="单对象混入" href="mixins-single-object.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="mixins-single-object.html" title="单对象混入">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="mixins-editing.html" title="编辑混入">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-class-based-views-mixins-multiple-object">
+            
+  <div class="section" id="s-multiple-object-mixins">
+<span id="multiple-object-mixins"></span><h1>多对象混入<a class="headerlink" href="#multiple-object-mixins" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-multipleobjectmixin">
+<span id="multipleobjectmixin"></span><h2><code class="docutils literal notranslate"><span class="pre">MultipleObjectMixin</span></code><a class="headerlink" href="#multipleobjectmixin" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.list.</span></code><code class="sig-name descname"><span class="pre">MultipleObjectMixin</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin" title="永久链接至目标">¶</a></dt>
+<dd><p>一个可以用来显示对象列表的混入。</p>
+<p>如果指定了 <code class="docutils literal notranslate"><span class="pre">paginate_by</span></code>，Django 会对返回的结果进行分页。你可以用两种方式之一在 URL 中指定页码。</p>
+<ul>
+<li><p class="first">在 URLconf 中使用 <code class="docutils literal notranslate"><span class="pre">page</span></code> 参数。例如，你的 URLconf 可能是这样的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">path</span><span class="p">(</span><span class="s2">&quot;objects/page&lt;int:page&gt;/&quot;</span><span class="p">,</span> <span class="n">PaginatedView</span><span class="o">.</span><span class="n">as_view</span><span class="p">()),</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Pass the page number via the <code class="docutils literal notranslate"><span class="pre">page</span></code> query-string parameter. For
+example, a URL would look like this:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/objects/?page=3
+</pre></div>
+</div>
+</li>
+</ul>
+<p>这些数值和列表是以 1 为基础的，而不是以 0 为基础的，所以第一页将表示为 <code class="docutils literal notranslate"><span class="pre">1</span></code> 页。</p>
+<p>更多关于分页的内容，请阅读 <a class="reference internal" href="../../topics/pagination.html"><span class="doc">分页文档</span></a>。</p>
+<p>As a special case, you are also permitted to use <code class="docutils literal notranslate"><span class="pre">last</span></code> as a value for
+<code class="docutils literal notranslate"><span class="pre">page</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/objects/?page=last
+</pre></div>
+</div>
+<p>这允许你访问结果的最后一页，而不必首先确定有多少页。</p>
+<p>请注意，<code class="docutils literal notranslate"><span class="pre">page</span></code> <em>必须</em> 是有效的页码或 <code class="docutils literal notranslate"><span class="pre">last</span></code> 值；<code class="docutils literal notranslate"><span class="pre">page</span></code> 的任何其他值将导致 404 错误。</p>
+<p><strong>扩展</strong></p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.ContextMixin" title="django.views.generic.base.ContextMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.base.ContextMixin</span></code></a></li>
+</ul>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>方法和属性*</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.allow_empty">
+<code class="sig-name descname"><span class="pre">allow_empty</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.allow_empty" title="永久链接至目标">¶</a></dt>
+<dd><p>一个布尔值，用于指定是否在没有对象的情况下显示页面。如果这个值是 <code class="docutils literal notranslate"><span class="pre">False</span></code>，并且没有可用的对象，视图将提出一个 404，而不是显示一个空的页面。默认情况下，这是 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.model">
+<code class="sig-name descname"><span class="pre">model</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.model" title="永久链接至目标">¶</a></dt>
+<dd><p>该视图将显示数据的模型。指定 <code class="docutils literal notranslate"><span class="pre">model</span> <span class="pre">=</span> <span class="pre">Foo</span></code> 实际上等于指定 <code class="docutils literal notranslate"><span class="pre">queryset</span> <span class="pre">=</span> <span class="pre">Foo.objects.all()</span></code>，其中 <code class="docutils literal notranslate"><span class="pre">objects</span></code> 代表 <a href="#id1"><span class="problematic" id="id2">``</span></a>Foo``的 <a class="reference internal" href="../../topics/db/managers.html#default-managers"><span class="std std-ref">默认管理器</span></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.queryset">
+<code class="sig-name descname"><span class="pre">queryset</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.queryset" title="永久链接至目标">¶</a></dt>
+<dd><p>代表对象的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>。如果提供，<code class="docutils literal notranslate"><span class="pre">queryset</span></code> 的值将取代为 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.model" title="django.views.generic.list.MultipleObjectMixin.model"><code class="xref py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> 提供的值。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">queryset</span></code> 是一个类属性，它的值是 <em>可变的</em>，所以直接使用它时一定要注意。在使用它之前，要么调用它的 <a class="reference internal" href="../models/querysets.html#django.db.models.query.QuerySet.all" title="django.db.models.query.QuerySet.all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">all()</span></code></a> 方法，要么用 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.get_queryset" title="django.views.generic.list.MultipleObjectMixin.get_queryset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_queryset()</span></code></a> 检索它，它在幕后负责克隆。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.ordering">
+<code class="sig-name descname"><span class="pre">ordering</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.ordering" title="永久链接至目标">¶</a></dt>
+<dd><p>一个字符串或字符串列表，指定应用于 <code class="docutils literal notranslate"><span class="pre">queryset</span></code> 的顺序。有效值与 <a class="reference internal" href="../models/querysets.html#django.db.models.query.QuerySet.order_by" title="django.db.models.query.QuerySet.order_by"><code class="xref py py-meth docutils literal notranslate"><span class="pre">order_by()</span></code></a> 的值相同。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.paginate_by">
+<code class="sig-name descname"><span class="pre">paginate_by</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.paginate_by" title="永久链接至目标">¶</a></dt>
+<dd><p>一个整数，指定每页应显示多少对象。如果给定了这个值，视图将用 <code class="docutils literal notranslate"><span class="pre">paginate_by</span></code> 对象分页。视图将期待一个 <code class="docutils literal notranslate"><span class="pre">page</span></code> 查询字符串参数（通过 <code class="docutils literal notranslate"><span class="pre">request.GET</span></code>）或一个在 URLconf 中指定的 <code class="docutils literal notranslate"><span class="pre">page</span></code> 变量。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.paginate_orphans">
+<code class="sig-name descname"><span class="pre">paginate_orphans</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.paginate_orphans" title="永久链接至目标">¶</a></dt>
+<dd><p>一个整数，指定最后一页可以包含的”溢出“对象的数量。这扩展了 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.paginate_by" title="django.views.generic.list.MultipleObjectMixin.paginate_by"><code class="xref py py-attr docutils literal notranslate"><span class="pre">paginate_by</span></code></a> 对最后一页的限制，最多可扩展到 <code class="docutils literal notranslate"><span class="pre">paginate_orphans</span></code>，以防止最后一页的对象数量非常少。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.page_kwarg">
+<code class="sig-name descname"><span class="pre">page_kwarg</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.page_kwarg" title="永久链接至目标">¶</a></dt>
+<dd><p>一个字符串，用于指定页面参数的名称。视图希望该参数可以作为查询字符串参数（通过 <code class="docutils literal notranslate"><span class="pre">request.GET</span></code>）或作为 URLconf 中指定的 kwarg 变量。默认为 <code class="docutils literal notranslate"><span class="pre">page</span></code>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.paginator_class">
+<code class="sig-name descname"><span class="pre">paginator_class</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.paginator_class" title="永久链接至目标">¶</a></dt>
+<dd><p>用于分页的 paginator 类。默认情况下，使用 <a class="reference internal" href="../paginator.html#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.paginator.Paginator</span></code></a>。如果自定义的分页器类没有和 <a class="reference internal" href="../paginator.html#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.paginator.Paginator</span></code></a> 一样的构造函数接口，你还需要为 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.get_paginator" title="django.views.generic.list.MultipleObjectMixin.get_paginator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_paginator()</span></code></a> 提供一个实现。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.context_object_name">
+<code class="sig-name descname"><span class="pre">context_object_name</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.context_object_name" title="永久链接至目标">¶</a></dt>
+<dd><p>指定在上下文中使用的变量名称。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_queryset">
+<code class="sig-name descname"><span class="pre">get_queryset</span></code>()<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_queryset" title="永久链接至目标">¶</a></dt>
+<dd><p>获取此视图的项目列表。这必须是一个可迭代对象，也可以是一个查询集（查询集特定行为将被启用）。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_ordering">
+<code class="sig-name descname"><span class="pre">get_ordering</span></code>()<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_ordering" title="永久链接至目标">¶</a></dt>
+<dd><p>返回定义应用于 <code class="docutils literal notranslate"><span class="pre">queryset</span></code> 的排序的字符串（或字符串的迭代）。</p>
+<p>默认返回 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.ordering" title="django.views.generic.list.MultipleObjectMixin.ordering"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ordering</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.paginate_queryset">
+<code class="sig-name descname"><span class="pre">paginate_queryset</span></code>(<em><span class="n"><span class="pre">queryset</span></span></em>, <em><span class="n"><span class="pre">page_size</span></span></em>)<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.paginate_queryset" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个包含 (<code class="docutils literal notranslate"><span class="pre">paginator</span></code>, <code class="docutils literal notranslate"><span class="pre">page</span></code>, <code class="docutils literal notranslate"><span class="pre">object_list</span></code>, <code class="docutils literal notranslate"><span class="pre">is_paginated</span></code>) 的四元元组。</p>
+<p>通过将 <code class="docutils literal notranslate"><span class="pre">queryset</span></code> 分页成大小为 <code class="docutils literal notranslate"><span class="pre">page_size</span></code> 的页面来构建。如果请求中包含一个 <code class="docutils literal notranslate"><span class="pre">page</span></code> 参数，无论是作为一个捕获的 URL 参数还是作为一个 GET 参数，<code class="docutils literal notranslate"><span class="pre">object_list</span></code> 将对应于该页的对象。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_paginate_by">
+<code class="sig-name descname"><span class="pre">get_paginate_by</span></code>(<em><span class="n"><span class="pre">queryset</span></span></em>)<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_paginate_by" title="永久链接至目标">¶</a></dt>
+<dd><p>返回要分页的项目数，如果没有分页，则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。默认情况下，返回 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.paginate_by" title="django.views.generic.list.MultipleObjectMixin.paginate_by"><code class="xref py py-attr docutils literal notranslate"><span class="pre">paginate_by</span></code></a> 的值。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_paginator">
+<code class="sig-name descname"><span class="pre">get_paginator</span></code>(<em><span class="n"><span class="pre">queryset</span></span></em>, <em><span class="n"><span class="pre">per_page</span></span></em>, <em><span class="n"><span class="pre">orphans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">allow_empty_first_page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>)<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_paginator" title="永久链接至目标">¶</a></dt>
+<dd><p>返回要用于该视图的分页器实例。默认情况下，实例化一个 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.paginator_class" title="django.views.generic.list.MultipleObjectMixin.paginator_class"><code class="xref py py-attr docutils literal notranslate"><span class="pre">paginator_class</span></code></a> 的实例。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_paginate_orphans">
+<code class="sig-name descname"><span class="pre">get_paginate_orphans</span></code>()<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_paginate_orphans" title="永久链接至目标">¶</a></dt>
+<dd><p>一个整数，指定最后一页可以包含的”溢出“对象的数量。默认情况下，返回 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.paginate_orphans" title="django.views.generic.list.MultipleObjectMixin.paginate_orphans"><code class="xref py py-attr docutils literal notranslate"><span class="pre">paginate_orphans</span></code></a> 的值。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_allow_empty">
+<code class="sig-name descname"><span class="pre">get_allow_empty</span></code>()<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_allow_empty" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个布尔值，指定是否在没有对象的情况下显示页面。如果本方法返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>，并且没有可用的对象，视图将引发 404，而不是显示一个空页面。默认情况下，这个方法是 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_context_object_name">
+<code class="sig-name descname"><span class="pre">get_context_object_name</span></code>(<em><span class="n"><span class="pre">object_list</span></span></em>)<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_context_object_name" title="永久链接至目标">¶</a></dt>
+<dd><p>返回上下文变量名，该变量将用于包含该视图正在操作的数据列表。如果 <code class="docutils literal notranslate"><span class="pre">object_list</span></code> 是一个 Django 对象的查询集，并且 <a class="reference internal" href="#django.views.generic.list.MultipleObjectMixin.context_object_name" title="django.views.generic.list.MultipleObjectMixin.context_object_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">context_object_name</span></code></a> 没有被设置，那么上下文名称将是该查询集组成的模型的 <code class="docutils literal notranslate"><span class="pre">model_name</span></code>，并加上后缀 <code class="docutils literal notranslate"><span class="pre">'_list'</span></code>。例如，模型 <code class="docutils literal notranslate"><span class="pre">Article</span></code> 将有一个名为 <code class="docutils literal notranslate"><span class="pre">article_list</span></code> 的上下文对象。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectMixin.get_context_data">
+<code class="sig-name descname"><span class="pre">get_context_data</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.views.generic.list.MultipleObjectMixin.get_context_data" title="永久链接至目标">¶</a></dt>
+<dd><p>返回用于显示对象列表的上下文数据。</p>
+</dd></dl>
+
+<p><strong>上下文</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">object_list</span></code>：该视图正在显示的对象列表。如果指定了 <code class="docutils literal notranslate"><span class="pre">context_object_name</span></code>，该变量也将在上下文中设置，其值与 <code class="docutils literal notranslate"><span class="pre">object_list</span></code> 相同。</li>
+<li><code class="docutils literal notranslate"><span class="pre">is_paginated</span></code>：一个布尔值，表示结果是否分页。具体来说，如果没有指定页面大小，或者如果可用的对象没有跨越多个页面，则设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">paginator</span></code>：一个 <a class="reference internal" href="../paginator.html#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.paginator.Paginator</span></code></a> 的实例。如果页面没有分页，这个上下文变量将是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">page_obj</span></code>：一个 <a class="reference internal" href="../paginator.html#django.core.paginator.Page" title="django.core.paginator.Page"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.paginator.Page</span></code></a> 的实例。如果页面没有被分页，这个上下文变量将是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="s-multipleobjecttemplateresponsemixin">
+<span id="multipleobjecttemplateresponsemixin"></span><h2><code class="docutils literal notranslate"><span class="pre">MultipleObjectTemplateResponseMixin</span></code><a class="headerlink" href="#multipleobjecttemplateresponsemixin" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectTemplateResponseMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.views.generic.list.</span></code><code class="sig-name descname"><span class="pre">MultipleObjectTemplateResponseMixin</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectTemplateResponseMixin" title="永久链接至目标">¶</a></dt>
+<dd><p>一个混入类，为对对象实例列表进行操作的视图执行基于模板的响应渲染。要求与之混入的视图提供 <code class="docutils literal notranslate"><span class="pre">self.object_list</span></code>，即该视图操作的对象实例列表。<code class="docutils literal notranslate"><span class="pre">self.object_list</span></code> 可以是，但不要求是： <a class="reference internal" href="../models/querysets.html#django.db.models.query.QuerySet" title="django.db.models.query.QuerySet"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuerySet</span></code></a>。</p>
+<p><strong>扩展</strong></p>
+<ul class="simple">
+<li><a class="reference internal" href="mixins-simple.html#django.views.generic.base.TemplateResponseMixin" title="django.views.generic.base.TemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemplateResponseMixin</span></code></a></li>
+</ul>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>方法和属性*</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectTemplateResponseMixin.template_name_suffix">
+<code class="sig-name descname"><span class="pre">template_name_suffix</span></code><a class="headerlink" href="#django.views.generic.list.MultipleObjectTemplateResponseMixin.template_name_suffix" title="永久链接至目标">¶</a></dt>
+<dd><p>自动生成的候选模板名称的后缀。默认后缀是 <code class="docutils literal notranslate"><span class="pre">_list</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.views.generic.list.MultipleObjectTemplateResponseMixin.get_template_names">
+<code class="sig-name descname"><span class="pre">get_template_names</span></code>()<a class="headerlink" href="#django.views.generic.list.MultipleObjectTemplateResponseMixin.get_template_names" title="永久链接至目标">¶</a></dt>
+<dd><p>返回候选模板名称的列表。返回以下列表：</p>
+<ul class="simple">
+<li>视图中 <code class="docutils literal notranslate"><span class="pre">template_name</span></code> 的值（如果提供）</li>
+<li><code class="docutils literal notranslate"><span class="pre">&lt;app_label&gt;/&lt;model_name&gt;&lt;template_name_suffix&gt;.html</span></code></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">多对象混入</a><ul>
+<li><a class="reference internal" href="#multipleobjectmixin"><code class="docutils literal notranslate"><span class="pre">MultipleObjectMixin</span></code></a></li>
+<li><a class="reference internal" href="#multipleobjecttemplateresponsemixin"><code class="docutils literal notranslate"><span class="pre">MultipleObjectTemplateResponseMixin</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="mixins-single-object.html"
+                          title="上一章">单对象混入</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="mixins-editing.html"
+                          title="下一章">编辑混入</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/ref/class-based-views/mixins-multiple-object.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="mixins-single-object.html" title="单对象混入">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="mixins-editing.html" title="编辑混入">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

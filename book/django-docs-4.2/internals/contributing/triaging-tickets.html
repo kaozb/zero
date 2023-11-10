@@ -1,0 +1,454 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分类工单 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="编写代码" href="writing-code/index.html" />
+    <link rel="prev" title="报告问题和请求新功能" href="bugs-and-features.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="bugs-and-features.html" title="报告问题和请求新功能">previous</a>
+     |
+    <a href="../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="writing-code/index.html" title="编写代码">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-contributing-triaging-tickets">
+            
+  <div class="section" id="s-triaging-tickets">
+<span id="triaging-tickets"></span><h1>分类工单<a class="headerlink" href="#triaging-tickets" title="永久链接至标题">¶</a></h1>
+<p>Django 使用 Trac _ 来管理代码库上的工作。 Trac 是一个由社区维护的花园，里面记录了人们发现的错误和人们希望添加的功能。就像任何花园一样，有时候需要清除杂草，有时候则需要采摘鲜花和蔬菜。我们需要您的帮助来区分其中的差异，最终我们都会从中受益。</p>
+<p>就像所有花园一样，我们可以追求完美，但实际上并不存在完美无缺的事物。即使在最洁净的花园中，仍然会有蜗牛和昆虫存在。在社区花园中，也会有热心的人们——怀着最好的意图——给杂草施肥，却误伤玫瑰。整个社区的任务是自我管理，将问题最小化，并教育那些加入社区的人，使他们成为有价值的贡献成员。</p>
+<p>Similarly, while we aim for Trac to be a perfect representation of the state of
+Django's progress, we acknowledge that this will not happen. By distributing
+the load of Trac maintenance to the community, we accept that there will be
+mistakes. Trac is &quot;mostly accurate&quot;, and we give allowances for the fact that
+sometimes it will be wrong. That's okay. We're perfectionists with deadlines.</p>
+<p>We rely on the community to keep participating, keep tickets as accurate as
+possible, and raise issues for discussion on our mailing lists when there is
+confusion or disagreement.</p>
+<p>Django是一个社区项目，每个贡献都有帮助。没有**你**我们不能这样做！</p>
+<div class="section" id="s-triage-workflow">
+<span id="triage-workflow"></span><h2>分诊工作流<a class="headerlink" href="#triage-workflow" title="永久链接至标题">¶</a></h2>
+<p>不幸的是，并不是工单跟踪程序中的所有bug报告和功能请求都提供 <span class="xref std std-doc">required details</span> 。很多工单都有补丁，但这些补丁并不满足一个 <span class="xref std std-ref">good patch</span> 的要求。</p>
+<p>One way to help out is to <em>triage</em> tickets that have been created by other
+users.</p>
+<p>大多数工作流都是基于工单的 :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>triage stages ` 。每个阶段都描述了在其生命周期中，给定的工单在任何时间的位置。除了一些标志，这个属性可以很容易地告诉我们每张工单在等待什么和谁。</p>
+<p>既然一张图片胜过千言万语，那就从这里开始吧：</p>
+<a class="reference internal image-reference" href="../../images/triage_process.svg"><img alt="Django 的工单筛选工作流程" height="501" src="../../images/triage_process.svg" width="400" /></a>
+<p>在这张图表中我们有两个角色：</p>
+<ul class="simple">
+<li>合并者：拥有提交权限并负责最终决定是否合并补丁的人员。</li>
+<li>工单分拣员：Django社区中选择参与Django开发过程的任何人。我们的Trac装置有意对公众开放，任何人都可以对工单进行分类。Django是一个社区项目，我们鼓励 <span class="xref std std-ref">triage by the community</span> 。</li>
+</ul>
+<p>举个例子，我们可以看到一张普通工单的生命周期：</p>
+<ul class="simple">
+<li>Alice创建一个工单并发送一个不完整的请求（没有测试，实现也不正确）。</li>
+<li>Bob reviews the pull request, marks the ticket as &quot;Accepted&quot;, &quot;needs tests&quot;,
+and &quot;patch needs improvement&quot;, and leaves a comment telling Alice how the
+patch could be improved.</li>
+<li>Alice更新pull请求，添加测试（但不更改实现）。她把两个旗子摘了下来。</li>
+<li>Charlie检查pull请求并用另一条关于改进实现的注释重置“patch needs improvement”标志。</li>
+<li>Alice更新了pull请求，修复了实现。她去掉了“patch needs improvement”的标志。</li>
+<li>Daisy检查pull请求并将工单标记为“Ready for checkin”。</li>
+<li>Jacob, a <a class="reference internal" href="../organization.html#mergers-team"><span class="std std-ref">merger</span></a>, reviews the pull request and merges
+it.</li>
+</ul>
+<p>有些工单需要的反馈比这少得多，但同样有些工单需要更多的反馈。</p>
+</div>
+<div class="section" id="s-triage-stages">
+<span id="s-id1"></span><span id="triage-stages"></span><span id="id1"></span><h2>分类阶段<a class="headerlink" href="#triage-stages" title="永久链接至标题">¶</a></h2>
+<p>下面我们将更详细地描述工单在其生命周期中可能经历的各个阶段。</p>
+<div class="section" id="s-unreviewed">
+<span id="unreviewed"></span><h3>没有审阅<a class="headerlink" href="#unreviewed" title="永久链接至标题">¶</a></h3>
+<p>没有任何人对工单是否包含有效问题、可行功能或是否应因任何原因关闭而对工单进行审阅。</p>
+</div>
+<div class="section" id="s-accepted">
+<span id="accepted"></span><h3>已接受<a class="headerlink" href="#accepted" title="永久链接至标题">¶</a></h3>
+<p>大灰色区域！“已接受”的绝对含义是，工单中描述的问题是有效的，并且正处于处理的某个阶段。除此之外，还有几个考虑因素：</p>
+<ul>
+<li><p class="first"><strong>已接受并且没有标识</strong></p>
+<p>工单是有效的，但是还没有人提交补丁。通常这意味着您可以安全地开始为它编写补丁。对于可接受的bug，这通常比接受的特性更真实。对于一个已经被接受的bug的工单意味着这个问题已经被至少一个trigger验证为合法的bug，并且如果可能的话应该被修复。一个被接受的新特性可能只意味着一个试验者认为该特性将是好的，但这本身并不代表一致的观点，也不意味着某个补丁将被接受。如果您有疑问，请在编写大量补丁之前寻求更多反馈。</p>
+</li>
+<li><p class="first"><strong>已接受并且有补丁</strong></p>
+<p>工单正在等待人们查看提供的修补程序。这意味着下载并试用补丁，验证它是否包含测试和文档，使用包含的补丁运行测试套件，并在工单上留下反馈。</p>
+</li>
+<li><p class="first"><strong>已接受并且有补丁，需要...</strong></p>
+<p>这意味着工单已经过审核，需要进一步的工作。“需求测试”和“需求文档”是不言而喻的，“补丁需要改进”通常会在工单上附上注释，解释需要改进的代码。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-ready-for-checkin">
+<span id="ready-for-checkin"></span><h3>准备收入<a class="headerlink" href="#ready-for-checkin" title="永久链接至标题">¶</a></h3>
+<p>The ticket was reviewed by any member of the community other than the person
+who supplied the patch and found to meet all the requirements for a
+commit-ready patch. A <a class="reference internal" href="../organization.html#mergers-team"><span class="std std-ref">merger</span></a> now needs to give the patch
+a final review prior to being committed.</p>
+<p>There are a lot of pull requests. It can take a while for your patch to get
+reviewed. See the <a class="reference internal" href="../../faq/contributing.html#new-contributors-faq"><span class="std std-ref">contributing code FAQ</span></a> for some
+ideas here.</p>
+</div>
+<div class="section" id="s-someday-maybe">
+<span id="someday-maybe"></span><h3>几天/可能<a class="headerlink" href="#someday-maybe" title="永久链接至标题">¶</a></h3>
+<p>这个阶段在图表上没有显示。它被谨慎使用，用于追踪高层次的想法或长期的功能请求。</p>
+<p>这些工单并不常见，而且总体上没有多大用处，因为它们没有描述具体的可操作问题。如果提交了一个优秀的补丁，我们可能会考虑在框架中添加这些增强请求。它们不是优先考虑的问题。</p>
+</div>
+</div>
+<div class="section" id="s-other-triage-attributes">
+<span id="other-triage-attributes"></span><h2>其他分类属性<a class="headerlink" href="#other-triage-attributes" title="永久链接至标题">¶</a></h2>
+<p>A number of flags, appearing as checkboxes in Trac, can be set on a ticket:</p>
+<div class="section" id="s-has-patch">
+<span id="has-patch"></span><h3>有补丁<a class="headerlink" href="#has-patch" title="永久链接至标题">¶</a></h3>
+<p>这意味着工单有一个关联的 <a class="reference internal" href="writing-code/submitting-patches.html"><span class="doc">patch</span></a> 。这些将被审阅，看看补丁是否“良好”。</p>
+<p>以下三个字段（需要文档、需要测试、补丁需要改进）仅适用于提供了补丁的情况。</p>
+</div>
+<div class="section" id="s-needs-documentation">
+<span id="needs-documentation"></span><h3>需要文档<a class="headerlink" href="#needs-documentation" title="永久链接至标题">¶</a></h3>
+<p>此标志用于具有需要相关文档的修补程序的工单。完整的特性文档是我们将它们检入代码库之前的先决条件。</p>
+</div>
+<div class="section" id="s-needs-tests">
+<span id="needs-tests"></span><h3>需要测试<a class="headerlink" href="#needs-tests" title="永久链接至标题">¶</a></h3>
+<p>这会将补丁标记为需要相关联的单元测试。同样，这是有效补丁程序的必需部分。</p>
+</div>
+<div class="section" id="s-patch-needs-improvement">
+<span id="patch-needs-improvement"></span><h3>补丁需要改进<a class="headerlink" href="#patch-needs-improvement" title="永久链接至标题">¶</a></h3>
+<p>此标志表示虽然工单 <a href="#id1"><span class="problematic" id="id2">*</span></a>有*个补丁，但还没有完全准备好检入。这可能意味着补丁没有干净地应用，实现中存在缺陷，或者代码不符合我们的标准。</p>
+</div>
+<div class="section" id="s-easy-pickings">
+<span id="easy-pickings"></span><h3>容易挑选<a class="headerlink" href="#easy-pickings" title="永久链接至标题">¶</a></h3>
+<p>需要小的，容易的补丁的工单。</p>
+</div>
+<div class="section" id="s-type">
+<span id="type"></span><h3>类型<a class="headerlink" href="#type" title="永久链接至标题">¶</a></h3>
+<p>工单应该按*类型*分类</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>新特性</dt><dd>为了添加一些新东西。</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>错误</dt><dd>指☞一些损坏的或者行为与预期不符的地方。</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>清理/优化</dt><dd>指那些没有东西被破坏，同时有一些东西可以变得更干净、更好、更快、更强的地方。</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="s-component">
+<span id="component"></span><h3>组件<a class="headerlink" href="#component" title="永久链接至标题">¶</a></h3>
+<p>工单应该被分类到*组件*中，指出它们属于Django代码库的哪个区域。这使得工单更有条理，更容易找到。</p>
+</div>
+<div class="section" id="s-severity">
+<span id="severity"></span><h3>严重性<a class="headerlink" href="#severity" title="永久链接至标题">¶</a></h3>
+<p>The <em>severity</em> attribute is used to identify blockers, that is, issues that
+should get fixed before releasing the next version of Django. Typically those
+issues are bugs causing regressions from earlier versions or potentially
+causing severe data losses. This attribute is quite rarely used and the vast
+majority of tickets have a severity of &quot;Normal&quot;.</p>
+</div>
+<div class="section" id="s-version">
+<span id="version"></span><h3>版本<a class="headerlink" href="#version" title="永久链接至标题">¶</a></h3>
+<p>可以使用*version*属性来指示在哪个版本中发现了报告的bug。</p>
+</div>
+<div class="section" id="s-ui-ux">
+<span id="ui-ux"></span><h3>UI/UX<a class="headerlink" href="#ui-ux" title="永久链接至标题">¶</a></h3>
+<p>此标志用于与用户界面和用户体验问题相关的工单。例如，此标志适用于表单或管理后台接口界面中面向用户的功能。</p>
+</div>
+<div class="section" id="s-cc">
+<span id="cc"></span><h3>副本<a class="headerlink" href="#cc" title="永久链接至标题">¶</a></h3>
+<p>您可以将您的用户名或电子邮件地址添加到该字段，以便在对工单进行新的投稿时收到通知。</p>
+</div>
+<div class="section" id="s-keywords">
+<span id="keywords"></span><h3>关键词<a class="headerlink" href="#keywords" title="永久链接至标题">¶</a></h3>
+<p>使用此字段，您可以为一个工单添加多个关键词标签。这在将几个相关的工单分组时非常有用。关键词可以用逗号或空格分隔。关键词搜索会在关键词的任何位置查找关键词字符串。例如，点击带有关键词 &quot; form &quot; 的工单会显示带有包含字符串 &quot; formset &quot;、&quot; modelformset &quot; 和 &quot; ManagementForm &quot; 的类似关键词标记的工单。</p>
+</div>
+</div>
+<div class="section" id="s-closing-tickets">
+<span id="s-id2"></span><span id="closing-tickets"></span><span id="id2"></span><h2>关闭工单<a class="headerlink" href="#closing-tickets" title="永久链接至标题">¶</a></h2>
+<p>当一个工单已经完成了它的有用的生命周期，是时候关闭它了。不过，关闭工单是一个很大的责任。你必须确保这个问题真的得到了解决，而且你需要记住，工单的报告者可能不乐意关闭他们的工单（除非它被修复了！）。如果你不确定是否要关闭工单，请留下你的注释。</p>
+<p>如果您确实关闭了工单，则应始终确保以下事项：</p>
+<ul class="simple">
+<li>确认问题已经解决了。</li>
+<li>请注释解释关闭工单的决定。</li>
+<li>如果他们有办法改进工单重新开启，让他们知道。</li>
+<li>如果工单重复了，请参考原始工单。还可以通过在原始工单中留下注释来交叉引用已关闭的工单——这允许访问有关报告的错误或请求的功能的更多相关信息。</li>
+<li><a href="#id1"><span class="problematic" id="id2">**</span></a>要有礼貌。<a href="#id3"><span class="problematic" id="id4">**</span></a>没有人喜欢关闭他们的工单。这可能会让人沮丧甚至沮丧。避免让人们拒绝为 Django 贡献的最好方法是礼貌友好，并为他们将来如何改进这张工单和其他工单提供建议。</li>
+</ul>
+<p>工单可以通过多种方式收尾：</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>已修复</dt><dd>在Django中添加补丁并修复问题后使用。</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>无效</dt><dd>如果发现工单不正确，则使用。这意味着工单中的问题实际上是用户错误的结果，或者描述的是Django之外的问题，或者根本不是bug报告或特性请求（例如，一些新用户将支持查询作为工单提交）。</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>不会修复</dt><dd>Used when someone decides that the request isn't appropriate for
+consideration in Django. Sometimes a ticket is closed as &quot;wontfix&quot; with a
+request for the reporter to start a discussion on the <a class="reference external" href="https://forum.djangoproject.com/">Django Forum</a> or
+<a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> mailing list if they feel differently from the
+rationale provided by the person who closed the ticket. Other times, a
+discussion precedes the decision to close a ticket. Always use the forum
+or mailing list to get a consensus before reopening tickets closed as
+&quot;wontfix&quot;.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>重复</dt><dd>当另一张工单涵盖同一问题时使用。通过关闭重复工单，我们将所有讨论放在一个地方，这对每个人都有帮助。</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>对我有用</dt><dd>当工单中没有足够的细节来复现原始错误时使用。</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>需要信息</dt><dd>当工单不包含足够的信息来复现报告的问题，但可能仍然有效时使用。提供更多信息后，应重新打开工单。</dd>
+</dl>
+</li>
+</ul>
+<p>If you believe that the ticket was closed in error -- because you're
+still having the issue, or it's popped up somewhere else, or the triagers have
+made a mistake -- please reopen the ticket and provide further information.
+Again, please do not reopen tickets that have been marked as &quot;wontfix&quot; and
+bring the issue to the <a class="reference external" href="https://forum.djangoproject.com/">Django Forum</a> or <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> instead.</p>
+</div>
+<div class="section" id="s-how-can-i-help-with-triaging">
+<span id="s-id3"></span><span id="how-can-i-help-with-triaging"></span><span id="id3"></span><h2>我能帮你怎么做分类？<a class="headerlink" href="#how-can-i-help-with-triaging" title="永久链接至标题">¶</a></h2>
+<p>分流过程主要由社区成员推动。真的，<a href="#id1"><span class="problematic" id="id2">**</span></a>任何人**都能帮上忙。</p>
+<p>要想参与其中，首先要 “在Trac上创建一个账户”_ 。如果您有账户但忘记了密码，可以使用 “密码重置页”_ 重置它。</p>
+<p>然后，你可这样帮忙：</p>
+<ul class="simple">
+<li>以“无效”、“工作表”或“复制”或“wontfix”关闭“未审核”票据。</li>
+<li>Closing &quot;Unreviewed&quot; tickets as &quot;needsinfo&quot; when the description is too
+sparse to be actionable, or when they're feature requests requiring a
+discussion on the <a class="reference external" href="https://forum.djangoproject.com/">Django Forum</a> or <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a>.</li>
+<li>当描述太少而无法操作时，或者当它们是需要在| django developers <a href="#id1"><span class="problematic" id="id2">|</span></a>中讨论的功能请求时，将“unreview”工单作为“needsinfo”关闭。</li>
+<li>配置 &quot;<a class="reference external" href="https://code.djangoproject.com/query?status=!closed&amp;easy=1">Easy pickings</a>&quot; 标志，用于较小且相对简单的工单。</li>
+<li>设置尚未分类的工单的 <em>类型</em> 。</li>
+<li>检查原工单是否仍然有效。如果一个工单在一长段时间里未发现任何活动，则有可能其问题已经修复但工单尚未关闭。</li>
+<li>Identifying trends and themes in the tickets. If there are a lot of bug
+reports about a particular part of Django, it may indicate we should
+consider refactoring that part of the code. If a trend is emerging,
+you should raise it for discussion (referencing the relevant tickets)
+on the <a class="reference external" href="https://forum.djangoproject.com/">Django Forum</a> or <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a>.</li>
+<li>验证其他用户提交的修补程序是否正确。如果它们是正确的并且还包含适当的文档和测试，那么将它们移到“准备签入”阶段。如果它们不正确，请留下注释解释原因并设置相应的标志（“补丁需要改进”、“需要测试”等）。</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p><a class="reference external" href="https://code.djangoproject.com/wiki/Reports">Reports page</a> 包含指向许多有用的Trac查询的链接，其中包括一些对筛选工单和查看上面建议的修补程序很有用的查询。</p>
+<p class="last">你可以找到更多的 <a class="reference internal" href="new-contributors.html"><span class="doc">对新贡献者的建议</span></a> 。</p>
+</div>
+<p>但是，我们确实要求在工单数据库中工作的所有普通社区成员：</p>
+<ul class="simple">
+<li>Please <strong>don't</strong> promote your own tickets to &quot;Ready for checkin&quot;. You
+may mark other people's tickets that you've reviewed as &quot;Ready for
+checkin&quot;, but you should get at minimum one other community member to
+review a patch that you submit.</li>
+<li>Please <strong>don't</strong> reverse a decision without posting a message to the
+<a class="reference external" href="https://forum.djangoproject.com/">Django Forum</a> or <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> to find consensus.</li>
+<li>If you're unsure if you should be making a change, don't make the
+change but instead leave a comment with your concerns on the ticket,
+or post a message to the <a class="reference external" href="https://forum.djangoproject.com/">Django Forum</a> or <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a>. It's okay to
+be unsure, but your input is still valuable.</li>
+</ul>
+</div>
+<div class="section" id="s-bisecting-a-regression">
+<span id="bisecting-a-regression"></span><h2>平等回归<a class="headerlink" href="#bisecting-a-regression" title="永久链接至标题">¶</a></h2>
+<p>回归是一些较新版本的Django中存在，而较旧的版本中没有的错误。 引入回归的提交是非常有用的信息。了解导致行为改变的提交有助于识别改变是有意的还是无意的副作用。以下是您如何确定这个的。</p>
+<p>Begin by writing a regression test for Django's test suite for the issue. For
+example, we'll pretend we're debugging a regression in migrations. After you've
+written the test and confirmed that it fails on the latest main branch, put it
+in a separate file that you can run standalone. For our example, we'll pretend
+we created <code class="docutils literal notranslate"><span class="pre">tests/migrations/test_regression.py</span></code>, which can be run with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./runtests.py migrations.test_regression
+</pre></div>
+</div>
+<p>接下来，我们将当前历史点标记为&quot;不好&quot;，因为测试失败：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git bisect bad
+You need to start by <span class="s2">&quot;git bisect start&quot;</span>
+Do you want me to <span class="k">do</span> it <span class="k">for</span> you <span class="o">[</span>Y/n<span class="o">]</span>? y
+</pre></div>
+</div>
+<p>Now, we need to find a point in git history before the regression was
+introduced (i.e. a point where the test passes). Use something like
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">HEAD~100</span></code> to check out an earlier revision (100 commits earlier,
+in this case). Check if the test fails. If so, mark that point as &quot;bad&quot;
+(<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">bisect</span> <span class="pre">bad</span></code>), then check out an earlier revision and recheck. Once you
+find a revision where your test passes, mark it as &quot;good&quot;:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git bisect good
+Bisecting: X revisions left to <span class="nb">test</span> after this <span class="o">(</span>roughly Y steps<span class="o">)</span>
+...
+</pre></div>
+</div>
+<p>Now we're ready for the fun part: using <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">bisect</span> <span class="pre">run</span></code> to automate the rest
+of the process:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git bisect run tests/runtests.py migrations.test_regression
+</pre></div>
+</div>
+<p>您应该看到 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">bisect</span></code> 使用二分搜索来自动检查好提交和坏提交之间的修订，直到找到测试失败的第一个“坏”提交为止。</p>
+<p>现在，在Trac工单上报告您的结果，并在附件中包含回归测试。当某人为该错误编写修复程序时，他们已经以您的测试为起点。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">分类工单</a><ul>
+<li><a class="reference internal" href="#triage-workflow">分诊工作流</a></li>
+<li><a class="reference internal" href="#triage-stages">分类阶段</a><ul>
+<li><a class="reference internal" href="#unreviewed">没有审阅</a></li>
+<li><a class="reference internal" href="#accepted">已接受</a></li>
+<li><a class="reference internal" href="#ready-for-checkin">准备收入</a></li>
+<li><a class="reference internal" href="#someday-maybe">几天/可能</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other-triage-attributes">其他分类属性</a><ul>
+<li><a class="reference internal" href="#has-patch">有补丁</a></li>
+<li><a class="reference internal" href="#needs-documentation">需要文档</a></li>
+<li><a class="reference internal" href="#needs-tests">需要测试</a></li>
+<li><a class="reference internal" href="#patch-needs-improvement">补丁需要改进</a></li>
+<li><a class="reference internal" href="#easy-pickings">容易挑选</a></li>
+<li><a class="reference internal" href="#type">类型</a></li>
+<li><a class="reference internal" href="#component">组件</a></li>
+<li><a class="reference internal" href="#severity">严重性</a></li>
+<li><a class="reference internal" href="#version">版本</a></li>
+<li><a class="reference internal" href="#ui-ux">UI/UX</a></li>
+<li><a class="reference internal" href="#cc">副本</a></li>
+<li><a class="reference internal" href="#keywords">关键词</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#closing-tickets">关闭工单</a></li>
+<li><a class="reference internal" href="#how-can-i-help-with-triaging">我能帮你怎么做分类？</a></li>
+<li><a class="reference internal" href="#bisecting-a-regression">平等回归</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="bugs-and-features.html"
+                          title="上一章">报告问题和请求新功能</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="writing-code/index.html"
+                          title="下一章">编写代码</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/internals/contributing/triaging-tickets.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="bugs-and-features.html" title="报告问题和请求新功能">previous</a>
+     |
+    <a href="../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="writing-code/index.html" title="编写代码">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

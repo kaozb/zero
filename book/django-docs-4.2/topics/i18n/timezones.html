@@ -1,0 +1,610 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>时区 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="日志" href="../logging.html" />
+    <link rel="prev" title="本地格式化" href="formatting.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="formatting.html" title="本地格式化">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="../logging.html" title="日志">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-i18n-timezones">
+            
+  <div class="section" id="s-time-zones">
+<span id="time-zones"></span><h1>时区<a class="headerlink" href="#time-zones" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-overview">
+<span id="s-time-zones-overview"></span><span id="overview"></span><span id="time-zones-overview"></span><h2>概况<a class="headerlink" href="#overview" title="永久链接至标题">¶</a></h2>
+<p>当启用对时区的支持时，Django 在数据库中以 UTC 为单位存储日期时间信息，在内部使用具有时区的日期时间对象，并在模板和表单中将其转换为最终用户的时区。</p>
+<p>如果用户居住在多个时区时，这会很方便。你要根据用户的时间来显示日期信息。</p>
+<p>即使你的网站只在一个时区提供服务，在你的数据库中用 UTC 存储数据仍然是一个好的做法。主要原因是夏令时（DST）。许多国家都有一个 DST 系统，春天的时钟会向前移动，秋天的时钟会向后移动。当转换发生时，如果你使用当地时间工作，你很可能会遇到一年两次的错误。这可能对你的博客并不重要，但如果你每年向客户多收或少收一个小时的费用，每年两次，这就是一个问题。解决这个问题的办法是在代码中使用 UTC，只在与终端用户互动时使用当地时间。</p>
+<p>时区支持在默认情况下是禁用的。要启用它，请在你的配置文件中设置 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">True</span></code></a>。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在 Django 5.0 中，时区支持将被默认启用。</p>
+</div>
+<p>时区支持使用 <a class="reference external" href="https://docs.python.org/3/library/zoneinfo.html#module-zoneinfo" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoneinfo</span></code></a>，它是 Python 3.9 中 Python 标准库的一部分。 如果你使用 Python 3.8，<code class="docutils literal notranslate"><span class="pre">backports.zoneinfo</span></code> 包会自动与 Django 一起安装。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">方便起见，在执行 <a class="reference internal" href="../../ref/django-admin.html#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">startproject</span></code></a> 后创建默认的 <code class="file docutils literal notranslate"><span class="pre">settings.py</span></code> 文件中包含了 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">True</span></code></a> 。</p>
+</div>
+<p>如果你正在解决一个特定问题，请从阅读 <a class="reference internal" href="#time-zones-faq"><span class="std std-ref">时区常见问题</span></a> 开始。</p>
+</div>
+<div class="section" id="s-concepts">
+<span id="concepts"></span><h2>概念<a class="headerlink" href="#concepts" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-naive-and-aware-datetime-objects">
+<span id="s-naive-vs-aware-datetimes"></span><span id="naive-and-aware-datetime-objects"></span><span id="naive-vs-aware-datetimes"></span><h3>无时区日期时间对象与有时区日期对象<a class="headerlink" href="#naive-and-aware-datetime-objects" title="永久链接至标题">¶</a></h3>
+<p>Python 的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code></a> 对象有一个 <code class="docutils literal notranslate"><span class="pre">tzinfo</span></code> 属性，可以用来存储时区信息，表示为 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.tzinfo</span></code></a> 子类的一个实例。当设置这个属性并描述了偏移量后，日期对象就是 <strong>有时区</strong> 的，否则就是 <strong>无时区</strong> 的。</p>
+<p>你可以使用 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.is_aware" title="django.utils.timezone.is_aware"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_aware()</span></code></a> 和 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.is_naive" title="django.utils.timezone.is_naive"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_naive()</span></code></a> 来确定日期时间是有时区的还是无时区的。</p>
+<p>当关闭了时区支持，Django 会在本地时间里使用无时区日期时间对象。这对很多用例来说足够了。在这个模式下，如果你想获取当前时间，你可以这么写：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>当启用了时区支持 (<a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ=True</span></code></a>) ，Django 使用有时区日期时间对象。如果你的代码创建了日期时间对象，她们应该也是有时区的。在这个模式下，上面的例子变成：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">timezone</span>
+
+<span class="n">now</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">处理有时区日期时间对象并不总是直观的。例如，标准日期时间构造函数的 <code class="docutils literal notranslate"><span class="pre">tzinfo</span></code> 参数对于 DST 的时区并不可靠。使用 UTC 通常是安全的；如果你使用其他时区，你应该仔细查看 <a class="reference external" href="https://docs.python.org/3/library/zoneinfo.html#module-zoneinfo" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoneinfo</span></code></a> 文档。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>Python 的 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.time" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.time</span></code></a> 对象具有 <code class="docutils literal notranslate"><span class="pre">tzinfo</span></code> 属性，PostgreSQL 也具有匹配 <code class="docutils literal notranslate"><span class="pre">带有时区时间</span></code> 的类型。但是，正如 PostgreSQL 所描述的，这个类型 &quot;展示了导致可用性存疑的特性&quot;。</p>
+<p class="last">Django 只支持无时区时间对象，如果打算保存有时区时间对象会引发异常，因为没有关联日期的有时区时间是没有意义的。</p>
+</div>
+</div>
+<div class="section" id="s-interpretation-of-naive-datetime-objects">
+<span id="s-naive-datetime-objects"></span><span id="interpretation-of-naive-datetime-objects"></span><span id="naive-datetime-objects"></span><h3>无时区日期时间对象的说明<a class="headerlink" href="#interpretation-of-naive-datetime-objects" title="永久链接至标题">¶</a></h3>
+<p>当 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，Django 仍然接受无时区日期时间对象，以保持向后兼容。当数据库层收到一个无时区日期时间对象，会试着用 <a class="reference internal" href="#default-current-time-zone"><span class="std std-ref">默认时区</span></a> 进行解释将其变为有时区日期对象，并发出警告。</p>
+<p>不幸的是，在 DST 转换期间，一些日期时间不存在或不明确。这就是为什么你应该在启用时区支持时创建有时区日期时间对象。（参见 <a class="reference external" href="https://docs.python.org/3/library/zoneinfo.html#module-zoneinfo" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">zoneinfo</span> <span class="pre">文档的使用</span> <span class="pre">ZoneInfo</span> <span class="pre">章节</span></code></a> ，了解使用 <code class="docutils literal notranslate"><span class="pre">fold</span></code> 属性来指定在 DST 过渡期间应该适用于日期时间的偏移量的例子。)</p>
+<p>实际上，这种情况很罕见。Django 在模型和表单里为你提供了有时区日期时间对象，并且在大部分时候，新的日期时间对象是通过 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">timedelta</span></code></a> 算法从现有的对象创建的。仅有的经常在应用代码里创建的日期时间是当前时间，<a class="reference internal" href="../../ref/utils.html#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">timezone.now()</span></code></a> 会自动且正确的完成这个操作。</p>
+</div>
+<div class="section" id="s-default-time-zone-and-current-time-zone">
+<span id="s-default-current-time-zone"></span><span id="default-time-zone-and-current-time-zone"></span><span id="default-current-time-zone"></span><h3>默认时区和当前时区<a class="headerlink" href="#default-time-zone-and-current-time-zone" title="永久链接至标题">¶</a></h3>
+<p><strong>默认时区</strong> 是通过 <a class="reference internal" href="../../ref/settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 定义的时区。</p>
+<p><strong>当前时区</strong> 是用来渲染的时区。</p>
+<p>你应该用 <code class="xref py py-func docutils literal notranslate"><span class="pre">activated()</span></code> 将当前时区设置为终端用户的实际时区。否则，将使用默认的时区。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>正如在 <a class="reference internal" href="../../ref/settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 的文档中所解释的，Django 设置环境变量，使其进程在默认时区运行。这与 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 的值或当前时区无关。</p>
+<p class="last">When <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this is useful to preserve
+backwards-compatibility with applications that still rely on local time.
+However, <a class="reference internal" href="#naive-datetime-objects"><span class="std std-ref">as explained above</span></a>, this isn't
+entirely reliable, and you should always work with aware datetimes in UTC
+in your own code. For instance, use <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime.fromtimestamp" title="(在 Python v3.11)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fromtimestamp()</span></code></a>
+and set the <code class="docutils literal notranslate"><span class="pre">tz</span></code> parameter to <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timezone.utc" title="(在 Python v3.11)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">utc</span></code></a>.</p>
+</div>
+</div>
+<div class="section" id="s-selecting-the-current-time-zone">
+<span id="selecting-the-current-time-zone"></span><h3>选择当前时区<a class="headerlink" href="#selecting-the-current-time-zone" title="永久链接至标题">¶</a></h3>
+<p>当前时区相当于当前 <a class="reference internal" href="index.html#term-locale-name"><span class="xref std std-term">区域</span></a> 。但是，Django 没有可用于自动确定用户时区的如  <code class="docutils literal notranslate"><span class="pre">Accept-Language</span></code> 的 HTTP 头。相反，Django 提供了 <a class="reference internal" href="../../ref/utils.html#time-zone-selection-functions"><span class="std std-ref">时区选择函数</span></a> 。使用它们来建立对你有用的时区选择逻辑。</p>
+<p>大多数关心时区的网站都会询问用户居住在哪个时区，并将这些信息存储在用户的个人资料中。<a class="reference external" href="https://docs.python.org/3/library/zoneinfo.html#zoneinfo.available_timezones" title="(在 Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">zoneinfo.available_timezones()</span></code></a> 提供了一组可用的时区，你可以用它来建立一个从可能的地点到时区的映射。</p>
+<p>这里有个在会话(session)里存储当前时区的例子。（为简单起见，它完全跳过了错误处理）</p>
+<p>在 <a class="reference internal" href="../../ref/settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a>: 里添加下面的中间件：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">zoneinfo</span>
+
+<span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">timezone</span>
+
+
+<span class="k">class</span> <span class="nc">TimezoneMiddleware</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">get_response</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_response</span> <span class="o">=</span> <span class="n">get_response</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="n">tzname</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;django_timezone&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tzname</span><span class="p">:</span>
+            <span class="n">timezone</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="n">zoneinfo</span><span class="o">.</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="n">tzname</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">timezone</span><span class="o">.</span><span class="n">deactivate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>创建一个可以设置当前时区的视图：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render</span>
+
+<span class="c1"># Prepare a map of common locations to timezone choices you wish to offer.</span>
+<span class="n">common_timezones</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;London&quot;</span><span class="p">:</span> <span class="s2">&quot;Europe/London&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Paris&quot;</span><span class="p">:</span> <span class="s2">&quot;Europe/Paris&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;New York&quot;</span><span class="p">:</span> <span class="s2">&quot;America/New_York&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">set_timezone</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;django_timezone&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s2">&quot;timezone&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;template.html&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;timezones&quot;</span><span class="p">:</span> <span class="n">common_timezones</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>在  <code class="docutils literal notranslate"><span class="pre">template.html</span></code>&nbsp; 包含了一个发送 <code class="docutils literal notranslate"><span class="pre">POST</span></code> 到视图的表单：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">tz</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">get_current_timezone</span> <span class="k">as</span> <span class="nv">TIME_ZONE</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">form</span> <span class="na">action</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">url</span> <span class="s1">&#39;set_timezone&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;POST&quot;</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">csrf_token</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">label</span> <span class="na">for</span><span class="o">=</span><span class="s">&quot;timezone&quot;</span><span class="p">&gt;</span>Time zone:<span class="p">&lt;/</span><span class="nt">label</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">select</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;timezone&quot;</span><span class="p">&gt;</span>
+        <span class="cp">{%</span> <span class="k">for</span> <span class="nv">city</span><span class="o">,</span> <span class="nv">tz</span> <span class="k">in</span> <span class="nv">timezones</span> <span class="cp">%}</span>
+        <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">tz</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">tz</span> <span class="o">==</span> <span class="nv">TIME_ZONE</span> <span class="cp">%}</span> <span class="na">selected</span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">city</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+        <span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+    <span class="p">&lt;/</span><span class="nt">select</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;Set&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-time-zone-aware-input-in-forms">
+<span id="s-time-zones-in-forms"></span><span id="time-zone-aware-input-in-forms"></span><span id="time-zones-in-forms"></span><h2>表单里有时区的输入<a class="headerlink" href="#time-zone-aware-input-in-forms" title="永久链接至标题">¶</a></h2>
+<p>当启用了时区支持，Django会以 <a class="reference internal" href="#default-current-time-zone"><span class="std std-ref">当前时区</span></a> 解释表单中输入的日期时间，并且在 <code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 中返回有时区日期时间对象。</p>
+<p>转换后的数据时间如果不存在，或者因为属于夏令时过渡期而含糊不清，将被报告为无效的值。</p>
+</div>
+<div class="section" id="s-time-zone-aware-output-in-templates">
+<span id="s-time-zones-in-templates"></span><span id="time-zone-aware-output-in-templates"></span><span id="time-zones-in-templates"></span><h2>模板中有时区的输出<a class="headerlink" href="#time-zone-aware-output-in-templates" title="永久链接至标题">¶</a></h2>
+<p>当启用了时区支持，Django 会在模板中渲染有时区日期时间时，将其转换为当前时区。这非常类似于 <a class="reference internal" href="formatting.html"><span class="doc">格式本地化</span></a> 。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">Django 不会转换无时区日期时间对象，因为它们是含糊不清的，而且当开启了时区支持后，你的代码里绝不应该生成无时区日期时间。但是，你可以使用下面描述的模板过滤器来强制转换。</p>
+</div>
+<p>转换为当地时间并不总是合适的——你或许是为计算机而不是为人类生成输出。下面的过滤器和标签，由  <code class="docutils literal notranslate"><span class="pre">tz</span></code> 模板标签库支持，允许你控制时区转换。</p>
+<div class="section" id="s-template-tags">
+<span id="template-tags"></span><h3>模板标签<a class="headerlink" href="#template-tags" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-localtime">
+<span id="s-std-templatetag-localtime"></span><span id="s-std:templatetag-localtime"></span><span id="localtime"></span><span id="std-templatetag-localtime"></span><span id="std:templatetag-localtime"></span><h4><code class="docutils literal notranslate"><span class="pre">localtime</span></code><a class="headerlink" href="#localtime" title="永久链接至标题">¶</a></h4>
+<p>在包含块里开启或关闭将有时区日期时间对象的转换为当前时区。</p>
+<p>就模板引擎而言，该标签与 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 具有完全相同的效果。它可以更精细地控制转换。</p>
+<p>To activate or deactivate conversion for a template block, use:</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">tz</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">localtime</span> <span class="nv">on</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">value</span> <span class="cp">}}</span>
+<span class="cp">{%</span> <span class="k">endlocaltime</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">localtime</span> <span class="nv">off</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">value</span> <span class="cp">}}</span>
+<span class="cp">{%</span> <span class="k">endlocaltime</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last"><a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 的值在 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">localtime</span> <span class="pre">%}</span></code> 块内被忽略。</p>
+</div>
+</div>
+<div class="section" id="s-timezone">
+<span id="s-std-templatetag-timezone"></span><span id="s-std:templatetag-timezone"></span><span id="timezone"></span><span id="std-templatetag-timezone"></span><span id="std:templatetag-timezone"></span><h4><code class="docutils literal notranslate"><span class="pre">timezone</span></code><a class="headerlink" href="#timezone" title="永久链接至标题">¶</a></h4>
+<p>在包含块内设置或取消当前时区。当没有设置当前时区时，会使用默认时区。</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">tz</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">timezone</span> <span class="s2">&quot;Europe/Paris&quot;</span> <span class="cp">%}</span>
+    Paris time: <span class="cp">{{</span> <span class="nv">value</span> <span class="cp">}}</span>
+<span class="cp">{%</span> <span class="k">endtimezone</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">timezone</span> <span class="kp">None</span> <span class="cp">%}</span>
+    Server time: <span class="cp">{{</span> <span class="nv">value</span> <span class="cp">}}</span>
+<span class="cp">{%</span> <span class="k">endtimezone</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-get-current-timezone">
+<span id="s-std-templatetag-get_current_timezone"></span><span id="s-std:templatetag-get_current_timezone"></span><span id="get-current-timezone"></span><span id="std-templatetag-get_current_timezone"></span><span id="std:templatetag-get_current_timezone"></span><h4><code class="docutils literal notranslate"><span class="pre">get_current_timezone</span></code><a class="headerlink" href="#get-current-timezone" title="永久链接至标题">¶</a></h4>
+<p>You can get the name of the current time zone using the
+<code class="docutils literal notranslate"><span class="pre">get_current_timezone</span></code> tag:</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">get_current_timezone</span> <span class="k">as</span> <span class="nv">TIME_ZONE</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>另外，你可以激活 <a class="reference internal" href="../../ref/templates/api.html#django.template.context_processors.tz" title="django.template.context_processors.tz"><code class="xref py py-func docutils literal notranslate"><span class="pre">tz()</span></code></a> 上下文处理器并使用 <code class="docutils literal notranslate"><span class="pre">TIME_ZONE</span></code> 上下文变量。</p>
+</div>
+</div>
+<div class="section" id="s-template-filters">
+<span id="template-filters"></span><h3>模板过滤器<a class="headerlink" href="#template-filters" title="永久链接至标题">¶</a></h3>
+<p>这些过滤器接受有时区日期时间和无时区日期时间。出于转换目的，它们假设无时区日期时间在默认时区中。它们始终返回有时区日期时间。</p>
+<div class="section" id="s-std-templatefilter-localtime">
+<span id="s-std:templatefilter-localtime"></span><span id="s-id1"></span><span id="std-templatefilter-localtime"></span><span id="std:templatefilter-localtime"></span><span id="id1"></span><h4><code class="docutils literal notranslate"><span class="pre">localtime</span></code><a class="headerlink" href="#std-templatefilter-localtime" title="永久链接至标题">¶</a></h4>
+<p>单一值强制转换为当前时区。</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">tz</span> <span class="cp">%}</span>
+
+<span class="cp">{{</span> <span class="nv">value</span><span class="o">|</span><span class="nf">localtime</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-utc">
+<span id="s-std-templatefilter-utc"></span><span id="s-std:templatefilter-utc"></span><span id="utc"></span><span id="std-templatefilter-utc"></span><span id="std:templatefilter-utc"></span><h4><code class="docutils literal notranslate"><span class="pre">utc</span></code><a class="headerlink" href="#utc" title="永久链接至标题">¶</a></h4>
+<p>单一值强制转换为 UTC 。</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">tz</span> <span class="cp">%}</span>
+
+<span class="cp">{{</span> <span class="nv">value</span><span class="o">|</span><span class="nf">utc</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-std-templatefilter-timezone">
+<span id="s-std:templatefilter-timezone"></span><span id="s-id2"></span><span id="std-templatefilter-timezone"></span><span id="std:templatefilter-timezone"></span><span id="id2"></span><h4><code class="docutils literal notranslate"><span class="pre">timezone</span></code><a class="headerlink" href="#std-templatefilter-timezone" title="永久链接至标题">¶</a></h4>
+<p>单一值强制转换为任意时区。</p>
+<p>参数必须是 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.tzinfo" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tzinfo</span></code></a> 子类实例或时区名。</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">tz</span> <span class="cp">%}</span>
+
+<span class="cp">{{</span> <span class="nv">value</span><span class="o">|</span><span class="nf">timezone</span><span class="s2">:&quot;Europe/Paris&quot;</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-migration-guide">
+<span id="s-time-zones-migration-guide"></span><span id="migration-guide"></span><span id="time-zones-migration-guide"></span><h2>迁移指南<a class="headerlink" href="#migration-guide" title="永久链接至标题">¶</a></h2>
+<p>以下是迁移在 Django 支持时区之前已有项目的方法。</p>
+<div class="section" id="s-database">
+<span id="database"></span><h3>数据库<a class="headerlink" href="#database" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-postgresql">
+<span id="postgresql"></span><h4>PostgreSQL<a class="headerlink" href="#postgresql" title="永久链接至标题">¶</a></h4>
+<p>PostgreSQL 后端存储将日期时间存储为 <code class="docutils literal notranslate"><span class="pre">带时区的时间戳</span></code> 。事实上，这意味着它在存储时会将日期从连接的时区转换为UTC，并在检索时将UTC转换为连接的时区。</p>
+<p>因此，如果你正在使用 PostgreSQL，你可以在 <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">False</span></code> 和  <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">True</span></code> 之间自由选择，数据库连接的时区将分别设置为 <a class="reference internal" href="../../ref/settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 或 <code class="docutils literal notranslate"><span class="pre">UTC</span></code> ，以便 Django 在所有情况下将得到正确的日期。你不需要执行任何数据转换。</p>
+</div>
+<div class="section" id="s-other-databases">
+<span id="other-databases"></span><h4>其他数据库<a class="headerlink" href="#other-databases" title="永久链接至标题">¶</a></h4>
+<p>其他后端存储没有时区信息的日期。如果你的选择从 <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">False</span></code> 变为 <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">True</span></code> ，你必须将你的数据从本地时间转换为UTC —— 如果你的当地时间有夏令时时，则不确定。</p>
+</div>
+</div>
+<div class="section" id="s-code">
+<span id="code"></span><h3>代码<a class="headerlink" href="#code" title="永久链接至标题">¶</a></h3>
+<p>第一步是将 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">True</span></code></a> 添加到你的配置文件里。在这点上，大多数情况下都应该起作用。如果你在代码里创建无时区日期时间对象，Django 会在必要时将它们转换为有时区日期时间对象。</p>
+<p>然而，这些转换有可能在夏令时转换时失败，这意味着你并没有获得时区支持的所有好处。而且，在运行的时候很可能会遇到一些问题，因为它无法将无时区日期时间和有时区日期时间进行比较。由于 Django 现在为你提供了 有时区时间，你在比较来自模型或表单的日期与代码里创建的无时区日期时间时，会遇到一些异常。</p>
+<p>第二步是重构你在任何地方实例化的日期时间，将它们转换为有时区日期时间。这可以逐步完成。<a class="reference internal" href="../../ref/utils.html#module-django.utils.timezone" title="django.utils.timezone: Timezone support."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.utils.timezone</span></code></a> 为了代码兼容性而定义了一些方法：<a class="reference internal" href="../../ref/utils.html#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">now()</span></code></a>、 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.is_aware" title="django.utils.timezone.is_aware"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_aware()</span></code></a>、 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.is_naive" title="django.utils.timezone.is_naive"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_naive()</span></code></a>、 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.make_aware" title="django.utils.timezone.make_aware"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_aware()</span></code></a> 和 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.make_naive" title="django.utils.timezone.make_naive"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_naive()</span></code></a> 。</p>
+<p>Finally, in order to help you locate code that needs upgrading, Django raises
+a warning when you attempt to save a naive datetime to the database:</p>
+<div class="highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="x">RuntimeWarning: DateTimeField ModelName.field_name received a naive</span>
+<span class="x">datetime (2012-01-01 00:00:00) while time zone support is active.</span>
+</pre></div>
+</div>
+<p>在开发期间，你可以通过在配置文件中添加下面的代码，使得此类警告变成异常，方便追踪：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span>
+    <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">&quot;DateTimeField .* received a naive datetime&quot;</span><span class="p">,</span>
+    <span class="ne">RuntimeWarning</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">&quot;django\.db\.models\.fields&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-fixtures">
+<span id="fixtures"></span><h3>辅助工具<a class="headerlink" href="#fixtures" title="永久链接至标题">¶</a></h3>
+<p>当序列化有时区日期时间时，会包含 UTC 偏移，如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;2011-09-01T13:20:30+03:00&quot;</span>
+</pre></div>
+</div>
+<p>对于无时区日期时间，它不能这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;2011-09-01T13:20:30&quot;</span>
+</pre></div>
+</div>
+<p>对于带有 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.DateTimeField" title="django.db.models.DateTimeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeField</span></code></a> 的模型，这种差异使得编写一个支持和不支持时区的辅助工具变得不可能。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">False</span></code> 生成辅助工具，或者 Django 1.4 版本之前，使用“无时区”格式化。如果你的项目包含这些辅助工具，则在开始时区支持后，你将会在加载它们时，看到 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeWarning" title="(在 Python v3.11)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeWarning</span></code></a> 。为了避免这些警告，你必须将辅助工具转换为“有时区”格式。</p>
+<p>你可以先使用 <a class="reference internal" href="../../ref/django-admin.html#django-admin-loaddata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">loaddata</span></code></a> 然后 <a class="reference internal" href="../../ref/django-admin.html#django-admin-dumpdata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">dumpdata</span></code></a> 重新生成辅助工具。或者，如果它们足够小，你可以对它们编辑，与将匹配到 <a class="reference internal" href="../../ref/settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 的 UTC 偏移量添加到每个序列化日期时间。</p>
+</div>
+</div>
+<div class="section" id="s-faq">
+<span id="s-time-zones-faq"></span><span id="faq"></span><span id="time-zones-faq"></span><h2>常见问题<a class="headerlink" href="#faq" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-setup">
+<span id="setup"></span><h3>安装<a class="headerlink" href="#setup" title="永久链接至标题">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><strong>我不需要多时区服务。我应该开启时区支持吗？</strong></p>
+<p>是的。当启用时区支持时，Django 会使用一个更准确的本地时间模型。这可以让你避免在夏令时（DST）转换时出现细微的、不可再现的错误。</p>
+<p>开启时区支持后，会遇到一些错误，因为你使用无时区日期时间，而 Django 期望使用有时区日期时间。这些错误在运行测试的时候会显示出来。你会很快学会如何避免错误的操作。</p>
+<p>另一方面，由于缺乏时区支持而导致的错误更难预防、诊断和修复。任何涉及到计划任务或日期时间运算的东西都是微妙错误的候选者，这些错误一年只影响你一次或两次。</p>
+<p>由于这些原因，时区支持在新项目中是默认启用的，除非你有非常好的理由不这样做，否则你应该保持它。</p>
+</li>
+<li><p class="first"><strong>我已经开启了时区支持。我安全了吗？</strong></p>
+<p>也许吧。你可以更好地避免与 DST 有关的错误，但你仍然可以通过不小心把无时区日期时间变成有时区日期时间，反之亦然。</p>
+<p>如果你的应用程序连接到其他系统——例如，如果它查询一个网络服务——请确保日期时间被正确指定。为了安全地传输日期，它们的表示应该包括 UTC 的偏移量，或者它们的值应该是 UTC 的（或者两者都是！）。</p>
+<p>Finally, our calendar system contains interesting edge cases. For example,
+you can't always subtract one year directly from a given date:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">one_year_before</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>  <span class="c1"># Wrong example.</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">value</span><span class="o">.</span><span class="n">year</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">one_year_before</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">datetime.datetime(2011, 3, 1, 10, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">one_year_before</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">day is out of range for month</span>
+</pre></div>
+</div>
+<p>为了正确实现这样的功能，你必须决定 2012-02-29 减去一年是 2011-02-28 还是 2011-03-01，这取决于你的业务需求。</p>
+</li>
+<li><p class="first"><strong>我该如何与存储本地日期时间的数据库进行交互？</strong></p>
+<p>在 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 里将:setting:TIME_ZONE &lt;DATABASE-TIME_ZONE&gt; 选项设置为适合该数据库的时区。</p>
+<p>当 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，这对连接到不支持时区以及不受 Django 管理的数据库很有用。</p>
+</li>
+</ol>
+</div>
+<div class="section" id="s-troubleshooting">
+<span id="troubleshooting"></span><h3>错误调试<a class="headerlink" href="#troubleshooting" title="永久链接至标题">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><strong>我的程序因不能比较带有偏移的无时区日期时间与带有偏移的有时区日期时间而崩溃——怎么回事？</strong></p>
+<p>Let's reproduce this error by comparing a naive and an aware datetime:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">timezone</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aware</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">naive</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">make_naive</span><span class="p">(</span><span class="n">aware</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">naive</span> <span class="o">==</span> <span class="n">aware</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">can&#39;t compare offset-naive and offset-aware datetimes</span>
+</pre></div>
+</div>
+<p>如果遇到这个错误，很可能你的代码正在比较这两件事：</p>
+<ul class="simple">
+<li>Django 支持的日期——比如，读取来自表单或模型字段的值。因为你开启了时区支持，所以它是有时区的。</li>
+<li>通过代码生成了日期时间，它是无时区的（否则你就不会读到这里）。</li>
+</ul>
+<p>一般来说，正确的解决办法是修改代码，用有时区日期时间代替它。</p>
+<p>如果你正在编写可插拔的应用独立于 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 的值运行，你会发现 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.timezone.now()</span></code></a> 很有用。这个函数会在 <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">False</span></code>  时将当前日期和时间以无时区返回，并且在 <code class="docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">True</span></code> 时将当前日期和时间以有时区返回。你可以在需要时添加或减少 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code></a> 。</p>
+</li>
+<li><p class="first"><strong>我发现了很多告警：</strong> <code class="docutils literal notranslate"><span class="pre">RuntimeWarning:</span> <span class="pre">DateTimeField</span> <span class="pre">received</span> <span class="pre">a</span> <span class="pre">naive</span> <span class="pre">datetime</span></code> <code class="docutils literal notranslate"><span class="pre">(YYYY-MM-DD</span> <span class="pre">HH:MM:SS)</span></code> <code class="docutils literal notranslate"><span class="pre">while</span> <span class="pre">time</span> <span class="pre">zone</span> <span class="pre">support</span> <span class="pre">is</span> <span class="pre">active</span></code> <strong>——这样不好吗？</strong></p>
+<p>当启用时区支持后，数据库层会期望仅从你的代码里收到有时区日期时间。这个告警发生在数据库收到无时区日期时间时。这表明你没有为时区支持而完成代码移植。请参考 <a class="reference internal" href="#time-zones-migration-guide"><span class="std std-ref">迁移指南</span></a> 来获取此过程的提示。</p>
+<p>在这期间，为了向后兼容，日期时间被认为处于默认时区内，通常这是你期望的。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">now.date()</span></code> 方法得到的结果 <strong>为什么是昨天（或明天）？</strong></p>
+<p>如果你一直在使用无时区日期时间，你或许相信可以通过调用 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime.date" title="(在 Python v3.11)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">date()</span></code></a> 方法来将日期时间转换为日期。你也认为 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> 和 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 很像，除了它的准确性较差。</p>
+<p>None of this is true in a time zone aware environment:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">zoneinfo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paris_tz</span> <span class="o">=</span> <span class="n">zoneinfo</span><span class="o">.</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="s2">&quot;Europe/Paris&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_york_tz</span> <span class="o">=</span> <span class="n">zoneinfo</span><span class="o">.</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="s2">&quot;America/New_York&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paris</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">paris_tz</span><span class="p">)</span>
+<span class="go"># This is the correct way to convert between time zones.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_york</span> <span class="o">=</span> <span class="n">paris</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">new_york_tz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paris</span> <span class="o">==</span> <span class="n">new_york</span><span class="p">,</span> <span class="n">paris</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">==</span> <span class="n">new_york</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+<span class="go">(True, False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paris</span> <span class="o">-</span> <span class="n">new_york</span><span class="p">,</span> <span class="n">paris</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">-</span> <span class="n">new_york</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+<span class="go">(datetime.timedelta(0), datetime.timedelta(1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paris</span>
+<span class="go">datetime.datetime(2012, 3, 3, 1, 30, tzinfo=zoneinfo.ZoneInfo(key=&#39;Europe/Paris&#39;))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_york</span>
+<span class="go">datetime.datetime(2012, 3, 2, 19, 30, tzinfo=zoneinfo.ZoneInfo(key=&#39;America/New_York&#39;))</span>
+</pre></div>
+</div>
+<p>正如这个例子所显示的，同一个日期时间有不同的日期，这取决于它所代表的时区。但真正的问题是更基本的。</p>
+<p>一个日期时间代表一个 <strong>时间点</strong>。它是绝对的，不依赖任何事物。另一方面，一个日期是一个 <strong>计算概念</strong> 。它是一个时间段，其范围取决于日期所在的时区。如你所见，这两个概念在根本上是不同的，将日期时间转换为日期并不是确定性的操作。</p>
+<p>这在实践中意味着什么？</p>
+<p>通常，你应该避免将 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 转换为 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code></a> 。比如，你可以使用 <a class="reference internal" href="../../ref/templates/builtins.html#std-templatefilter-date"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">date</span></code></a> 模板过滤器来只展示日期时间的日期部分。这个过滤器在格式化之前将日期时间转换为为当前时间，确保显示正确的结果。</p>
+<p>If you really need to do the conversion yourself, you must ensure the
+datetime is converted to the appropriate time zone first. Usually, this
+will be the current timezone:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">timezone</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timezone</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="n">zoneinfo</span><span class="o">.</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="s2">&quot;Asia/Singapore&quot;</span><span class="p">))</span>
+<span class="go"># For this example, we set the time zone to Singapore, but here&#39;s how</span>
+<span class="go"># you would obtain the current time zone in the general case.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">current_tz</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">get_current_timezone</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">local</span> <span class="o">=</span> <span class="n">paris</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">current_tz</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">local</span>
+<span class="go">datetime.datetime(2012, 3, 3, 8, 30, tzinfo=zoneinfo.ZoneInfo(key=&#39;Asia/Singapore&#39;))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">local</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+<span class="go">datetime.date(2012, 3, 3)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>收到“你的数据库安装时区定义了吗？”的错误</strong></p>
+<p>如果你正在使用 MySQL，查看  <a class="reference internal" href="../../ref/databases.html#mysql-time-zone-definitions"><span class="std std-ref">时区定义</span></a> 部分，以获取有关加载时区定义的说明。</p>
+</li>
+</ol>
+</div>
+<div class="section" id="s-usage">
+<span id="usage"></span><h3>用法<a class="headerlink" href="#usage" title="永久链接至标题">¶</a></h3>
+<ol class="arabic">
+<li><p class="first"><strong>我有一个字符串</strong> <code class="docutils literal notranslate"><span class="pre">&quot;2012-02-21</span> <span class="pre">10:28:45&quot;</span></code> <strong>并且我知道时区是</strong> <code class="docutils literal notranslate"><span class="pre">&quot;Europe/Helsinki&quot;</span></code> <strong>。我该如何将其转换为有时区日期时间？</strong></p>
+<p>Here you need to create the required <code class="docutils literal notranslate"><span class="pre">ZoneInfo</span></code> instance and attach it to
+the naïve datetime:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">zoneinfo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.utils.dateparse</span> <span class="kn">import</span> <span class="n">parse_datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">naive</span> <span class="o">=</span> <span class="n">parse_datetime</span><span class="p">(</span><span class="s2">&quot;2012-02-21 10:28:45&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">naive</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">zoneinfo</span><span class="o">.</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="s2">&quot;Europe/Helsinki&quot;</span><span class="p">))</span>
+<span class="go">datetime.datetime(2012, 2, 21, 10, 28, 45, tzinfo=zoneinfo.ZoneInfo(key=&#39;Europe/Helsinki&#39;))</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>如何在当前时区里获取当地时间？</strong></p>
+<p>好吧，首先要问下自己，你真的需要这么做吗？</p>
+<p>当与用户进行交互的时候，你应该只使用当地时间，模板层提供了:ref:过滤器和标签 &lt;time-zones-in-templates&gt; 来将日期时间转换为你选择的时区。</p>
+<p>而且，Python 知道如何去比较有时区日期时间，并在必要时考虑 UTC 偏移量。使用 UTC 编写所有模型和视图代码里很容易（并且可能很快）。因此，在大部分情况下，由 <a class="reference internal" href="../../ref/utils.html#django.utils.timezone.now" title="django.utils.timezone.now"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.timezone.now()</span></code></a> 返回的 UTC 日期时间足够了。</p>
+<p>For the sake of completeness, though, if you really want the local time
+in the current time zone, here's how you can obtain it:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">timezone</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timezone</span><span class="o">.</span><span class="n">localtime</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+<span class="go">datetime.datetime(2012, 3, 3, 20, 10, 53, 873365, tzinfo=zoneinfo.ZoneInfo(key=&#39;Europe/Paris&#39;))</span>
+</pre></div>
+</div>
+<p>在这个例子里，当前时区是 <code class="docutils literal notranslate"><span class="pre">&quot;Europe/Paris&quot;</span></code> 。</p>
+</li>
+<li><p class="first">如何查看所有可用时区？</p>
+<p><a class="reference external" href="https://docs.python.org/3/library/zoneinfo.html#zoneinfo.available_timezones" title="(在 Python v3.11)"><code class="xref py py-func docutils literal notranslate"><span class="pre">zoneinfo.available_timezones()</span></code></a> 为你的系统提供 IANA 时区的所有有效键集。关于使用注意事项，请参见文档。</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">时区</a><ul>
+<li><a class="reference internal" href="#overview">概况</a></li>
+<li><a class="reference internal" href="#concepts">概念</a><ul>
+<li><a class="reference internal" href="#naive-and-aware-datetime-objects">无时区日期时间对象与有时区日期对象</a></li>
+<li><a class="reference internal" href="#interpretation-of-naive-datetime-objects">无时区日期时间对象的说明</a></li>
+<li><a class="reference internal" href="#default-time-zone-and-current-time-zone">默认时区和当前时区</a></li>
+<li><a class="reference internal" href="#selecting-the-current-time-zone">选择当前时区</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#time-zone-aware-input-in-forms">表单里有时区的输入</a></li>
+<li><a class="reference internal" href="#time-zone-aware-output-in-templates">模板中有时区的输出</a><ul>
+<li><a class="reference internal" href="#template-tags">模板标签</a><ul>
+<li><a class="reference internal" href="#localtime"><code class="docutils literal notranslate"><span class="pre">localtime</span></code></a></li>
+<li><a class="reference internal" href="#timezone"><code class="docutils literal notranslate"><span class="pre">timezone</span></code></a></li>
+<li><a class="reference internal" href="#get-current-timezone"><code class="docutils literal notranslate"><span class="pre">get_current_timezone</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#template-filters">模板过滤器</a><ul>
+<li><a class="reference internal" href="#std-templatefilter-localtime"><code class="docutils literal notranslate"><span class="pre">localtime</span></code></a></li>
+<li><a class="reference internal" href="#utc"><code class="docutils literal notranslate"><span class="pre">utc</span></code></a></li>
+<li><a class="reference internal" href="#std-templatefilter-timezone"><code class="docutils literal notranslate"><span class="pre">timezone</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#migration-guide">迁移指南</a><ul>
+<li><a class="reference internal" href="#database">数据库</a><ul>
+<li><a class="reference internal" href="#postgresql">PostgreSQL</a></li>
+<li><a class="reference internal" href="#other-databases">其他数据库</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#code">代码</a></li>
+<li><a class="reference internal" href="#fixtures">辅助工具</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#faq">常见问题</a><ul>
+<li><a class="reference internal" href="#setup">安装</a></li>
+<li><a class="reference internal" href="#troubleshooting">错误调试</a></li>
+<li><a class="reference internal" href="#usage">用法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="formatting.html"
+                          title="上一章">本地格式化</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../logging.html"
+                          title="下一章">日志</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/topics/i18n/timezones.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="formatting.html" title="本地格式化">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="../logging.html" title="日志">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

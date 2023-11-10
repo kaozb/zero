@@ -1,0 +1,1654 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>使用 Django 的验证系统 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="Django中的密码管理" href="passwords.html" />
+    <link rel="prev" title="Django中的用户认证" href="index.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../../static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="index.html" title="Django中的用户认证">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="passwords.html" title="Django中的密码管理">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-auth-default">
+            
+  <div class="section" id="s-using-the-django-authentication-system">
+<span id="using-the-django-authentication-system"></span><h1>使用 Django 的验证系统<a class="headerlink" href="#using-the-django-authentication-system" title="永久链接至标题">¶</a></h1>
+<p>本文档介绍了 Django 验证系统在默认配置下的使用方法。默认配置满足最常见的项目需求，可以处理相当多的任务，还有一个安全的密码和权限实现。对于验证需求与默认配置不同的项目，Django 支持对身份验证进行扩展和定制。</p>
+<p>Django 验证同时提供身份验证和授权，通常称为身份验证系统，因为这些功能在某种程度上是耦合的。</p>
+<div class="section" id="s-user-objects">
+<span id="s-id1"></span><span id="user-objects"></span><span id="id1"></span><h2><code class="docutils literal notranslate"><span class="pre">User</span></code> 对象<a class="headerlink" href="#user-objects" title="永久链接至标题">¶</a></h2>
+<p>用户对象是认证系统的核心。它通常代表了与你的站点交互的人员，并用于允许诸如限制访问、注册用户配置文件、将内容与创建者关联等功能。Django 的认证框架中用户只有一个类，例如 “超级管理员”或“普通管理员”只是具有特殊属性集的用户对象，而不是用户对象的不同类。</p>
+<p>默认用户的主要属性是：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.username" title="django.contrib.auth.models.User.username"><code class="xref py py-attr docutils literal notranslate"><span class="pre">username</span></code></a></li>
+<li><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.password" title="django.contrib.auth.models.User.password"><code class="xref py py-attr docutils literal notranslate"><span class="pre">password</span></code></a></li>
+<li><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.email" title="django.contrib.auth.models.User.email"><code class="xref py py-attr docutils literal notranslate"><span class="pre">email</span></code></a></li>
+<li><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.first_name" title="django.contrib.auth.models.User.first_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">first_name</span></code></a></li>
+<li><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.last_name" title="django.contrib.auth.models.User.last_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">last_name</span></code></a></li>
+</ul>
+<p>请参阅完整的API文档 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">full</span> <span class="pre">API</span> <span class="pre">documentation</span></code></a> 以获得完整的参考，下面的文档主要以任务为导向。</p>
+<div class="section" id="s-creating-users">
+<span id="s-topics-auth-creating-users"></span><span id="creating-users"></span><span id="topics-auth-creating-users"></span><h3>创建用户<a class="headerlink" href="#creating-users" title="永久链接至标题">¶</a></h3>
+<p>The most direct way to create users is to use the included
+<a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.UserManager.create_user" title="django.contrib.auth.models.UserManager.create_user"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_user()</span></code></a> helper function:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span><span class="s2">&quot;john&quot;</span><span class="p">,</span> <span class="s2">&quot;lennon@thebeatles.com&quot;</span><span class="p">,</span> <span class="s2">&quot;johnpassword&quot;</span><span class="p">)</span>
+
+<span class="go"># At this point, user is a User object that has already been saved</span>
+<span class="go"># to the database. You can continue to change its attributes</span>
+<span class="go"># if you want to change other fields.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">last_name</span> <span class="o">=</span> <span class="s2">&quot;Lennon&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>如果你已经安装了 Django admin 管理后台，你也可以在 admin 管理后台交互式地创建用户:ref:create users interactively &lt;auth-admin&gt; 。</p>
+</div>
+<div class="section" id="s-creating-superusers">
+<span id="s-topics-auth-creating-superusers"></span><span id="creating-superusers"></span><span id="topics-auth-creating-superusers"></span><h3>创建超级用户<a class="headerlink" href="#creating-superusers" title="永久链接至标题">¶</a></h3>
+<p>Create superusers using the <a class="reference internal" href="../../ref/django-admin.html#django-admin-createsuperuser"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">createsuperuser</span></code></a> command:</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py createsuperuser --username<span class="o">=</span>joe --email<span class="o">=</span>joe@example.com
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py createsuperuser --username=joe --email=joe@example.com
+</pre></div>
+</section>
+</div>
+<p>你将会被提示输入密码，完成之后，超级管理员就被创建成功了。如果你没有填写参数 <code class="xref std std-option docutils literal notranslate"><span class="pre">--username</span> <span class="pre">&lt;createsuperuser</span> <span class="pre">--username&gt;</span> <span class="pre">`</span> <span class="pre">or</span> <span class="pre">:option:</span></code>--email &lt;createsuperuser --email&gt;` ，也将会被提示输入这些值。</p>
+</div>
+<div class="section" id="s-changing-passwords">
+<span id="changing-passwords"></span><h3>更改密码<a class="headerlink" href="#changing-passwords" title="永久链接至标题">¶</a></h3>
+<p>Django 不会在用户模型里保存原始(明文)密码，而只会存储哈希值(请参阅文档 如何管理密码  <a class="reference internal" href="passwords.html"><span class="doc">documentation of how passwords are managed</span></a> ) 。因此，请不要试图直接操作用户的密码，这就是创建用户需要辅助函数的原因。</p>
+<p>更改一个用户的密码，你有几个选择：</p>
+<p><a class="reference internal" href="../../ref/django-admin.html#django-admin-changepassword"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">changepassword</span> <span class="pre">*username*</span></code></a> 提供了在命令行修改用户密码的方法。它会提示你输入两次新密码，如果操作成功，新密码就立刻生效。如果你没有提供参数 username ，那么将会尝试修改当前系统用户的密码。</p>
+<p>你也可以在代码里修改密码，使用 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.set_password" title="django.contrib.auth.models.User.set_password"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_password()</span></code></a>:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;john&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="o">.</span><span class="n">set_password</span><span class="p">(</span><span class="s2">&quot;new password&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>如果你已经按照了 Django admin 管理后台，你也可以在管理后台页面修改密码（请参阅 :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>authentication system's admin pages ` ）。</p>
+<p>Django 还提供了允许用户自行修改密码的 :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>views ` 和 :ref:<a href="#id3"><span class="problematic" id="id4">`</span></a>forms ` 。</p>
+<p>修改密码将会注销用户的所有会话。查看详情请参阅 <a class="reference internal" href="#session-invalidation-on-password-change"><span class="std std-ref">密码更改时会话失效</span></a> 。</p>
+</div>
+<div class="section" id="s-authenticating-users">
+<span id="authenticating-users"></span><h3>验证用户<a class="headerlink" href="#authenticating-users" title="永久链接至标题">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.authenticate">
+<code class="sig-name descname"><span class="pre">authenticate</span></code>(<em><span class="n"><span class="pre">request</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">credentials</span></span></em>)<a class="headerlink" href="#django.contrib.auth.authenticate" title="永久链接至目标">¶</a></dt>
+<dd><p>使用 <a class="reference internal" href="#django.contrib.auth.authenticate" title="django.contrib.auth.authenticate"><code class="xref py py-func docutils literal notranslate"><span class="pre">authenticate()</span></code></a> 来验证用户。它使用 <code class="docutils literal notranslate"><span class="pre">username</span></code> 和 <code class="docutils literal notranslate"><span class="pre">password</span></code> 作为参数来验证，对每个身份验证后端( <span class="xref std std-ref">authentication backend ` )进行检查。如果后端验证有效，则返回一个 :class:`~django.contrib.auth.models.User</span>&nbsp;对象。如果后端引发 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.PermissionDenied" title="django.core.exceptions.PermissionDenied"><code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionDenied</span></code></a> 错误，将返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">authenticate</span>
+
+<span class="n">user</span> <span class="o">=</span> <span class="n">authenticate</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;john&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;secret&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># A backend authenticated the credentials</span>
+    <span class="o">...</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># No backend authenticated the credentials</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">request</span></code> 是可选的 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> ，它在身份验证后端上的 <code class="docutils literal notranslate"><span class="pre">authenticate()</span></code> 方法来传递。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">这个一个很底层的验证方法。比如，可以通过 <a class="reference internal" href="../../ref/middleware.html#django.contrib.auth.middleware.RemoteUserMiddleware" title="django.contrib.auth.middleware.RemoteUserMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">RemoteUserMiddleware</span></code></a> 来验证。除非你在编写自己的身份验证系统，否则你可能不会用到它。如果你正在寻找用户登录的方法，请参阅 <a class="reference internal" href="#django.contrib.auth.views.LoginView" title="django.contrib.auth.views.LoginView"><code class="xref py py-class docutils literal notranslate"><span class="pre">LoginView</span></code></a> 。</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-permissions-and-authorization">
+<span id="s-topic-authorization"></span><span id="permissions-and-authorization"></span><span id="topic-authorization"></span><h2>权限和认证<a class="headerlink" href="#permissions-and-authorization" title="永久链接至标题">¶</a></h2>
+<p>Django 内置了一个权限系统。它提供了为指定的用户和用户组分配权限的方法。</p>
+<p>它在 Django 管理后台界面里使用，但你也可以在自己的代码中使用它。</p>
+<p>Django 的 admin 页面使用了如下权限：</p>
+<ul class="simple">
+<li>访问查看的对象仅限于具有该类型对象的“查看”或“更改”权限的用户。</li>
+<li>访问“添加”表单和添加对象仅限于具有该类型对象的“添加”权限的用户。</li>
+<li>访问修改列表、查看“修改”表单和修改对象仅限于对该类型对象的“修改”权限的用户。</li>
+<li>访问删除对象仅限于对该类型对象的“删除”权限的用户。</li>
+</ul>
+<p>不仅可以为每个对象类型设置权限，还可以为每个指定对象实例设置权限。通过使用 <a class="reference internal" href="../../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin" title="django.contrib.admin.ModelAdmin"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelAdmin</span></code></a> 类提供的 <a class="reference internal" href="../../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin.has_view_permission" title="django.contrib.admin.ModelAdmin.has_view_permission"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has_view_permission()</span></code></a>, <a class="reference internal" href="../../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin.has_add_permission" title="django.contrib.admin.ModelAdmin.has_add_permission"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has_add_permission()</span></code></a>, <a class="reference internal" href="../../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin.has_change_permission" title="django.contrib.admin.ModelAdmin.has_change_permission"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has_change_permission()</span></code></a> 和 <a class="reference internal" href="../../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin.has_delete_permission" title="django.contrib.admin.ModelAdmin.has_delete_permission"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has_delete_permission()</span></code></a>&nbsp;方法，可以为同一类型的不同实例定制权限。</p>
+<p><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a> 对象有两个多对多字段:<code class="docutils literal notranslate"><span class="pre">groups</span></code> 和 <code class="docutils literal notranslate"><span class="pre">user_permissions</span></code>。 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a>&nbsp;对象可以像访问其他 :doc:<a href="#id1"><span class="problematic" id="id2">`</span></a>Django model <a href="#id3"><span class="problematic" id="id4">`</span></a>: 一样访问他们的相关对象。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myuser</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">set</span><span class="p">([</span><span class="n">group_list</span><span class="p">])</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">user_permissions</span><span class="o">.</span><span class="n">set</span><span class="p">([</span><span class="n">permission_list</span><span class="p">])</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">user_permissions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">permission</span><span class="p">,</span> <span class="n">permission</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">user_permissions</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">permission</span><span class="p">,</span> <span class="n">permission</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">myuser</span><span class="o">.</span><span class="n">user_permissions</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="s-default-permissions">
+<span id="default-permissions"></span><h3>默认权限<a class="headerlink" href="#default-permissions" title="永久链接至标题">¶</a></h3>
+<p>当 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 设置了 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code>&nbsp;时，它将确保你的每个 Django 模型被创建时有四个默认权限：添加、修改、删除和查看。</p>
+<p>运行 <a class="reference internal" href="../../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code></a> 时将创建这些权限。当你添加 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code> 到 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 后第一次运行 <code class="docutils literal notranslate"><span class="pre">迁移</span></code> ，将会为所有只去已经安装过的模型以及现在正在安装的模型创建这些默认的权限。之后，每次你运行 <a class="reference internal" href="../../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code></a> 都会为新模型创建默认权限 (创建权限的函数连接 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 信号)。</p>
+<p>假设你有一个名为 <code class="docutils literal notranslate"><span class="pre">foo</span></code> 应用程序和一个名为 <code class="docutils literal notranslate"><span class="pre">Bar</span></code> 的模型，要测试基础权限，你应该使用：</p>
+<ul class="simple">
+<li>添加：<code class="docutils literal notranslate"><span class="pre">user.has_perm('foo.add_bar')</span></code></li>
+<li>修改：<code class="docutils literal notranslate"><span class="pre">user.has_perm('foo.change_bar')</span></code></li>
+<li>删除：<code class="docutils literal notranslate"><span class="pre">user.has_perm('foo.delete_bar')</span></code></li>
+<li>查看：<code class="docutils literal notranslate"><span class="pre">user.has_perm('foo.view_bar')</span></code></li>
+</ul>
+<p>权限模型很少会被直接访问。</p>
+</div>
+<div class="section" id="s-groups">
+<span id="groups"></span><h3>组<a class="headerlink" href="#groups" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.Group" title="django.contrib.auth.models.Group"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.contrib.auth.models.Group</span></code></a> 模型是对用户进行分类的通用方法，因此您可以将权限或其他标签应用于这些用户。用户可以属于任意数量的组。</p>
+<p>组里的用户会自动拥有该组的权限。举例，如果 <code class="docutils literal notranslate"><span class="pre">Site</span> <span class="pre">editors</span></code>&nbsp;组有修改网站首页的权限，那么该组的任何成员都有这个权限。</p>
+<p>除权限外，组是一个方便的途径，可以给用户分类，为其提供一些标签或扩展功能。例如，你可以创建一个组 <code class="docutils literal notranslate"><span class="pre">'Special</span> <span class="pre">users'</span></code>，并在编写的代码里让该组成员访问网站仅限会员部分的内容，或者对该组成员发送仅限会员查看的电子邮件。</p>
+</div>
+<div class="section" id="s-programmatically-creating-permissions">
+<span id="programmatically-creating-permissions"></span><h3>以编程方式创建权限<a class="headerlink" href="#programmatically-creating-permissions" title="永久链接至标题">¶</a></h3>
+<p>虽然可以在模型的  <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 类中定义 <a class="reference internal" href="customizing.html#custom-permissions"><span class="std std-ref">custom permissions</span></a> ，你也可以直接创建权限。例如，你可以为 <code class="docutils literal notranslate"><span class="pre">BlogPost</span></code> 模型创建 <code class="docutils literal notranslate"><span class="pre">can_publish</span></code> 权限。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">BlogPost</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">Permission</span>
+<span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+
+<span class="n">content_type</span> <span class="o">=</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_for_model</span><span class="p">(</span><span class="n">BlogPost</span><span class="p">)</span>
+<span class="n">permission</span> <span class="o">=</span> <span class="n">Permission</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">codename</span><span class="o">=</span><span class="s2">&quot;can_publish&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Can Publish Posts&quot;</span><span class="p">,</span>
+    <span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>然后，可以通过 <code class="docutils literal notranslate"><span class="pre">user_permissions</span></code> 属性将权限分配给 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a> ，或通过 <code class="docutils literal notranslate"><span class="pre">permissions</span></code>&nbsp;属性分配给 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.Group" title="django.contrib.auth.models.Group"><code class="xref py py-class docutils literal notranslate"><span class="pre">Group</span></code></a>&nbsp; 。</p>
+<div class="admonition-proxy-models-need-their-own-content-type admonition">
+<p class="first admonition-title">代理模型需要自己的内容类型</p>
+<p>如果你想创建 <a class="reference internal" href="#proxy-models-permissions-topic"><span class="std std-ref">permissions for a proxy model</span></a> ，传递 <code class="docutils literal notranslate"><span class="pre">for_concrete_model=False</span></code> 到 <a class="reference internal" href="../../ref/contrib/contenttypes.html#django.contrib.contenttypes.models.ContentTypeManager.get_for_model" title="django.contrib.contenttypes.models.ContentTypeManager.get_for_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ContentTypeManager.get_for_model()</span></code></a>&nbsp;来获取合适的 <code class="docutils literal notranslate"><span class="pre">ContentType</span></code> ：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">content_type</span> <span class="o">=</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_for_model</span><span class="p">(</span>
+    <span class="n">BlogPostProxy</span><span class="p">,</span> <span class="n">for_concrete_model</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-permission-caching">
+<span id="permission-caching"></span><h3>权限缓存<a class="headerlink" href="#permission-caching" title="永久链接至标题">¶</a></h3>
+<p>在第一次需要获取用户对象的权限检查时， <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.backends.ModelBackend" title="django.contrib.auth.backends.ModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelBackend</span></code></a> 才会缓存它们的权限。对于请求-响应周期来说，这通常是很好的，因为权限通常不会在添加的时候立刻检查（例如，在 admin 中）。如果你打算在测试或视图中添加权限，并随后检查他们，最简单的解决方案就是从数据库中重新获取用户。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">Permission</span><span class="p">,</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">django.contrib.contenttypes.models</span> <span class="kn">import</span> <span class="n">ContentType</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">get_object_or_404</span>
+
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">BlogPost</span>
+
+
+<span class="k">def</span> <span class="nf">user_gains_perms</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="c1"># any permission check will cache the current set of permissions</span>
+    <span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="s2">&quot;myapp.change_blogpost&quot;</span><span class="p">)</span>
+
+    <span class="n">content_type</span> <span class="o">=</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_for_model</span><span class="p">(</span><span class="n">BlogPost</span><span class="p">)</span>
+    <span class="n">permission</span> <span class="o">=</span> <span class="n">Permission</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">codename</span><span class="o">=</span><span class="s2">&quot;change_blogpost&quot;</span><span class="p">,</span>
+        <span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">user</span><span class="o">.</span><span class="n">user_permissions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">permission</span><span class="p">)</span>
+
+    <span class="c1"># Checking the cached permission set</span>
+    <span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="s2">&quot;myapp.change_blogpost&quot;</span><span class="p">)</span>  <span class="c1"># False</span>
+
+    <span class="c1"># Request new instance of User</span>
+    <span class="c1"># Be aware that user.refresh_from_db() won&#39;t clear the cache.</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+
+    <span class="c1"># Permission cache is repopulated from the database</span>
+    <span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="s2">&quot;myapp.change_blogpost&quot;</span><span class="p">)</span>  <span class="c1"># True</span>
+
+    <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-proxy-models">
+<span id="s-proxy-models-permissions-topic"></span><span id="proxy-models"></span><span id="proxy-models-permissions-topic"></span><h3>代理模型<a class="headerlink" href="#proxy-models" title="永久链接至标题">¶</a></h3>
+<p>代理模型的工作方式和具体模型完全相同。代理模型使用自己的内容类型创建权限。代理模型不会继承其子类的具体模型权限。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">permissions</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;can_eat_pizzas&quot;</span><span class="p">,</span> <span class="s2">&quot;Can eat pizzas&quot;</span><span class="p">)]</span>
+
+
+<span class="k">class</span> <span class="nc">Student</span><span class="p">(</span><span class="n">Person</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">permissions</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;can_deliver_pizzas&quot;</span><span class="p">,</span> <span class="s2">&quot;Can deliver pizzas&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Fetch the content type for the proxy model.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">content_type</span> <span class="o">=</span> <span class="n">ContentType</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_for_model</span><span class="p">(</span><span class="n">Student</span><span class="p">,</span> <span class="n">for_concrete_model</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">student_permissions</span> <span class="o">=</span> <span class="n">Permission</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">codename</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">student_permissions</span><span class="p">]</span>
+<span class="go">[&#39;add_student&#39;, &#39;change_student&#39;, &#39;delete_student&#39;, &#39;view_student&#39;,</span>
+<span class="go">&#39;can_deliver_pizzas&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">permission</span> <span class="ow">in</span> <span class="n">student_permissions</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">user</span><span class="o">.</span><span class="n">user_permissions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">permission</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="s2">&quot;app.add_person&quot;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">has_perm</span><span class="p">(</span><span class="s2">&quot;app.can_eat_pizzas&quot;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span><span class="o">.</span><span class="n">has_perms</span><span class="p">((</span><span class="s2">&quot;app.add_student&quot;</span><span class="p">,</span> <span class="s2">&quot;app.can_deliver_pizzas&quot;</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-authentication-in-web-requests">
+<span id="s-auth-web-requests"></span><span id="authentication-in-web-requests"></span><span id="auth-web-requests"></span><h2>Web 请求的认证<a class="headerlink" href="#authentication-in-web-requests" title="永久链接至标题">¶</a></h2>
+<p>Django 使用 <a class="reference internal" href="../http/sessions.html"><span class="doc">sessions</span></a> 和中间件将身份验证系统挂接到请求对象中。</p>
+<p>它们在每次请求中都会提供 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.user" title="django.http.HttpRequest.user"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.user</span></code></a> 属性。如果当前没有用户登录，这个属性将会被设置为 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.AnonymousUser" title="django.contrib.auth.models.AnonymousUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnonymousUser</span></code></a> ，否则将会被设置为 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a> 实例。</p>
+<p>你可以使用 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.is_authenticated" title="django.contrib.auth.models.User.is_authenticated"><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_authenticated</span></code></a> 区分两者，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">:</span>
+    <span class="c1"># Do something for authenticated users.</span>
+    <span class="o">...</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># Do something for anonymous users.</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<div class="section" id="s-how-to-log-a-user-in">
+<span id="s-id2"></span><span id="how-to-log-a-user-in"></span><span id="id2"></span><h3>用户如何登陆<a class="headerlink" href="#how-to-log-a-user-in" title="永久链接至标题">¶</a></h3>
+<p>如果有一个已验证的用户想附加到当前会话(session)中，将通过 <a class="reference internal" href="#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">login()</span></code></a>&nbsp; 函数完成。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.login">
+<code class="sig-name descname"><span class="pre">login</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">user</span></span></em>, <em><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.auth.login" title="永久链接至目标">¶</a></dt>
+<dd><p>要在视图中让用户登录，使用 <a class="reference internal" href="#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">login()</span></code></a>  。它需要 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> 对象和 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a> 对象。通过 Django 的 session 框架， <a class="reference internal" href="#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">login()</span></code></a>&nbsp;会在 session 中保存用户的ID。</p>
+<p>注意，在匿名会话期间设置的任何数据都会在用户登录后保留在会话中。</p>
+<p>这个例子展示了如何使用 <a class="reference internal" href="#django.contrib.auth.authenticate" title="django.contrib.auth.authenticate"><code class="xref py py-func docutils literal notranslate"><span class="pre">authenticate()</span></code></a>&nbsp;和 <a class="reference internal" href="#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">login()</span></code></a>: ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">authenticate</span><span class="p">,</span> <span class="n">login</span>
+
+
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">authenticate</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">login</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="c1"># Redirect to a success page.</span>
+        <span class="o">...</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Return an &#39;invalid login&#39; error message.</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<div class="section" id="s-selecting-the-authentication-backend">
+<span id="selecting-the-authentication-backend"></span><h4>选择验证后端<a class="headerlink" href="#selecting-the-authentication-backend" title="永久链接至标题">¶</a></h4>
+<p>当用户登录时，用户 ID 和用于身份验证的后端会被保存在用户会话中。允许相同的 <a class="reference internal" href="customizing.html#authentication-backends"><span class="std std-ref">authentication backend</span></a>&nbsp;在未来的请求中获取用户详情。选择要在会话中保存的验证后端如下：</p>
+<ol class="arabic simple">
+<li>使用提供了的可选 <code class="docutils literal notranslate"><span class="pre">backend</span></code>&nbsp;参数值。</li>
+<li>使用 <code class="docutils literal notranslate"><span class="pre">user.backend</span></code>&nbsp; 的值。允许配对 <a class="reference internal" href="#django.contrib.auth.authenticate" title="django.contrib.auth.authenticate"><code class="xref py py-func docutils literal notranslate"><span class="pre">authenticate()</span></code></a>&nbsp; 和 <a class="reference internal" href="#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">login()</span></code></a> ：当返回用户对象时 <a class="reference internal" href="#django.contrib.auth.authenticate" title="django.contrib.auth.authenticate"><code class="xref py py-func docutils literal notranslate"><span class="pre">authenticate()</span></code></a>  设置 <code class="docutils literal notranslate"><span class="pre">user.backend</span></code> 属性。</li>
+<li>使用 <a class="reference internal" href="../../ref/settings.html#std-setting-AUTHENTICATION_BACKENDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTHENTICATION_BACKENDS</span></code></a> 存在的 <code class="docutils literal notranslate"><span class="pre">backend</span></code>&nbsp;。</li>
+<li>否则，抛出一个异常。</li>
+</ol>
+<p>在1和2中，<code class="docutils literal notranslate"><span class="pre">backend</span></code> 参数和 <code class="docutils literal notranslate"><span class="pre">user.backend</span></code>&nbsp;属性应该是完整的导入路径（像 <a class="reference internal" href="../../ref/settings.html#std-setting-AUTHENTICATION_BACKENDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTHENTICATION_BACKENDS</span></code></a> 里的路径一样），而不是真实的后端类。</p>
+</div>
+</div>
+<div class="section" id="s-how-to-log-a-user-out">
+<span id="how-to-log-a-user-out"></span><h3>用户如何登出<a class="headerlink" href="#how-to-log-a-user-out" title="永久链接至标题">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.logout">
+<code class="sig-name descname"><span class="pre">logout</span></code>(<em><span class="n"><span class="pre">request</span></span></em>)<a class="headerlink" href="#django.contrib.auth.logout" title="永久链接至目标">¶</a></dt>
+<dd><p>如果已经通过 <a class="reference internal" href="#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.contrib.auth.login()</span></code></a> 登录的用户想退出登录，可以在视图中使用 <a class="reference internal" href="#django.contrib.auth.logout" title="django.contrib.auth.logout"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.contrib.auth.logout()</span></code></a> 。需要传入 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> 对象，并且该函数不会返回值。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">logout</span>
+
+
+<span class="k">def</span> <span class="nf">logout_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">logout</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="c1"># Redirect to a success page.</span>
+</pre></div>
+</div>
+<p>注意，如果用户未登录，<a class="reference internal" href="#django.contrib.auth.logout" title="django.contrib.auth.logout"><code class="xref py py-func docutils literal notranslate"><span class="pre">logout()</span></code></a> 不会报错。</p>
+<p>When you call <a class="reference internal" href="#django.contrib.auth.logout" title="django.contrib.auth.logout"><code class="xref py py-func docutils literal notranslate"><span class="pre">logout()</span></code></a>, the session data for
+the current request is completely cleaned out. All existing data is
+removed. This is to prevent another person from using the same web browser
+to log in and have access to the previous user's session data. If you want
+to put anything into the session that will be available to the user
+immediately after logging out, do that <em>after</em> calling
+<a class="reference internal" href="#django.contrib.auth.logout" title="django.contrib.auth.logout"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.contrib.auth.logout()</span></code></a>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-limiting-access-to-logged-in-users">
+<span id="limiting-access-to-logged-in-users"></span><h3>限制对未登录用户的访问<a class="headerlink" href="#limiting-access-to-logged-in-users" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-the-raw-way">
+<span id="the-raw-way"></span><h4>原始方式<a class="headerlink" href="#the-raw-way" title="永久链接至标题">¶</a></h4>
+<p>限制访问页面最原始的办法就是检查 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.is_authenticated" title="django.contrib.auth.models.User.is_authenticated"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.user.is_authenticated</span></code></a> 并重定向到登录页面。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">redirect</span>
+
+
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">LOGIN_URL</span><span class="si">}</span><span class="s2">?next=</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>或者显示一个错误信息：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+
+
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;myapp/login_error.html&quot;</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-the-login-required-decorator">
+<span id="the-login-required-decorator"></span><h4><code class="docutils literal notranslate"><span class="pre">login_required</span></code> 装饰器<a class="headerlink" href="#the-login-required-decorator" title="永久链接至标题">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.decorators.login_required">
+<code class="sig-name descname"><span class="pre">login_required</span></code>(<em><span class="n"><span class="pre">redirect_field_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'next'</span></span></em>, <em><span class="n"><span class="pre">login_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.auth.decorators.login_required" title="永久链接至目标">¶</a></dt>
+<dd><p>作为快捷方式，你可以使用 <a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a> 装饰器:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span>
+
+
+<span class="nd">@login_required</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a> 会执行以下操作：</p>
+<ul class="simple">
+<li>如果用户没有登录，会重定向到  <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a> ，并传递绝对路径到查询字符串中。例如： <code class="docutils literal notranslate"><span class="pre">/accounts/login/?next=/polls/3/</span></code> 。</li>
+<li>如果用户已经登录，则正常执行视图。视图里的代码可以假设用户已经登录了。</li>
+</ul>
+<p>默认情况下，成功验证时用户跳转的路径保存在名为 <code class="docutils literal notranslate"><span class="pre">&quot;next&quot;</span></code> 的查询字符串参数中。如果你希望这个参数使用不同名称，请在 <a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a> 中传递可选参数 <code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code>&nbsp;：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span>
+
+
+<span class="nd">@login_required</span><span class="p">(</span><span class="n">redirect_field_name</span><span class="o">=</span><span class="s2">&quot;my_redirect_field&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>注意，如果你提供了 <code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code> 值，则很可能也需要自定义登录模板，因为存储重定向路径的模板上下文变量使用的是 <code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code> 值，而不是 <code class="docutils literal notranslate"><span class="pre">&quot;next&quot;</span></code>&nbsp;（默认情况下）。</p>
+<p><a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a> 也有可选参数 <code class="docutils literal notranslate"><span class="pre">login_url</span></code> 。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span>
+
+
+<span class="nd">@login_required</span><span class="p">(</span><span class="n">login_url</span><span class="o">=</span><span class="s2">&quot;/accounts/login/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>注意，如果你没有指定参数 <code class="docutils literal notranslate"><span class="pre">login_url</span></code>&nbsp;，你需要确认 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a>&nbsp; 和登录视图是正确关联的。例如，使用默认方式，在 URL 配置文件里添加下面这行：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">views</span> <span class="k">as</span> <span class="n">auth_views</span>
+
+<span class="n">path</span><span class="p">(</span><span class="s2">&quot;accounts/login/&quot;</span><span class="p">,</span> <span class="n">auth_views</span><span class="o">.</span><span class="n">LoginView</span><span class="o">.</span><span class="n">as_view</span><span class="p">()),</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a> 也接受视图方法名和 <a class="reference internal" href="../http/urls.html#naming-url-patterns"><span class="std std-ref">named URL patterns</span></a> 。这样你可以在 URLconf&nbsp;里自由地重新映射你的登录视图，而不需更新配置文件。</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">login_required</span></code> 装饰器不会检查用户的 <code class="docutils literal notranslate"><span class="pre">is_active</span></code>&nbsp;标识状态，但默认的 <a class="reference internal" href="../../ref/settings.html#std-setting-AUTHENTICATION_BACKENDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTHENTICATION_BACKENDS</span></code></a>&nbsp;会拒绝非正常用户。</p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">如果你打算编写自定义的 Django 管理模块视图（或需要与内置视图使用同样的权限检查），你将会发现 <a class="reference internal" href="../../ref/contrib/admin/index.html#django.contrib.admin.views.decorators.staff_member_required" title="django.contrib.admin.views.decorators.staff_member_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.contrib.admin.views.decorators.staff_member_required()</span></code></a>&nbsp;装饰器是 <code class="docutils literal notranslate"><span class="pre">login_required()</span></code> 的一个有用的替代方法。</p>
+</div>
+</div>
+<div class="section" id="s-the-loginrequiredmixin-mixin">
+<span id="the-loginrequiredmixin-mixin"></span><h4>The <code class="docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code> mixin<a class="headerlink" href="#the-loginrequiredmixin-mixin" title="永久链接至标题">¶</a></h4>
+<p>使用基于类的视图时，可以使用 <code class="docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code> 实现和 <code class="docutils literal notranslate"><span class="pre">login_required</span></code> 相同的行为。这个 Mixin 应该在继承列表中最左侧的位置。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.LoginRequiredMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LoginRequiredMixin</span></code><a class="headerlink" href="#django.contrib.auth.mixins.LoginRequiredMixin" title="永久链接至目标">¶</a></dt>
+<dd><p>如果一个视图使用 Mixin ，那么未经验证用户的所有请求都会被重定向到登录页面或者显示 HTTP 403 Forbidden 错误，这取决于 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.raise_exception" title="django.contrib.auth.mixins.AccessMixin.raise_exception"><code class="xref py py-attr docutils literal notranslate"><span class="pre">raise_exception</span></code></a> 参数。</p>
+<p>你可以设置 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin" title="django.contrib.auth.mixins.AccessMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">AccessMixin</span></code></a> 的任何参数来自定义未验证用户的处理：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.mixins</span> <span class="kn">import</span> <span class="n">LoginRequiredMixin</span>
+
+
+<span class="k">class</span> <span class="nc">MyView</span><span class="p">(</span><span class="n">LoginRequiredMixin</span><span class="p">,</span> <span class="n">View</span><span class="p">):</span>
+    <span class="n">login_url</span> <span class="o">=</span> <span class="s2">&quot;/login/&quot;</span>
+    <span class="n">redirect_field_name</span> <span class="o">=</span> <span class="s2">&quot;redirect_to&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">同 <code class="docutils literal notranslate"><span class="pre">login_required</span></code>&nbsp;装饰器一样，Mixin 不会检查用户的 <code class="docutils literal notranslate"><span class="pre">is_active</span></code>&nbsp;标识状态，但默认的 <a class="reference internal" href="../../ref/settings.html#std-setting-AUTHENTICATION_BACKENDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTHENTICATION_BACKENDS</span></code></a>&nbsp;会拒绝非正常用户。</p>
+</div>
+</div>
+<div class="section" id="s-limiting-access-to-logged-in-users-that-pass-a-test">
+<span id="limiting-access-to-logged-in-users-that-pass-a-test"></span><h4>限制对通过测试的登录用户的访问<a class="headerlink" href="#limiting-access-to-logged-in-users-that-pass-a-test" title="永久链接至标题">¶</a></h4>
+<p>根据某些权限或者其他测试来限制访问，你基本上可以执行和上一节所述同样的操作。</p>
+<p>可以在视图里直接对 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.user" title="django.http.HttpRequest.user"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.user</span></code></a> 进行测试。举例，这个视图检查用户是否拥有特定域名的邮箱，否则会重定向到登录页：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">redirect</span>
+
+
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;@example.com&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/login/?next=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.decorators.user_passes_test">
+<code class="sig-name descname"><span class="pre">user_passes_test</span></code>(<em><span class="n"><span class="pre">test_func</span></span></em>, <em><span class="n"><span class="pre">login_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">redirect_field_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'next'</span></span></em>)<a class="headerlink" href="#django.contrib.auth.decorators.user_passes_test" title="永久链接至目标">¶</a></dt>
+<dd><p>作为快捷方式，你可以方便的调用 <code class="docutils literal notranslate"><span class="pre">user_passes_test</span></code>&nbsp;装饰器，当调用返回 <code class="docutils literal notranslate"><span class="pre">False</span></code> 时会执行重定向。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">user_passes_test</span>
+
+
+<span class="k">def</span> <span class="nf">email_check</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;@example.com&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@user_passes_test</span><span class="p">(</span><span class="n">email_check</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#django.contrib.auth.decorators.user_passes_test" title="django.contrib.auth.decorators.user_passes_test"><code class="xref py py-func docutils literal notranslate"><span class="pre">user_passes_test()</span></code></a> 接受一个必要的参数：一个带有:class:~django.contrib.auth.models.User 对象的调用，如果允许用户访问这个页面，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code> 。注意，<a class="reference internal" href="#django.contrib.auth.decorators.user_passes_test" title="django.contrib.auth.decorators.user_passes_test"><code class="xref py py-func docutils literal notranslate"><span class="pre">user_passes_test()</span></code></a> 不会自动检查用户是否匿名。</p>
+<p><a class="reference internal" href="#django.contrib.auth.decorators.user_passes_test" title="django.contrib.auth.decorators.user_passes_test"><code class="xref py py-func docutils literal notranslate"><span class="pre">user_passes_test()</span></code></a> 可以传递两个可选参数：</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">login_url</span></code></dt><dd>允许你指定用户没有通过测试时跳转的地址。它可能是一个登录页面，如果你没指定，默认是 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a>&nbsp;。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code></dt><dd>与 <a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a> 相同。如果你想把没通过检查的用户重定向到没有 &quot;next page&quot; 的非登录页面时，把它设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code> ，这样它会在 URL 中移除。</dd>
+</dl>
+<p>例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@user_passes_test</span><span class="p">(</span><span class="n">email_check</span><span class="p">,</span> <span class="n">login_url</span><span class="o">=</span><span class="s2">&quot;/login/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.UserPassesTestMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">UserPassesTestMixin</span></code><a class="headerlink" href="#django.contrib.auth.mixins.UserPassesTestMixin" title="永久链接至目标">¶</a></dt>
+<dd><p>使用基于类的视图时，可以使用 <code class="docutils literal notranslate"><span class="pre">UserPassesTestMixin</span></code>&nbsp;执行此操作。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.UserPassesTestMixin.test_func">
+<code class="sig-name descname"><span class="pre">test_func</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.UserPassesTestMixin.test_func" title="永久链接至目标">¶</a></dt>
+<dd><p>你必须覆盖类方法 <code class="docutils literal notranslate"><span class="pre">test_func()</span></code> 以提供执行的测试。此外，还可以设置 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin" title="django.contrib.auth.mixins.AccessMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">AccessMixin</span></code></a> 的任何参数来自定义处理未授权用户：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.mixins</span> <span class="kn">import</span> <span class="n">UserPassesTestMixin</span>
+
+
+<span class="k">class</span> <span class="nc">MyView</span><span class="p">(</span><span class="n">UserPassesTestMixin</span><span class="p">,</span> <span class="n">View</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;@example.com&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.UserPassesTestMixin.get_test_func">
+<code class="sig-name descname"><span class="pre">get_test_func</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.UserPassesTestMixin.get_test_func" title="永久链接至目标">¶</a></dt>
+<dd><p>你也可以覆盖 <code class="docutils literal notranslate"><span class="pre">get_test_func()</span></code> 方法，以使 mixin 对其检查使用不同名称的函数（而不是 <a class="reference internal" href="#django.contrib.auth.mixins.UserPassesTestMixin.test_func" title="django.contrib.auth.mixins.UserPassesTestMixin.test_func"><code class="xref py py-meth docutils literal notranslate"><span class="pre">test_func()</span></code></a> ）。</p>
+</dd></dl>
+
+<div class="admonition-stacking-userpassestestmixin admonition">
+<p class="first admonition-title">集成 <code class="docutils literal notranslate"><span class="pre">UserPassesTestMixin</span></code></p>
+<p>由于实现了 <code class="docutils literal notranslate"><span class="pre">UserPassesTestMixin</span></code>&nbsp;方式，不能在继承列表中集成它们。下述方式将不能工作：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TestMixin1</span><span class="p">(</span><span class="n">UserPassesTestMixin</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;@example.com&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">TestMixin2</span><span class="p">(</span><span class="n">UserPassesTestMixin</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;django&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MyView</span><span class="p">(</span><span class="n">TestMixin1</span><span class="p">,</span> <span class="n">TestMixin2</span><span class="p">,</span> <span class="n">View</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p class="last">如果 <code class="docutils literal notranslate"><span class="pre">TestMixin1</span></code>&nbsp;调用 <code class="docutils literal notranslate"><span class="pre">super()</span></code> 并把结果考虑在内，<code class="docutils literal notranslate"><span class="pre">TestMixin1</span></code> 将不能独立运行。</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-the-permission-required-decorator">
+<span id="the-permission-required-decorator"></span><h4><code class="docutils literal notranslate"><span class="pre">permission_required</span></code> 装饰器<a class="headerlink" href="#the-permission-required-decorator" title="永久链接至标题">¶</a></h4>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.decorators.permission_required">
+<code class="sig-name descname"><span class="pre">permission_required</span></code>(<em><span class="n"><span class="pre">perm</span></span></em>, <em><span class="n"><span class="pre">login_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">raise_exception</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.auth.decorators.permission_required" title="永久链接至目标">¶</a></dt>
+<dd><p>检查用户是否拥有特定的权限是一个相对常见的任务。出于这个原因，Django 提供了一个快捷方式：<a class="reference internal" href="#django.contrib.auth.decorators.permission_required" title="django.contrib.auth.decorators.permission_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">permission_required()</span></code></a>&nbsp;装饰器：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">permission_required</span>
+
+
+<span class="nd">@permission_required</span><span class="p">(</span><span class="s2">&quot;polls.add_choice&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>就像 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.has_perm" title="django.contrib.auth.models.User.has_perm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has_perm()</span></code></a>&nbsp;方法一样，权限名称采用 <code class="docutils literal notranslate"><span class="pre">&quot;&lt;app</span> <span class="pre">label&gt;.&lt;permission</span> <span class="pre">codename&gt;&quot;</span></code>&nbsp;形式（比如 <code class="docutils literal notranslate"><span class="pre">polls.polls.add_choice</span></code> 就是 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 应用程序下的模型的权限）。</p>
+<p>装饰器也可以接受可迭代权限，在这种情况下，用户必须拥有所有权限才能访问视图。</p>
+<p>注意， <a class="reference internal" href="#django.contrib.auth.decorators.permission_required" title="django.contrib.auth.decorators.permission_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">permission_required()</span></code></a>&nbsp;也可以接受可选的 <code class="docutils literal notranslate"><span class="pre">login_url</span></code> 参数：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">permission_required</span>
+
+
+<span class="nd">@permission_required</span><span class="p">(</span><span class="s2">&quot;polls.add_choice&quot;</span><span class="p">,</span> <span class="n">login_url</span><span class="o">=</span><span class="s2">&quot;/loginpage/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>和 <a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a>&nbsp;装饰器一样， <code class="docutils literal notranslate"><span class="pre">login_url</span></code>&nbsp;默认是:setting:settings.LOGIN_URL &lt;LOGIN_URL&gt;。</p>
+<p>如果有 <code class="docutils literal notranslate"><span class="pre">raise_exception</span></code>&nbsp;参数，那么装饰器将引发 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.PermissionDenied" title="django.core.exceptions.PermissionDenied"><code class="xref py py-exc docutils literal notranslate"><span class="pre">PermissionDenied</span></code></a> 错误，提示 <a class="reference internal" href="../../ref/views.html#http-forbidden-view"><span class="std std-ref">the 403 (HTTP Forbidden) view</span></a>&nbsp;而不是跳转到登录页面。</p>
+<p>如果你想使用 <code class="docutils literal notranslate"><span class="pre">raise_exception</span></code> 但也想给用户登录的机会，那需要添加 <a class="reference internal" href="#django.contrib.auth.decorators.login_required" title="django.contrib.auth.decorators.login_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">login_required()</span></code></a>&nbsp;装饰器：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span><span class="p">,</span> <span class="n">permission_required</span>
+
+
+<span class="nd">@login_required</span>
+<span class="nd">@permission_required</span><span class="p">(</span><span class="s2">&quot;polls.add_choice&quot;</span><span class="p">,</span> <span class="n">raise_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>当 <a class="reference internal" href="#django.contrib.auth.views.LoginView" title="django.contrib.auth.views.LoginView"><code class="xref py py-class docutils literal notranslate"><span class="pre">LoginView</span></code></a> 的 <code class="docutils literal notranslate"><span class="pre">redirect_authenticated_user=True</span></code>&nbsp;并且已登录用户没有所有必须的权限时，这避免了重定向循环。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-the-permissionrequiredmixin-mixin">
+<span id="the-permissionrequiredmixin-mixin"></span><h4><code class="docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code> Mixin<a class="headerlink" href="#the-permissionrequiredmixin-mixin" title="永久链接至标题">¶</a></h4>
+<p>在 <a class="reference internal" href="../../ref/class-based-views/index.html"><span class="doc">class-based views</span></a> 中应用权限检查，你可以使用 <code class="docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code> ：</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.PermissionRequiredMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PermissionRequiredMixin</span></code><a class="headerlink" href="#django.contrib.auth.mixins.PermissionRequiredMixin" title="永久链接至目标">¶</a></dt>
+<dd><p>和 <code class="docutils literal notranslate"><span class="pre">permission_required</span></code>&nbsp;装饰器一样，Mixin 检查用户访问的视图是否拥有全部的权限。你应该使用 <code class="docutils literal notranslate"><span class="pre">permission_required</span></code> 指定权限（或者可迭代权限）：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.mixins</span> <span class="kn">import</span> <span class="n">PermissionRequiredMixin</span>
+
+
+<span class="k">class</span> <span class="nc">MyView</span><span class="p">(</span><span class="n">PermissionRequiredMixin</span><span class="p">,</span> <span class="n">View</span><span class="p">):</span>
+    <span class="n">permission_required</span> <span class="o">=</span> <span class="s2">&quot;polls.add_choice&quot;</span>
+    <span class="c1"># Or multiple of permissions:</span>
+    <span class="n">permission_required</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;polls.view_choice&quot;</span><span class="p">,</span> <span class="s2">&quot;polls.change_choice&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>你可以设置 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin" title="django.contrib.auth.mixins.AccessMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">AccessMixin</span></code></a> 的任意参数来自定义处理没有权限的用户。</p>
+<p>你可能同样需要重写这些方法：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.PermissionRequiredMixin.get_permission_required">
+<code class="sig-name descname"><span class="pre">get_permission_required</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.PermissionRequiredMixin.get_permission_required" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 Mixin 使用的可迭代权限的名称。默认为 <code class="docutils literal notranslate"><span class="pre">permission_required</span></code>&nbsp;属性，如果需要可以转化为元组。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.PermissionRequiredMixin.has_permission">
+<code class="sig-name descname"><span class="pre">has_permission</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.PermissionRequiredMixin.has_permission" title="永久链接至目标">¶</a></dt>
+<dd><p>返回布尔值，表示当前用户是否拥有权限执行装饰器视图。默认情况下，这将返回调用 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.has_perms" title="django.contrib.auth.models.User.has_perms"><code class="xref py py-meth docutils literal notranslate"><span class="pre">has_perms()</span></code></a> 的结果，其中包括返回 <a class="reference internal" href="#django.contrib.auth.mixins.PermissionRequiredMixin.get_permission_required" title="django.contrib.auth.mixins.PermissionRequiredMixin.get_permission_required"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_permission_required()</span></code></a> 的权限列表。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-redirecting-unauthorized-requests-in-class-based-views">
+<span id="redirecting-unauthorized-requests-in-class-based-views"></span><h3>在基于类的视图中重定向未通过验证的请求<a class="headerlink" href="#redirecting-unauthorized-requests-in-class-based-views" title="永久链接至标题">¶</a></h3>
+<p>为了简化基于类的视图限制访问的处理方式，<code class="docutils literal notranslate"><span class="pre">AccessMixin</span></code> 被用来配置当访问被拒绝时的视图行为。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AccessMixin</span></code><a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin" title="永久链接至目标">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.login_url">
+<code class="sig-name descname"><span class="pre">login_url</span></code><a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.login_url" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.get_login_url" title="django.contrib.auth.mixins.AccessMixin.get_login_url"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_login_url()</span></code></a> 的缺省返回值。默认是 <code class="docutils literal notranslate"><span class="pre">None</span></code>&nbsp;，在这种情况下， <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.get_login_url" title="django.contrib.auth.mixins.AccessMixin.get_login_url"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_login_url()</span></code></a> 会回退至 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.permission_denied_message">
+<code class="sig-name descname"><span class="pre">permission_denied_message</span></code><a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.permission_denied_message" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.get_permission_denied_message" title="django.contrib.auth.mixins.AccessMixin.get_permission_denied_message"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_permission_denied_message()</span></code></a> 的缺省返回值。默认是空字符串。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.redirect_field_name">
+<code class="sig-name descname"><span class="pre">redirect_field_name</span></code><a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.redirect_field_name" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.get_redirect_field_name" title="django.contrib.auth.mixins.AccessMixin.get_redirect_field_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_redirect_field_name()</span></code></a> 的缺省返回值。默认是 <code class="docutils literal notranslate"><span class="pre">&quot;next&quot;</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.raise_exception">
+<code class="sig-name descname"><span class="pre">raise_exception</span></code><a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.raise_exception" title="永久链接至目标">¶</a></dt>
+<dd><p>如果这个属性被设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> ，当条件不被满足的时候会引发 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.PermissionDenied" title="django.core.exceptions.PermissionDenied"><code class="xref py py-class docutils literal notranslate"><span class="pre">PermissionDenied</span></code></a>&nbsp;异常。如果是 <code class="docutils literal notranslate"><span class="pre">False</span></code>&nbsp;（默认），匿名用户会被重定向至登录页面。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.get_login_url">
+<code class="sig-name descname"><span class="pre">get_login_url</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.get_login_url" title="永久链接至目标">¶</a></dt>
+<dd><p>返回当用户没有通过测试时将被重定向的网址。如果已设置，将返回 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.login_url" title="django.contrib.auth.mixins.AccessMixin.login_url"><code class="xref py py-attr docutils literal notranslate"><span class="pre">login_url</span></code></a>&nbsp;，否则返回 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a> 。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.get_permission_denied_message">
+<code class="sig-name descname"><span class="pre">get_permission_denied_message</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.get_permission_denied_message" title="永久链接至目标">¶</a></dt>
+<dd><p>当 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.raise_exception" title="django.contrib.auth.mixins.AccessMixin.raise_exception"><code class="xref py py-attr docutils literal notranslate"><span class="pre">raise_exception</span></code></a>&nbsp;为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，这个方法可以控制传递给错误处理程序的错误信息，以便显示给用户。默认返回 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.permission_denied_message" title="django.contrib.auth.mixins.AccessMixin.permission_denied_message"><code class="xref py py-attr docutils literal notranslate"><span class="pre">permission_denied_message</span></code></a>&nbsp;属性。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.get_redirect_field_name">
+<code class="sig-name descname"><span class="pre">get_redirect_field_name</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.get_redirect_field_name" title="永久链接至目标">¶</a></dt>
+<dd><p>返回查询参数名，包含用户登录成功后重定向的 URL 。如果这个值设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code> ，将不会添加查询参数。默认返回 <a class="reference internal" href="#django.contrib.auth.mixins.AccessMixin.redirect_field_name" title="django.contrib.auth.mixins.AccessMixin.redirect_field_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">redirect_field_name</span></code></a>&nbsp;属性。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.mixins.AccessMixin.handle_no_permission">
+<code class="sig-name descname"><span class="pre">handle_no_permission</span></code>()<a class="headerlink" href="#django.contrib.auth.mixins.AccessMixin.handle_no_permission" title="永久链接至目标">¶</a></dt>
+<dd><p>根据 <code class="docutils literal notranslate"><span class="pre">raise_exception</span></code> 的值，这个方法将会引发 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.PermissionDenied" title="django.core.exceptions.PermissionDenied"><code class="xref py py-exc docutils literal notranslate"><span class="pre">PermissionDenied</span></code></a>&nbsp;异常或重定向用户至 <code class="docutils literal notranslate"><span class="pre">login_url</span></code> ，如果已设置，则可选地包含 <code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code> 。</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="s-session-invalidation-on-password-change">
+<span id="s-id3"></span><span id="session-invalidation-on-password-change"></span><span id="id3"></span><h4>密码更改时会话失效<a class="headerlink" href="#session-invalidation-on-password-change" title="永久链接至标题">¶</a></h4>
+<p>如果 <a class="reference internal" href="../../ref/settings.html#std-setting-AUTH_USER_MODEL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTH_USER_MODEL</span></code></a>&nbsp;继承自 <a class="reference internal" href="customizing.html#django.contrib.auth.models.AbstractBaseUser" title="django.contrib.auth.models.AbstractBaseUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractBaseUser</span></code></a>&nbsp;或实现了自己的 <a class="reference internal" href="customizing.html#django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash" title="django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_session_auth_hash()</span></code></a> 方法，已验证的会话将包含这个函数返回的哈希值。在 <a class="reference internal" href="customizing.html#django.contrib.auth.models.AbstractBaseUser" title="django.contrib.auth.models.AbstractBaseUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractBaseUser</span></code></a>&nbsp;的情况下，这是密码字段的 HMAC 。Django 验证每个请求的会话中的哈希是否与请求期间计算的哈希相匹配。这允许用户修改密码来注销所有会话。</p>
+<p>Django 包含默认的密码修改视图，<a class="reference internal" href="#django.contrib.auth.views.PasswordChangeView" title="django.contrib.auth.views.PasswordChangeView"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordChangeView</span></code></a>&nbsp;和 <code class="docutils literal notranslate"><span class="pre">user_change_password</span></code>&nbsp;视图在 <a class="reference internal" href="index.html#module-django.contrib.auth" title="django.contrib.auth: Django's authentication framework."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.auth</span></code></a>&nbsp;admin 中，将使用新密码的哈希更新会话，因此用户修改密码后不会被注销。如果你有自定义的密码修改视图，并期望有同样的行为，可以使用 <a class="reference internal" href="#django.contrib.auth.update_session_auth_hash" title="django.contrib.auth.update_session_auth_hash"><code class="xref py py-func docutils literal notranslate"><span class="pre">update_session_auth_hash()</span></code></a> 函数。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.update_session_auth_hash">
+<code class="sig-name descname"><span class="pre">update_session_auth_hash</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">user</span></span></em>)<a class="headerlink" href="#django.contrib.auth.update_session_auth_hash" title="永久链接至目标">¶</a></dt>
+<dd><p>这个函数接受当前请求和从新会话哈希派生时更新的用户对象，并会更新哈希值。它也会替换哈希值因此被盗用的会话cookie会无效。</p>
+<p>用法示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">update_session_auth_hash</span>
+
+
+<span class="k">def</span> <span class="nf">password_change</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">PasswordChangeForm</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">is_valid</span><span class="p">():</span>
+            <span class="n">form</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">update_session_auth_hash</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">form</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">Since
+<a class="reference internal" href="customizing.html#django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash" title="django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_session_auth_hash()</span></code></a>
+is based on <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a>, secret key values must be
+rotated to avoid invalidating existing sessions when updating your site to
+use a new secret. See <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY_FALLBACKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY_FALLBACKS</span></code></a> for details.</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-module-django.contrib.auth.views">
+<span id="s-authentication-views"></span><span id="s-built-in-auth-views"></span><span id="module-django.contrib.auth.views"></span><span id="authentication-views"></span><span id="built-in-auth-views"></span><h3>验证视图<a class="headerlink" href="#module-django.contrib.auth.views" title="永久链接至标题">¶</a></h3>
+<p>Django 提供许多可以用来处理登录、注销和密码管理的视图。这些利用了  <a class="reference internal" href="#built-in-auth-forms"><span class="std std-ref">stock auth forms</span></a>&nbsp;，但你也可以使用自己的表单。</p>
+<p>Django 没有为验证视图提供默认模板。你可以为你打算使用的视图创建自己的模板。每个视图都记录了模板上下文，详情查看 <a class="reference internal" href="#all-authentication-views"><span class="std std-ref">所有的验证视图</span></a> 。</p>
+<div class="section" id="s-using-the-views">
+<span id="s-id4"></span><span id="using-the-views"></span><span id="id4"></span><h4>使用视图<a class="headerlink" href="#using-the-views" title="永久链接至标题">¶</a></h4>
+<p>在项目中可以使用不同方法来实现这些视图。最简单的方法就是在 URLconf 中包含  <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.urls</span></code> 提供的 URLconf 。举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;accounts/&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s2">&quot;django.contrib.auth.urls&quot;</span><span class="p">)),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>This will include the following URL patterns:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>accounts/login/ [name=&#39;login&#39;]
+accounts/logout/ [name=&#39;logout&#39;]
+accounts/password_change/ [name=&#39;password_change&#39;]
+accounts/password_change/done/ [name=&#39;password_change_done&#39;]
+accounts/password_reset/ [name=&#39;password_reset&#39;]
+accounts/password_reset/done/ [name=&#39;password_reset_done&#39;]
+accounts/reset/&lt;uidb64&gt;/&lt;token&gt;/ [name=&#39;password_reset_confirm&#39;]
+accounts/reset/done/ [name=&#39;password_reset_complete&#39;]
+</pre></div>
+</div>
+<p>视图提供 URL 名称以便参考。有关使用命名 URL 模式的使用详情参考 <a class="reference internal" href="../http/urls.html"><span class="doc">the URL documentation</span></a> 。</p>
+<p>如果你想更好的控制 URL ，你可以在你的 URLconf 中引用特定的视图：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth</span> <span class="kn">import</span> <span class="n">views</span> <span class="k">as</span> <span class="n">auth_views</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;change-password/&quot;</span><span class="p">,</span> <span class="n">auth_views</span><span class="o">.</span><span class="n">PasswordChangeView</span><span class="o">.</span><span class="n">as_view</span><span class="p">()),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>这个视图具有更改视图行为的可选参数。例如，如果你想改变视图使用的模板名称，你可以提供 <code class="docutils literal notranslate"><span class="pre">template_name</span></code>&nbsp;参数。在 URLconf 中提供关键字参数，这些参数将被传递给视图。举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span>
+        <span class="s2">&quot;change-password/&quot;</span><span class="p">,</span>
+        <span class="n">auth_views</span><span class="o">.</span><span class="n">PasswordChangeView</span><span class="o">.</span><span class="n">as_view</span><span class="p">(</span><span class="n">template_name</span><span class="o">=</span><span class="s2">&quot;change-password.html&quot;</span><span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>所有视图都是基于类的，这就允许你通过子类去方便地自定义它们。</p>
+</div>
+<div class="section" id="s-all-authentication-views">
+<span id="s-id5"></span><span id="all-authentication-views"></span><span id="id5"></span><h4>所有的验证视图<a class="headerlink" href="#all-authentication-views" title="永久链接至标题">¶</a></h4>
+<p>这是一个 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code> 提供的所有视图列表。有关实现细节可参考 <a class="reference internal" href="#using-the-views"><span class="std std-ref">使用视图</span></a> 。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LoginView</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">login</span></code></p>
+<p>有关使用命名 URL 模式的细节可参考 <a class="reference internal" href="../http/urls.html"><span class="doc">the URL documentation</span></a> 。</p>
+<p><a href="#id1"><span class="problematic" id="id2">**</span></a>方法和属性*</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The name of a template to display for the view used to log the user in.
+Defaults to <code class="file docutils literal notranslate"><span class="pre">registration/login.html</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.next_page">
+<code class="sig-name descname"><span class="pre">next_page</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.next_page" title="永久链接至目标">¶</a></dt>
+<dd><p>The URL to redirect to after login. Defaults to
+<a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_REDIRECT_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGIN_REDIRECT_URL</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.redirect_field_name">
+<code class="sig-name descname"><span class="pre">redirect_field_name</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.redirect_field_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The name of a <code class="docutils literal notranslate"><span class="pre">GET</span></code> field containing the URL to redirect to after
+login. Defaults to <code class="docutils literal notranslate"><span class="pre">next</span></code>. Overrides the
+<a class="reference internal" href="#django.contrib.auth.views.LoginView.get_default_redirect_url" title="django.contrib.auth.views.LoginView.get_default_redirect_url"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_default_redirect_url()</span></code></a> URL if the given <code class="docutils literal notranslate"><span class="pre">GET</span></code> parameter is
+passed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.authentication_form">
+<code class="sig-name descname"><span class="pre">authentication_form</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.authentication_form" title="永久链接至目标">¶</a></dt>
+<dd><p>A callable (typically a form class) to use for authentication. Defaults
+to <a class="reference internal" href="#django.contrib.auth.forms.AuthenticationForm" title="django.contrib.auth.forms.AuthenticationForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">AuthenticationForm</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.redirect_authenticated_user">
+<code class="sig-name descname"><span class="pre">redirect_authenticated_user</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.redirect_authenticated_user" title="永久链接至目标">¶</a></dt>
+<dd><p>A boolean that controls whether or not authenticated users accessing
+the login page will be redirected as if they had just successfully
+logged in. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>如果你启用了 <code class="docutils literal notranslate"><span class="pre">redirect_authenticated_user</span></code> ，其他网站通过重定向请求你的网站的图片文件的方式来确定他们的访客是否是你网站的已验证用户。为了避免这个 &quot;<a class="reference external" href="https://robinlinus.github.io/socialmedia-leak/">social media fingerprinting</a>&quot;&nbsp;信息泄露，请将所有图片和 favicon 都托管在单独的域名中。</p>
+<p class="last">启用 <code class="docutils literal notranslate"><span class="pre">redirect_authenticated_user</span></code>&nbsp;也会在使用 <a class="reference internal" href="#django.contrib.auth.decorators.permission_required" title="django.contrib.auth.decorators.permission_required"><code class="xref py py-func docutils literal notranslate"><span class="pre">permission_required()</span></code></a> 装饰器的时候，导致重定向循环，除非 <code class="docutils literal notranslate"><span class="pre">raise_exception</span></code> 参数被使用。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.success_url_allowed_hosts">
+<code class="sig-name descname"><span class="pre">success_url_allowed_hosts</span></code><a class="headerlink" href="#django.contrib.auth.views.LoginView.success_url_allowed_hosts" title="永久链接至目标">¶</a></dt>
+<dd><p>A <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> of hosts, in addition to <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.get_host" title="django.http.HttpRequest.get_host"><code class="xref py py-meth docutils literal notranslate"><span class="pre">request.get_host()</span></code></a>, that are safe for redirecting
+after login. Defaults to an empty <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LoginView.get_default_redirect_url">
+<code class="sig-name descname"><span class="pre">get_default_redirect_url</span></code>()<a class="headerlink" href="#django.contrib.auth.views.LoginView.get_default_redirect_url" title="永久链接至目标">¶</a></dt>
+<dd><p>Returns the URL to redirect to after login. The default implementation
+resolves and returns <a class="reference internal" href="#django.contrib.auth.views.LoginView.next_page" title="django.contrib.auth.views.LoginView.next_page"><code class="xref py py-attr docutils literal notranslate"><span class="pre">next_page</span></code></a> if set, or
+<a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_REDIRECT_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGIN_REDIRECT_URL</span></code></a> otherwise.</p>
+</dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">LoginView</span></code> 能做什么：</p>
+<ul class="simple">
+<li>如果通过 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 调用，它将显示 POST 到同一 URL 地址的登录表单。稍后会详细介绍。</li>
+<li>如果用户提交的数据通过 <code class="docutils literal notranslate"><span class="pre">POST</span></code> 调用，那它将试着让用户登录。如果登录成功，那么视图将重定向到 <code class="docutils literal notranslate"><span class="pre">next</span></code> 指定的 URL 。如果没有提供 <code class="docutils literal notranslate"><span class="pre">next</span></code> ，它将重定向到 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_REDIRECT_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_REDIRECT_URL</span></code></a> （默认 <code class="docutils literal notranslate"><span class="pre">/accounts/profile/</span></code> ）。如果登录没有成功，它将重新显示登录表单。</li>
+</ul>
+<p>你需要提供登录模板，默认调用 <code class="docutils literal notranslate"><span class="pre">registration/login.html</span></code> 。这个模板传递四个模板上下文变量：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">form</span></code> ：一个代表 <a class="reference internal" href="#django.contrib.auth.forms.AuthenticationForm" title="django.contrib.auth.forms.AuthenticationForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">AuthenticationForm</span></code></a> 的 <a class="reference internal" href="../../ref/forms/api.html#django.forms.Form" title="django.forms.Form"><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code></a>&nbsp;对象。</li>
+<li><code class="docutils literal notranslate"><span class="pre">next</span></code> ：登录成功后跳转的网址。这可能包含查询字段。</li>
+<li><code class="docutils literal notranslate"><span class="pre">site</span></code> ：根据 <a class="reference internal" href="../../ref/settings.html#std-setting-SITE_ID"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SITE_ID</span></code></a> 设置的当前站点。如果你还没有安装站点框架，会将其设置为 <a class="reference internal" href="../../ref/contrib/sites.html#django.contrib.sites.requests.RequestSite" title="django.contrib.sites.requests.RequestSite"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestSite</span></code></a> 实例，该实例从当前 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> 中派生出站点名和域名。</li>
+<li><code class="docutils literal notranslate"><span class="pre">site_name</span></code> ：<code class="docutils literal notranslate"><span class="pre">site.name</span></code> 的别名。如果你还没有按照站点框架，它将设置为 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.META" title="django.http.HttpRequest.META"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.META['SERVER_NAME']</span></code></a> 的值。更多关于站点信息，请参考 <a class="reference internal" href="../../ref/contrib/sites.html"><span class="doc">“站点”框架</span></a> 。</li>
+</ul>
+<p>如果你不愿意调用模板 <code class="file docutils literal notranslate"><span class="pre">registration/login.html</span></code> ，你可以通过附加参数的形式传递 <code class="docutils literal notranslate"><span class="pre">template_name</span></code> 参数给你的 URLconf 中的 <code class="docutils literal notranslate"><span class="pre">as_view</span></code> 方法。比如，这行 URLconf 将使用 <code class="file docutils literal notranslate"><span class="pre">myapp/login.html</span></code>&nbsp;代替：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">path</span><span class="p">(</span><span class="s2">&quot;accounts/login/&quot;</span><span class="p">,</span> <span class="n">auth_views</span><span class="o">.</span><span class="n">LoginView</span><span class="o">.</span><span class="n">as_view</span><span class="p">(</span><span class="n">template_name</span><span class="o">=</span><span class="s2">&quot;myapp/login.html&quot;</span><span class="p">)),</span>
+</pre></div>
+</div>
+<p>你也可以使用 <code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code> 指定 <code class="docutils literal notranslate"><span class="pre">GET</span></code>&nbsp;字段的名称，这个字段包含登陆后跳转的 URL 地址。默认情况下，这个字段为 <code class="docutils literal notranslate"><span class="pre">next</span></code> 。</p>
+<p>下面是一个简单的 <code class="file docutils literal notranslate"><span class="pre">registration/login.html</span></code>&nbsp;模板。它假设你有 <code class="file docutils literal notranslate"><span class="pre">base.html</span></code>&nbsp;模板，并且已经定义了 <code class="docutils literal notranslate"><span class="pre">content</span></code> 块：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">extends</span> <span class="s2">&quot;base.html&quot;</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">block</span> <span class="nv">content</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">if</span> <span class="nv">form.errors</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Your username and password didn&#39;t match. Please try again.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">if</span> <span class="nv">next</span> <span class="cp">%}</span>
+    <span class="cp">{%</span> <span class="k">if</span> <span class="nv">user.is_authenticated</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Your account doesn&#39;t have access to this page. To proceed,
+    please login with an account that has access.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">else</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Please login to see this page.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+
+<span class="p">&lt;</span><span class="nt">form</span> <span class="na">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span> <span class="na">action</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">url</span> <span class="s1">&#39;login&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">csrf_token</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">table</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">form.username.label_tag</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">form.username</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">form.password.label_tag</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">form.password</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;login&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;hidden&quot;</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;next&quot;</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">next</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+
+<span class="c">{# Assumes you set up the password_reset view in your URLconf #}</span>
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">url</span> <span class="s1">&#39;password_reset&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="p">&gt;</span>Lost password?<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+
+<span class="cp">{%</span> <span class="k">endblock</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>如果你具有自定义身份验证（查看 <a class="reference internal" href="customizing.html"><span class="doc">Customizing Authentication</span></a> ），可以通过设置 <code class="docutils literal notranslate"><span class="pre">authentication_form</span></code> 属性来使用自定义的验证码模板。此表单必须在它的 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 方法中接受 <code class="docutils literal notranslate"><span class="pre">request</span></code>&nbsp;关键字参数，并且提供一个返回已验证用户对象的 <code class="docutils literal notranslate"><span class="pre">get_user()</span></code> 方法（这个方法只会在表单成功验证后调用）。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LogoutView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LogoutView</span></code><a class="headerlink" href="#django.contrib.auth.views.LogoutView" title="永久链接至目标">¶</a></dt>
+<dd><p>Logs a user out on <code class="docutils literal notranslate"><span class="pre">POST</span></code> requests.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">4.1 版后已移除: </span>Support for logging out on <code class="docutils literal notranslate"><span class="pre">GET</span></code> requests is deprecated and will be
+removed in Django 5.0.</p>
+</div>
+<p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">logout</span></code></p>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LogoutView.next_page">
+<code class="sig-name descname"><span class="pre">next_page</span></code><a class="headerlink" href="#django.contrib.auth.views.LogoutView.next_page" title="永久链接至目标">¶</a></dt>
+<dd><p>The URL to redirect to after logout. Defaults to
+<a class="reference internal" href="../../ref/settings.html#std-setting-LOGOUT_REDIRECT_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGOUT_REDIRECT_URL</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LogoutView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.LogoutView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to display after logging the user out.
+Defaults to <code class="file docutils literal notranslate"><span class="pre">registration/logged_out.html</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LogoutView.redirect_field_name">
+<code class="sig-name descname"><span class="pre">redirect_field_name</span></code><a class="headerlink" href="#django.contrib.auth.views.LogoutView.redirect_field_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The name of a <code class="docutils literal notranslate"><span class="pre">GET</span></code> field containing the URL to redirect to after log
+out. Defaults to <code class="docutils literal notranslate"><span class="pre">'next'</span></code>. Overrides the
+<a class="reference internal" href="#django.contrib.auth.views.LogoutView.next_page" title="django.contrib.auth.views.LogoutView.next_page"><code class="xref py py-attr docutils literal notranslate"><span class="pre">next_page</span></code></a> URL if the given <code class="docutils literal notranslate"><span class="pre">GET</span></code> parameter is
+passed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LogoutView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.LogoutView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.LogoutView.success_url_allowed_hosts">
+<code class="sig-name descname"><span class="pre">success_url_allowed_hosts</span></code><a class="headerlink" href="#django.contrib.auth.views.LogoutView.success_url_allowed_hosts" title="永久链接至目标">¶</a></dt>
+<dd><p>A <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> of hosts, in addition to <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.get_host" title="django.http.HttpRequest.get_host"><code class="xref py py-meth docutils literal notranslate"><span class="pre">request.get_host()</span></code></a>, that are safe for redirecting
+after logout. Defaults to an empty <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(在 Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>.</p>
+</dd></dl>
+
+<p><strong>Template context:</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">title</span></code> ：字符串 &quot;已注销&quot;，已本地化。</li>
+<li><code class="docutils literal notranslate"><span class="pre">site</span></code> ：根据 <a class="reference internal" href="../../ref/settings.html#std-setting-SITE_ID"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SITE_ID</span></code></a> 设置的当前站点。如果你还没有安装站点框架，会将其设置为 <a class="reference internal" href="../../ref/contrib/sites.html#django.contrib.sites.requests.RequestSite" title="django.contrib.sites.requests.RequestSite"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestSite</span></code></a> 实例，该实例从当前 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> 中派生出站点名和域名。</li>
+<li><code class="docutils literal notranslate"><span class="pre">site_name</span></code> ：<code class="docutils literal notranslate"><span class="pre">site.name</span></code> 的别名。如果你还没有按照站点框架，它将设置为 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.META" title="django.http.HttpRequest.META"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.META['SERVER_NAME']</span></code></a> 的值。更多关于站点信息，请参考 <a class="reference internal" href="../../ref/contrib/sites.html"><span class="doc">“站点”框架</span></a> 。</li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.views.logout_then_login">
+<code class="sig-name descname"><span class="pre">logout_then_login</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">login_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.auth.views.logout_then_login" title="永久链接至目标">¶</a></dt>
+<dd><p>Logs a user out on <code class="docutils literal notranslate"><span class="pre">POST</span></code> requests, then redirects to the login page.</p>
+<p><strong>URL name:</strong> 没有提供默认的 URL</p>
+<p>可选参数：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">login_url</span></code> ：要重定向到登录页面的 URL 。如果没有提供，默认是 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a> 。</li>
+</ul>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">4.1 版后已移除: </span>Support for logging out on <code class="docutils literal notranslate"><span class="pre">GET</span></code> requests is deprecated and will be
+removed in Django 5.0.</p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordChangeView</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">password_change</span></code></p>
+<p>允许用户修改密码。</p>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to use for displaying the password change
+form. Defaults to <code class="file docutils literal notranslate"><span class="pre">registration/password_change_form.html</span></code> if not
+supplied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeView.success_url">
+<code class="sig-name descname"><span class="pre">success_url</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeView.success_url" title="永久链接至目标">¶</a></dt>
+<dd><p>密码修改成功后跳转的 URL 。默认是 <code class="docutils literal notranslate"><span class="pre">'password_change_done'</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeView.form_class">
+<code class="sig-name descname"><span class="pre">form_class</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeView.form_class" title="永久链接至目标">¶</a></dt>
+<dd><p>A custom &quot;change password&quot; form which must accept a <code class="docutils literal notranslate"><span class="pre">user</span></code> keyword
+argument. The form is responsible for actually changing the user's
+password. Defaults to
+<a class="reference internal" href="#django.contrib.auth.forms.PasswordChangeForm" title="django.contrib.auth.forms.PasswordChangeForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordChangeForm</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+<p><strong>Template context:</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">form</span></code> ：密码修改表单（参考上面的 <code class="docutils literal notranslate"><span class="pre">form_class</span></code> ）</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeDoneView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordChangeDoneView</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeDoneView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">password_change_done</span></code></p>
+<p>用户修改密码之后显示的页面。</p>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeDoneView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeDoneView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to use. Defaults to
+<code class="file docutils literal notranslate"><span class="pre">registration/password_change_done.html</span></code> if not supplied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordChangeDoneView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordChangeDoneView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordResetView</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">password_reset</span></code></p>
+<p>允许用户通过生成的一次性链接来重置密码，并把一次性链接发到用户注册邮箱中。</p>
+<p>This view will send an email if the following conditions are met:</p>
+<ul class="simple">
+<li>提供的电子邮件地址存在于系统中。</li>
+<li>The requested user is active (<code class="docutils literal notranslate"><span class="pre">User.is_active</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>).</li>
+<li>The requested user has a usable password. Users flagged with an unusable
+password (see
+<a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.set_unusable_password" title="django.contrib.auth.models.User.set_unusable_password"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_unusable_password()</span></code></a>) aren't
+allowed to request a password reset to prevent misuse when using an
+external authentication source like LDAP.</li>
+</ul>
+<p>If any of these conditions are <em>not</em> met, no email will be sent, but the
+user won't receive any error message either. This prevents information
+leaking to potential attackers. If you want to provide an error message in
+this case, you can subclass
+<a class="reference internal" href="#django.contrib.auth.forms.PasswordResetForm" title="django.contrib.auth.forms.PasswordResetForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordResetForm</span></code></a> and use the
+<code class="docutils literal notranslate"><span class="pre">form_class</span></code> attribute.</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">Be aware that sending an email costs extra time, hence you may be
+vulnerable to an email address enumeration timing attack due to a
+difference between the duration of a reset request for an existing
+email address and the duration of a reset request for a nonexistent
+email address. To reduce the overhead, you can use a 3rd party package
+that allows to send emails asynchronously, e.g. <a class="reference external" href="https://pypi.org/project/django-mailer/">django-mailer</a>.</p>
+</div>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to use for displaying the password reset
+form. Defaults to <code class="file docutils literal notranslate"><span class="pre">registration/password_reset_form.html</span></code> if not
+supplied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.form_class">
+<code class="sig-name descname"><span class="pre">form_class</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.form_class" title="永久链接至目标">¶</a></dt>
+<dd><p>Form that will be used to get the email of the user to reset the
+password for. Defaults to
+<a class="reference internal" href="#django.contrib.auth.forms.PasswordResetForm" title="django.contrib.auth.forms.PasswordResetForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordResetForm</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.email_template_name">
+<code class="sig-name descname"><span class="pre">email_template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.email_template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to use for generating the email with the
+reset password link. Defaults to
+<code class="file docutils literal notranslate"><span class="pre">registration/password_reset_email.html</span></code> if not supplied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.subject_template_name">
+<code class="sig-name descname"><span class="pre">subject_template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.subject_template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to use for the subject of the email with
+the reset password link. Defaults to
+<code class="file docutils literal notranslate"><span class="pre">registration/password_reset_subject.txt</span></code> if not supplied.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.token_generator">
+<code class="sig-name descname"><span class="pre">token_generator</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.token_generator" title="永久链接至目标">¶</a></dt>
+<dd><p>Instance of the class to check the one time link. This will default to
+<code class="docutils literal notranslate"><span class="pre">default_token_generator</span></code>, it's an instance of
+<code class="docutils literal notranslate"><span class="pre">django.contrib.auth.tokens.PasswordResetTokenGenerator</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.success_url">
+<code class="sig-name descname"><span class="pre">success_url</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.success_url" title="永久链接至目标">¶</a></dt>
+<dd><p>The URL to redirect to after a successful password reset request.
+Defaults to <code class="docutils literal notranslate"><span class="pre">'password_reset_done'</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.from_email">
+<code class="sig-name descname"><span class="pre">from_email</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.from_email" title="永久链接至目标">¶</a></dt>
+<dd><p>一个合法的邮件地址。默认情况下，Django 使用 <a class="reference internal" href="../../ref/settings.html#std-setting-DEFAULT_FROM_EMAIL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEFAULT_FROM_EMAIL</span></code></a> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.html_email_template_name">
+<code class="sig-name descname"><span class="pre">html_email_template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.html_email_template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>The full name of a template to use for generating a
+<em class="mimetype">text/html</em> multipart email with the password reset link. By
+default, HTML email is not sent.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetView.extra_email_context">
+<code class="sig-name descname"><span class="pre">extra_email_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetView.extra_email_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be available in the email
+template. It can be used to override default template context values
+listed below e.g. <code class="docutils literal notranslate"><span class="pre">domain</span></code>.</p>
+</dd></dl>
+
+<p><strong>Template context:</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">form</span></code> ：重置用户密码的表单（可参考上面的 <code class="docutils literal notranslate"><span class="pre">form_class</span></code> ）。</li>
+</ul>
+<p><strong>电子邮件模板上下文:</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">email</span></code> ：<code class="docutils literal notranslate"><span class="pre">user.email</span></code> 的别名。</li>
+<li><code class="docutils literal notranslate"><span class="pre">user</span></code> ：根据电子邮件表单字段指定的当前用户。只有活动用户才可以重置密码（ <code class="docutils literal notranslate"><span class="pre">User.is_active</span> <span class="pre">为</span> <span class="pre">True</span></code> ）。</li>
+<li><code class="docutils literal notranslate"><span class="pre">site_name</span></code> ：<code class="docutils literal notranslate"><span class="pre">site.name</span></code> 的别名。如果你还没有按照站点框架，它将设置为 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest.META" title="django.http.HttpRequest.META"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.META['SERVER_NAME']</span></code></a> 的值。更多关于站点信息，请参考 <a class="reference internal" href="../../ref/contrib/sites.html"><span class="doc">“站点”框架</span></a> 。</li>
+<li><code class="docutils literal notranslate"><span class="pre">domain</span></code> ：<code class="docutils literal notranslate"><span class="pre">site.domain</span></code> 的别名。如果你还没有安装网站框架，它会被设置为 <code class="docutils literal notranslate"><span class="pre">request.get_host()</span></code> 的值。</li>
+<li><code class="docutils literal notranslate"><span class="pre">protocol</span></code> ：http 或 https</li>
+<li><code class="docutils literal notranslate"><span class="pre">uid</span></code> ：使用 Base64 编码过的用户主键。</li>
+<li><code class="docutils literal notranslate"><span class="pre">token</span></code> ：检测重置密码链接是否有效的 Token 。</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">registration/password_reset_email.html</span></code> 例子（电子邮件内容模板）</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span>Someone asked for password reset for email <span class="cp">{{</span> <span class="nv">email</span> <span class="cp">}}</span>. Follow the link below:
+<span class="cp">{{</span> <span class="nv">protocol</span><span class="cp">}}</span>://<span class="cp">{{</span> <span class="nv">domain</span> <span class="cp">}}{%</span> <span class="k">url</span> <span class="s1">&#39;password_reset_confirm&#39;</span> <span class="nv">uidb64</span><span class="o">=</span><span class="nv">uid</span> <span class="nv">token</span><span class="o">=</span><span class="nv">token</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>相同的模板上下文用于主题模板。主题必须是单行纯文本字符串。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetDoneView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordResetDoneView</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetDoneView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">password_reset_done</span></code></p>
+<p>发送重置密码邮件后显示的页面。如果 <a class="reference internal" href="#django.contrib.auth.views.PasswordResetView" title="django.contrib.auth.views.PasswordResetView"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordResetView</span></code></a>&nbsp;没有明确设置 <code class="docutils literal notranslate"><span class="pre">success_url</span></code> ，那么默认将该视图调用。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">如果提供的电子邮件地址在系统内并不存在，那么用户可能是非活动用户，或者密码不可被更改。用户仍然会重定向到这个视图，但不会发送邮件。</p>
+</div>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetDoneView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetDoneView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>被使用模板的全称。如果没有提供，则默认是 <code class="file docutils literal notranslate"><span class="pre">registration/password_reset_done.html</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetDoneView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetDoneView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordResetConfirmView</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">password_reset_confirm</span></code></p>
+<p>提供输入新密码的表单。</p>
+<p>URL 的关键参数</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">uidb64</span></code> ：被Base64编码过的用户 id。</li>
+<li><code class="docutils literal notranslate"><span class="pre">token</span></code> ：检查密码是否有效的 Token。</li>
+</ul>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>用于显示确认密码视图的模板全称。默认值是 <code class="file docutils literal notranslate"><span class="pre">registration/password_reset_confirm.html</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.token_generator">
+<code class="sig-name descname"><span class="pre">token_generator</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.token_generator" title="永久链接至目标">¶</a></dt>
+<dd><p>检查密码的类实例。默认是 <code class="docutils literal notranslate"><span class="pre">default_token_generator</span></code>，它是 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.tokens.PasswordResetTokenGenerator</span></code> 的实例。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.post_reset_login">
+<code class="sig-name descname"><span class="pre">post_reset_login</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.post_reset_login" title="永久链接至目标">¶</a></dt>
+<dd><p>布尔值，用来标示用户成功重置密码后是否会被自动验证。默认是 <code class="docutils literal notranslate"><span class="pre">False</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.post_reset_login_backend">
+<code class="sig-name descname"><span class="pre">post_reset_login_backend</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.post_reset_login_backend" title="永久链接至目标">¶</a></dt>
+<dd><p>验证后端的路径，用于当 <code class="docutils literal notranslate"><span class="pre">post_reset_login</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时验证用户使用。当拥有多个 <a class="reference internal" href="../../ref/settings.html#std-setting-AUTHENTICATION_BACKENDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTHENTICATION_BACKENDS</span></code></a> 设置时才会用到。默认为 <code class="docutils literal notranslate"><span class="pre">None</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.form_class">
+<code class="sig-name descname"><span class="pre">form_class</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.form_class" title="永久链接至目标">¶</a></dt>
+<dd><p>用来设置密码的表单。默认是 <a class="reference internal" href="#django.contrib.auth.forms.SetPasswordForm" title="django.contrib.auth.forms.SetPasswordForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetPasswordForm</span></code></a> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.success_url">
+<code class="sig-name descname"><span class="pre">success_url</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.success_url" title="永久链接至目标">¶</a></dt>
+<dd><p>重置密码完成后跳转的 URL 。默认是 <code class="docutils literal notranslate"><span class="pre">'password_reset_complete'</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetConfirmView.reset_url_token">
+<code class="sig-name descname"><span class="pre">reset_url_token</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetConfirmView.reset_url_token" title="永久链接至目标">¶</a></dt>
+<dd><p>Token 参数为密码重置链接的组成部分。默认是 <code class="docutils literal notranslate"><span class="pre">'set-password'</span></code> 。</p>
+</dd></dl>
+
+<p><strong>Template context:</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">form</span></code> ：用来设置用户新密码的表单（查看上面的 <code class="docutils literal notranslate"><span class="pre">form_class</span></code> ）。</li>
+<li><code class="docutils literal notranslate"><span class="pre">validlink</span></code> ：布尔值，如果链接（<code class="docutils literal notranslate"><span class="pre">uidb64</span></code> 和 <code class="docutils literal notranslate"><span class="pre">token</span></code> 的组合）有效且合法，则返回 True 。</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetCompleteView">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordResetCompleteView</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetCompleteView" title="永久链接至目标">¶</a></dt>
+<dd><p><strong>URL name:</strong> <code class="docutils literal notranslate"><span class="pre">password_reset_complete</span></code></p>
+<p>当密码已经被修改成功后通知用户的视图。</p>
+<p>属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetCompleteView.template_name">
+<code class="sig-name descname"><span class="pre">template_name</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetCompleteView.template_name" title="永久链接至目标">¶</a></dt>
+<dd><p>显示视图的模板全称。默认是 <code class="file docutils literal notranslate"><span class="pre">registration/password_reset_complete.html</span></code> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.auth.views.PasswordResetCompleteView.extra_context">
+<code class="sig-name descname"><span class="pre">extra_context</span></code><a class="headerlink" href="#django.contrib.auth.views.PasswordResetCompleteView.extra_context" title="永久链接至目标">¶</a></dt>
+<dd><p>A dictionary of context data that will be added to the default context
+data passed to the template.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-helper-functions">
+<span id="helper-functions"></span><h3>辅助函数<a class="headerlink" href="#helper-functions" title="永久链接至标题">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.auth.views.redirect_to_login">
+<code class="sig-name descname"><span class="pre">redirect_to_login</span></code>(<em><span class="n"><span class="pre">next</span></span></em>, <em><span class="n"><span class="pre">login_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">redirect_field_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'next'</span></span></em>)<a class="headerlink" href="#django.contrib.auth.views.redirect_to_login" title="永久链接至目标">¶</a></dt>
+<dd><p>重定向到登录页面，登陆成功后跳转到其他 URL 。</p>
+<p><strong>必要参数</strong></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">next</span></code> ：成功登陆后跳转的 URL。</li>
+</ul>
+<p>可选参数：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">login_url</span></code> ：要重定向到登录页面的 URL 。如果没有提供，默认是 <a class="reference internal" href="../../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a> 。</li>
+<li><code class="docutils literal notranslate"><span class="pre">redirect_field_name</span></code> ：注销后跳转的 URL 所包含的 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 字段名称。如果已传递给定的 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 参数，则覆盖 <code class="docutils literal notranslate"><span class="pre">next</span></code> 。</li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.contrib.auth.forms">
+<span id="s-built-in-forms"></span><span id="s-built-in-auth-forms"></span><span id="module-django.contrib.auth.forms"></span><span id="built-in-forms"></span><span id="built-in-auth-forms"></span><h3>内置表单<a class="headerlink" href="#module-django.contrib.auth.forms" title="永久链接至标题">¶</a></h3>
+<p>如果你不想使用内置视图，但希望不必为此功能编写表单，验证系统提供很多在 <a class="reference internal" href="#module-django.contrib.auth.forms" title="django.contrib.auth.forms"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.auth.forms</span></code></a> 中的内置表单。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">内置验证表单对用户正在使用的的用户模型做了某些假设。如果你正在使用 <a class="reference internal" href="customizing.html#custom-users-and-the-built-in-auth-forms"><span class="std std-ref">custom user model ` ，它可能需要为验证系统定义你自己的表单。如需了解更多信息，参考文档 :ref:`using the built-in authentication forms with custom user models</span></a> 。</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.AdminPasswordChangeForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AdminPasswordChangeForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.AdminPasswordChangeForm" title="永久链接至目标">¶</a></dt>
+<dd><p>在管理界面修改用户密码所使用的表单。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">user</span></code>&nbsp;作为第一个参数。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.AuthenticationForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AuthenticationForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.AuthenticationForm" title="永久链接至目标">¶</a></dt>
+<dd><p>用户登录的表单。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">request</span></code>&nbsp;作为第一个参数，该参数存储在表单实例上，供子类使用。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.AuthenticationForm.confirm_login_allowed">
+<code class="sig-name descname"><span class="pre">confirm_login_allowed</span></code>(<em><span class="n"><span class="pre">user</span></span></em>)<a class="headerlink" href="#django.contrib.auth.forms.AuthenticationForm.confirm_login_allowed" title="永久链接至目标">¶</a></dt>
+<dd><p>默认情况下，<code class="docutils literal notranslate"><span class="pre">AuthenticationForm</span></code> 拒绝  <code class="docutils literal notranslate"><span class="pre">is_active</span></code> 标识为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 的用户。你可以通过自定义策略来覆盖这个行为来决定哪个用户可以登录。通过``AuthenticationForm`` 子类的自定义表单来执行这个操作，并覆盖 <code class="docutils literal notranslate"><span class="pre">confirm_login_allowed()</span></code> 方法。如果给定的用户无法登录，这个方法应该引发 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.ValidationError" title="django.core.exceptions.ValidationError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValidationError</span></code></a> 错误。</p>
+<p>举例，允许所有用户登录而不管 &quot;active&quot; 状态：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.forms</span> <span class="kn">import</span> <span class="n">AuthenticationForm</span>
+
+
+<span class="k">class</span> <span class="nc">AuthenticationFormWithInactiveUsersOkay</span><span class="p">(</span><span class="n">AuthenticationForm</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">confirm_login_allowed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>（在这个例子中，你将需要使用一个允许非活动用户的验证后端，比如 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.backends.AllowAllUsersModelBackend" title="django.contrib.auth.backends.AllowAllUsersModelBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">AllowAllUsersModelBackend</span></code></a> 。）</p>
+<p>或者只允许一些活动用户登录：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PickyAuthenticationForm</span><span class="p">(</span><span class="n">AuthenticationForm</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">confirm_login_allowed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="n">_</span><span class="p">(</span><span class="s2">&quot;This account is inactive.&quot;</span><span class="p">),</span>
+                <span class="n">code</span><span class="o">=</span><span class="s2">&quot;inactive&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Sorry, accounts starting with &#39;b&#39; aren&#39;t welcome here.&quot;</span><span class="p">),</span>
+                <span class="n">code</span><span class="o">=</span><span class="s2">&quot;no_b_users&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.PasswordChangeForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordChangeForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.PasswordChangeForm" title="永久链接至目标">¶</a></dt>
+<dd><p>允许用户修改密码的表单:</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.PasswordResetForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PasswordResetForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.PasswordResetForm" title="永久链接至目标">¶</a></dt>
+<dd><p>生成和邮件发送一次性重置密码链接的表单。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.PasswordResetForm.send_mail">
+<code class="sig-name descname"><span class="pre">send_mail</span></code>(<em><span class="n"><span class="pre">subject_template_name</span></span></em>, <em><span class="n"><span class="pre">email_template_name</span></span></em>, <em><span class="n"><span class="pre">context</span></span></em>, <em><span class="n"><span class="pre">from_email</span></span></em>, <em><span class="n"><span class="pre">to_email</span></span></em>, <em><span class="n"><span class="pre">html_email_template_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.auth.forms.PasswordResetForm.send_mail" title="永久链接至目标">¶</a></dt>
+<dd><p>使用参数发送 <code class="docutils literal notranslate"><span class="pre">EmailMultiAlternatives</span></code>。可以重写自定义邮件发送给用户的方式。</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first last simple">
+<li><strong>subject_template_name</strong> -- 主题模板</li>
+<li><strong>email_template_name</strong> -- 邮件主体模板</li>
+<li><strong>context</strong> -- 上下文传递至 <code class="docutils literal notranslate"><span class="pre">subject_template</span></code>, <code class="docutils literal notranslate"><span class="pre">email_template</span></code>, 和 <code class="docutils literal notranslate"><span class="pre">html_email_template</span></code> （如果它非空）。</li>
+<li><strong>from_email</strong> -- 发送方的邮箱地址。</li>
+<li><strong>to_email</strong> -- 接收方的邮箱地址。</li>
+<li><strong>html_email_template_name</strong> -- HTML 正文模板；默认是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，在这种情况下发送纯文本邮件。</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>默认情况下，<code class="docutils literal notranslate"><span class="pre">save()</span></code>&nbsp;使用 <a class="reference internal" href="#django.contrib.auth.views.PasswordResetView" title="django.contrib.auth.views.PasswordResetView"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordResetView</span></code></a>&nbsp;传递给其电子邮件上下文的相同变量填充上下文。</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.SetPasswordForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SetPasswordForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.SetPasswordForm" title="永久链接至目标">¶</a></dt>
+<dd><p>让用户不输入旧密码就能改变它们密码的表单。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.UserChangeForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">UserChangeForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.UserChangeForm" title="永久链接至目标">¶</a></dt>
+<dd><p>在管理界面修改用户信息和权限的表单。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.BaseUserCreationForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">BaseUserCreationForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.BaseUserCreationForm" title="永久链接至目标">¶</a></dt>
+<dd><div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p>A <a class="reference internal" href="../forms/modelforms.html#django.forms.ModelForm" title="django.forms.ModelForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelForm</span></code></a> for creating a new user. This is the
+recommended base class if you need to customize the user creation form.</p>
+<p>它有三个字段： <code class="docutils literal notranslate"><span class="pre">username</span></code>&nbsp;（来自用户模型），<code class="docutils literal notranslate"><span class="pre">password1</span></code> ，和 <code class="docutils literal notranslate"><span class="pre">password2</span></code> 。它检查 <code class="docutils literal notranslate"><span class="pre">password1</span></code> 和 <code class="docutils literal notranslate"><span class="pre">password2</span></code> 是否匹配，使用 <a class="reference internal" href="passwords.html#django.contrib.auth.password_validation.validate_password" title="django.contrib.auth.password_validation.validate_password"><code class="xref py py-func docutils literal notranslate"><span class="pre">validate_password()</span></code></a> 验证密码，并且使用 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.set_password" title="django.contrib.auth.models.User.set_password"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_password()</span></code></a> 来设置用户密码。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.auth.forms.UserCreationForm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">UserCreationForm</span></code><a class="headerlink" href="#django.contrib.auth.forms.UserCreationForm" title="永久链接至目标">¶</a></dt>
+<dd><p>Inherits from <a class="reference internal" href="#django.contrib.auth.forms.BaseUserCreationForm" title="django.contrib.auth.forms.BaseUserCreationForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseUserCreationForm</span></code></a>. To help prevent confusion with
+similar usernames, the form doesn't allow usernames that differ only in
+case.</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>In older versions, <a class="reference internal" href="#django.contrib.auth.forms.UserCreationForm" title="django.contrib.auth.forms.UserCreationForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserCreationForm</span></code></a> didn't save many-to-many
+form fields for a custom user model.</p>
+<p>In older versions, usernames that differ only in case are allowed.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-authentication-data-in-templates">
+<span id="authentication-data-in-templates"></span><h3>模板内验证数据<a class="headerlink" href="#authentication-data-in-templates" title="永久链接至标题">¶</a></h3>
+<p>当你使用 <a class="reference internal" href="../../ref/templates/api.html#django.template.RequestContext" title="django.template.RequestContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestContext</span></code></a> 时，当前已登录用户和他们的权限在 :doc:<a href="#id1"><span class="problematic" id="id2">`</span></a>template context ` 中是可用的。</p>
+<div class="admonition-technicality admonition">
+<p class="first admonition-title">技术细节</p>
+<p class="last">从技术上讲，如果你使用 <a class="reference internal" href="../../ref/templates/api.html#django.template.RequestContext" title="django.template.RequestContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestContext</span></code></a> ，这些变量只在模板上下文中可用，并且已启用 <code class="docutils literal notranslate"><span class="pre">'django.contrib.auth.context_processors.auth'</span></code>&nbsp;处理机。它默认产生配置文件。了解更多，可以查看 <a class="reference internal" href="../../ref/templates/api.html#subclassing-context-requestcontext"><span class="std std-ref">RequestContext docs</span></a> 。</p>
+</div>
+<div class="section" id="s-users">
+<span id="users"></span><h4>用户<a class="headerlink" href="#users" title="永久链接至标题">¶</a></h4>
+<p>当渲染模板 <a class="reference internal" href="../../ref/templates/api.html#django.template.RequestContext" title="django.template.RequestContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestContext</span></code></a> ，当前登录用户（<a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User" title="django.contrib.auth.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a> 实例或 <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.AnonymousUser" title="django.contrib.auth.models.AnonymousUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnonymousUser</span></code></a> 实例）被保存在模板变量 <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">user</span> <span class="pre">}}</span></code> 中：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">user.is_authenticated</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Welcome, <span class="cp">{{</span> <span class="nv">user.username</span> <span class="cp">}}</span>. Thanks for logging in.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">else</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Welcome, new user. Please log in.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>如果没有使用 <code class="docutils literal notranslate"><span class="pre">RequestContext</span></code> ，那么这个模板上下文变量将不可用。</p>
+</div>
+<div class="section" id="s-permissions">
+<span id="permissions"></span><h4>权限<a class="headerlink" href="#permissions" title="永久链接至标题">¶</a></h4>
+<p>当前登录用户的权限保存在模板变量 <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">perms</span> <span class="pre">}}</span></code> 中。这是 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.context_processors.PermWrapper</span></code> 的一个实例，它是一个对模板友好的权限代理。</p>
+<p>Evaluating a single-attribute lookup of <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">perms</span> <span class="pre">}}</span></code> as a boolean is a proxy
+to <a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.has_module_perms" title="django.contrib.auth.models.User.has_module_perms"><code class="xref py py-meth docutils literal notranslate"><span class="pre">User.has_module_perms()</span></code></a>. For example, to check if
+the logged-in user has any permissions in the <code class="docutils literal notranslate"><span class="pre">foo</span></code> app:</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">perms.foo</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>Evaluating a two-level-attribute lookup as a boolean is a proxy to
+<a class="reference internal" href="../../ref/contrib/auth.html#django.contrib.auth.models.User.has_perm" title="django.contrib.auth.models.User.has_perm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">User.has_perm()</span></code></a>. For example,
+to check if the logged-in user has the permission <code class="docutils literal notranslate"><span class="pre">foo.add_vote</span></code>:</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">perms.foo.add_vote</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>以下是一个在模板中检查权限的更完整的示例：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">perms.foo</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>You have permission to do something in the foo app.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">if</span> <span class="nv">perms.foo.add_vote</span> <span class="cp">%}</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>You can vote!<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+    <span class="cp">{%</span> <span class="k">if</span> <span class="nv">perms.foo.add_driving</span> <span class="cp">%}</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>You can drive!<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">else</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>You don&#39;t have permission to do anything in the foo app.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>也可以通过 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">if</span> <span class="pre">in</span> <span class="pre">%}</span></code> 语句来查找权限。比如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="s1">&#39;foo&#39;</span> <span class="k">in</span> <span class="nv">perms</span> <span class="cp">%}</span>
+    <span class="cp">{%</span> <span class="k">if</span> <span class="s1">&#39;foo.add_vote&#39;</span> <span class="k">in</span> <span class="nv">perms</span> <span class="cp">%}</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>In lookup works, too.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-managing-users-in-the-admin">
+<span id="s-auth-admin"></span><span id="managing-users-in-the-admin"></span><span id="auth-admin"></span><h2>在管理界面中管理用户<a class="headerlink" href="#managing-users-in-the-admin" title="永久链接至标题">¶</a></h2>
+<p>当安装了 <code class="docutils literal notranslate"><span class="pre">django.contrib.admin</span></code> 和 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code>，管理后台提供了方便的方法来查看和管理用户、组和权限。用户可以增加和删除任何 Django 模型。可以创建组，也可以为用户和组分配权限。用户操作模型的日志也会在管理后台中保存和显示。</p>
+<div class="section" id="s-id6">
+<span id="id6"></span><h3>创建用户<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<p>你可以在管理后台主页的 “认证和权限” 部分看到 “用户” 链接。“增加用户”的管理界面和其他标准的管理后台不同的是：你需要先输入一个新用户名和新密码，然后才能编辑新用户的剩余字段。</p>
+<p>注意：如果你希望某个用户账号可以在 Django 管理后台创建用户，你将需要给用户“创建”和“修改”权限。如果账号只有“创建”权限但没有“修改”权限，那么这个账号将不能增加用户。为什么？因为你有权限添加用户，那么你就拥有添加超级管理员的权利，而超级管理员就可以修改其他用户。因此，Django 需要添加和修改权限作为安全措施。</p>
+<p>要考虑如何允许用户去管理权限。如果你允许普通管理员编辑用户，这和给他们超级管理员权限一样。因为他们有权利提升用户权限，包括他们自己。</p>
+</div>
+<div class="section" id="s-id7">
+<span id="id7"></span><h3>更改密码<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
+<p>用户密码不显示在管理界面中（也不在数据库中保存），但会显示 <a class="reference internal" href="passwords.html"><span class="doc">password storage details</span></a> 。这个信息中包含一个指向密码修改表单的链接，该表单允许管理员修改用户密码。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">使用 Django 的验证系统</a><ul>
+<li><a class="reference internal" href="#user-objects"><code class="docutils literal notranslate"><span class="pre">User</span></code> 对象</a><ul>
+<li><a class="reference internal" href="#creating-users">创建用户</a></li>
+<li><a class="reference internal" href="#creating-superusers">创建超级用户</a></li>
+<li><a class="reference internal" href="#changing-passwords">更改密码</a></li>
+<li><a class="reference internal" href="#authenticating-users">验证用户</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#permissions-and-authorization">权限和认证</a><ul>
+<li><a class="reference internal" href="#default-permissions">默认权限</a></li>
+<li><a class="reference internal" href="#groups">组</a></li>
+<li><a class="reference internal" href="#programmatically-creating-permissions">以编程方式创建权限</a></li>
+<li><a class="reference internal" href="#permission-caching">权限缓存</a></li>
+<li><a class="reference internal" href="#proxy-models">代理模型</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#authentication-in-web-requests">Web 请求的认证</a><ul>
+<li><a class="reference internal" href="#how-to-log-a-user-in">用户如何登陆</a><ul>
+<li><a class="reference internal" href="#selecting-the-authentication-backend">选择验证后端</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-log-a-user-out">用户如何登出</a></li>
+<li><a class="reference internal" href="#limiting-access-to-logged-in-users">限制对未登录用户的访问</a><ul>
+<li><a class="reference internal" href="#the-raw-way">原始方式</a></li>
+<li><a class="reference internal" href="#the-login-required-decorator"><code class="docutils literal notranslate"><span class="pre">login_required</span></code> 装饰器</a></li>
+<li><a class="reference internal" href="#the-loginrequiredmixin-mixin">The <code class="docutils literal notranslate"><span class="pre">LoginRequiredMixin</span></code> mixin</a></li>
+<li><a class="reference internal" href="#limiting-access-to-logged-in-users-that-pass-a-test">限制对通过测试的登录用户的访问</a></li>
+<li><a class="reference internal" href="#the-permission-required-decorator"><code class="docutils literal notranslate"><span class="pre">permission_required</span></code> 装饰器</a></li>
+<li><a class="reference internal" href="#the-permissionrequiredmixin-mixin"><code class="docutils literal notranslate"><span class="pre">PermissionRequiredMixin</span></code> Mixin</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#redirecting-unauthorized-requests-in-class-based-views">在基于类的视图中重定向未通过验证的请求</a><ul>
+<li><a class="reference internal" href="#session-invalidation-on-password-change">密码更改时会话失效</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-django.contrib.auth.views">验证视图</a><ul>
+<li><a class="reference internal" href="#using-the-views">使用视图</a></li>
+<li><a class="reference internal" href="#all-authentication-views">所有的验证视图</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#helper-functions">辅助函数</a></li>
+<li><a class="reference internal" href="#module-django.contrib.auth.forms">内置表单</a></li>
+<li><a class="reference internal" href="#authentication-data-in-templates">模板内验证数据</a><ul>
+<li><a class="reference internal" href="#users">用户</a></li>
+<li><a class="reference internal" href="#permissions">权限</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#managing-users-in-the-admin">在管理界面中管理用户</a><ul>
+<li><a class="reference internal" href="#id6">创建用户</a></li>
+<li><a class="reference internal" href="#id7">更改密码</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="index.html"
+                          title="上一章">Django中的用户认证</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="passwords.html"
+                          title="下一章">Django中的密码管理</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/topics/auth/default.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="index.html" title="Django中的用户认证">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="passwords.html" title="Django中的密码管理">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

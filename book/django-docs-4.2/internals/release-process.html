@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 的发行流程 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django废弃时间表" href="deprecation.html" />
+    <link rel="prev" title="Django 的安全策略" href="security.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="security.html" title="Django 的安全策略">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="deprecation.html" title="Django废弃时间表">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-release-process">
+            
+  <div class="section" id="s-django-s-release-process">
+<span id="django-s-release-process"></span><h1>Django 的发行流程<a class="headerlink" href="#django-s-release-process" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-official-releases">
+<span id="s-id1"></span><span id="official-releases"></span><span id="id1"></span><h2>正式发行<a class="headerlink" href="#official-releases" title="永久链接至标题">¶</a></h2>
+<p>从 1.0 版本开始，Django 的发行编号如下方式工作：</p>
+<ul class="simple">
+<li>版本编号为 <code class="docutils literal notranslate"><span class="pre">A.B</span></code> 或 <code class="docutils literal notranslate"><span class="pre">A.B.C</span></code> 形式。</li>
+<li><code class="docutils literal notranslate"><span class="pre">A.B</span></code> 是 <em>功能发行</em> 的版本号。每个版本都将基本向后兼容前一个版本。这个规则的例外情况将在发行说明中列出。</li>
+<li><code class="docutils literal notranslate"><span class="pre">C</span></code> 是 <em>补丁发行</em> 的版本号，对于错误修复和安全发行来说，它是递增的。这些版本将 100% 向后兼容前一个补丁版本。唯一的例外是当有一个安全或数据丢失的问题无法在不破坏向后兼容的情况下被修复。如果发生这种情况，发行说明将提供详细的升级说明。</li>
+<li>在一个新的功能发行之前，我们会发布 alpha、beta 和候选发行。这些发行的形式是 <code class="docutils literal notranslate"><span class="pre">A.B</span> <span class="pre">alpha/beta/rc</span> <span class="pre">N</span></code>，意思是 <code class="docutils literal notranslate"><span class="pre">A.B</span></code> 版本的第 <code class="docutils literal notranslate"><span class="pre">N</span></code> 个 alpha/beta/候选发行。</li>
+</ul>
+<p>在 git 中，每个 Django 发行都会有一个标签，表示它的版本号，用 Django 的发行密钥签名。此外，每个发行系列都有自己的分支，称为 <code class="docutils literal notranslate"><span class="pre">stable/A.B.x</span></code>，bugfix/security 版本将从这些分支发布。</p>
+<p>关于 Django 项目如何出于安全目的发布新版本的更多信息，请参见 <a class="reference internal" href="security.html"><span class="doc">我们的安全政策</span></a>。</p>
+<dl class="glossary docutils">
+<dt id="term-Feature-release">功能发行<a class="headerlink" href="#term-Feature-release" title="Permalink to this term">¶</a></dt><dd>功能发行（A.B，A.B+1，等等）大约每 8 个月进行一次 —— 详情请见 <a class="reference internal" href="#id2">release process</a> 。这些发行将包含新的功能，对现有功能的改进等等。</dd>
+<dt id="term-Patch-release">补丁发行<a class="headerlink" href="#term-Patch-release" title="Permalink to this term">¶</a></dt><dd><p>补丁版本（A.B.C，A.B.C+1 等等）将根据需要发布，以修复错误和／或安全问题。</p>
+<p>这些版本将与相关的功能版本 100% 兼容，除非由于安全原因或为了防止数据丢失而无法做到。因此，“我应该升级到最新的补丁版本吗？” 的答案将永远是 “是的”。</p>
+</dd>
+<dt id="term-Long-term-support-release">长期支持发行<a class="headerlink" href="#term-Long-term-support-release" title="Permalink to this term">¶</a></dt><dd><p>某些功能版本将被指定为长期支持（LTS）版本。这些版本将在保证的时间内，通常是三年内得到安全和数据丢失的修复。</p>
+<p>请参见 <a class="reference external" href="https://www.djangoproject.com/download/">the download page</a> ，了解被指定为长期支持的版本。</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="s-release-cadence">
+<span id="s-internal-release-cadence"></span><span id="release-cadence"></span><span id="internal-release-cadence"></span><h2>发行节奏<a class="headerlink" href="#release-cadence" title="永久链接至标题">¶</a></h2>
+<p>从 Django 2.0 开始，版本号将使用一种松散的 <a class="reference external" href="https://semver.org/">语义版本</a> ，这样一来，LTS 之后的每个版本都将提升到下一个 “点零” 版本。例如：2.0、2.1、2.2（LTS）、3.0、3.1、3.2（LTS）等等。</p>
+<p>语义版本使人们更容易一目了然地看到各版本之间的兼容情况。它还有助于预测兼容性垫片何时会被移除。这不是一个纯粹的语义版本形式，因为每个功能版本都会继续有一些记录在案的向后不兼容问题，在这些问题上不可能有一个废弃的路径，或者不值得花费。此外，在 LTS 版本（X.2）中开始的弃用将在非零版本（Y.1）中放弃，以适应我们的政策，即至少在两个功能版本中保留弃用的垫片。请继续阅读下一节，了解一个例子。</p>
+</div>
+<div class="section" id="s-deprecation-policy">
+<span id="s-internal-release-deprecation-policy"></span><span id="deprecation-policy"></span><span id="internal-release-deprecation-policy"></span><h2>废弃政策<a class="headerlink" href="#deprecation-policy" title="永久链接至标题">¶</a></h2>
+<p>一个功能版本可能会废弃以前版本中的某些功能。如果一个功能在 A.x 版本中被弃用，它将继续在所有 A.x 版本中工作（对于所有版本的 x），但会引发警告。被废弃的功能将在 B.0 版本中移除，如果是在上一个 A.x 版本中废弃的功能，则在 B.1 版本中移除，以确保废弃的功能至少在两个版本中完成。</p>
+<p>因此，举例来说，如果我们决定在 Django 4.2 中开始废止一个函数：</p>
+<ul class="simple">
+<li>Django 4.2 将包含一个向后兼容的函数副本，它将引发一个 <code class="docutils literal notranslate"><span class="pre">RemovedInDjango51Warning</span></code>。</li>
+<li>Django 5.0（4.2 之后的版本）仍将包含向后兼容的副本。</li>
+<li>Django 5.1 将直接删除该功能。</li>
+</ul>
+<p>这些警告在默认情况下是静默的。你可以用 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-Wd</span></code> 选项打开这些警告的显示。</p>
+<p>一个更普遍的例子：</p>
+<ul class="simple">
+<li>X.0</li>
+<li>X.1</li>
+<li>X.2 LTS</li>
+<li>Y.0: 丢弃在 X.0 和 X.1 中添加的废弃垫片。</li>
+<li>Y.1: 丢弃在 X.2 中添加的废弃垫片。</li>
+<li>Y.2 LTS: 没有丢弃废弃垫片（虽然 Y.0 不再被支持，但第三方应用程序需要保持回到 X.2 LTS 的兼容性，以方便 LTS 到 LTS 的升级）。</li>
+<li>Z.0: 丢弃在 Y.0 和 Y.1 中添加的废弃垫片。</li>
+</ul>
+<p>也请参见 <a class="reference internal" href="contributing/writing-code/submitting-patches.html#deprecating-a-feature"><span class="std std-ref">弃用一个功能</span></a> 指南。</p>
+</div>
+<div class="section" id="s-supported-versions">
+<span id="s-supported-versions-policy"></span><span id="supported-versions"></span><span id="supported-versions-policy"></span><h2>支持的版本<a class="headerlink" href="#supported-versions" title="永久链接至标题">¶</a></h2>
+<p>在任何时候，Django 的开发者团队都会在不同程度上支持一系列的版本。请参阅下载页面的 <a class="reference external" href="https://www.djangoproject.com/download/#supported-versions">支持的版本部分</a> ，了解每个版本的当前支持情况。</p>
+<ul>
+<li><p class="first">目前的开发分支 <code class="docutils literal notranslate"><span class="pre">main</span></code> 将获得需要少量重构的新功能和错误修复。</p>
+</li>
+<li><p class="first">应用于主分支的补丁也必须应用于最后一个功能发行分支，当它们修复关键问题时，将在该功能系列的下一个补丁发行中发布：</p>
+<ul class="simple">
+<li>安全问题。</li>
+<li>数据丢失漏洞。</li>
+<li>崩溃漏洞。</li>
+<li>最新稳定发行的新功能中的主要功能漏洞。</li>
+<li>在当前版本系列中引入的旧版本 Django 的缺陷。</li>
+</ul>
+<p>经验法则是，对于那些一开始就会阻止发行的漏洞（发行障碍），修复将被向后移植到最后一个功能发行。</p>
+</li>
+<li><p class="first">安全修复和数据丢失漏洞将被应用于当前的主分支、最后两个功能发行分支以及任何其他支持的长期支持发行分支。</p>
+</li>
+<li><p class="first">一般来说，文档修复会更自由地向后移植到最后一个发行分支。这是因为让最后一个发行的文档是最新的和正确的是非常有利的，而且引入缺陷的风险也更小。</p>
+</li>
+</ul>
+<p>作为一个具体的例子，考虑在 Django 5.1 和 5.2 发布之间的一个时间点。在这个时间点上：</p>
+<ul class="simple">
+<li>功能将被添加到开发主分支，作为 Django 5.2 发行。</li>
+<li>关键漏洞修复将应用于 <code class="docutils literal notranslate"><span class="pre">stable/5.1.x</span></code> 分支，并作为 5.1.1、5.1.2 等发行。</li>
+<li>安全修复和数据丢失问题的漏洞修复将应用于 <code class="docutils literal notranslate"><span class="pre">main</span></code>、<code class="docutils literal notranslate"><span class="pre">stable/5.1.x</span></code>、<code class="docutils literal notranslate"><span class="pre">stable/5.0.x</span></code> 和 <code class="docutils literal notranslate"><span class="pre">stable/4.2.x</span></code> （LTS）分支。它们将触发 <code class="docutils literal notranslate"><span class="pre">5.1.1</span></code>、<code class="docutils literal notranslate"><span class="pre">5.0.5</span></code>、<code class="docutils literal notranslate"><span class="pre">4.2.8</span></code> 等的发行。</li>
+<li>文档修复将应用于 main，如果容易向后移植，则应用于最新的稳定分支，<code class="docutils literal notranslate"><span class="pre">5.1.x</span></code>。</li>
+</ul>
+</div>
+<div class="section" id="s-release-process">
+<span id="s-id2"></span><span id="release-process"></span><span id="id2"></span><h2>发行过程<a class="headerlink" href="#release-process" title="永久链接至标题">¶</a></h2>
+<p>Django 使用了一个基于时间的发行时间表，每八个月左右一次功能发行。</p>
+<p>每次功能发行后，发行经理都会宣布下一次功能发行的时间表。</p>
+<div class="section" id="s-release-cycle">
+<span id="release-cycle"></span><h3>发行周期<a class="headerlink" href="#release-cycle" title="永久链接至标题">¶</a></h3>
+<p>每个发行周期由三部分组成：</p>
+<div class="section" id="s-phase-one-feature-proposal">
+<span id="phase-one-feature-proposal"></span><h4>第一阶段：功能建议<a class="headerlink" href="#phase-one-feature-proposal" title="永久链接至标题">¶</a></h4>
+<p>发行过程的第一阶段将包括确定在下一个版本中包括哪些主要功能。这应该包括对这些功能进行大量的初步工作 —— 工作代码胜过宏伟设计。</p>
+<p>即将发布的版本的主要功能将被添加到 wiki 路线图页面，例如： <a class="reference external" href="https://code.djangoproject.com/wiki/Version1.11Roadmap">https://code.djangoproject.com/wiki/Version1.11Roadmap</a>。</p>
+</div>
+<div class="section" id="s-phase-two-development">
+<span id="phase-two-development"></span><h4>第二阶段：开发<a class="headerlink" href="#phase-two-development" title="永久链接至标题">¶</a></h4>
+<p>发行时间表的第二部分是 “低头” 工作期。利用第一阶段结束时产生的路线图，我们都将非常努力地工作，以完成上面的所有工作。</p>
+<p>在第二阶段结束时，任何未完成的功能将被推迟到下一个版本。</p>
+<p>第二阶段将以 alpha 版本达到高潮。此时，<code class="docutils literal notranslate"><span class="pre">stable/A.B.x</span></code> 分支将从 <code class="docutils literal notranslate"><span class="pre">main</span></code> 分叉出来。</p>
+</div>
+<div class="section" id="s-phase-three-bugfixes">
+<span id="phase-three-bugfixes"></span><h4>第三阶段：修复漏洞<a class="headerlink" href="#phase-three-bugfixes" title="永久链接至标题">¶</a></h4>
+<p>发行周期的最后一部分是用来修复错误的 —— 在这段时间内不会接受新的功能。我们将尝试在 alpha 版的一个月后发行 beta 版，在 beta 版一个月后发行候选版。</p>
+<p>候选发行版本标志着字符串冻结，它至少发生在最终发行版本的两周前。在这之后，不得再添加新的可翻译字符串。</p>
+<p>During this phase, mergers will be more and more conservative with backports,
+to avoid introducing regressions. After the release candidate, only release
+blockers and documentation fixes should be backported.</p>
+<p>在这个阶段的同时，<code class="docutils literal notranslate"><span class="pre">main</span></code> 可以接受新的功能，在 <code class="docutils literal notranslate"><span class="pre">A.B+1</span></code> 周期内发布。</p>
+</div>
+</div>
+<div class="section" id="s-bug-fix-releases">
+<span id="bug-fix-releases"></span><h3>漏洞修复发行<a class="headerlink" href="#bug-fix-releases" title="永久链接至标题">¶</a></h3>
+<p>在一个功能发行（如 A.B）后，之前的版本将进入漏洞修复模式。</p>
+<p>上一个功能发行的分支（例如：<code class="docutils literal notranslate"><span class="pre">stable/A.B-1.x</span></code>）将包括漏洞修复。在 main 上修复的重要漏洞 <em>也</em> 必须在漏洞分支上修复；这意味着提交时需要将漏洞修复和功能添加干净地分开。向 main 提交修复的开发者将负责把该修复应用于当前的漏洞修复分支。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 的发行流程</a><ul>
+<li><a class="reference internal" href="#official-releases">正式发行</a></li>
+<li><a class="reference internal" href="#release-cadence">发行节奏</a></li>
+<li><a class="reference internal" href="#deprecation-policy">废弃政策</a></li>
+<li><a class="reference internal" href="#supported-versions">支持的版本</a></li>
+<li><a class="reference internal" href="#release-process">发行过程</a><ul>
+<li><a class="reference internal" href="#release-cycle">发行周期</a><ul>
+<li><a class="reference internal" href="#phase-one-feature-proposal">第一阶段：功能建议</a></li>
+<li><a class="reference internal" href="#phase-two-development">第二阶段：开发</a></li>
+<li><a class="reference internal" href="#phase-three-bugfixes">第三阶段：修复漏洞</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bug-fix-releases">漏洞修复发行</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="security.html"
+                          title="上一章">Django 的安全策略</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="deprecation.html"
+                          title="下一章">Django废弃时间表</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/internals/release-process.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="security.html" title="Django 的安全策略">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="deprecation.html" title="Django废弃时间表">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

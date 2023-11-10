@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分页 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 的安全性" href="security.html" />
+    <link rel="prev" title="日志" href="logging.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="logging.html" title="日志">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="security.html" title="Django 的安全性">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-pagination">
+            
+  <div class="section" id="s-pagination">
+<span id="pagination"></span><h1>分页<a class="headerlink" href="#pagination" title="永久链接至标题">¶</a></h1>
+<p>Django 提供了高级和低级的方法来帮助你管理分页数据——也就是说，数据被分割在几个页面上，并带有“上一页／下一页”链接。</p>
+<div class="section" id="s-the-paginator-class">
+<span id="the-paginator-class"></span><h2><code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 类<a class="headerlink" href="#the-paginator-class" title="永久链接至标题">¶</a></h2>
+<p>在幕后，所有分页方法都使用：<a class="reference internal" href="../ref/paginator.html#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paginator</span></code></a> 类。它完成了将 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 拆分为 <a class="reference internal" href="../ref/paginator.html#django.core.paginator.Page" title="django.core.paginator.Page"><code class="xref py py-class docutils literal notranslate"><span class="pre">Page</span></code></a> 对象的所有繁重工作。</p>
+</div>
+<div class="section" id="s-example">
+<span id="example"></span><h2>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h2>
+<p>Give <a class="reference internal" href="../ref/paginator.html#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paginator</span></code></a> a list of objects, plus the
+number of items you'd like to have on each page, and it gives you methods for
+accessing the items for each page:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.paginator</span> <span class="kn">import</span> <span class="n">Paginator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">objects</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;john&quot;</span><span class="p">,</span> <span class="s2">&quot;paul&quot;</span><span class="p">,</span> <span class="s2">&quot;george&quot;</span><span class="p">,</span> <span class="s2">&quot;ringo&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">count</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">num_pages</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">page_range</span><span class="p">)</span>
+<span class="go">&lt;class &#39;range_iterator&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">page_range</span>
+<span class="go">range(1, 3)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page1</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page1</span>
+<span class="go">&lt;Page 1 of 2&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page1</span><span class="o">.</span><span class="n">object_list</span>
+<span class="go">[&#39;john&#39;, &#39;paul&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">object_list</span>
+<span class="go">[&#39;george&#39;, &#39;ringo&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">has_next</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">has_previous</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">has_other_pages</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">next_page_number</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">EmptyPage</span>: <span class="n">That page contains no results</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">previous_page_number</span><span class="p">()</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">start_index</span><span class="p">()</span>  <span class="c1"># The 1-based index of the first item on this page</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">page2</span><span class="o">.</span><span class="n">end_index</span><span class="p">()</span>  <span class="c1"># The 1-based index of the last item on this page</span>
+<span class="go">4</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">EmptyPage</span>: <span class="n">That page number is less than 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">EmptyPage</span>: <span class="n">That page contains no results</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">请注意，你可以给 <code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 一个列表／元组，一个 Django 的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>，或者任何其它具有 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 或 <code class="docutils literal notranslate"><span class="pre">__len__()</span></code> 方法的对象。在确定传递的对象中包含的对象数时，<code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 将首先尝试调用 <code class="docutils literal notranslate"><span class="pre">count()</span></code>，如果传入的对象没有 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 方法则回退到使用 <code class="docutils literal notranslate"><span class="pre">len()</span></code>。这允许像 Django 的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 之类的对象在可用的情况下使用更高效的 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 方法。</p>
+</div>
+</div>
+<div class="section" id="s-paginating-a-listview">
+<span id="s-paginating-a-list-view"></span><span id="paginating-a-listview"></span><span id="paginating-a-list-view"></span><h2><code class="docutils literal notranslate"><span class="pre">ListView</span></code> 分页<a class="headerlink" href="#paginating-a-listview" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="../ref/class-based-views/generic-display.html#django.views.generic.list.ListView" title="django.views.generic.list.ListView"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.views.generic.list.ListView</span></code></a> 提供了一种内置的方式来对显示的列表进行分页。你可以通过在你的视图类中添加：<a class="reference internal" href="../ref/class-based-views/mixins-multiple-object.html#django.views.generic.list.MultipleObjectMixin.paginate_by" title="django.views.generic.list.MultipleObjectMixin.paginate_by"><code class="xref py py-attr docutils literal notranslate"><span class="pre">paginate_by</span></code></a> 属性来实现此目的，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.generic</span> <span class="kn">import</span> <span class="n">ListView</span>
+
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Contact</span>
+
+
+<span class="k">class</span> <span class="nc">ContactListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+    <span class="n">paginate_by</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Contact</span>
+</pre></div>
+</div>
+<p>这限制了每页的对象数量，并在 <code class="docutils literal notranslate"><span class="pre">context</span></code> 中添加了 <code class="docutils literal notranslate"><span class="pre">paginator</span></code> 和 <code class="docutils literal notranslate"><span class="pre">page_obj</span></code>。要允许用户在页面之间导航，请在模板中添加指向下一页和上一页的链接，如下所示：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">contact</span> <span class="k">in</span> <span class="nv">page_obj</span> <span class="cp">%}</span>
+    <span class="c">{# Each &quot;contact&quot; is a Contact model object. #}</span>
+    <span class="cp">{{</span> <span class="nv">contact.full_name</span><span class="o">|</span><span class="nf">upper</span> <span class="cp">}}</span><span class="p">&lt;</span><span class="nt">br</span><span class="p">&gt;</span>
+    ...
+<span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+
+<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;pagination&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;step-links&quot;</span><span class="p">&gt;</span>
+        <span class="cp">{%</span> <span class="k">if</span> <span class="nv">page_obj.has_previous</span> <span class="cp">%}</span>
+            <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;?page=1&quot;</span><span class="p">&gt;</span><span class="ni">&amp;laquo;</span> first<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;?page=</span><span class="cp">{{</span> <span class="nv">page_obj.previous_page_number</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="p">&gt;</span>previous<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+        <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+
+        <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;current&quot;</span><span class="p">&gt;</span>
+            Page <span class="cp">{{</span> <span class="nv">page_obj.number</span> <span class="cp">}}</span> of <span class="cp">{{</span> <span class="nv">page_obj.paginator.num_pages</span> <span class="cp">}}</span>.
+        <span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+
+        <span class="cp">{%</span> <span class="k">if</span> <span class="nv">page_obj.has_next</span> <span class="cp">%}</span>
+            <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;?page=</span><span class="cp">{{</span> <span class="nv">page_obj.next_page_number</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="p">&gt;</span>next<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+            <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;?page=</span><span class="cp">{{</span> <span class="nv">page_obj.paginator.num_pages</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="p">&gt;</span>last <span class="ni">&amp;raquo;</span><span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+        <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+    <span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-using-paginator-in-a-view-function">
+<span id="s-using-paginator-in-view"></span><span id="using-paginator-in-a-view-function"></span><span id="using-paginator-in-view"></span><h2>在视图函数中使用 <code class="docutils literal notranslate"><span class="pre">Paginator</span></code><a class="headerlink" href="#using-paginator-in-a-view-function" title="永久链接至标题">¶</a></h2>
+<p>下面是在视图函数中使用 <a class="reference internal" href="../ref/paginator.html#django.core.paginator.Paginator" title="django.core.paginator.Paginator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paginator</span></code></a> 对查询结果集分页的例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.paginator</span> <span class="kn">import</span> <span class="n">Paginator</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Contact</span>
+
+
+<span class="k">def</span> <span class="nf">listing</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">contact_list</span> <span class="o">=</span> <span class="n">Contact</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">paginator</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">(</span><span class="n">contact_list</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>  <span class="c1"># Show 25 contacts per page.</span>
+
+    <span class="n">page_number</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span>
+    <span class="n">page_obj</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">get_page</span><span class="p">(</span><span class="n">page_number</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;list.html&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;page_obj&quot;</span><span class="p">:</span> <span class="n">page_obj</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>在模板 <code class="file docutils literal notranslate"><span class="pre">list.html</span></code> 中，你可以像上面 <code class="docutils literal notranslate"><span class="pre">ListView</span></code> 的模板一样，在页面之间加入导航。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">分页</a><ul>
+<li><a class="reference internal" href="#the-paginator-class"><code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 类</a></li>
+<li><a class="reference internal" href="#example">例如</a></li>
+<li><a class="reference internal" href="#paginating-a-listview"><code class="docutils literal notranslate"><span class="pre">ListView</span></code> 分页</a></li>
+<li><a class="reference internal" href="#using-paginator-in-a-view-function">在视图函数中使用 <code class="docutils literal notranslate"><span class="pre">Paginator</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="logging.html"
+                          title="上一章">日志</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="security.html"
+                          title="下一章">Django 的安全性</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/topics/pagination.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="logging.html" title="日志">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="security.html" title="Django 的安全性">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

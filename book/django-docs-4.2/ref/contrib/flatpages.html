@@ -1,0 +1,401 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>简单页面应用 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../static/documentation_options.js"></script>
+    <script src="../../static/jquery.js"></script>
+    <script src="../../static/underscore.js"></script>
+    <script src="../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="GeoDjango" href="gis/index.html" />
+    <link rel="prev" title="内容类型框架" href="contenttypes.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="contenttypes.html" title="内容类型框架">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="gis/index.html" title="GeoDjango">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-flatpages">
+            
+  <div class="section" id="s-module-django.contrib.flatpages">
+<span id="s-the-flatpages-app"></span><span id="module-django.contrib.flatpages"></span><span id="the-flatpages-app"></span><h1>简单页面应用<a class="headerlink" href="#module-django.contrib.flatpages" title="永久链接至标题">¶</a></h1>
+<p>Django 自带一个可选的“简单页面”应用程序。它可以让你在数据库中存储“简单”的 HTML 内容，并通过 Django 的管理界面和 Python API 为你处理管理。</p>
+<p>A flatpage is an object with a URL, title and content. Use it for one-off,
+special-case pages, such as &quot;About&quot; or &quot;Privacy Policy&quot; pages, that you want to
+store in a database but for which you don't want to develop a custom Django
+application.</p>
+<p>一个简单页面可以使用自定义模板，也可以使用系统默认的简单页面模板。它可以与一个或多个网站关联。</p>
+<p>如果你想把你的内容放在一个自定义模板中，内容字段可以选择留空。</p>
+<div class="section" id="s-installation">
+<span id="installation"></span><h2>安装<a class="headerlink" href="#installation" title="永久链接至标题">¶</a></h2>
+<p>要安装简单页面应用，请按照以下步骤操作：</p>
+<ol class="arabic">
+<li><p class="first">安装 <a class="reference internal" href="sites.html#module-django.contrib.sites" title="django.contrib.sites: Lets you operate multiple websites from the same database and Django project"><code class="xref py py-mod docutils literal notranslate"><span class="pre">站点框架</span></code></a>，在 <a class="reference internal" href="../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 设置中添加 <code class="docutils literal notranslate"><span class="pre">'django.contrib.sites'</span></code>，如果还没有的话。</p>
+<p>同时确保你已经正确地设置 <a class="reference internal" href="../settings.html#std-setting-SITE_ID"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SITE_ID</span></code></a> 为配置文件所代表的网站 ID。这通常是 <code class="docutils literal notranslate"><span class="pre">1</span></code> （即 <code class="docutils literal notranslate"><span class="pre">SITE_ID</span> <span class="pre">=</span> <span class="pre">1</span></code>，但如果你使用网站框架来管理多个网站，它可能是不同网站的 ID。</p>
+</li>
+<li><p class="first">将 <code class="docutils literal notranslate"><span class="pre">'django.contrib.flatpages'</span></code> 添加到你的 <a class="reference internal" href="../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 配置中。</p>
+</li>
+</ol>
+<p>那么无论是：</p>
+<ol class="arabic" start="3">
+<li><p class="first">在你的 URLconf 中添加一个条目。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;pages/&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s2">&quot;django.contrib.flatpages.urls&quot;</span><span class="p">)),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>或：</p>
+<ol class="arabic simple" start="3">
+<li>将 <code class="docutils literal notranslate"><span class="pre">'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware'</span></code> 添加到你的 <a class="reference internal" href="../settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 配置中。</li>
+<li>运行命令 <a class="reference internal" href="../django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code></a>。</li>
+</ol>
+</div>
+<div class="section" id="s-how-it-works">
+<span id="how-it-works"></span><h2>工作方式<a class="headerlink" href="#how-it-works" title="永久链接至标题">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> 在数据库中创建两个表。<code class="docutils literal notranslate"><span class="pre">django_flatpage</span></code> 和 <code class="docutils literal notranslate"><span class="pre">django_flatpage_sites</span></code>。<code class="docutils literal notranslate"><span class="pre">django_flatpage</span></code> 是一个查找表，将一个 URL 映射到标题和一堆文本内容。<code class="docutils literal notranslate"><span class="pre">django_flatpage_sites</span></code> 将一个简单页面与一个网站关联起来。</p>
+<div class="section" id="s-using-the-urlconf">
+<span id="using-the-urlconf"></span><h3>使用 URLconf<a class="headerlink" href="#using-the-urlconf" title="永久链接至标题">¶</a></h3>
+<p>有几种方法可以在你的 URLconf 中包含简单页面。你可以为简单页面指定一个特定的路径：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;pages/&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s2">&quot;django.contrib.flatpages.urls&quot;</span><span class="p">)),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>你也可以把它设置成一个“catchall”模式。在这种情况下，重要的是将该模式放在其他 urlpatterns 的最后：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.flatpages</span> <span class="kn">import</span> <span class="n">views</span>
+
+<span class="c1"># Your other patterns here</span>
+<span class="n">urlpatterns</span> <span class="o">+=</span> <span class="p">[</span>
+    <span class="n">re_path</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^(?P&lt;url&gt;.*/)$&quot;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">flatpage</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">如果你将 <a class="reference internal" href="../settings.html#std-setting-APPEND_SLASH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APPEND_SLASH</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，你必须删除 catchall 模式中的斜杠，否则没有尾部斜杠的简单页面将不会被匹配。</p>
+</div>
+<p>另一种常见的设置是对有限的已知页面集使用简单页面，并对网址进行硬编码，所以你可以用 <a class="reference internal" href="../templates/builtins.html#std-templatetag-url"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">url</span></code></a> 模板标签来引用它们：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.flatpages</span> <span class="kn">import</span> <span class="n">views</span>
+
+<span class="n">urlpatterns</span> <span class="o">+=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;about-us/&quot;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">flatpage</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;/about-us/&quot;</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span><span class="p">),</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;license/&quot;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">flatpage</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;/license/&quot;</span><span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;license&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-using-the-middleware">
+<span id="using-the-middleware"></span><h3>使用中间件<a class="headerlink" href="#using-the-middleware" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#django.contrib.flatpages.middleware.FlatpageFallbackMiddleware" title="django.contrib.flatpages.middleware.FlatpageFallbackMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlatpageFallbackMiddleware</span></code></a> 可以完成所有的工作。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.flatpages.middleware.FlatpageFallbackMiddleware">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">FlatpageFallbackMiddleware</span></code><a class="headerlink" href="#django.contrib.flatpages.middleware.FlatpageFallbackMiddleware" title="永久链接至目标">¶</a></dt>
+<dd><p>每当任何 Django 应用出现 404 错误时，这个中间件都会检查简单页面数据库中所请求的 URL，作为最后的手段。具体来说，它检查给定 URL 的简单页面，其网站 ID 对应于:setting:SITE_ID 配置。</p>
+<p>如果它找到了一个匹配，就按照这个算法：</p>
+<ul class="simple">
+<li>如果简单页面有自定义模板，它就加载该模板。否则，它会加载模板 <code class="file docutils literal notranslate"><span class="pre">flatpages/default.html</span></code>。</li>
+<li>它给该模板传递了一个上下文变量 <code class="docutils literal notranslate"><span class="pre">flatpage</span></code>，也就是简单页面对象。它使用 <a class="reference internal" href="../templates/api.html#django.template.RequestContext" title="django.template.RequestContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestContext</span></code></a> 来渲染模板。</li>
+</ul>
+<p>如果产生的 URL 指向有效的简单页面，中间件只会添加尾部的斜线和重定向（通过查看 <a class="reference internal" href="../settings.html#std-setting-APPEND_SLASH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APPEND_SLASH</span></code></a> 配置）。重定向是永久性的（301 状态码）。</p>
+<p>如果没有找到匹配的请求，则继续照常处理。</p>
+<p>中间件只有在 404 时才会被激活——而不是 500 或任何其他状态码的响应。</p>
+</dd></dl>
+
+<div class="admonition-flatpages-will-not-apply-view-middleware admonition">
+<p class="first admonition-title">简单页面不会应用视图中间件</p>
+<p class="last">因为 <code class="docutils literal notranslate"><span class="pre">FlatpageFallbackMiddleware</span></code> 只有在 URL 解析失败并产生 404 之后才会应用，所以它返回的响应不会应用任何 <a class="reference internal" href="../../topics/http/middleware.html#view-middleware"><span class="std std-ref">视图中间件</span></a> 方法。只有通过正常 URL 解析成功路由到视图的请求才会应用视图中间件。</p>
+</div>
+<p>注意 <a class="reference internal" href="../settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 的顺序很重要。一般来说，你可以把 <a class="reference internal" href="#django.contrib.flatpages.middleware.FlatpageFallbackMiddleware" title="django.contrib.flatpages.middleware.FlatpageFallbackMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlatpageFallbackMiddleware</span></code></a> 放在列表的最后。这意味着它将在处理响应时首先运行，并确保任何其他响应处理中间件看到的是真正的简单页面响应而不是 404。</p>
+<p>关于中间件的更多内容，请阅读 <a class="reference internal" href="../../topics/http/middleware.html"><span class="doc">中间件文档</span></a>。</p>
+<div class="admonition-ensure-that-your-404-template-works admonition">
+<p class="first admonition-title">确保你的 404 模板工作</p>
+<p class="last">请注意 <a class="reference internal" href="#django.contrib.flatpages.middleware.FlatpageFallbackMiddleware" title="django.contrib.flatpages.middleware.FlatpageFallbackMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlatpageFallbackMiddleware</span></code></a> 只有在另一个视图成功产生 404 响应后才会介入。如果另一个视图或中间件类试图产生 404，但最后却引发了一个异常，那么响应将变成 HTTP 500（“内部服务器错误”），并且 <a class="reference internal" href="#django.contrib.flatpages.middleware.FlatpageFallbackMiddleware" title="django.contrib.flatpages.middleware.FlatpageFallbackMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlatpageFallbackMiddleware</span></code></a> 将不会试图服务一个简单页面。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-how-to-add-change-and-delete-flatpages">
+<span id="how-to-add-change-and-delete-flatpages"></span><h2>如何添加、更改和删除简单页面<a class="headerlink" href="#how-to-add-change-and-delete-flatpages" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-via-the-admin-interface">
+<span id="s-flatpages-admin"></span><span id="via-the-admin-interface"></span><span id="flatpages-admin"></span><h3>通过管理界面<a class="headerlink" href="#via-the-admin-interface" title="永久链接至标题">¶</a></h3>
+<p>如果你已经激活了 Django 的自动管理界面，你应该会在管理索引页上看到一个“简单页面”栏目。编辑简单页面就像编辑系统中的其他对象一样。</p>
+<p><code class="docutils literal notranslate"><span class="pre">FlatPage</span></code> 模型有一个 <code class="docutils literal notranslate"><span class="pre">enable_comments</span></code> 字段，<code class="docutils literal notranslate"><span class="pre">contrib.flatpages</span></code> 没有使用，但对你的项目或第三方应用程序可能有用。它不会出现在管理界面中，但你可以通过为 <code class="docutils literal notranslate"><span class="pre">FlatPage</span></code> 注册一个自定义的 <code class="docutils literal notranslate"><span class="pre">ModelAdmin</span></code> 来添加它：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">django.contrib.flatpages.admin</span> <span class="kn">import</span> <span class="n">FlatPageAdmin</span>
+<span class="kn">from</span> <span class="nn">django.contrib.flatpages.models</span> <span class="kn">import</span> <span class="n">FlatPage</span>
+<span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">gettext_lazy</span> <span class="k">as</span> <span class="n">_</span>
+
+
+<span class="c1"># Define a new FlatPageAdmin</span>
+<span class="k">class</span> <span class="nc">FlatPageAdmin</span><span class="p">(</span><span class="n">FlatPageAdmin</span><span class="p">):</span>
+    <span class="n">fieldsets</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="s2">&quot;sites&quot;</span><span class="p">]}),</span>
+        <span class="p">(</span>
+            <span class="n">_</span><span class="p">(</span><span class="s2">&quot;Advanced options&quot;</span><span class="p">),</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;collapse&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;enable_comments&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;registration_required&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;template_name&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="c1"># Re-register FlatPageAdmin</span>
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">FlatPage</span><span class="p">)</span>
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">FlatPage</span><span class="p">,</span> <span class="n">FlatPageAdmin</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-via-the-python-api">
+<span id="via-the-python-api"></span><h3>通过 Python API<a class="headerlink" href="#via-the-python-api" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.flatpages.models.FlatPage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">FlatPage</span></code><a class="headerlink" href="#django.contrib.flatpages.models.FlatPage" title="永久链接至目标">¶</a></dt>
+<dd><p>简单页面由一个标准的 <a class="reference internal" href="../../topics/db/models.html"><span class="doc">Django 模型</span></a> 来表示，它位于 <a class="reference external" href="https://github.com/django/django/blob/main/django/contrib/flatpages/models.py">django/contrib/flatpages/models.py</a> 中。你可以通过 <a class="reference internal" href="../../topics/db/queries.html"><span class="doc">Django 数据库 API</span></a> 来访问简单页面对象。</p>
+</dd></dl>
+
+<div class="admonition-check-for-duplicate-flatpage-urls admonition">
+<p class="first admonition-title">检查是否有重复的简单页面网址。</p>
+<p class="last">如果你通过自己的代码来添加或修改简单页面，你很可能要检查同一站点内是否有重复的简单页面 URL。管理中使用的简单页面表单可以执行这种验证检查，可以从 <code class="docutils literal notranslate"><span class="pre">django.contrib.flatpages.forms.FlatpageForm</span></code> 中导入，并在你自己的视图中使用。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-flatpage-templates">
+<span id="flatpage-templates"></span><h2>简单页面模板<a class="headerlink" href="#flatpage-templates" title="永久链接至标题">¶</a></h2>
+<p>默认情况下，简单页面是通过模板 <code class="file docutils literal notranslate"><span class="pre">flatpages/default.html</span></code> 来渲染的，但是你可以为某个特定的简单页面覆盖这个模板：在管理中，一个名为“高级选项”的折叠式字段集（点击可以展开）包含了一个指定模板名称的字段。如果你是通过 Python API 创建一个简单页面，你可以将模板名称设置为 <code class="docutils literal notranslate"><span class="pre">template_name</span></code> 对象上的字段 <code class="docutils literal notranslate"><span class="pre">FlatPage</span></code>。</p>
+<p>创建 <code class="file docutils literal notranslate"><span class="pre">flatpages/default.html</span></code> 模板是你的责任；在你的模板目录下，创建一个 <code class="file docutils literal notranslate"><span class="pre">flatpages</span></code> 目录，其中包含一个文件 <code class="file docutils literal notranslate"><span class="pre">default.html</span></code>。</p>
+<p>简单模板被传递一个单一的上下文变量 <code class="docutils literal notranslate"><span class="pre">flatpage</span></code>，也就是简单页面对象。</p>
+<p>下面是一个示例 <code class="file docutils literal notranslate"><span class="pre">flatpages/default.html</span></code> 模板：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">flatpage.title</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="cp">{{</span> <span class="nv">flatpage.content</span> <span class="cp">}}</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>由于你已经在管理页面中输入了原始 HTML，所以 <code class="docutils literal notranslate"><span class="pre">flatpage.title</span></code> 和 <code class="docutils literal notranslate"><span class="pre">flatpage.content</span></code> 都在模板中被标记为 <strong>不需要</strong> <a class="reference internal" href="../templates/language.html#automatic-html-escaping"><span class="std std-ref">自动 HTML 转义</span></a>。</p>
+</div>
+<div class="section" id="s-getting-a-list-of-flatpage-objects-in-your-templates">
+<span id="getting-a-list-of-flatpage-objects-in-your-templates"></span><h2>获取模板中的 <a class="reference internal" href="#django.contrib.flatpages.models.FlatPage" title="django.contrib.flatpages.models.FlatPage"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlatPage</span></code></a> 对象列表<a class="headerlink" href="#getting-a-list-of-flatpage-objects-in-your-templates" title="永久链接至标题">¶</a></h2>
+<p>简单页面应用提供了一个模板标签，允许你在 :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>当前站点 &lt;hooking-into-current-site-from-views&gt;`上迭代所有可用的简单应用。</p>
+<p>和所有的自定义模板标签一样，在使用它之前，你需要 <a class="reference internal" href="../templates/language.html#loading-custom-template-libraries"><span class="std std-ref">加载其自定义标签库</span></a>。加载库后，你可以通过 <a class="reference internal" href="#std-templatetag-get_flatpages"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">get_flatpages</span></code></a> 标签来检索当前所有的简单页面。</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">flatpages</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">get_flatpages</span> <span class="k">as</span> <span class="nv">flatpages</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">for</span> <span class="nv">page</span> <span class="k">in</span> <span class="nv">flatpages</span> <span class="cp">%}</span>
+        <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">page.url</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">page.title</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<div class="section" id="s-displaying-registration-required-flatpages">
+<span id="s-std-templatetag-get_flatpages"></span><span id="s-std:templatetag-get_flatpages"></span><span id="displaying-registration-required-flatpages"></span><span id="std-templatetag-get_flatpages"></span><span id="std:templatetag-get_flatpages"></span><h3>显示 <code class="docutils literal notranslate"><span class="pre">registration_required</span></code> 简单页面<a class="headerlink" href="#displaying-registration-required-flatpages" title="永久链接至标题">¶</a></h3>
+<p>默认情况下，<a class="reference internal" href="#std-templatetag-get_flatpages"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">get_flatpages</span></code></a> 模板标签只显示标记为 <code class="docutils literal notranslate"><span class="pre">registration_required</span> <span class="pre">=</span> <span class="pre">False</span></code> 的页面。如果你想显示受注册保护的页面，你需要使用 <code class="docutils literal notranslate"><span class="pre">for</span></code> 子句指定一个经过认证的用户。</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">get_flatpages</span> <span class="nv">for</span> <span class="nv">someuser</span> <span class="k">as</span> <span class="nv">about_pages</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>如果你提供了一个匿名用户， <a class="reference internal" href="#std-templatetag-get_flatpages"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">get_flatpages</span></code></a> 将与你没有提供用户的行为相同——即，它将只向你显示公共的简单页面。</p>
+</div>
+<div class="section" id="s-limiting-flatpages-by-base-url">
+<span id="limiting-flatpages-by-base-url"></span><h3>通过基础 URL 限制简单页面<a class="headerlink" href="#limiting-flatpages-by-base-url" title="永久链接至标题">¶</a></h3>
+<p>一个可选的参数，<code class="docutils literal notranslate"><span class="pre">starts_with</span></code>，可以用来限制返回的页面以特定的基本 URL 开头。这个参数可以以字符串的形式传递，也可以以一个变量的形式从上下文中解析。</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">get_flatpages</span> <span class="s1">&#39;/about/&#39;</span> <span class="k">as</span> <span class="nv">about_pages</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">get_flatpages</span> <span class="nv">about_prefix</span> <span class="k">as</span> <span class="nv">about_pages</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">get_flatpages</span> <span class="s1">&#39;/about/&#39;</span> <span class="nv">for</span> <span class="nv">someuser</span> <span class="k">as</span> <span class="nv">about_pages</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-integrating-with-django-contrib-sitemaps">
+<span id="integrating-with-django-contrib-sitemaps"></span><h2>与 <a class="reference internal" href="sitemaps.html#module-django.contrib.sitemaps" title="django.contrib.sitemaps: A framework for generating Google sitemap XML files."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sitemaps</span></code></a> 整合<a class="headerlink" href="#integrating-with-django-contrib-sitemaps" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.flatpages.sitemaps.FlatPageSitemap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">FlatPageSitemap</span></code><a class="headerlink" href="#django.contrib.flatpages.sitemaps.FlatPageSitemap" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.contrib.flatpages.sitemaps.FlatPageSitemap" title="django.contrib.flatpages.sitemaps.FlatPageSitemap"><code class="xref py py-class docutils literal notranslate"><span class="pre">sitemaps.FlatPageSitemap</span></code></a> 类查看所有为当前 <a class="reference internal" href="../settings.html#std-setting-SITE_ID"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SITE_ID</span></code></a> 定义的公开可见的 <a class="reference internal" href="#module-django.contrib.flatpages" title="django.contrib.flatpages: A framework for managing simple ?flat? HTML content in a database."><code class="xref py py-mod docutils literal notranslate"><span class="pre">flatpages</span></code></a> （参见 <a class="reference internal" href="sites.html#module-django.contrib.sites" title="django.contrib.sites: Lets you operate multiple websites from the same database and Django project"><code class="xref py py-mod docutils literal notranslate"><span class="pre">站点文档</span></code></a>），并在站点地图中创建一个条目。这些条目只包括 <a class="reference internal" href="sitemaps.html#django.contrib.sitemaps.Sitemap.location" title="django.contrib.sitemaps.Sitemap.location"><code class="xref py py-attr docutils literal notranslate"><span class="pre">location</span></code></a> 属性——不包括 <a class="reference internal" href="sitemaps.html#django.contrib.sitemaps.Sitemap.lastmod" title="django.contrib.sitemaps.Sitemap.lastmod"><code class="xref py py-attr docutils literal notranslate"><span class="pre">lastmod</span></code></a>、 <a class="reference internal" href="sitemaps.html#django.contrib.sitemaps.Sitemap.changefreq" title="django.contrib.sitemaps.Sitemap.changefreq"><code class="xref py py-attr docutils literal notranslate"><span class="pre">changefreq</span></code></a> 或 <a class="reference internal" href="sitemaps.html#django.contrib.sitemaps.Sitemap.priority" title="django.contrib.sitemaps.Sitemap.priority"><code class="xref py py-attr docutils literal notranslate"><span class="pre">priority</span></code></a>。</p>
+</dd></dl>
+
+<div class="section" id="s-example">
+<span id="example"></span><h3>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h3>
+<p>下面是一个使用 <a class="reference internal" href="#django.contrib.flatpages.sitemaps.FlatPageSitemap" title="django.contrib.flatpages.sitemaps.FlatPageSitemap"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlatPageSitemap</span></code></a> 的 URLconf 的例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.flatpages.sitemaps</span> <span class="kn">import</span> <span class="n">FlatPageSitemap</span>
+<span class="kn">from</span> <span class="nn">django.contrib.sitemaps.views</span> <span class="kn">import</span> <span class="n">sitemap</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">path</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># the sitemap</span>
+    <span class="n">path</span><span class="p">(</span>
+        <span class="s2">&quot;sitemap.xml&quot;</span><span class="p">,</span>
+        <span class="n">sitemap</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;sitemaps&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;flatpages&quot;</span><span class="p">:</span> <span class="n">FlatPageSitemap</span><span class="p">}},</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;django.contrib.sitemaps.views.sitemap&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">简单页面应用</a><ul>
+<li><a class="reference internal" href="#installation">安装</a></li>
+<li><a class="reference internal" href="#how-it-works">工作方式</a><ul>
+<li><a class="reference internal" href="#using-the-urlconf">使用 URLconf</a></li>
+<li><a class="reference internal" href="#using-the-middleware">使用中间件</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-add-change-and-delete-flatpages">如何添加、更改和删除简单页面</a><ul>
+<li><a class="reference internal" href="#via-the-admin-interface">通过管理界面</a></li>
+<li><a class="reference internal" href="#via-the-python-api">通过 Python API</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#flatpage-templates">简单页面模板</a></li>
+<li><a class="reference internal" href="#getting-a-list-of-flatpage-objects-in-your-templates">获取模板中的 <code class="xref py py-class docutils literal notranslate"><span class="pre">FlatPage</span></code> 对象列表</a><ul>
+<li><a class="reference internal" href="#displaying-registration-required-flatpages">显示 <code class="docutils literal notranslate"><span class="pre">registration_required</span></code> 简单页面</a></li>
+<li><a class="reference internal" href="#limiting-flatpages-by-base-url">通过基础 URL 限制简单页面</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integrating-with-django-contrib-sitemaps">与 <code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sitemaps</span></code> 整合</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="contenttypes.html"
+                          title="上一章">内容类型框架</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="gis/index.html"
+                          title="下一章">GeoDjango</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../sources/ref/contrib/flatpages.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="contenttypes.html" title="内容类型框架">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="gis/index.html" title="GeoDjango">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

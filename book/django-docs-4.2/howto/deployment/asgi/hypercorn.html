@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何使用 Hypercorn 托管 Django。 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../static/documentation_options.js"></script>
+    <script src="../../../static/jquery.js"></script>
+    <script src="../../../static/underscore.js"></script>
+    <script src="../../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="如何使用 Uvicorn 托管 Django" href="uvicorn.html" />
+    <link rel="prev" title="如何使用 Daphne 托管 Django" href="daphne.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="daphne.html" title="如何使用 Daphne 托管 Django">previous</a>
+     |
+    <a href="../../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="uvicorn.html" title="如何使用 Uvicorn 托管 Django">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-deployment-asgi-hypercorn">
+            
+  <div class="section" id="s-how-to-use-django-with-hypercorn">
+<span id="how-to-use-django-with-hypercorn"></span><h1>如何使用 Hypercorn 托管 Django。<a class="headerlink" href="#how-to-use-django-with-hypercorn" title="永久链接至标题">¶</a></h1>
+<p><a class="reference external" href="https://pgjones.gitlab.io/hypercorn/">Hypercorn</a> 是一个加强支持HTTP/1，HTTP/2和HTTP/3的ASGI服务器。</p>
+<div class="section" id="s-installing-hypercorn">
+<span id="installing-hypercorn"></span><h2>安装Hypercorn<a class="headerlink" href="#installing-hypercorn" title="永久链接至标题">¶</a></h2>
+<p>You can install Hypercorn with <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -m pip install hypercorn
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-running-django-in-hypercorn">
+<span id="running-django-in-hypercorn"></span><h2>在Hypercorn中运行Django<a class="headerlink" href="#running-django-in-hypercorn" title="永久链接至标题">¶</a></h2>
+<p>一旦 Hypercorn 安装完毕，你就可用 <code class="docutils literal notranslate"><span class="pre">hypercorn</span></code> 命令来运行ASGI应用了。Hypercorn 运行需要包含一个 ASGI 应用程序模块的位置和应用程序的名称（以冒号分隔）。</p>
+<p>对于一个典型的 Django 项目，调用 Hypercorn 的方式如下：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>hypercorn myproject.asgi:application
+</pre></div>
+</div>
+<p>它将开启一个进程，监听 <code class="docutils literal notranslate"><span class="pre">127.0.0.1:8000</span></code>。这需要你的项目位于 Python path 上。为了确保这点，你应该在与 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 文件相同的路径中运行这个命令。</p>
+<p>有关更多的高级用法，请参阅 <a class="reference external" href="https://pgjones.gitlab.io/hypercorn/">Hypercorn documentation 1</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何使用 Hypercorn 托管 Django。</a><ul>
+<li><a class="reference internal" href="#installing-hypercorn">安装Hypercorn</a></li>
+<li><a class="reference internal" href="#running-django-in-hypercorn">在Hypercorn中运行Django</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="daphne.html"
+                          title="上一章">如何使用 Daphne 托管 Django</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="uvicorn.html"
+                          title="下一章">如何使用 Uvicorn 托管 Django</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../sources/howto/deployment/asgi/hypercorn.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="daphne.html" title="如何使用 Daphne 托管 Django">previous</a>
+     |
+    <a href="../../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="uvicorn.html" title="如何使用 Uvicorn 托管 Django">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

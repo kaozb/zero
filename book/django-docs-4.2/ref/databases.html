@@ -1,0 +1,936 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据库 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="django-admin 和 manage.py" href="django-admin.html" />
+    <link rel="prev" title="跨站请求伪造保护" href="csrf.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="csrf.html" title="跨站请求伪造保护">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="django-admin.html" title="&lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django-admin&lt;/span&gt;&lt;/code&gt; 和 &lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;manage.py&lt;/span&gt;&lt;/code&gt;">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-databases">
+            
+  <div class="section" id="s-databases">
+<span id="databases"></span><h1>数据库<a class="headerlink" href="#databases" title="永久链接至标题">¶</a></h1>
+<p>Django 官方支持以下数据库：</p>
+<ul class="simple">
+<li><a class="reference internal" href="#postgresql-notes"><span class="std std-ref">PostgreSQL</span></a></li>
+<li><a class="reference internal" href="#mariadb-notes"><span class="std std-ref">MariaDB</span></a></li>
+<li><a class="reference internal" href="#mysql-notes"><span class="std std-ref">MySQL</span></a></li>
+<li><a class="reference internal" href="#oracle-notes"><span class="std std-ref">Oracle</span></a></li>
+<li><a class="reference internal" href="#sqlite-notes"><span class="std std-ref">SQLite</span></a></li>
+</ul>
+<p>还有一些第三方提供的 <a class="reference internal" href="#third-party-notes"><span class="std std-ref">数据库后端</span></a>。</p>
+<p>Django 试图在所有数据库后端上支持尽可能多的功能。然而，并不是所有的数据库后端都是一样的，我们不得不在设计上决定支持哪些功能，以及我们可以安全地做出哪些假设。</p>
+<p>该文件描述了一些可能与 Django 使用有关的功能。 它不能替代特定于服务器的文档或参考手册。</p>
+<div class="section" id="s-general-notes">
+<span id="general-notes"></span><h2>通用注意事项<a class="headerlink" href="#general-notes" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-persistent-connections">
+<span id="s-persistent-database-connections"></span><span id="persistent-connections"></span><span id="persistent-database-connections"></span><h3>持久连接<a class="headerlink" href="#persistent-connections" title="永久链接至标题">¶</a></h3>
+<p>Persistent connections avoid the overhead of reestablishing a connection to
+the database in each HTTP request. They're controlled by the
+<a class="reference internal" href="settings.html#std-setting-CONN_MAX_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a> parameter which defines the maximum lifetime of a
+connection. It can be set independently for each database.</p>
+<p>默认值是 <code class="docutils literal notranslate"><span class="pre">0</span></code>，保留了每次请求结束时关闭数据库连接的历史行为。要启用持久连接，可将 <a class="reference internal" href="settings.html#std-setting-CONN_MAX_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a> 设置为正整数秒。对于无限制的持久连接，将其设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+<div class="section" id="s-connection-management">
+<span id="connection-management"></span><h4>连接管理<a class="headerlink" href="#connection-management" title="永久链接至标题">¶</a></h4>
+<p>当 Django 第一次进行数据库查询时，就会打开一个与数据库的连接。它保持这个连接的开放性，并在以后的请求中重复使用。一旦连接超过了 <a class="reference internal" href="settings.html#std-setting-CONN_MAX_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a> 所定义的最大时长，或者当它不再可用时，Django 就会关闭这个连接。</p>
+<p>详细来说，Django 每当需要连接数据库而又没有连接的时候，就会自动打开一个连接到数据库——或者是因为这是第一个连接，或者是因为之前的连接被关闭。</p>
+<p>在每次请求开始时，如果连接已达到最大时长，Django 就会关闭连接。如果你的数据库在一段时间后终止了空闲的连接，你应该将 <a class="reference internal" href="settings.html#std-setting-CONN_MAX_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a> 设置为一个较低的值，这样 Django 就不会尝试使用一个已经被数据库服务器终止的连接。（这个问题可能只影响到流量很低的网站。）</p>
+<p>At the end of each request, Django closes the connection if it has reached its
+maximum age or if it is in an unrecoverable error state. If any database
+errors have occurred while processing the requests, Django checks whether the
+connection still works, and closes it if it doesn't. Thus, database errors
+affect at most one request per each application's worker thread; if the
+connection becomes unusable, the next request gets a fresh connection.</p>
+<p>Setting <a class="reference internal" href="settings.html#std-setting-CONN_HEALTH_CHECKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_HEALTH_CHECKS</span></code></a> to <code class="docutils literal notranslate"><span class="pre">True</span></code> can be used to improve the
+robustness of connection reuse and prevent errors when a connection has been
+closed by the database server which is now ready to accept and serve new
+connections, e.g. after database server restart. The health check is performed
+only once per request and only if the database is being accessed during the
+handling of the request.</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.1:</span> <p>The <a class="reference internal" href="settings.html#std-setting-CONN_HEALTH_CHECKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_HEALTH_CHECKS</span></code></a> setting was added.</p>
+</div>
+</div>
+<div class="section" id="s-caveats">
+<span id="caveats"></span><h4>附加说明<a class="headerlink" href="#caveats" title="永久链接至标题">¶</a></h4>
+<p>由于每个线程都维护自己的连接，所以你的数据库必须支持至少与你的工作线程一样多的同时连接。</p>
+<p>有时，数据库不会被大多数视图访问，例如因为它是外部系统的数据库，或者由于缓存的原因。在这种情况下，你应该将 <a class="reference internal" href="settings.html#std-setting-CONN_MAX_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CONN_MAX_AGE</span></code></a> 设置为一个低值，甚至 <code class="docutils literal notranslate"><span class="pre">0</span></code>，因为维护一个不太可能被重复使用的连接是没有意义的。这将有助于保持这个数据库的同时连接数较少。</p>
+<p>开发服务器每处理一个请求都会创建一个新的线程，消除了持久连接的影响。在开发过程中不要启用它们。</p>
+<p>当 Django 建立与数据库的连接时，它会根据所使用的后端设置相应的参数。如果你启用了持久化连接，就不再每次请求都重复这种设置。如果你修改了连接的隔离级别或时区等参数，你应该在每次请求结束时恢复 Django 的默认值，在每次请求开始时强制设置一个合适的值，或者禁用持久连接。</p>
+<p>If a connection is created in a long-running process, outside of Django’s
+request-response cycle, the connection will remain open until explicitly
+closed, or timeout occurs.</p>
+</div>
+</div>
+<div class="section" id="s-encoding">
+<span id="encoding"></span><h3>编码<a class="headerlink" href="#encoding" title="永久链接至标题">¶</a></h3>
+<p>Django 假设所有的数据库都使用 UTF-8 编码。使用其他编码可能会导致意外的行为，比如数据库中的数据在 Django 中是有效的，却出现“value too long”的错误。关于如何正确设置数据库，请参考下面的数据库具体说明。</p>
+</div>
+</div>
+<div class="section" id="s-postgresql-notes">
+<span id="s-id1"></span><span id="postgresql-notes"></span><span id="id1"></span><h2>PostgreSQL 注意事项<a class="headerlink" href="#postgresql-notes" title="永久链接至标题">¶</a></h2>
+<p>Django supports PostgreSQL 12 and higher. <a class="reference external" href="https://www.psycopg.org/psycopg3/">psycopg</a> 3.1.8+ or <a class="reference external" href="https://www.psycopg.org/">psycopg2</a>
+2.8.4+ is required, though the latest <a class="reference external" href="https://www.psycopg.org/psycopg3/">psycopg</a> 3.1.8+ is recommended.</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">Support for <code class="docutils literal notranslate"><span class="pre">psycopg2</span></code> is likely to be deprecated and removed at some
+point in the future.</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>Support for <code class="docutils literal notranslate"><span class="pre">psycopg</span></code> 3.1.8+ was added.</p>
+</div>
+<div class="section" id="s-postgresql-connection-settings">
+<span id="s-id2"></span><span id="postgresql-connection-settings"></span><span id="id2"></span><h3>PostgreSQL 连接配置<a class="headerlink" href="#postgresql-connection-settings" title="永久链接至标题">¶</a></h3>
+<p>详见 <a class="reference internal" href="settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a>。</p>
+<p>要使用 <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-pgservice.html">连接服务文件</a> 中的服务名称和 <a class="reference external" href="https://www.postgresql.org/docs/current/libpq-pgpass.html">密码文件</a> 中的密码进行连接，你必须在数据库配置中的 <a href="#id1"><span class="problematic" id="id2">:settings:`OPTIONS`</span></a> 部分指定它们。</p>
+<div class="literal-block-wrapper docutils container" id="id15">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">settings.py</span></code></span><a class="headerlink" href="#id15" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.postgresql&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;service&quot;</span><span class="p">:</span> <span class="s2">&quot;my_service&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;passfile&quot;</span><span class="p">:</span> <span class="s2">&quot;.my_pgpass&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id16">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">.pg_service.conf</span></code></span><a class="headerlink" href="#id16" title="永久链接至代码">¶</a></div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[my_service]
+host=localhost
+user=USER
+dbname=NAME
+port=5432
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id17">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">.my_pgpass</span></code></span><a class="headerlink" href="#id17" title="永久链接至代码">¶</a></div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>localhost:5432:NAME:USER:PASSWORD
+</pre></div>
+</div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">Using a service name for testing purposes is not supported. This
+<a class="reference external" href="https://code.djangoproject.com/ticket/33685">may be implemented later</a>.</p>
+</div>
+</div>
+<div class="section" id="s-optimizing-postgresql-s-configuration">
+<span id="optimizing-postgresql-s-configuration"></span><h3>优化 PostgreSQL 的配置<a class="headerlink" href="#optimizing-postgresql-s-configuration" title="永久链接至标题">¶</a></h3>
+<p>Django 的数据库连接需要以下参数：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">client_encoding</span></code>：<code class="docutils literal notranslate"><span class="pre">'UTF8'</span></code>，</li>
+<li><code class="docutils literal notranslate"><span class="pre">default_transaction_isolation</span></code>：<code class="docutils literal notranslate"><span class="pre">'read</span> <span class="pre">committed'</span></code> 默认情况下，或在连接选项中设置的值（见下文）。</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">timezone</span></code>：</dt><dd><ul>
+<li>当 <a class="reference internal" href="settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，默认为 <code class="docutils literal notranslate"><span class="pre">'UTC</span></code>，或 <a class="reference internal" href="settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 为连接设置的值。</li>
+<li>当 <a class="reference internal" href="settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 时，全局 <a class="reference internal" href="settings.html#std-setting-TIME_ZONE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIME_ZONE</span></code></a> 设置的值。</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>如果这些参数已经有了正确的值，Django 就不会为每个新的连接设置这些参数，这样可以稍微提高性能。你可以直接在 <code class="file docutils literal notranslate"><span class="pre">postgresql.conf</span></code> 中设置它们，或者更方便地在每个数据库用户中用 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-alterrole.html">ALTER ROLE</a> 设置。</p>
+<p>如果没有这个优化，Django 也能正常工作，但每个新的连接都会做一些额外的查询来设置这些参数。</p>
+</div>
+<div class="section" id="s-isolation-level">
+<span id="s-database-isolation-level"></span><span id="isolation-level"></span><span id="database-isolation-level"></span><h3>隔离等级<a class="headerlink" href="#isolation-level" title="永久链接至标题">¶</a></h3>
+<p>和 PostgreSQL 本身一样，Django 默认为 <code class="docutils literal notranslate"><span class="pre">READ</span> <span class="pre">COMMITTED</span></code> <a class="reference external" href="https://www.postgresql.org/docs/current/transaction-iso.html">隔离级别</a> 。如果你需要更高的隔离级别，比如 <code class="docutils literal notranslate"><span class="pre">REPEATABLE</span> <span class="pre">READ</span></code> 或者 <code class="docutils literal notranslate"><span class="pre">SERIALIZABLE</span></code>，可以在数据库配置的 <a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中的 <a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> 部分进行设置：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.backends.postgresql.psycopg_any</span> <span class="kn">import</span> <span class="n">IsolationLevel</span>
+
+<span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;isolation_level&quot;</span><span class="p">:</span> <span class="n">IsolationLevel</span><span class="o">.</span><span class="n">SERIALIZABLE</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在更高的隔离级别下，你的应用程序应该准备好处理序列化失败时引发的异常。这个选项是为进阶用途设计的。</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p><code class="docutils literal notranslate"><span class="pre">IsolationLevel</span></code> was added.</p>
+</div>
+</div>
+<div class="section" id="s-role">
+<span id="s-database-role"></span><span id="role"></span><span id="database-role"></span><h3>Role<a class="headerlink" href="#role" title="永久链接至标题">¶</a></h3>
+<div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p>If you need to use a different role for database connections than the role use
+to establish the connection, set it in the <a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> part of your
+database configuration in <a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.postgresql&quot;</span><span class="p">,</span>
+        <span class="c1"># ...</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;assume_role&quot;</span><span class="p">:</span> <span class="s2">&quot;my_application_role&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-server-side-parameters-binding">
+<span id="s-database-server-side-parameters-binding"></span><span id="server-side-parameters-binding"></span><span id="database-server-side-parameters-binding"></span><h3>Server-side parameters binding<a class="headerlink" href="#server-side-parameters-binding" title="永久链接至标题">¶</a></h3>
+<div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p>With <a class="reference external" href="https://www.psycopg.org/psycopg3/">psycopg</a> 3.1.8+, Django defaults to the <a class="reference external" href="https://www.psycopg.org/psycopg3/docs/advanced/cursors.html#client-side-binding-cursors" title="(在 psycopg)"><span class="xref std std-ref">client-side binding
+cursors</span></a>. If you want to use the
+<a class="reference external" href="https://www.psycopg.org/psycopg3/docs/basic/from_pg2.html#server-side-binding" title="(在 psycopg)"><span class="xref std std-ref">server-side binding</span></a> set it in the
+<a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> part of your database configuration in
+<a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.postgresql&quot;</span><span class="p">,</span>
+        <span class="c1"># ...</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;server_side_binding&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This option is ignored with <code class="docutils literal notranslate"><span class="pre">psycopg2</span></code>.</p>
+</div>
+<div class="section" id="s-indexes-for-varchar-and-text-columns">
+<span id="indexes-for-varchar-and-text-columns"></span><h3><code class="docutils literal notranslate"><span class="pre">varchar</span></code> 和 <code class="docutils literal notranslate"><span class="pre">text</span></code> 列的索引。<a class="headerlink" href="#indexes-for-varchar-and-text-columns" title="永久链接至标题">¶</a></h3>
+<p>当指定 <code class="docutils literal notranslate"><span class="pre">db_index=True</span></code> 时，Django 通常会输出一条 <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">INDEX</span></code> 语句。 但是，如果字段的数据库类型是 <code class="docutils literal notranslate"><span class="pre">varchar</span></code> 或 <code class="docutils literal notranslate"><span class="pre">text</span></code> （例如，<code class="docutils literal notranslate"><span class="pre">CharField</span></code>、<code class="docutils literal notranslate"><span class="pre">FileField</span></code> 和 <code class="docutils literal notranslate"><span class="pre">TextField</span></code>），那么 Django 将为该列创建一个额外的索引，使用适当的 <a class="reference external" href="https://www.postgresql.org/docs/current/indexes-opclass.html">PostgreSQL 操作类</a> 。 这个额外的索引对于正确执行在 SQL 中使用 <code class="docutils literal notranslate"><span class="pre">LIKE</span></code> 操作符的查询是必要的，就像 <code class="docutils literal notranslate"><span class="pre">contains</span></code> 和 <code class="docutils literal notranslate"><span class="pre">startswith</span></code> 查询类型一样。</p>
+</div>
+<div class="section" id="s-migration-operation-for-adding-extensions">
+<span id="migration-operation-for-adding-extensions"></span><h3>添加扩展的迁移操作<a class="headerlink" href="#migration-operation-for-adding-extensions" title="永久链接至标题">¶</a></h3>
+<p>如果你需要使用迁移来添加 PostgreSQL 扩展（如 <code class="docutils literal notranslate"><span class="pre">hstore</span></code>、<code class="docutils literal notranslate"><span class="pre">postgis</span></code> 等），请使用 <a class="reference internal" href="contrib/postgres/operations.html#django.contrib.postgres.operations.CreateExtension" title="django.contrib.postgres.operations.CreateExtension"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateExtension</span></code></a> 操作。</p>
+</div>
+<div class="section" id="s-server-side-cursors">
+<span id="s-postgresql-server-side-cursors"></span><span id="server-side-cursors"></span><span id="postgresql-server-side-cursors"></span><h3>服务器端游标<a class="headerlink" href="#server-side-cursors" title="永久链接至标题">¶</a></h3>
+<p>When using <a class="reference internal" href="models/querysets.html#django.db.models.query.QuerySet.iterator" title="django.db.models.query.QuerySet.iterator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.iterator()</span></code></a>, Django opens a <a class="reference external" href="https://www.psycopg.org/psycopg3/docs/advanced/cursors.html#server-side-cursors" title="(在 psycopg)"><span class="xref std std-ref">server-side
+cursor</span></a>. By default, PostgreSQL assumes that
+only the first 10% of the results of cursor queries will be fetched. The query
+planner spends less time planning the query and starts returning results
+faster, but this could diminish performance if more than 10% of the results are
+retrieved. PostgreSQL's assumptions on the number of rows retrieved for a
+cursor query is controlled with the <a class="reference external" href="https://www.postgresql.org/docs/current/runtime-config-query.html#GUC-CURSOR-TUPLE-FRACTION">cursor_tuple_fraction</a> option.</p>
+<div class="section" id="s-transaction-pooling-and-server-side-cursors">
+<span id="s-transaction-pooling-server-side-cursors"></span><span id="transaction-pooling-and-server-side-cursors"></span><span id="transaction-pooling-server-side-cursors"></span><h4>事务池和服务器端游标<a class="headerlink" href="#transaction-pooling-and-server-side-cursors" title="永久链接至标题">¶</a></h4>
+<p>在事务池模式下使用连接池（如 <a class="reference external" href="https://www.pgbouncer.org/">PgBouncer</a> ）需要禁用该连接的服务器端游标。</p>
+<p>服务器端游标是本地连接，当 <a class="reference internal" href="settings.html#std-setting-DATABASE-AUTOCOMMIT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">AUTOCOMMIT</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，服务器端游标在事务结束时保持开放。后续事务可能会尝试从服务器端游标中获取更多的结果。在事务池模式下，不能保证后续事务会使用同一个连接。如果使用了不同的连接，当事务引用服务器端游标时就会出现错误，因为服务器端游标只有在创建它们的连接中才能访问。</p>
+<p>一种解决方案是在 <a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中通过将 <a class="reference internal" href="settings.html#std-setting-DATABASE-DISABLE_SERVER_SIDE_CURSORS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DISABLE_SERVER_SIDE_CURSORS</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 来禁用连接的服务器端游标。</p>
+<p>为了从事务池模式下的服务器端游标中获益，你可以设置 <a class="reference internal" href="../topics/db/multi-db.html"><span class="doc">与数据库的另一个连接</span></a>，以便执行使用服务器端游标的查询。这个连接需要直接连接到数据库或者连接到会话池模式下的连接池。</p>
+<p>另一种选择是将每个使用服务器端游标的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 包裹在一个 <a class="reference internal" href="../topics/db/transactions.html#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 块中，因为它在事务的持续时间内禁用 <code class="docutils literal notranslate"><span class="pre">autocommit</span></code>。这样一来，服务器端游标将只在事务持续时间内有效。</p>
+</div>
+</div>
+<div class="section" id="s-manually-specifying-values-of-auto-incrementing-primary-keys">
+<span id="s-manually-specified-autoincrement-pk"></span><span id="manually-specifying-values-of-auto-incrementing-primary-keys"></span><span id="manually-specified-autoincrement-pk"></span><h3>手动指定自增主键的值。<a class="headerlink" href="#manually-specifying-values-of-auto-incrementing-primary-keys" title="永久链接至标题">¶</a></h3>
+<p>Django uses PostgreSQL's identity columns to store auto-incrementing primary
+keys. An identity column is populated with values from a <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createsequence.html">sequence</a> that keeps
+track of the next available value. Manually assigning a value to an
+auto-incrementing field doesn't update the field's sequence, which might later
+cause a conflict. For example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;alice&quot;</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;User: alice&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The sequence hasn&#39;t been updated; its next value is 1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;bob&quot;</span><span class="p">)</span>
+<span class="go">IntegrityError: duplicate key value violates unique constraint</span>
+<span class="go">&quot;auth_user_pkey&quot; DETAIL:  Key (id)=(1) already exists.</span>
+</pre></div>
+</div>
+<p>如果你需要指定这样的值，请在之后重置序列以避免重复使用已经在表中的值。<a class="reference internal" href="django-admin.html#django-admin-sqlsequencereset"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">sqlsequencereset</span></code></a> 管理命令会生成 SQL 语句来做到这一点。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.1:</span> <p>In older versions, PostgreSQL’s <code class="docutils literal notranslate"><span class="pre">SERIAL</span></code> data type was used instead of
+identity columns.</p>
+</div>
+</div>
+<div class="section" id="s-test-database-templates">
+<span id="test-database-templates"></span><h3>测试数据库模板<a class="headerlink" href="#test-database-templates" title="永久链接至标题">¶</a></h3>
+<p>你可以使用 <a class="reference internal" href="settings.html#std-setting-TEST_TEMPLATE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST['TEMPLATE']</span></code></a> 配置来指定一个 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createdatabase.html">template</a> （例如 <code class="docutils literal notranslate"><span class="pre">'template0'</span></code>）来创建测试数据库。</p>
+</div>
+<div class="section" id="s-speeding-up-test-execution-with-non-durable-settings">
+<span id="speeding-up-test-execution-with-non-durable-settings"></span><h3>使用非持久设置加快测试执行速度。<a class="headerlink" href="#speeding-up-test-execution-with-non-durable-settings" title="永久链接至标题">¶</a></h3>
+<p>你可以通过 <a class="reference external" href="https://www.postgresql.org/docs/current/non-durability.html">将 PostgreSQL 配置为非持久</a> 来加快测试执行时间。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">这是很危险的：它将使你的数据库在服务器崩溃或断电的情况下更容易发生数据丢失或损坏。只有在开发机器上使用，在那里你可以轻松的恢复集群中所有数据库的全部内容。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-mariadb-notes">
+<span id="s-id4"></span><span id="mariadb-notes"></span><span id="id4"></span><h2>MariaDB 注意事项<a class="headerlink" href="#mariadb-notes" title="永久链接至标题">¶</a></h2>
+<p>Django supports MariaDB 10.4 and higher.</p>
+<p>要使用 MariaDB，请使用 MySQL 后端，两者共享。详情请看 <a class="reference internal" href="#mysql-notes"><span class="std std-ref">MySQL 注意事项</span></a>。</p>
+</div>
+<div class="section" id="s-mysql-notes">
+<span id="s-id5"></span><span id="mysql-notes"></span><span id="id5"></span><h2>MySQL 注意事项<a class="headerlink" href="#mysql-notes" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-version-support">
+<span id="version-support"></span><h3>版本支持<a class="headerlink" href="#version-support" title="永久链接至标题">¶</a></h3>
+<p>Django supports MySQL 8 and higher.</p>
+<p>Django 的 <code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 功能使用 <code class="docutils literal notranslate"><span class="pre">information_schema</span></code> 数据库，其中包含所有数据库架构的详细数据。</p>
+<p>Django 希望数据库支持 Unicode（UTF-8 编码），并将执行事务和引用完整性的任务交给它。需要注意的是，MySQL 在使用 MyISAM 存储引擎时，后两项其实并没有强制执行，参见下一节。</p>
+</div>
+<div class="section" id="s-storage-engines">
+<span id="s-mysql-storage-engines"></span><span id="storage-engines"></span><span id="mysql-storage-engines"></span><h3>存储引擎<a class="headerlink" href="#storage-engines" title="永久链接至标题">¶</a></h3>
+<p>MySQL 有几个 <a class="reference internal" href="#storage-engines">存储引擎</a> 。你可以在服务器配置中更改默认的存储引擎。</p>
+<p>MySQL 的默认存储引擎是 <a class="reference external" href="https://dev.mysql.com/doc/refman/en/innodb-storage-engine.html">InnoDB</a> 。这个引擎是完全事务性的，并且支持外键引用。这是推荐的选择。然而，InnoDB 自动增量计数器在 MySQL 重启时丢失，因为它不记得 <code class="docutils literal notranslate"><span class="pre">AUTO_INCREMENT</span></code> 值，而是将其重新创建为 &quot;max(id)+1&quot;。这可能会导致无意中重用 <a class="reference internal" href="models/fields.html#django.db.models.AutoField" title="django.db.models.AutoField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoField</span></code></a> 值。</p>
+<p><a class="reference external" href="https://dev.mysql.com/doc/refman/en/myisam-storage-engine.html">MyISAM</a> 的主要缺点是不支持事务，也不执行外键约束。</p>
+</div>
+<div class="section" id="s-mysql-db-api-drivers">
+<span id="s-id7"></span><span id="mysql-db-api-drivers"></span><span id="id7"></span><h3>MySQL 数据库 API 驱动程序<a class="headerlink" href="#mysql-db-api-drivers" title="永久链接至标题">¶</a></h3>
+<p>MySQL 有几个驱动程序实现了 <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a> 中描述的 Python 数据库 API。</p>
+<ul class="simple">
+<li><a class="reference external" href="https://pypi.org/project/mysqlclient/">mysqlclient</a> is a native driver. It's <strong>the recommended choice</strong>.</li>
+<li><a class="reference external" href="https://dev.mysql.com/downloads/connector/python/">MySQL Connector/Python</a> 是一个来自 Oracle 的纯 Python 驱动，不需要 MySQL 客户端库或标准库之外的任何 Python 模块。</li>
+</ul>
+<p>这些驱动程序都是线程安全的，并提供连接池。</p>
+<p>除了数据库 API 驱动之外，Django 还需要一个适配器来从其 ORM 中访问数据库驱动。Django 为 mysqlclient 提供了一个适配器，而 MySQL Connector/Python 则包含了 <a class="reference external" href="https://dev.mysql.com/doc/connector-python/en/connector-python-django-backend.html">自己的</a> 。</p>
+<div class="section" id="s-mysqlclient">
+<span id="mysqlclient"></span><h4>mysqlclient<a class="headerlink" href="#mysqlclient" title="永久链接至标题">¶</a></h4>
+<p>Django requires <a class="reference internal" href="#mysqlclient">mysqlclient</a> 1.4.3 or later.</p>
+</div>
+<div class="section" id="s-id8">
+<span id="id8"></span><h4>MySQL Connector/Python<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h4>
+<p>MySQL Connector/Python 可从 <a class="reference external" href="https://dev.mysql.com/downloads/connector/python/">下载页面</a> 。Django 适配器在 1.1.X 及以后的版本中可用。它可能不支持最新版本的 Django。</p>
+</div>
+</div>
+<div class="section" id="s-time-zone-definitions">
+<span id="s-mysql-time-zone-definitions"></span><span id="time-zone-definitions"></span><span id="mysql-time-zone-definitions"></span><h3>时区定义<a class="headerlink" href="#time-zone-definitions" title="永久链接至标题">¶</a></h3>
+<p>如果你打算使用 Django 的 <a class="reference internal" href="../topics/i18n/timezones.html"><span class="doc">时区支持</span></a>，使用 <a class="reference external" href="https://dev.mysql.com/doc/refman/en/mysql-tzinfo-to-sql.html">mysql_tzinfo_to_sql</a> 将时区表加载到 MySQL 数据库中。这只需要为你的 MySQL 服务器做一次，而不是每个数据库。</p>
+</div>
+<div class="section" id="s-creating-your-database">
+<span id="creating-your-database"></span><h3>创建你的数据库<a class="headerlink" href="#creating-your-database" title="永久链接至标题">¶</a></h3>
+<p>You can <a class="reference external" href="https://dev.mysql.com/doc/refman/en/create-database.html">create your database</a> using the command-line tools and this SQL:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="o">&lt;</span><span class="n">dbname</span><span class="o">&gt;</span><span class="w"> </span><span class="nb">CHARACTER</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">utf8</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>这确保了所有的表和列默认使用 UTF-8。</p>
+<div class="section" id="s-collation-settings">
+<span id="s-mysql-collation"></span><span id="collation-settings"></span><span id="mysql-collation"></span><h4>字符序配置<a class="headerlink" href="#collation-settings" title="永久链接至标题">¶</a></h4>
+<p>一列的字符序配置控制了数据排序的顺序，以及哪些字符串被比较为相等。你可以指定 <code class="docutils literal notranslate"><span class="pre">db_collation</span></code> 参数来为 <a class="reference internal" href="models/fields.html#django.db.models.CharField.db_collation" title="django.db.models.CharField.db_collation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">CharField</span></code></a> 和 <a class="reference internal" href="models/fields.html#django.db.models.TextField.db_collation" title="django.db.models.TextField.db_collation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">TextField</span></code></a> 设置列的字符序名称。</p>
+<p>字符序也可以在整个数据库层面和每张表上设置。这在 MySQL 文档中有详细的记录。在这种情况下，你必须通过直接操作数据库配置或表来设置字符序。Django 并没有提供一个 API 来改变它们。</p>
+<p>默认情况下，对于 UTF-8 数据库，MySQL 将使用 <code class="docutils literal notranslate"><span class="pre">utf8_general_ci</span></code> 字符序。这将导致所有字符串的平等比较以一种 <em>不区分大小写</em> 的方式进行。也就是说，<code class="docutils literal notranslate"><span class="pre">&quot;Fred&quot;</span></code> 和 <code class="docutils literal notranslate"><span class="pre">&quot;freD&quot;</span></code> 在数据库级别被认为是相等的。如果你在一个字段上有一个唯一的约束，那么试图将 <code class="docutils literal notranslate"><span class="pre">&quot;aa&quot;</span></code> 和 <code class="docutils literal notranslate"><span class="pre">&quot;AA&quot;</span></code> 插入到同一列中是不合法的，因为它们与默认的字符序比较是相等的（因此，是非唯一的）。如果你想在某一列或表上进行区分大小写的比较，请将该列或表改为使用 <code class="docutils literal notranslate"><span class="pre">utf8_bin</span></code> 字符序。</p>
+<p>请注意，根据 <a class="reference external" href="https://dev.mysql.com/doc/refman/en/charset-unicode-sets.html">MySQL Unicode 字符集</a> ，<code class="docutils literal notranslate"><span class="pre">utf8_general_ci</span></code> 的比较比 <code class="docutils literal notranslate"><span class="pre">utf8_unicode_ci</span></code> 的比较要快，但正确率略低。如果这对你的应用是可以接受的，你应该使用 <code class="docutils literal notranslate"><span class="pre">utf8_general_ci</span></code>，因为它更快。如果不能接受（例如，如果你需要德语字典顺序），使用 <code class="docutils literal notranslate"><span class="pre">utf8_unicode_ci</span></code>，因为它更准确。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">模型表格集以区分大小写的方式验证唯一字段。因此，当使用不区分大小写的字符序方式时，一个具有唯一字段值的表单集，如果只因大小写不同，将通过验证，但在调用 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 时，将引发 <code class="docutils literal notranslate"><span class="pre">IntegrityError</span></code>。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-connecting-to-the-database">
+<span id="connecting-to-the-database"></span><h3>连接数据库<a class="headerlink" href="#connecting-to-the-database" title="永久链接至标题">¶</a></h3>
+<p>参考 <a class="reference internal" href="settings.html"><span class="doc">配置文档</span></a>。</p>
+<p>连接配置应按此顺序使用</p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a>。</li>
+<li><a class="reference internal" href="settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a>、<a class="reference internal" href="settings.html#std-setting-USER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USER</span></code></a>、<a class="reference internal" href="settings.html#std-setting-PASSWORD"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PASSWORD</span></code></a>、<a class="reference internal" href="settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a>、<a class="reference internal" href="settings.html#std-setting-PORT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PORT</span></code></a></li>
+<li>MySQL 选项文件。</li>
+</ol>
+<p>换句话说，如果你在 <a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> 中设置数据库的名称，这将优先于 <a class="reference internal" href="settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a>，它将覆盖 <a class="reference external" href="https://dev.mysql.com/doc/refman/en/option-files.html">MySQL 选项文件</a> 中的任何内容。</p>
+<p>下面是一个使用 MySQL 选项文件的配置示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># settings.py</span>
+<span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.mysql&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;read_default_file&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/my.cnf&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1"># my.cnf</span><span class="w"></span>
+<span class="k">[client]</span><span class="w"></span>
+<span class="na">database</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">NAME</span><span class="w"></span>
+<span class="na">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">USER</span><span class="w"></span>
+<span class="na">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">PASSWORD</span><span class="w"></span>
+<span class="na">default-character-set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">utf8</span><span class="w"></span>
+</pre></div>
+</div>
+<p>其他几个 <a class="reference external" href="https://mysqlclient.readthedocs.io/user_guide.html#functions-and-attributes">MySQLdb 连接选项</a> 可能会有用，比如 <code class="docutils literal notranslate"><span class="pre">ssl</span></code>、<code class="docutils literal notranslate"><span class="pre">init_command</span></code> 和 <code class="docutils literal notranslate"><span class="pre">sql_mode</span></code>。</p>
+<div class="section" id="s-setting-sql-mode">
+<span id="s-mysql-sql-mode"></span><span id="setting-sql-mode"></span><span id="mysql-sql-mode"></span><h4>设置 <code class="docutils literal notranslate"><span class="pre">sql_mode</span></code><a class="headerlink" href="#setting-sql-mode" title="永久链接至标题">¶</a></h4>
+<p>The default value of the <code class="docutils literal notranslate"><span class="pre">sql_mode</span></code> option contains <code class="docutils literal notranslate"><span class="pre">STRICT_TRANS_TABLES</span></code>.
+That option escalates warnings into errors when data are truncated upon
+insertion, so Django highly recommends activating a <a class="reference external" href="https://dev.mysql.com/doc/refman/en/sql-mode.html#sql-mode-strict">strict mode</a> for MySQL to
+prevent data loss (either <code class="docutils literal notranslate"><span class="pre">STRICT_TRANS_TABLES</span></code> or <code class="docutils literal notranslate"><span class="pre">STRICT_ALL_TABLES</span></code>).</p>
+<p>如果你需要自定义 SQL 模式，你可以像其他 MySQL 选项一样设置 <code class="docutils literal notranslate"><span class="pre">sql_mode</span></code> 变量：可以在配置文件中设置，也可以在你的数据库配置的 <a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> 部分的 <a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中使用 <code class="docutils literal notranslate"><span class="pre">'init_command':</span> <span class="pre">&quot;SET</span> <span class="pre">sql_mode='STRICT_TRANS_TABLES'&quot;</span></code> 配置。</p>
+</div>
+<div class="section" id="s-mysql-isolation-level">
+<span id="s-id9"></span><span id="mysql-isolation-level"></span><span id="id9"></span><h4>隔离等级<a class="headerlink" href="#mysql-isolation-level" title="永久链接至标题">¶</a></h4>
+<p>当运行并发负载时，来自不同会话的数据库事务（例如，处理不同请求的独立线程）可能会相互交互。这些交互受到每个会话的 <a class="reference external" href="https://dev.mysql.com/doc/refman/en/innodb-transaction-isolation-levels.html">事务隔离级别</a> 的影响。你可以在数据库配置的 <a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中的 <a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> 部分设置连接的隔离级别，并在其中设置一个 <code class="docutils literal notranslate"><span class="pre">'isolation_level'</span></code> 条目。这个条目的有效值是四个标准隔离级别：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">'read</span> <span class="pre">uncommitted'</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">'read</span> <span class="pre">committed'</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">'repeatable</span> <span class="pre">read'</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">'serializable'</span></code></li>
+</ul>
+<p>或 <code class="docutils literal notranslate"><span class="pre">None</span></code> 来使用服务器配置的隔离级别。然而，Django 的最佳工作方式和默认值是 read committed，而不是 MySQL 的默认 repeatable read。在使用 repeatable read 时，可能会出现数据丢失的情况。特别是，你可能会看到这样的情况：<code class="xref py py-meth docutils literal notranslate"><span class="pre">get_or_create()</span></code> 会引发一个 <a class="reference internal" href="exceptions.html#django.db.IntegrityError" title="django.db.IntegrityError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IntegrityError</span></code></a>，但在随后的 <code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code> 调用中不会出现该对象。</p>
+</div>
+</div>
+<div class="section" id="s-creating-your-tables">
+<span id="creating-your-tables"></span><h3>创建你的表<a class="headerlink" href="#creating-your-tables" title="永久链接至标题">¶</a></h3>
+<p>当 Django 生成架构时，它并没有指定存储引擎，所以无论你的数据库服务器配置了什么默认的存储引擎，都会创建表。最简单的解决方案是将数据库服务器的默认存储引擎设置为所需的引擎。</p>
+<p>如果你使用的是托管服务，无法更改服务器的默认存储引擎，你有几个选择。</p>
+<ul>
+<li><p class="first">After the tables are created, execute an <code class="docutils literal notranslate"><span class="pre">ALTER</span> <span class="pre">TABLE</span></code> statement to
+convert a table to a new storage engine (such as InnoDB):</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="o">&lt;</span><span class="n">tablename</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ENGINE</span><span class="o">=</span><span class="n">INNODB</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>如果你有很多表，这可能会很繁琐。</p>
+</li>
+<li><p class="first">另一个选择是在创建表之前使用 MySQLdb 的 <code class="docutils literal notranslate"><span class="pre">init_command</span></code> 选项：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;init_command&quot;</span><span class="p">:</span> <span class="s2">&quot;SET default_storage_engine=INNODB&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>这将设置连接到数据库时的默认存储引擎。在你的表创建后，你应该删除这个选项，因为它为每个数据库连接添加了一个只在表创建期间需要的查询。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-table-names">
+<span id="table-names"></span><h3>表名称<a class="headerlink" href="#table-names" title="永久链接至标题">¶</a></h3>
+<p>即使在最新版本的 MySQL 中，也有一些 <a class="reference external" href="https://bugs.mysql.com/bug.php?id=48875">已知问题</a> ，当在某些条件下执行某些 SQL 语句时，可能会导致表名的大小写被改变。如果可能的话，建议你使用小写的表名，以避免这种行为可能产生的任何问题。Django 在从模型中自动生成表名时使用小写表名，所以这主要是考虑到如果你是通过 <a class="reference internal" href="models/options.html#django.db.models.Options.db_table" title="django.db.models.Options.db_table"><code class="xref py py-class docutils literal notranslate"><span class="pre">db_table</span></code></a> 参数来覆盖表名。</p>
+</div>
+<div class="section" id="s-savepoints">
+<span id="savepoints"></span><h3>保存点<a class="headerlink" href="#savepoints" title="永久链接至标题">¶</a></h3>
+<p>Django ORM 和 MySQL（使用 InnoDB <a class="reference internal" href="#mysql-storage-engines"><span class="std std-ref">存储引擎</span></a> 时）都支持数据库 <a class="reference internal" href="../topics/db/transactions.html#topics-db-transactions-savepoints"><span class="std std-ref">保存点</span></a>。</p>
+<p>如果你使用 MyISAM 存储引擎，请注意，如果你试图使用 <a class="reference internal" href="../topics/db/transactions.html#topics-db-transactions-savepoints"><span class="std std-ref">事务 API 的保存点相关方法</span></a>，你将收到数据库生成的错误。原因是检测 MySQL 数据库／表的存储引擎是一个昂贵的操作，所以决定不值得在没有操作的情况下动态转换这些方法，基于这种检测的结果。</p>
+</div>
+<div class="section" id="s-notes-on-specific-fields">
+<span id="notes-on-specific-fields"></span><h3>特定字段的注意事项<a class="headerlink" href="#notes-on-specific-fields" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-character-fields">
+<span id="s-mysql-character-fields"></span><span id="character-fields"></span><span id="mysql-character-fields"></span><h4>字符字段<a class="headerlink" href="#character-fields" title="永久链接至标题">¶</a></h4>
+<p>如果你对字段使用了 <code class="docutils literal notranslate"><span class="pre">unique=True</span></code>，那么任何以 <code class="docutils literal notranslate"><span class="pre">VARCHAR</span></code> 列类型存储的字段可能会被 <code class="docutils literal notranslate"><span class="pre">max_length</span></code> 限制为255个字符。这将影响 <a class="reference internal" href="models/fields.html#django.db.models.CharField" title="django.db.models.CharField"><code class="xref py py-class docutils literal notranslate"><span class="pre">CharField</span></code></a>、<a class="reference internal" href="models/fields.html#django.db.models.SlugField" title="django.db.models.SlugField"><code class="xref py py-class docutils literal notranslate"><span class="pre">SlugField</span></code></a>。更多细节请看 <a class="reference external" href="https://dev.mysql.com/doc/refman/en/create-index.html#create-index-column-prefixes">MySQL 文档</a> 。</p>
+</div>
+<div class="section" id="s-textfield-limitations">
+<span id="textfield-limitations"></span><h4><code class="docutils literal notranslate"><span class="pre">TextField</span></code> 限制<a class="headerlink" href="#textfield-limitations" title="永久链接至标题">¶</a></h4>
+<p>MySQL 只能对 <code class="docutils literal notranslate"><span class="pre">BLOB</span></code> 或 <code class="docutils literal notranslate"><span class="pre">TEXT</span></code> 列的前 N 个字符进行索引。由于 <code class="docutils literal notranslate"><span class="pre">TextField</span></code> 没有定义的长度，所以不能将其标记为 <code class="docutils literal notranslate"><span class="pre">unique=True</span></code>。MySQL 会报告：&quot;BLOB/TEXT column '&lt;db_column&gt;' used in key specification without a key length&quot;。</p>
+</div>
+<div class="section" id="s-fractional-seconds-support-for-time-and-datetime-fields">
+<span id="s-mysql-fractional-seconds"></span><span id="fractional-seconds-support-for-time-and-datetime-fields"></span><span id="mysql-fractional-seconds"></span><h4>支持时间和 DateTime 字段的小数秒。<a class="headerlink" href="#fractional-seconds-support-for-time-and-datetime-fields" title="永久链接至标题">¶</a></h4>
+<p>MySQL 可以存储小数秒，只要列的定义包括一个小数指示（例如 <code class="docutils literal notranslate"><span class="pre">DATETIME(6)</span></code>）。</p>
+<p>Django will not upgrade existing columns to include fractional seconds if the
+database server supports it. If you want to enable them on an existing database,
+it's up to you to either manually update the column on the target database, by
+executing a command like:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="o">`</span><span class="n">your_table</span><span class="o">`</span><span class="w"> </span><span class="k">MODIFY</span><span class="w"> </span><span class="o">`</span><span class="n">your_datetime_column</span><span class="o">`</span><span class="w"> </span><span class="n">DATETIME</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>或在 <a class="reference internal" href="../topics/migrations.html#data-migrations"><span class="std std-ref">数据迁移</span></a> 中使用 <a class="reference internal" href="migration-operations.html#django.db.migrations.operations.RunSQL" title="django.db.migrations.operations.RunSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunSQL</span></code></a> 操作。</p>
+</div>
+<div class="section" id="s-timestamp-columns">
+<span id="timestamp-columns"></span><h4><code class="docutils literal notranslate"><span class="pre">TIMESTAMP</span></code> 列<a class="headerlink" href="#timestamp-columns" title="永久链接至标题">¶</a></h4>
+<p>如果你使用的是包含 <code class="docutils literal notranslate"><span class="pre">TIMESTAMP</span></code> 列的遗留数据库，你必须设置 <a class="reference internal" href="settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span> <span class="pre">=</span> <span class="pre">False</span></code></a> 以避免数据损坏。 <a class="reference internal" href="django-admin.html#django-admin-inspectdb"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">inspectdb</span></code></a> 将这些列映射到 <a class="reference internal" href="models/fields.html#django.db.models.DateTimeField" title="django.db.models.DateTimeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeField</span></code></a>，如果你启用了时区支持，MySQL 和 Django 都会尝试将值从 UTC 转换为当地时间。</p>
+</div>
+</div>
+<div class="section" id="s-row-locking-with-queryset-select-for-update">
+<span id="row-locking-with-queryset-select-for-update"></span><h3>用 <code class="docutils literal notranslate"><span class="pre">QuerySet.select_for_update()</span></code> 锁定行<a class="headerlink" href="#row-locking-with-queryset-select-for-update" title="永久链接至标题">¶</a></h3>
+<p>MySQL 和 MariaDB 不支持 <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FOR</span> <span class="pre">UPDATE</span></code> 语句的某些选项。如果 <code class="docutils literal notranslate"><span class="pre">select_for_update()</span></code> 与一个不支持的选项一起使用，那么就会引发一个 <a class="reference internal" href="exceptions.html#django.db.NotSupportedError" title="django.db.NotSupportedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotSupportedError</span></code></a>。</p>
+<table class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="26%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">选项</th>
+<th class="head">MariaDB</th>
+<th class="head">MySQL</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">SKIP</span> <span class="pre">LOCKED</span></code></td>
+<td>X (≥10.6)</td>
+<td>X (≥8.0.1)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">NOWAIT</span></code></td>
+<td>X</td>
+<td>X (≥8.0.1)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">OF</span></code></td>
+<td>&#160;</td>
+<td>X (≥8.0.1)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">NO</span> <span class="pre">KEY</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<p>当在 MySQL 上使用 <code class="docutils literal notranslate"><span class="pre">select_for_update()</span></code> 时，确保你至少针对唯一约束中包含的一组字段或仅针对索引覆盖的字段过滤查询集。否则，在事务过程中，将对整个表获得一个独占的写锁。</p>
+</div>
+<div class="section" id="s-automatic-typecasting-can-cause-unexpected-results">
+<span id="automatic-typecasting-can-cause-unexpected-results"></span><h3>自动排版会造成意想不到的结果<a class="headerlink" href="#automatic-typecasting-can-cause-unexpected-results" title="永久链接至标题">¶</a></h3>
+<p>当对字符串类型执行查询，但有一个整数值时，MySQL 会在执行比较之前将表中所有值的类型强制为整数。如果你的表中包含值 <code class="docutils literal notranslate"><span class="pre">'abc'</span></code>、<code class="docutils literal notranslate"><span class="pre">'def'</span></code>，而你查询 <code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">mycolumn=0</span></code>，两行都会匹配。同理，<code class="docutils literal notranslate"><span class="pre">WHERE</span> <span class="pre">mycolumn=1</span></code> 将匹配值 <code class="docutils literal notranslate"><span class="pre">'abc1'</span></code>。因此，Django 中包含的字符串类型字段在查询中使用之前，总是会先将值转换为字符串。</p>
+<p>如果你实现的自定义模型字段直接继承自 <a class="reference internal" href="models/fields.html#django.db.models.Field" title="django.db.models.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>，覆盖 <a class="reference internal" href="models/fields.html#django.db.models.Field.get_prep_value" title="django.db.models.Field.get_prep_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_prep_value()</span></code></a> 或者使用 <code class="xref py py-class docutils literal notranslate"><span class="pre">RawSQL</span></code>、<code class="xref py py-meth docutils literal notranslate"><span class="pre">extra()</span></code> 或者 <a class="reference internal" href="../topics/db/sql.html#django.db.models.Manager.raw" title="django.db.models.Manager.raw"><code class="xref py py-meth docutils literal notranslate"><span class="pre">raw()</span></code></a>，你应该确保你执行了适当的类型化。</p>
+</div>
+</div>
+<div class="section" id="s-sqlite-notes">
+<span id="s-id10"></span><span id="sqlite-notes"></span><span id="id10"></span><h2>SQLite 注意事项<a class="headerlink" href="#sqlite-notes" title="永久链接至标题">¶</a></h2>
+<p>Django supports SQLite 3.21.0 and later.</p>
+<p><a class="reference external" href="https://www.sqlite.org/">SQLite</a> 为以只读为主或需要较小安装空间的应用程序提供了一个很好的开发选择。不过，与所有数据库服务器一样，SQLite 也有一些特定的差异，你应该注意。</p>
+<div class="section" id="s-substring-matching-and-case-sensitivity">
+<span id="s-sqlite-string-matching"></span><span id="substring-matching-and-case-sensitivity"></span><span id="sqlite-string-matching"></span><h3>子串匹配和大小写敏感性<a class="headerlink" href="#substring-matching-and-case-sensitivity" title="永久链接至标题">¶</a></h3>
+<p>对于所有的 SQLite 版本，当尝试匹配某些类型的字符串时，会出现一些略微反直觉的行为。 当在查询中使用 <a class="reference internal" href="models/querysets.html#std-fieldlookup-iexact"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">iexact</span></code></a> 或 <a class="reference internal" href="models/querysets.html#std-fieldlookup-contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">contains</span></code></a> 过滤器时，这些行为会被触发。这种行为分为两种情况：</p>
+<p>1. For substring matching, all matches are done case-insensitively. That is a
+filter such as <code class="docutils literal notranslate"><span class="pre">filter(name__contains=&quot;aa&quot;)</span></code> will match a name of <code class="docutils literal notranslate"><span class="pre">&quot;Aabb&quot;</span></code>.</p>
+<p>2. For strings containing characters outside the ASCII range, all exact string
+matches are performed case-sensitively, even when the case-insensitive options
+are passed into the query. So the <a class="reference internal" href="models/querysets.html#std-fieldlookup-iexact"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">iexact</span></code></a> filter will behave exactly
+the same as the <a class="reference internal" href="models/querysets.html#std-fieldlookup-exact"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">exact</span></code></a> filter in these cases.</p>
+<p>一些可能的变通方法在 <a class="reference external" href="https://www.sqlite.org/faq.html#q18">sqlite.org 有记载</a> ，但是 Django 的默认 SQLite 后端并没有利用这些方法，因为将它们整合起来是相当困难的。因此，Django 暴露了默认的 SQLite 行为，当你进行大小写不敏感或子串过滤时，你应该注意这一点。</p>
+</div>
+<div class="section" id="s-decimal-handling">
+<span id="s-sqlite-decimal-handling"></span><span id="decimal-handling"></span><span id="sqlite-decimal-handling"></span><h3>小数处理<a class="headerlink" href="#decimal-handling" title="永久链接至标题">¶</a></h3>
+<p>SQLite 没有真正的小数内部类型。小数值在内部转换为 <code class="docutils literal notranslate"><span class="pre">REAL</span></code> 数据类型（8 字节的 IEEE 浮点数），正如 <a class="reference external" href="https://www.sqlite.org/datatype3.html#storage_classes_and_datatypes">SQLite 数据类型文档</a> 中所解释的那样，所以它们不支持正确舍入的小数浮点运算。</p>
+</div>
+<div class="section" id="s-database-is-locked-errors">
+<span id="database-is-locked-errors"></span><h3>“Database is locked”错误<a class="headerlink" href="#database-is-locked-errors" title="永久链接至标题">¶</a></h3>
+<p>SQLite 是一个轻量级数据库，因此不能支持高并发。<code class="docutils literal notranslate"><span class="pre">OperationalError:</span> <span class="pre">database</span> <span class="pre">is</span> <span class="pre">locked</span></code> 错误表明你的应用程序遇到的并发量超过了 <code class="docutils literal notranslate"><span class="pre">sqlite</span></code> 在默认配置下所能处理的范围。这个错误意味着一个线程或进程在数据库连接上有一个独占锁，另一个线程超时等待锁被释放。</p>
+<p>Python 的 SQLite 包装器有一个默认的超时值，这个超时值决定了第二个线程在超时并引发 <code class="docutils literal notranslate"><span class="pre">OperationalError:</span> <span class="pre">database</span> <span class="pre">is</span> <span class="pre">locked</span></code> 错误之前允许在锁上等待多长时间。</p>
+<p>如果你遇到这种错误，你可以通过以下方式解决：</p>
+<ul>
+<li><p class="first">切换到另一个数据库后端。到了一定程度，SQLite 对于现实世界的应用来说就会变得过于“精简”，这类并发错误表明你已经达到了这个程度。</p>
+</li>
+<li><p class="first">重写你的代码以减少并发性，并确保数据库事务是短暂的。</p>
+</li>
+<li><p class="first">通过设置 <code class="docutils literal notranslate"><span class="pre">timeout</span></code> 数据库选项增加默认超时值：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+    <span class="c1"># ...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>这将使 SQLite 在抛出 “database is locked” 的错误之前等待更长的时间；它不会真正起到任何解决这些问题的作用。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-queryset-select-for-update-not-supported">
+<span id="queryset-select-for-update-not-supported"></span><h3>不支持 <code class="docutils literal notranslate"><span class="pre">QuerySet.select_for_update()</span></code><a class="headerlink" href="#queryset-select-for-update-not-supported" title="永久链接至标题">¶</a></h3>
+<p>SQLite 不支持 <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">...</span> <span class="pre">FOR</span> <span class="pre">UPDATE</span></code> 语法。调用它不会有任何效果。</p>
+</div>
+<div class="section" id="s-isolation-when-using-queryset-iterator">
+<span id="s-sqlite-isolation"></span><span id="isolation-when-using-queryset-iterator"></span><span id="sqlite-isolation"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.iterator()</span></code> 时的隔离<a class="headerlink" href="#isolation-when-using-queryset-iterator" title="永久链接至标题">¶</a></h3>
+<p>当使用 <a class="reference internal" href="models/querysets.html#django.db.models.query.QuerySet.iterator" title="django.db.models.query.QuerySet.iterator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.iterator()</span></code></a> 在迭代表时修改表，有一些特殊的注意事项在 <a class="reference external" href="https://www.sqlite.org/isolation.html">SQLite 的隔离</a> 中描述。如果一条记录在循环中被添加、更改或删除，那么这条记录可能会出现，也可能不会出现，或者可能会在后续从迭代器中获取的结果中出现两次。你的代码必须处理这个问题。</p>
+</div>
+<div class="section" id="s-enabling-json1-extension-on-sqlite">
+<span id="s-sqlite-json1"></span><span id="enabling-json1-extension-on-sqlite"></span><span id="sqlite-json1"></span><h3>在 SQLite 上启用 JSON1 扩展<a class="headerlink" href="#enabling-json1-extension-on-sqlite" title="永久链接至标题">¶</a></h3>
+<p>要在 SQLite 上使用 <a class="reference internal" href="models/fields.html#django.db.models.JSONField" title="django.db.models.JSONField"><code class="xref py py-class docutils literal notranslate"><span class="pre">JSONField</span></code></a>，你需要在 Python 的 <a class="reference external" href="https://docs.python.org/3/library/sqlite3.html#module-sqlite3" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code></a> 库中启用 <a class="reference external" href="https://www.sqlite.org/json1.html">JSON1 扩展</a> 。如果在你的安装中没有启用扩展，系统会产生一个错误（<code class="docutils literal notranslate"><span class="pre">fields.E180</span></code>）。</p>
+<p>要启用 JSON1 扩展，你可以按照 <a class="reference external" href="https://code.djangoproject.com/wiki/JSON1Extension">wiki 页面</a> 上的说明进行操作。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">The JSON1 extension is enabled by default on SQLite 3.38+.</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-oracle-notes">
+<span id="s-id12"></span><span id="oracle-notes"></span><span id="id12"></span><h2>Oracle 注意事项<a class="headerlink" href="#oracle-notes" title="永久链接至标题">¶</a></h2>
+<p>Django 支持 <a class="reference external" href="https://www.oracle.com/">Oracle 数据库服务器</a> 19c 及以上版本。需要 7.0 或更高版本的 <a class="reference external" href="https://oracle.github.io/python-cx_Oracle/">cx_Oracle</a> Python 驱动。</p>
+<p>为了使 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">migrate</span></code> 命令有效，你的 Oracle 数据库用户必须拥有运行以下命令的权限：</p>
+<ul class="simple">
+<li>CREATE TABLE</li>
+<li>CREATE SEQUENCE</li>
+<li>CREATE PROCEDURE</li>
+<li>CREATE TRIGGER</li>
+</ul>
+<p>要运行一个项目的测试套件，用户通常需要这些 <em>额外</em> 的权限：</p>
+<ul class="simple">
+<li>CREATE USER</li>
+<li>ALTER USER</li>
+<li>DROP USER</li>
+<li>CREATE TABLESPACE</li>
+<li>DROP TABLESPACE</li>
+<li>CREATE SESSION WITH ADMIN OPTION</li>
+<li>CREATE TABLE WITH ADMIN OPTION</li>
+<li>CREATE SEQUENCE WITH ADMIN OPTION</li>
+<li>CREATE PROCEDURE WITH ADMIN OPTION</li>
+<li>CREATE TRIGGER WITH ADMIN OPTION</li>
+</ul>
+<p>虽然 <code class="docutils literal notranslate"><span class="pre">RESOURCE</span></code> 角色具有所需的 <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span></code>、<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">SEQUENCE</span></code>、<code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">PROCEDURE</span></code> 和 <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TRIGGER</span></code> 特权，被授予 <code class="docutils literal notranslate"><span class="pre">RESOURCE</span> <span class="pre">WITH</span> <span class="pre">ADMIN</span> <span class="pre">OPTION</span></code> 的用户可以授予 <code class="docutils literal notranslate"><span class="pre">RESOURCE</span></code>，但这样的用户不能授予单个特权（如 <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span></code>），因此 <code class="docutils literal notranslate"><span class="pre">RESOURCE</span> <span class="pre">WITH</span> <span class="pre">ADMIN</span> <span class="pre">OPTION</span></code> 通常不足以运行测试。</p>
+<p>有些测试套件还可以创建视图或实体化视图；要运行这些视图，用户还需要 <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">VIEW</span> <span class="pre">WITH</span> <span class="pre">ADMIN</span> <span class="pre">OPTION</span></code> 和 <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">MATERIALIZED</span> <span class="pre">VIEW</span> <span class="pre">WITH</span> <span class="pre">ADMIN</span> <span class="pre">OPTION</span></code> 权限。尤其是 Django 自己的测试套件，更是需要这样的权限。</p>
+<p>这些权限都包含在 DBA 角色中，适合在个人开发者的数据库上使用。</p>
+<p>Oracle 数据库后台使用 <code class="docutils literal notranslate"><span class="pre">SYS.DBMS_LOB</span></code> 和 <code class="docutils literal notranslate"><span class="pre">SYS.DBMS_RANDOM</span></code> 包，所以你的用户需要对它有执行权限。一般情况下，所有用户都可以访问它，但如果不是，你需要授予这样的权限。</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">GRANT</span><span class="w"> </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">SYS</span><span class="p">.</span><span class="n">DBMS_LOB</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="k">user</span><span class="p">;</span><span class="w"></span>
+<span class="k">GRANT</span><span class="w"> </span><span class="k">EXECUTE</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">SYS</span><span class="p">.</span><span class="n">DBMS_RANDOM</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="k">user</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="section" id="s-id13">
+<span id="id13"></span><h3>连接数据库<a class="headerlink" href="#id13" title="永久链接至标题">¶</a></h3>
+<p>要使用 Oracle 数据库的服务名进行连接，你的 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 文件应该像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.oracle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;xe&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;USER&quot;</span><span class="p">:</span> <span class="s2">&quot;a_user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PASSWORD&quot;</span><span class="p">:</span> <span class="s2">&quot;a_password&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;HOST&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PORT&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>在这种情况下，你应该把 <a class="reference internal" href="settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a> 和 <a class="reference internal" href="settings.html#std-setting-PORT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PORT</span></code></a> 都留空。但是，如果你不使用 <code class="docutils literal notranslate"><span class="pre">tnsnames.ora</span></code> 文件或类似的命名方法，而想使用 SID（本例中的“xe”）进行连接，则应像这样填写 <a class="reference internal" href="settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a> 和 <a class="reference internal" href="settings.html#std-setting-PORT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PORT</span></code></a>。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.oracle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;xe&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;USER&quot;</span><span class="p">:</span> <span class="s2">&quot;a_user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PASSWORD&quot;</span><span class="p">:</span> <span class="s2">&quot;a_password&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;HOST&quot;</span><span class="p">:</span> <span class="s2">&quot;dbprod01ned.mycompany.com&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PORT&quot;</span><span class="p">:</span> <span class="s2">&quot;1540&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>你应该同时提供 <a class="reference internal" href="settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a> 和 <a class="reference internal" href="settings.html#std-setting-PORT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PORT</span></code></a>，或者把这两个字符串都留为空。Django 会根据这个选择使用不同的连接描述符。</p>
+<div class="section" id="s-full-dsn-and-easy-connect">
+<span id="full-dsn-and-easy-connect"></span><h4>完整的 DSN 和 Easy Connect<a class="headerlink" href="#full-dsn-and-easy-connect" title="永久链接至标题">¶</a></h4>
+<p>如果 <a class="reference internal" href="settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a> 和 <a class="reference internal" href="settings.html#std-setting-PORT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PORT</span></code></a> 都是空的，可以在 <a class="reference internal" href="settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a> 中使用完整的 DSN 或 Easy Connect 字符串。例如，在使用 RAC 或没有 <code class="docutils literal notranslate"><span class="pre">tnsnames.ora</span></code> 的可插拔数据库时，需要使用这种格式。</p>
+<p>一个 Easy Connect 字符串的例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost:1521/orclpdb1&quot;</span>
+</pre></div>
+</div>
+<p>一个完整 DSN 字符串的例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="p">(</span>
+    <span class="s2">&quot;(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))&quot;</span>
+    <span class="s2">&quot;(CONNECT_DATA=(SERVICE_NAME=orclpdb1)))&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-threaded-option">
+<span id="threaded-option"></span><h3>线程选项<a class="headerlink" href="#threaded-option" title="永久链接至标题">¶</a></h3>
+<p>如果你打算在多线程环境中运行 Django（例如 Apache 在任何现代操作系统中使用默认的 MPM 模块），那么你 <strong>必须</strong> 将 Oracle 数据库配置中的 <code class="docutils literal notranslate"><span class="pre">threaded</span></code> 选项设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;threaded&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>如果不这样做，可能会导致崩溃和其他奇怪的行为。</p>
+</div>
+<div class="section" id="s-insert-returning-into">
+<span id="insert-returning-into"></span><h3>INSERT ... RETURNING INTO<a class="headerlink" href="#insert-returning-into" title="永久链接至标题">¶</a></h3>
+<p>默认情况下，当插入新行时，Oracle 后端使用 <code class="docutils literal notranslate"><span class="pre">RETURNING</span> <span class="pre">INTO</span></code> 子句来有效地检索 <code class="docutils literal notranslate"><span class="pre">AutoField</span></code> 的值。 这种行为可能会在某些不寻常的设置中导致 <code class="docutils literal notranslate"><span class="pre">DatabaseError</span></code>，例如当插入到远程表中，或插入到具有 <code class="docutils literal notranslate"><span class="pre">INSTEAD</span> <span class="pre">OF</span></code> 触发器的视图中。可以通过将数据库配置中的 <code class="docutils literal notranslate"><span class="pre">use_returning_into</span></code> 选项设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 来禁用 <code class="docutils literal notranslate"><span class="pre">RETURNING</span> <span class="pre">INTO</span></code> 子句：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;use_returning_into&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>在这种情况下，Oracle 后端将使用一个单独的 <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> 查询来检索 <code class="docutils literal notranslate"><span class="pre">AutoField</span></code> 值。</p>
+</div>
+<div class="section" id="s-naming-issues">
+<span id="naming-issues"></span><h3>命名问题<a class="headerlink" href="#naming-issues" title="永久链接至标题">¶</a></h3>
+<p>Oracle 规定名称长度限制为 30 个字符。为了适应这一限制，后端对数据库标识符进行截断以适应，用一个可重复的 MD5 哈希值替换截断后的名称的最后四个字符。此外，后端将数据库标识符变成全大写。</p>
+<p>为了防止这些转换（通常只有在处理遗留数据库或访问属于其他用户的表时才需要这样做），使用加引号的名称作为 <code class="docutils literal notranslate"><span class="pre">db_table</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LegacyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">db_table</span> <span class="o">=</span> <span class="s1">&#39;&quot;name_left_in_lowercase&quot;&#39;</span>
+
+
+<span class="k">class</span> <span class="nc">ForeignModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">db_table</span> <span class="o">=</span> <span class="s1">&#39;&quot;OTHER_USER&quot;.&quot;NAME_ONLY_SEEMS_OVER_30&quot;&#39;</span>
+</pre></div>
+</div>
+<p>引用的名字也可以用在 Django 的其他支持的数据库后端；但是，除了 Oracle，引用没有任何效果。</p>
+<p>当运行 <code class="docutils literal notranslate"><span class="pre">migrate</span></code> 时，如果将某些 Oracle 关键字用作模型字段的名称或 <code class="docutils literal notranslate"><span class="pre">db_column</span></code> 选项的值，可能会遇到 <code class="docutils literal notranslate"><span class="pre">ORA-06552</span></code> 错误。 Django 引用了查询中使用的所有标识符，以防止大多数这样的问题，但当使用 Oracle 数据类型作为列名时，仍然会出现这个错误。 特别是要注意避免使用 <code class="docutils literal notranslate"><span class="pre">date</span></code>、<code class="docutils literal notranslate"><span class="pre">timestamp</span></code>、<code class="docutils literal notranslate"><span class="pre">number</span></code> 或 <code class="docutils literal notranslate"><span class="pre">float</span></code> 作为字段名。</p>
+</div>
+<div class="section" id="s-null-and-empty-strings">
+<span id="s-oracle-null-empty-strings"></span><span id="null-and-empty-strings"></span><span id="oracle-null-empty-strings"></span><h3>NULL 和空字符串<a class="headerlink" href="#null-and-empty-strings" title="永久链接至标题">¶</a></h3>
+<p>Django 通常更喜欢使用空字符串（<code class="docutils literal notranslate"><span class="pre">''</span></code>）而不是 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，但 Oracle 对两者的处理是一样的。为了解决这个问题，Oracle 后端会忽略字段上显式的 <code class="docutils literal notranslate"><span class="pre">null</span></code> 选项，并将 <code class="docutils literal notranslate"><span class="pre">null=True</span></code> 生成 DDL。当从数据库中获取数据时，假定这些字段中的 <code class="docutils literal notranslate"><span class="pre">null</span></code> 值确实意味着空字符串，数据被默默地转换以反映这一假设。</p>
+</div>
+<div class="section" id="s-id14">
+<span id="id14"></span><h3><code class="docutils literal notranslate"><span class="pre">TextField</span></code> 限制<a class="headerlink" href="#id14" title="永久链接至标题">¶</a></h3>
+<p>Oracle 后台将 <code class="docutils literal notranslate"><span class="pre">TextFields</span></code> 存储为 <code class="docutils literal notranslate"><span class="pre">NCLOB</span></code> 列。Oracle 对这种 LOB 列的使用一般有一些限制：</p>
+<ul class="simple">
+<li>LOB 列不可作为主键使用。</li>
+<li>LOB 列不可用于索引中。</li>
+<li>LOB 列不能用于 <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">DISTINCT</span></code> 列表中。这意味着，当与 Oracle 运行时，试图在包含 <code class="docutils literal notranslate"><span class="pre">TextField</span></code> 列的模型上使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.distinct</span></code> 方法将导致 <code class="docutils literal notranslate"><span class="pre">ORA-00932</span></code> 错误。作为一个变通办法，使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.defer</span></code> 方法与 <code class="docutils literal notranslate"><span class="pre">distinct()</span></code> 结合使用，以防止 <code class="docutils literal notranslate"><span class="pre">TextField</span></code> 列被包含在 <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">DISTINCT</span></code> 列表中。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-subclassing-the-built-in-database-backends">
+<span id="s-subclassing-database-backends"></span><span id="subclassing-the-built-in-database-backends"></span><span id="subclassing-database-backends"></span><h2>子类化内置数据库后端<a class="headerlink" href="#subclassing-the-built-in-database-backends" title="永久链接至标题">¶</a></h2>
+<p>Django 有内置的数据库后端，你可以对现有的数据库后端进行子类化来修改它的行为、功能或配置。</p>
+<p>Consider, for example, that you need to change a single database feature.
+First, you have to create a new directory with a <code class="docutils literal notranslate"><span class="pre">base</span></code> module in it. For
+example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mysite/
+    ...
+    mydbengine/
+        __init__.py
+        base.py
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">base.py</span></code> 模块必须包含一个名为 <code class="docutils literal notranslate"><span class="pre">DatabaseWrapper</span></code> 的类，它从 <code class="docutils literal notranslate"><span class="pre">django.db.backends</span></code> 模块中子类化了一个现有的引擎。下面是一个子类化 PostgreSQL 引擎的例子，用来改变一个特征类 <code class="docutils literal notranslate"><span class="pre">allows_group_by_selected_pks_on_model</span></code>。</p>
+<div class="literal-block-wrapper docutils container" id="id18">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">mysite/mydbengine/base.py</span></code></span><a class="headerlink" href="#id18" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.backends.postgresql</span> <span class="kn">import</span> <span class="n">base</span><span class="p">,</span> <span class="n">features</span>
+
+
+<span class="k">class</span> <span class="nc">DatabaseFeatures</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">DatabaseFeatures</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">allows_group_by_selected_pks_on_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">DatabaseWrapper</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">DatabaseWrapper</span><span class="p">):</span>
+    <span class="n">features_class</span> <span class="o">=</span> <span class="n">DatabaseFeatures</span>
+</pre></div>
+</div>
+</div>
+<p>最后，你必须在你的 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 文件中指定一个 <a class="reference internal" href="settings.html#std-setting-DATABASE-ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASE-ENGINE</span></code></a>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;mydbengine&quot;</span><span class="p">,</span>
+        <span class="c1"># ...</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>你可以在 <a class="reference external" href="https://github.com/django/django/blob/main/django/db/backends">django/db/backends</a> 中查看当前的数据库引擎列表。</p>
+</div>
+<div class="section" id="s-using-a-3rd-party-database-backend">
+<span id="s-third-party-notes"></span><span id="using-a-3rd-party-database-backend"></span><span id="third-party-notes"></span><h2>使用第三方数据库后端<a class="headerlink" href="#using-a-3rd-party-database-backend" title="永久链接至标题">¶</a></h2>
+<p>除了官方支持的数据库外，还有第三方提供的后端，允许你在 Django 中使用其他数据库。</p>
+<ul class="simple">
+<li><a class="reference external" href="https://pypi.org/project/django-cockroachdb/">CockroachDB</a></li>
+<li><a class="reference external" href="https://pypi.org/project/django-firebird/">Firebird</a></li>
+<li><a class="reference external" href="https://pypi.org/project/django-google-spanner/">Google Cloud Spanner</a></li>
+<li><a class="reference external" href="https://pypi.org/project/mssql-django/">Microsoft SQL Server</a></li>
+<li><a class="reference external" href="https://pypi.org/project/django-snowflake/">Snowflake</a></li>
+<li><a class="reference external" href="https://pypi.org/project/django-tidb/">TiDB</a></li>
+<li><a class="reference external" href="https://pypi.org/project/django-yugabytedb/">YugabyteDB</a></li>
+</ul>
+<p>这些非官方后端所支持的 Django 版本和 ORM 功能有很大的不同。关于这些非官方后端的具体功能的查询，以及任何支持的查询，都应该通过每个第三方项目提供的支持渠道进行。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">数据库</a><ul>
+<li><a class="reference internal" href="#general-notes">通用注意事项</a><ul>
+<li><a class="reference internal" href="#persistent-connections">持久连接</a><ul>
+<li><a class="reference internal" href="#connection-management">连接管理</a></li>
+<li><a class="reference internal" href="#caveats">附加说明</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#encoding">编码</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#postgresql-notes">PostgreSQL 注意事项</a><ul>
+<li><a class="reference internal" href="#postgresql-connection-settings">PostgreSQL 连接配置</a></li>
+<li><a class="reference internal" href="#optimizing-postgresql-s-configuration">优化 PostgreSQL 的配置</a></li>
+<li><a class="reference internal" href="#isolation-level">隔离等级</a></li>
+<li><a class="reference internal" href="#role">Role</a></li>
+<li><a class="reference internal" href="#server-side-parameters-binding">Server-side parameters binding</a></li>
+<li><a class="reference internal" href="#indexes-for-varchar-and-text-columns"><code class="docutils literal notranslate"><span class="pre">varchar</span></code> 和 <code class="docutils literal notranslate"><span class="pre">text</span></code> 列的索引。</a></li>
+<li><a class="reference internal" href="#migration-operation-for-adding-extensions">添加扩展的迁移操作</a></li>
+<li><a class="reference internal" href="#server-side-cursors">服务器端游标</a><ul>
+<li><a class="reference internal" href="#transaction-pooling-and-server-side-cursors">事务池和服务器端游标</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#manually-specifying-values-of-auto-incrementing-primary-keys">手动指定自增主键的值。</a></li>
+<li><a class="reference internal" href="#test-database-templates">测试数据库模板</a></li>
+<li><a class="reference internal" href="#speeding-up-test-execution-with-non-durable-settings">使用非持久设置加快测试执行速度。</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mariadb-notes">MariaDB 注意事项</a></li>
+<li><a class="reference internal" href="#mysql-notes">MySQL 注意事项</a><ul>
+<li><a class="reference internal" href="#version-support">版本支持</a></li>
+<li><a class="reference internal" href="#storage-engines">存储引擎</a></li>
+<li><a class="reference internal" href="#mysql-db-api-drivers">MySQL 数据库 API 驱动程序</a><ul>
+<li><a class="reference internal" href="#mysqlclient">mysqlclient</a></li>
+<li><a class="reference internal" href="#id8">MySQL Connector/Python</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#time-zone-definitions">时区定义</a></li>
+<li><a class="reference internal" href="#creating-your-database">创建你的数据库</a><ul>
+<li><a class="reference internal" href="#collation-settings">字符序配置</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#connecting-to-the-database">连接数据库</a><ul>
+<li><a class="reference internal" href="#setting-sql-mode">设置 <code class="docutils literal notranslate"><span class="pre">sql_mode</span></code></a></li>
+<li><a class="reference internal" href="#mysql-isolation-level">隔离等级</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-your-tables">创建你的表</a></li>
+<li><a class="reference internal" href="#table-names">表名称</a></li>
+<li><a class="reference internal" href="#savepoints">保存点</a></li>
+<li><a class="reference internal" href="#notes-on-specific-fields">特定字段的注意事项</a><ul>
+<li><a class="reference internal" href="#character-fields">字符字段</a></li>
+<li><a class="reference internal" href="#textfield-limitations"><code class="docutils literal notranslate"><span class="pre">TextField</span></code> 限制</a></li>
+<li><a class="reference internal" href="#fractional-seconds-support-for-time-and-datetime-fields">支持时间和 DateTime 字段的小数秒。</a></li>
+<li><a class="reference internal" href="#timestamp-columns"><code class="docutils literal notranslate"><span class="pre">TIMESTAMP</span></code> 列</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#row-locking-with-queryset-select-for-update">用 <code class="docutils literal notranslate"><span class="pre">QuerySet.select_for_update()</span></code> 锁定行</a></li>
+<li><a class="reference internal" href="#automatic-typecasting-can-cause-unexpected-results">自动排版会造成意想不到的结果</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sqlite-notes">SQLite 注意事项</a><ul>
+<li><a class="reference internal" href="#substring-matching-and-case-sensitivity">子串匹配和大小写敏感性</a></li>
+<li><a class="reference internal" href="#decimal-handling">小数处理</a></li>
+<li><a class="reference internal" href="#database-is-locked-errors">“Database is locked”错误</a></li>
+<li><a class="reference internal" href="#queryset-select-for-update-not-supported">不支持 <code class="docutils literal notranslate"><span class="pre">QuerySet.select_for_update()</span></code></a></li>
+<li><a class="reference internal" href="#isolation-when-using-queryset-iterator">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.iterator()</span></code> 时的隔离</a></li>
+<li><a class="reference internal" href="#enabling-json1-extension-on-sqlite">在 SQLite 上启用 JSON1 扩展</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#oracle-notes">Oracle 注意事项</a><ul>
+<li><a class="reference internal" href="#id13">连接数据库</a><ul>
+<li><a class="reference internal" href="#full-dsn-and-easy-connect">完整的 DSN 和 Easy Connect</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#threaded-option">线程选项</a></li>
+<li><a class="reference internal" href="#insert-returning-into">INSERT ... RETURNING INTO</a></li>
+<li><a class="reference internal" href="#naming-issues">命名问题</a></li>
+<li><a class="reference internal" href="#null-and-empty-strings">NULL 和空字符串</a></li>
+<li><a class="reference internal" href="#id14"><code class="docutils literal notranslate"><span class="pre">TextField</span></code> 限制</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#subclassing-the-built-in-database-backends">子类化内置数据库后端</a></li>
+<li><a class="reference internal" href="#using-a-3rd-party-database-backend">使用第三方数据库后端</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="csrf.html"
+                          title="上一章">跨站请求伪造保护</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="django-admin.html"
+                          title="下一章"><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 和 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code></a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/ref/databases.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="csrf.html" title="跨站请求伪造保护">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="django-admin.html" title="&lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django-admin&lt;/span&gt;&lt;/code&gt; 和 &lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;manage.py&lt;/span&gt;&lt;/code&gt;">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

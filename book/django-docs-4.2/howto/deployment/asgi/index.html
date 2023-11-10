@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何使用 ASGI 来部署 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../static/documentation_options.js"></script>
+    <script src="../../../static/jquery.js"></script>
+    <script src="../../../static/underscore.js"></script>
+    <script src="../../../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="如何使用 Daphne 托管 Django" href="daphne.html" />
+    <link rel="prev" title="如何从 Apache 对 Django 的用户数据库进行认证" href="../wsgi/apache-auth.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="../wsgi/apache-auth.html" title="如何从 Apache 对 Django 的用户数据库进行认证">previous</a>
+     |
+    <a href="../../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="daphne.html" title="如何使用 Daphne 托管 Django">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-deployment-asgi-index">
+            
+  <div class="section" id="s-how-to-deploy-with-asgi">
+<span id="how-to-deploy-with-asgi"></span><h1>如何使用 ASGI 来部署<a class="headerlink" href="#how-to-deploy-with-asgi" title="永久链接至标题">¶</a></h1>
+<p>同 WSGI 一样，Django 也支持使用 <a class="reference external" href="https://asgi.readthedocs.io/en/latest/">ASGI</a> 来部署，它是为了支持异步网络服务器和应用而新出现的 Python 标准。</p>
+<p>Django 的管理命令 <a class="reference internal" href="../../../ref/django-admin.html#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startproject</span></code></a> 生成了一个默认的 ASGI 配置，你可以按照自己项目的需要去调整这个配置，任何兼容 ASGI 的应用程序服务器都可以直接使用。</p>
+<p>Django 提供了下面这些 ASGI 服务的入门文档：</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="daphne.html">如何使用 Daphne 托管 Django</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hypercorn.html">如何使用 Hypercorn 托管 Django。</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uvicorn.html">如何使用 Uvicorn 托管 Django</a></li>
+</ul>
+</div>
+<div class="section" id="s-the-application-object">
+<span id="the-application-object"></span><h2><code class="docutils literal notranslate"><span class="pre">application</span></code> 对象<a class="headerlink" href="#the-application-object" title="永久链接至标题">¶</a></h2>
+<p>与WSGI类似，ASGI需要你提供 <code class="docutils literal notranslate"><span class="pre">application</span></code> 可以让应用程序服务器用它与你的代码交互。可调用的应用程序 <code class="docutils literal notranslate"><span class="pre">application</span></code> 一般以一个位于 Python 模块中，名为应用程序 <code class="docutils literal notranslate"><span class="pre">application</span></code> 的对象的形式提供，且对服务器可见。</p>
+<p><a class="reference internal" href="../../../ref/django-admin.html#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startproject</span></code></a> 命令创建了文件 <code class="file docutils literal notranslate"><span class="pre">&lt;project_name&gt;/asgi.py</span></code>，其中包含了 <code class="docutils literal notranslate"><span class="pre">application</span></code> callable应用程序。</p>
+<p>它不会被开发服务器使用 (<code class="docutils literal notranslate"><span class="pre">runserver</span></code>) ，但是可以在开发环境或生产环境中用任意一种ASGI服务器来使用。</p>
+<p>ASGI服务器通常会以字符串形式获取可调用应用程序的路径；对于大多数Django项目来说，应用程序形如 <code class="docutils literal notranslate"><span class="pre">myproject.asgi:application</span></code> 。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>Django默认的ASGI处理器会将你所有的代码放在一个同步的线程内运行，但你如果选择运行自己的异步处理器，你必须确保它是异步安全的。</p>
+<p class="last">不要在异步代码中调用阻塞的同步函数或库。Django会阻止你这样异步不安全地使用Django的内容，但是对第三方应用程序或者Python库不一定会这样。</p>
+</div>
+</div>
+<div class="section" id="s-configuring-the-settings-module">
+<span id="configuring-the-settings-module"></span><h2>配置 settings 模块<a class="headerlink" href="#configuring-the-settings-module" title="永久链接至标题">¶</a></h2>
+<p>当 ASGI 服务器加载应用程序时，Django 需要导入配置模块——完整定义应用程序的地方。</p>
+<p>Django 利用 <span class="target" id="index-2"></span><a class="reference internal" href="../../../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 环境变量来定位合适的配置模块。它必须包含到配置模块的点式路径。开发环境和生产环境可以配置不同值；这都取决于你是如何组织配置的。</p>
+<p>若未设置该变量，文件 <code class="file docutils literal notranslate"><span class="pre">asgi.py</span></code> 默认将其配置为 <code class="docutils literal notranslate"><span class="pre">mysite.settings</span></code>， <code class="docutils literal notranslate"><span class="pre">mysite</span></code> 即工程名字。</p>
+</div>
+<div class="section" id="s-applying-asgi-middleware">
+<span id="applying-asgi-middleware"></span><h2>应用 ASGI 中间件<a class="headerlink" href="#applying-asgi-middleware" title="永久链接至标题">¶</a></h2>
+<p>为了应用ASGI中间件，或者将Django嵌入到其他的ASGI应用程序中，你可以将Django的 <code class="docutils literal notranslate"><span class="pre">application</span></code> 应用程序对象包装到  <code class="docutils literal notranslate"><span class="pre">asgi.py</span></code> 文件中。举个例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">some_asgi_library</span> <span class="kn">import</span> <span class="n">AmazingMiddleware</span>
+
+<span class="n">application</span> <span class="o">=</span> <span class="n">AmazingMiddleware</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何使用 ASGI 来部署</a><ul>
+<li><a class="reference internal" href="#the-application-object"><code class="docutils literal notranslate"><span class="pre">application</span></code> 对象</a></li>
+<li><a class="reference internal" href="#configuring-the-settings-module">配置 settings 模块</a></li>
+<li><a class="reference internal" href="#applying-asgi-middleware">应用 ASGI 中间件</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="../wsgi/apache-auth.html"
+                          title="上一章">如何从 Apache 对 Django 的用户数据库进行认证</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="daphne.html"
+                          title="下一章">如何使用 Daphne 托管 Django</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../sources/howto/deployment/asgi/index.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="../wsgi/apache-auth.html" title="如何从 Apache 对 Django 的用户数据库进行认证">previous</a>
+     |
+    <a href="../../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="daphne.html" title="如何使用 Daphne 托管 Django">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

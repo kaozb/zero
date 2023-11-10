@@ -1,0 +1,1217 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 缓存框架 &#8212; Django 4.2.6.dev20230904111759 文档</title>
+    <link rel="stylesheet" type="text/css" href="../static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../static/documentation_options.js"></script>
+    <script src="../static/jquery.js"></script>
+    <script src="../static/underscore.js"></script>
+    <script src="../static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="条件视图处理" href="conditional-view-processing.html" />
+    <link rel="prev" title="Django 中的自定义验证" href="auth/customizing.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 4.2.6.dev20230904111759 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="auth/customizing.html" title="Django 中的自定义验证">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="conditional-view-processing.html" title="条件视图处理">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-cache">
+            
+  <div class="section" id="s-django-s-cache-framework">
+<span id="django-s-cache-framework"></span><h1>Django 缓存框架<a class="headerlink" href="#django-s-cache-framework" title="永久链接至标题">¶</a></h1>
+<p>A fundamental trade-off in dynamic websites is, well, they're dynamic. Each
+time a user requests a page, the web server makes all sorts of calculations --
+from database queries to template rendering to business logic -- to create the
+page that your site's visitor sees. This is a lot more expensive, from a
+processing-overhead perspective, than your standard
+read-a-file-off-the-filesystem server arrangement.</p>
+<p>For most web applications, this overhead isn't a big deal. Most web
+applications aren't <code class="docutils literal notranslate"><span class="pre">washingtonpost.com</span></code> or <code class="docutils literal notranslate"><span class="pre">slashdot.org</span></code>; they're small-
+to medium-sized sites with so-so traffic. But for medium- to high-traffic
+sites, it's essential to cut as much overhead as possible.</p>
+<p>这就是缓存的用武之地。</p>
+<p>To cache something is to save the result of an expensive calculation so that
+you don't have to perform the calculation next time. Here's some pseudocode
+explaining how this would work for a dynamically generated web page:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>given a URL, try finding that page in the cache
+if the page is in the cache:
+    return the cached page
+else:
+    generate the page
+    save the generated page in the cache (for next time)
+    return the generated page
+</pre></div>
+</div>
+<p>Django 自带强大的缓存系统，可以让你保存动态页面，这样就不必为每次请求计算。为了方便，Django 提供了不同级别的缓存粒度。你可以缓存特定视图的输出，你可以只缓存难以生成的部分，或者你可以缓存整个网站。</p>
+<p>Django also works well with &quot;downstream&quot; caches, such as <a class="reference external" href="http://www.squid-cache.org/">Squid</a> and browser-based caches. These are the types
+of caches that you don't directly control but to which you can provide hints
+(via HTTP headers) about which parts of your site should be cached, and how.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last"><a class="reference internal" href="../misc/design-philosophies.html#cache-design-philosophy"><span class="std std-ref">缓存框架设计理念</span></a> 解释了框架的一些设计决策。</p>
+</div>
+<div class="section" id="s-setting-up-the-cache">
+<span id="s-id1"></span><span id="setting-up-the-cache"></span><span id="id1"></span><h2>设置缓存<a class="headerlink" href="#setting-up-the-cache" title="永久链接至标题">¶</a></h2>
+<p>缓存系统需要少量的设置。也就是说，你必须告诉它你的缓存数据应该放在哪里 —— 是在数据库中，还是在文件系统上，或者直接放在内存中。这是一个重要的决定，会影响你的缓存的性能；是的，有些缓存类型比其他类型快。</p>
+<p>缓存设置项位于你的配置文件的缓存配置中。这里有缓存配置所有可用值的说明。</p>
+<div class="section" id="s-memcached">
+<span id="s-id2"></span><span id="memcached"></span><span id="id2"></span><h3>Memcached<a class="headerlink" href="#memcached" title="永久链接至标题">¶</a></h3>
+<p><a class="reference external" href="https://memcached.org/">Memcached</a> is an entirely memory-based cache server, originally developed
+to handle high loads at LiveJournal.com and subsequently open-sourced by
+Danga Interactive. It is used by sites such as Facebook and Wikipedia to
+reduce database access and dramatically increase site performance.</p>
+<p>Memcached 以一个守护进程的形式运行，并且被分配了指定数量的 RAM。它所做的就是提供一个快速接口用于在缓存中添加，检索和删除数据。所有数据都直接存储在内存中，因此不会产生数据库或文件系统使用的开销。</p>
+<p>After installing Memcached itself, you'll need to install a Memcached
+binding. There are several Python Memcached bindings available; the
+two supported by Django are <a class="reference external" href="https://pypi.org/project/pylibmc/">pylibmc</a> and <a class="reference external" href="https://pypi.org/project/pymemcache/">pymemcache</a>.</p>
+<p>在 Django 中使用 Memcached ：</p>
+<ul class="simple">
+<li>设置 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> 为 django.core.cache.backends.memcached.PyMemcacheCache 或 django.core.cache.backends.memcached.PyLibMCCache （取决于你选择的 memcached 绑定）。</li>
+<li>将 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">ip:port</span></code> 值，其中 <code class="docutils literal notranslate"><span class="pre">ip</span></code> 是 Memcached 守护进程的 IP 地址，<code class="docutils literal notranslate"><span class="pre">port</span></code> 是 Memcached 运行的端口，或者设置为 <code class="docutils literal notranslate"><span class="pre">unix:path</span></code> 值，其中 <code class="docutils literal notranslate"><span class="pre">path</span></code> 是 Memcached Unix socket 文件的路径。</li>
+</ul>
+<p>在这个例子中，Memcached 运行在 localhost（127.0.0.1）端口 11211，使用 <code class="docutils literal notranslate"><span class="pre">pymemcache</span></code> 绑定：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.memcached.PyMemcacheCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1:11211&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>在这个例子中，Memcached 可以通过本地 Unix 套接字文件 <code class="file docutils literal notranslate"><span class="pre">/tmp/memcached.sock</span></code> 使用 <code class="docutils literal notranslate"><span class="pre">pymemcache</span></code> 绑定：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.memcached.PyMemcacheCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;unix:/tmp/memcached.sock&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Memcached 有一个很好的特性，就是它可以在多台服务器上共享一个缓存。这意味着你可以在多台机器上运行 Memcached 守护进程，程序将把这组机器作为一个 <em>单一</em> 的缓存，而不需要在每台机器上重复缓存值。要利用这个特性，请在 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 中包含所有服务器地址，可以是分号或逗号分隔的字符串，也可以是一个列表。</p>
+<p>在这个例子中，缓存是通过运行在 IP 地址 172.19.26.240 和 172.19.26.242 上的 Memcached 实例共享的，这两个实例都在 11211 端口上：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.memcached.PyMemcacheCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;172.19.26.240:11211&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;172.19.26.242:11211&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>在下面的例子中，缓存是由运行在 IP 地址 172.19.26.240（端口11211）、172.19.26.242（端口11212）和 172.19.26.244（端口11213）上的 Memcached 实例共享的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.memcached.PyMemcacheCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;172.19.26.240:11211&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;172.19.26.242:11212&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;172.19.26.244:11213&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>By default, the <code class="docutils literal notranslate"><span class="pre">PyMemcacheCache</span></code> backend sets the following options (you can
+override them in your <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;allow_unicode_keys&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">&quot;default_noreply&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">&quot;serde&quot;</span><span class="p">:</span> <span class="n">pymemcache</span><span class="o">.</span><span class="n">serde</span><span class="o">.</span><span class="n">pickle_serde</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>关于 Memcached 的最后一点是，基于内存的缓存有一个缺点：因为缓存的数据存储在内存中，如果你的服务器崩溃，数据将丢失。显然，内存并不是用来永久存储数据的，所以不要依赖基于内存的缓存作为你唯一的数据存储。毫无疑问，Django 缓存后端中的 <em>每个</em> 都不应该用于永久存储 —— 它们的目的都是为了缓存的解决方案，而不是存储 —— 但我们在这里指出这一点是因为基于内存的缓存是格外临时的。</p>
+</div>
+<div class="section" id="s-redis">
+<span id="s-id4"></span><span id="redis"></span><span id="id4"></span><h3>Redis<a class="headerlink" href="#redis" title="永久链接至标题">¶</a></h3>
+<p><a class="reference external" href="https://redis.io/">Redis</a> is an in-memory database that can be used for caching. To begin you'll
+need a Redis server running either locally or on a remote machine.</p>
+<p>After setting up the Redis server, you'll need to install Python bindings for
+Redis. <a class="reference external" href="https://pypi.org/project/redis/">redis-py</a> is the binding supported natively by Django.
+Installing the <a class="reference external" href="https://pypi.org/project/hiredis/">hiredis-py</a> package is also recommended.</p>
+<p>To use Redis as your cache backend with Django:</p>
+<ul class="simple">
+<li>Set <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> to
+<code class="docutils literal notranslate"><span class="pre">django.core.cache.backends.redis.RedisCache</span></code>.</li>
+<li>Set <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> to the URL pointing to your Redis
+instance, using the appropriate scheme. See the <code class="docutils literal notranslate"><span class="pre">redis-py</span></code> docs for
+<a class="reference external" href="https://redis-py.readthedocs.io/en/stable/connections.html#redis.connection.ConnectionPool.from_url">details on the available schemes</a>.</li>
+</ul>
+<p>For example, if Redis is running on localhost (127.0.0.1) port 6379:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.redis.RedisCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://127.0.0.1:6379&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Often Redis servers are protected with authentication. In order to supply a
+username and password, add them in the <code class="docutils literal notranslate"><span class="pre">LOCATION</span></code> along with the URL:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.redis.RedisCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://username:password@127.0.0.1:6379&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you have multiple Redis servers set up in the replication mode, you can
+specify the servers either as a semicolon or comma delimited string, or as a
+list. While using multiple servers, write operations are performed on the first
+server (leader). Read operations are performed on the other servers (replicas)
+chosen at random:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.redis.RedisCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;redis://127.0.0.1:6379&quot;</span><span class="p">,</span>  <span class="c1"># leader</span>
+            <span class="s2">&quot;redis://127.0.0.1:6378&quot;</span><span class="p">,</span>  <span class="c1"># read-replica 1</span>
+            <span class="s2">&quot;redis://127.0.0.1:6377&quot;</span><span class="p">,</span>  <span class="c1"># read-replica 2</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-database-caching">
+<span id="s-id6"></span><span id="database-caching"></span><span id="id6"></span><h3>数据库缓存<a class="headerlink" href="#database-caching" title="永久链接至标题">¶</a></h3>
+<p>Django 可以在数据库中存储缓存数据。如果你有一个快速、索引正常的数据库服务器，这种缓存效果最好。</p>
+<p>用数据库表作为你的缓存后端：</p>
+<ul class="simple">
+<li>将 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">django.core.cache.backends.db.DatabaseCache</span></code></li>
+<li>将 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 设置为数据库表的 <code class="docutils literal notranslate"><span class="pre">tablename</span></code>。这个表名可以是没有使用过的任何符合要求的名称。</li>
+</ul>
+<p>在这个例子中，缓存表的名称是 <code class="docutils literal notranslate"><span class="pre">my_cache_table</span></code> ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.db.DatabaseCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;my_cache_table&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Unlike other cache backends, the database cache does not support automatic
+culling of expired entries at the database level. Instead, expired cache
+entries are culled each time <code class="docutils literal notranslate"><span class="pre">add()</span></code>, <code class="docutils literal notranslate"><span class="pre">set()</span></code>, or <code class="docutils literal notranslate"><span class="pre">touch()</span></code> is called.</p>
+<div class="section" id="s-creating-the-cache-table">
+<span id="creating-the-cache-table"></span><h4>创建缓存表<a class="headerlink" href="#creating-the-cache-table" title="永久链接至标题">¶</a></h4>
+<p>Before using the database cache, you must create the cache table with this
+command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python manage.py createcachetable
+</pre></div>
+</div>
+<p>这将在数据库中创建一个表，该表的格式与 Django 数据库缓存系统期望的一致。该表的表名取自 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 。</p>
+<p>如果你正在使用多个数据库缓存， <a class="reference internal" href="../ref/django-admin.html#django-admin-createcachetable"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">createcachetable</span></code></a> 会为每个缓存创建一个表。</p>
+<p>如果你正在使用多个数据库， <a class="reference internal" href="../ref/django-admin.html#django-admin-createcachetable"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">createcachetable</span></code></a> 观察你的数据库路由器的 <code class="docutils literal notranslate"><span class="pre">allow_migrate()</span></code> 方法（见下文）。</p>
+<p>像 <a class="reference internal" href="../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> 一样， <a class="reference internal" href="../ref/django-admin.html#django-admin-createcachetable"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">createcachetable</span></code></a> 不会影响已经存在的表，它只创建缺失的表。</p>
+<p>要打印即将运行的 SQL，而不是运行它，请使用 <a class="reference internal" href="../ref/django-admin.html#cmdoption-createcachetable-dry-run"><code class="xref std std-option docutils literal notranslate"><span class="pre">createcachetable</span> <span class="pre">--dry-run</span></code></a> 选项。</p>
+</div>
+<div class="section" id="s-multiple-databases">
+<span id="multiple-databases"></span><h4>多数据库<a class="headerlink" href="#multiple-databases" title="永久链接至标题">¶</a></h4>
+<p>如果在多数据库中使用缓存，你也需要设置数据库缓存表的路由指令。因为路由的原因，数据库缓存表在 <code class="docutils literal notranslate"><span class="pre">django_cache</span></code> 应用程序中显示为 <code class="docutils literal notranslate"><span class="pre">CacheEntry</span></code> 的模型名。这个模型不会出现在模型缓存中，但模型详情可用于路由目的。</p>
+<p>比如，下面的路由可以将所有缓存读取操作指向 <code class="docutils literal notranslate"><span class="pre">cache_replica</span></code> ，并且所有的写操作指向 <code class="docutils literal notranslate"><span class="pre">cache_primary</span></code>。缓存表将会只同步到 <code class="docutils literal notranslate"><span class="pre">cache_primary</span></code>。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CacheRouter</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A router to control all database cache operations&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">db_for_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="s2">&quot;All cache read operations go to the replica&quot;</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span> <span class="o">==</span> <span class="s2">&quot;django_cache&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;cache_replica&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">db_for_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="s2">&quot;All cache write operations go to primary&quot;</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">app_label</span> <span class="o">==</span> <span class="s2">&quot;django_cache&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;cache_primary&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">allow_migrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="s2">&quot;Only install the cache model on primary&quot;</span>
+        <span class="k">if</span> <span class="n">app_label</span> <span class="o">==</span> <span class="s2">&quot;django_cache&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">db</span> <span class="o">==</span> <span class="s2">&quot;cache_primary&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>如果你没有指定路由指向数据库缓存模型，缓存后端将使用 <code class="docutils literal notranslate"><span class="pre">默认</span></code> 的数据库。</p>
+<p>如果没使用数据库缓存后端，则无需担心为数据库缓存模型提供路由指令。</p>
+</div>
+</div>
+<div class="section" id="s-filesystem-caching">
+<span id="filesystem-caching"></span><h3>文件系统缓存<a class="headerlink" href="#filesystem-caching" title="永久链接至标题">¶</a></h3>
+<p>基于文件的后端序列化并保存每个缓存值作为单独的文件。要使用此后端，可将 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;django.core.cache.backends.filebased.FileBasedCache&quot;</span></code> 并将 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 设置为一个合适的路径。比如，在 <code class="docutils literal notranslate"><span class="pre">/var/tmp/django_cache</span></code> 存储缓存数据，使用以下配置：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.filebased.FileBasedCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;/var/tmp/django_cache&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>如果使用 Windows 系统，将驱动器号放在路径开头，如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.filebased.FileBasedCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;c:/foo/bar&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>目录路径应该是绝对路径——因此，它应该以文件系统根目录开始。无需担心是否需要以斜杠结尾。</p>
+<p>Make sure the directory pointed-to by this setting either exists and is
+readable and writable, or that it can be created by the system user under which
+your web server runs. Continuing the above example, if your server runs as the
+user <code class="docutils literal notranslate"><span class="pre">apache</span></code>, make sure the directory <code class="docutils literal notranslate"><span class="pre">/var/tmp/django_cache</span></code> exists and
+is readable and writable by the user <code class="docutils literal notranslate"><span class="pre">apache</span></code>, or that it can be created by
+the user <code class="docutils literal notranslate"><span class="pre">apache</span></code>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>当缓存 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 包含在 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a> 或 <a class="reference internal" href="../ref/settings.html#std-setting-STATICFILES_FINDERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATICFILES_FINDERS</span></code></a> 中，敏感数据可能被暴露。</p>
+<p class="last">获得访问缓存文件的攻击者不仅可以伪造 HTML 内容，你的网站会信任它，而且还可以远程执行任意代码，因为数据是用 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(在 Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 序列化的。</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">Filesystem caching may become slow when storing a large number of files. If
+you run into this problem, consider using a different caching mechanism.
+You can also subclass
+<a class="reference external" href="https://github.com/django/django/blob/main/django/core/cache/backends/filebased.py">FileBasedCache</a> and
+improve the culling strategy.</p>
+</div>
+</div>
+<div class="section" id="s-local-memory-caching">
+<span id="s-id7"></span><span id="local-memory-caching"></span><span id="id7"></span><h3>本地内存缓存<a class="headerlink" href="#local-memory-caching" title="永久链接至标题">¶</a></h3>
+<p>如果你的配置文件中没有指定其他缓存，那么这是默认的缓存。如果你想获得内存缓存的速度优势，但又不具备运行 Memcached 的能力，可以考虑使用本地内存缓存后端。这个缓存是每进程所有（见下文）和线程安全的。要使用它，可以将 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;django.core.cache.backends.locmem.LocMemCache&quot;</span></code>。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.locmem.LocMemCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;unique-snowflake&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 被用于标识各个内存存储。如果只有一个 <code class="docutils literal notranslate"><span class="pre">locmem</span></code> 缓存，你可以忽略 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-LOCATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCATION</span></code></a> 。但是如果你有多个本地内存缓存，那么你至少要为其中一个起个名字，以便将它们区分开。</p>
+<p>这种缓存使用最近最少使用（LRU）的淘汰策略。</p>
+<p>请注意，每个进程都会有自己的私有缓存实例，这意味着不可能进行跨进程缓存。这也意味着本地内存缓存的内存效率不是特别高，所以对于生产环境来说，它可能不是一个好的选择。对于开发来说是不错的选择。</p>
+</div>
+<div class="section" id="s-dummy-caching-for-development">
+<span id="dummy-caching-for-development"></span><h3>虚拟缓存（用于开发模式）<a class="headerlink" href="#dummy-caching-for-development" title="永久链接至标题">¶</a></h3>
+<p>最后，Django 带有一个实际上不是缓存的 “虚拟” 缓存，它只是实现缓存接口，并不做其他操作。</p>
+<p>如果你有一个生产网站，在不同的地方使用了大量的缓存，但在开发／测试环境中，你不想缓存，也不想单独修改你的代码，那么这就很有用。要激活虚拟缓存，可以像这样设置 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.dummy.DummyCache&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-using-a-custom-cache-backend">
+<span id="using-a-custom-cache-backend"></span><h3>使用自定义缓存后端<a class="headerlink" href="#using-a-custom-cache-backend" title="永久链接至标题">¶</a></h3>
+<p>虽然 Django 包含了许多开箱即用的缓存后端支持，但有时你可能会想使用一个自定义的缓存后端。要在 Django 中使用外部缓存后端，使用 Python 导入路径作为 <code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code> 的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 配置中的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a>，像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;path.to.backend&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you're building your own backend, you can use the standard cache backends
+as reference implementations. You'll find the code in the
+<a class="reference external" href="https://github.com/django/django/blob/main/django/core/cache/backends/">django/core/cache/backends/</a> directory of the Django source.</p>
+<p>注意：除非是令人信服的理由，诸如服务器不支持缓存，否则你应该使用 Django 附带的缓存后端。他们经过了良好的测试并有完整文档。</p>
+</div>
+<div class="section" id="s-cache-arguments">
+<span id="s-id8"></span><span id="cache-arguments"></span><span id="id8"></span><h3>缓存参数<a class="headerlink" href="#cache-arguments" title="永久链接至标题">¶</a></h3>
+<p>每个缓存后端可以通过额外的参数来控制缓存行为。这些参数在 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 配置中作为附加键提供。有效参数如下：</p>
+<ul>
+<li><p class="first"><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-TIMEOUT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TIMEOUT</span></code></a> ：缓存的默认超时时间，以秒为单位。这个参数默认为 <code class="docutils literal notranslate"><span class="pre">300</span></code> 秒（5 分钟）。你可以将 <code class="docutils literal notranslate"><span class="pre">TIMEOUT</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，这样，默认情况下，缓存键永远不会过期。值为 <code class="docutils literal notranslate"><span class="pre">0</span></code> 会导致键立即过期（实际上是 “不缓存”）。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> ：任何应该传递给缓存后端的选项。有效的选项列表会随着每个后端而变化，由第三方库支持的缓存后端会直接将其选项传递给底层缓存库。</p>
+<p>实施自有缓存策略的缓存后端（即 <code class="docutils literal notranslate"><span class="pre">locmem</span></code>、<code class="docutils literal notranslate"><span class="pre">filesystem</span></code> 和 <code class="docutils literal notranslate"><span class="pre">database</span></code> 后端）将尊重以下选项：</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">MAX_ENTRIES</span></code> ：删除旧值之前允许缓存的最大条目。默认是 <code class="docutils literal notranslate"><span class="pre">300</span></code> 。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">CULL_FREQUENCY</span></code> ：当达到 <code class="docutils literal notranslate"><span class="pre">MAX_ENTRIES</span></code> 时，被删除的条目的比例。实际比例是 <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">CULL_FREQUENCY</span></code>，所以将 <code class="docutils literal notranslate"><span class="pre">CULL_FREQUENCY</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">2</span></code>，即当达到 <code class="docutils literal notranslate"><span class="pre">MAX_ENTRIES</span></code> 时将删除一半的条目。这个参数应该是一个整数，默认为 <code class="docutils literal notranslate"><span class="pre">3</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">CULL_FREQUENCY</span></code> 的值为 <code class="docutils literal notranslate"><span class="pre">0</span></code> 意味着当达到 <code class="docutils literal notranslate"><span class="pre">MAX_ENTRIES</span></code> 时，整个缓存将被转储。在某些后端（特别是 <code class="docutils literal notranslate"><span class="pre">database</span></code> ），这使得缓存速度 <em>更</em> 快，但代价是缓存未命中更多。</p>
+</li>
+</ul>
+<p>The Memcached and Redis backends pass the contents of <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> as keyword arguments to the client constructors, allowing
+for more advanced control of client behavior. For example usage, see below.</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-KEY_PREFIX"><code class="xref std std-setting docutils literal notranslate"><span class="pre">KEY_PREFIX</span></code></a>。一个自动包含在 Django 服务器使用的所有缓存键中的字符串（默认为前缀）。</p>
+<p>查看 <a class="reference internal" href="#cache-key-prefixing"><span class="std std-ref">缓存文档</span></a> 获取更多信息。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-VERSION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">VERSION</span></code></a> ：Django 服务器生成的缓存键的默认版本号。</p>
+<p>查看 <a class="reference internal" href="#cache-versioning"><span class="std std-ref">缓存文档</span></a> 获取更多信息。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-KEY_FUNCTION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">KEY_FUNCTION</span></code></a> 一个字符串，包含一个函数的点分隔路径，该函数定义了如何将前缀、版本和键组成一个最终的缓存键。</p>
+<p>查看 <a class="reference internal" href="#cache-key-transformation"><span class="std std-ref">缓存文档</span></a> 获取更多信息。</p>
+</li>
+</ul>
+<p>在本例中，正在配置一个文件系统后端，超时为 60 秒，最大容量 1000 项：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.filebased.FileBasedCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;/var/tmp/django_cache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;TIMEOUT&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;MAX_ENTRIES&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>下面是一个基于 <code class="docutils literal notranslate"><span class="pre">pylibmc</span></code> 的后端配置的例子，它启用了二进制协议、SASL 认证和 <code class="docutils literal notranslate"><span class="pre">ketama</span></code> 行为模式：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.memcached.PyLibMCCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1:11211&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;binary&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;pass&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;behaviors&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;ketama&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>下面是一个基于 <code class="docutils literal notranslate"><span class="pre">pymemcache</span></code> 的后端配置实例，它启用了客户端池（通过保持客户端连接来提高性能），将 memcache／网络错误视为缓存失效，并在连接的 socket 上设置了 <code class="docutils literal notranslate"><span class="pre">TCP_NODELAY</span></code> 标志：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.memcached.PyMemcacheCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1:11211&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;no_delay&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;ignore_exc&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;max_pool_size&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">&quot;use_pooling&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here's an example configuration for a <code class="docutils literal notranslate"><span class="pre">redis</span></code> based backend that selects
+database <code class="docutils literal notranslate"><span class="pre">10</span></code> (by default Redis ships with 16 logical databases), specifies a
+<a class="reference external" href="https://github.com/redis/redis-py#parsers">parser class</a> (<code class="docutils literal notranslate"><span class="pre">redis.connection.HiredisParser</span></code> will be used by default if
+the <code class="docutils literal notranslate"><span class="pre">hiredis-py</span></code> package is installed), and sets a custom <a class="reference external" href="https://github.com/redis/redis-py#connection-pools">connection pool
+class</a> (<code class="docutils literal notranslate"><span class="pre">redis.ConnectionPool</span></code> is used by default):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.core.cache.backends.redis.RedisCache&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://127.0.0.1:6379&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;db&quot;</span><span class="p">:</span> <span class="s2">&quot;10&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;parser_class&quot;</span><span class="p">:</span> <span class="s2">&quot;redis.connection.PythonParser&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pool_class&quot;</span><span class="p">:</span> <span class="s2">&quot;redis.BlockingConnectionPool&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-the-per-site-cache">
+<span id="s-id9"></span><span id="the-per-site-cache"></span><span id="id9"></span><h2>站点缓存<a class="headerlink" href="#the-per-site-cache" title="永久链接至标题">¶</a></h2>
+<p>一旦缓存设置完毕，使用缓存最简便的方式就是缓存整个站点。你需要在 <a class="reference internal" href="../ref/settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 设置中添加 <code class="docutils literal notranslate"><span class="pre">'django.middleware.cache.UpdateCacheMiddleware'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'django.middleware.cache.FetchFromCacheMiddleware'</span></code> ，像下面这个例子一样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MIDDLEWARE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;django.middleware.cache.UpdateCacheMiddleware&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.middleware.common.CommonMiddleware&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.middleware.cache.FetchFromCacheMiddleware&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">不，这不是错别字：“update” 中间件必须在列表的第一位，而 “fetch” 中间件必须在最后。细节有点晦涩难懂，但如果你想知道完整的故事，请看下面的 <a class="reference internal" href="#order-of-middleware">中间件的顺序</a> 。</p>
+</div>
+<p>最后，在 Django 设置文件里添加下面的必需配置：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_ALIAS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_ALIAS</span></code></a> -- 用于存储的缓存别名。</li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_SECONDS</span></code></a> -- 应缓存每个页面的秒数。</li>
+<li><a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_KEY_PREFIX"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_KEY_PREFIX</span></code></a> -- 如果使用相同的 Django installation ，通过多站点进行缓存共享，请将此值设置为站点名，或者设置成在Django 实例中唯一的其他字符串，以此防止键冲突。如果你不介意，可以设置成空字符串。</li>
+</ul>
+<p>在请求和响应标头允许的情况下，<code class="docutils literal notranslate"><span class="pre">FetchFromCacheMiddleware</span></code> 缓存状态为200的 GET 和 HEAD 响应。对于具有不同查询参数的相同URL的请求的响应被认为是单独的页面，并分别缓存。这个中间件期望一个HEAD请求的响应头与相应的GET请求具有相同的响应头；在这种情况下，它可以为HEAD请求返回一个缓存的GET响应。</p>
+<p>此外，<code class="docutils literal notranslate"><span class="pre">UpdateCacheMiddleware</span></code> 在每个 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a>  里会自动设置一些 headers，这会影响 <a class="reference internal" href="#downstream-caches"><span class="std std-ref">下游缓存</span></a>:</p>
+<ul class="simple">
+<li>设置 <code class="docutils literal notranslate"><span class="pre">Expires</span></code> header 为当前日期/时间加上定义的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_SECONDS</span></code></a> 。</li>
+<li>设置  <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code>&nbsp;header 为缓存页面的最长时间，同样，在 <a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_SECONDS</span></code></a> 里设置。</li>
+</ul>
+<p>查看 <a class="reference internal" href="http/middleware.html"><span class="doc">中间件</span></a> 获取更多中间件信息。</p>
+<p>如果一个视图设置了它自己的缓存过期时间（比如在它的 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> header 里有 <code class="docutils literal notranslate"><span class="pre">max-age</span></code> 部分），然后页面将被缓存起来直到过期，而不是 <a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_SECONDS</span></code></a> 。使用在 <code class="docutils literal notranslate"><span class="pre">django.views.decorators.cache</span></code> 的装饰器，你可以很轻松的设置视图的过期时间（使用 <a class="reference internal" href="http/decorators.html#django.views.decorators.cache.cache_control" title="django.views.decorators.cache.cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">cache_control()</span></code></a> 装饰器）或者禁用视图缓存（使用 <a class="reference internal" href="http/decorators.html#django.views.decorators.cache.never_cache" title="django.views.decorators.cache.never_cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">never_cache()</span></code></a> 装饰器）。有关这些装饰器的更多信息，请查看 <a class="reference internal" href="#controlling-cache-using-other-headers">using other headers</a> 部分。</p>
+<p id="i18n-cache-key">如果设置 <a class="reference internal" href="../ref/settings.html#std-setting-USE_I18N"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_I18N</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，然后已生成的缓存键将包含动态 <a class="reference internal" href="i18n/index.html#term-language-code"><span class="xref std std-term">language</span></a> 的名称（参阅 <a class="reference internal" href="i18n/translation.html#how-django-discovers-language-preference"><span class="std std-ref">Django 如何发现语言偏好</span></a>）。这将允许你轻松缓存使用多语言的站点，而不用再创建缓存键。</p>
+<p>当 <a class="reference internal" href="../ref/settings.html#std-setting-USE_TZ"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_TZ</span></code></a> 被设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，缓存键也包括 <a class="reference internal" href="i18n/timezones.html#default-current-time-zone"><span class="std std-ref">当前时区</span></a>。</p>
+</div>
+<div class="section" id="s-the-per-view-cache">
+<span id="the-per-view-cache"></span><h2>视图缓存<a class="headerlink" href="#the-per-view-cache" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.cache.cache_page">
+<code class="sig-prename descclassname"><span class="pre">django.views.decorators.cache.</span></code><code class="sig-name descname"><span class="pre">cache_page</span></code>(<em><span class="n"><span class="pre">timeout</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">key_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.views.decorators.cache.cache_page" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用缓存框架的通用办法是缓存视图结果。<code class="docutils literal notranslate"><span class="pre">django.views.decorators.cache</span></code> 定义了一个 <code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 装饰器，它将自动缓存视图的响应：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_page</span>
+
+
+<span class="nd">@cache_page</span><span class="p">(</span><span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 使用了一个单独的参数：缓存过期时间，以秒为单位。在上面的例子里，<code class="docutils literal notranslate"><span class="pre">my_view()</span></code> 视图的结果将缓存15分钟。（注意，我们用 <code class="docutils literal notranslate"><span class="pre">60</span> <span class="pre">*</span> <span class="pre">15</span></code> 这样的方式编写，目的是方便阅读。 <code class="docutils literal notranslate"><span class="pre">60</span> <span class="pre">*</span> <span class="pre">15</span></code> 将计算为 <code class="docutils literal notranslate"><span class="pre">900</span></code>，也就是15分钟乘以每分钟60秒。）</p>
+<p><code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 设置的缓存超时优先于 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> 头中的 <a href="#id1"><span class="problematic" id="id2">``</span></a>max-age'' 指令。</p>
+<p>和缓存站点一样，对视图缓存，以 URL 为键。如果许多 URL 指向相同的视图，每个 URL 将被单独缓存。继续以 <code class="docutils literal notranslate"><span class="pre">my_view</span></code>&nbsp;为例，如果你的 URLconf 是这样的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;foo/&lt;int:code&gt;/&quot;</span><span class="p">,</span> <span class="n">my_view</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>那么 <code class="docutils literal notranslate"><span class="pre">/foo/1/</span></code> 和 <code class="docutils literal notranslate"><span class="pre">/foo/23/</span></code>&nbsp;的请求将被分别缓存，正如你所料。但一旦部分 URL （比如 <code class="docutils literal notranslate"><span class="pre">/foo/23/</span></code> ）已经被请求，那么随后的请求都将使用缓存。</p>
+<p><code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 也可以传递可选关键字参数 <code class="docutils literal notranslate"><span class="pre">cache</span></code>，它指引装饰器在缓存视图结果时使用特定的缓存（来自 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 设置）。默认情况下，将使用默认缓存，但你可以指定任何你想要的缓存：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@cache_page</span><span class="p">(</span><span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s2">&quot;special_cache&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>你可以基于每个视图覆盖缓存前缀。<code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 传递了一个可选关键字参数 <code class="docutils literal notranslate"><span class="pre">key_prefix</span></code> ，它的工作方式与中间件的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_KEY_PREFIX"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_KEY_PREFIX</span></code></a> 相同。可以这样使用它：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@cache_page</span><span class="p">(</span><span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">,</span> <span class="n">key_prefix</span><span class="o">=</span><span class="s2">&quot;site1&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">key_prefix</span></code> 和 <code class="docutils literal notranslate"><span class="pre">cache</span></code> 参数可能需要被一起指定。<code class="docutils literal notranslate"><span class="pre">key_prefix</span></code>&nbsp;参数和 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 下指定的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-KEY_PREFIX"><code class="xref std std-setting docutils literal notranslate"><span class="pre">KEY_PREFIX</span></code></a> 将被连接起来。</p>
+<p>此外， <code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 在响应中自动设置 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Expires</span></code> 头， 这会影响 <a class="reference internal" href="#downstream-caches"><span class="std std-ref">下游缓存</span></a>.</p>
+<div class="section" id="s-specifying-per-view-cache-in-the-urlconf">
+<span id="specifying-per-view-cache-in-the-urlconf"></span><h3>在 URLconf 中指定视图缓存<a class="headerlink" href="#specifying-per-view-cache-in-the-urlconf" title="永久链接至标题">¶</a></h3>
+<p>上一节的例子硬编码了视图被缓存的事实，因为 <code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 改变了  <code class="docutils literal notranslate"><span class="pre">my_view</span></code> 函数。这种方法将你的视图和缓存系统耦合起来，这样并不理想。例如，你可能想在其他没有缓存的站点上重用这个视图函数，或者你可能想分发这个视图给那些想使用视图但不想缓存它们的人员。解决这些问题的办法是在 URLconf 中指定视图缓存，而不是视图函数旁边指定。</p>
+<p>当你在 URLconf 中使用 <code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 时，可以这样包装视图函数。这是之前提到的 URLconf：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;foo/&lt;int:code&gt;/&quot;</span><span class="p">,</span> <span class="n">my_view</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>将 <code class="docutils literal notranslate"><span class="pre">my_view</span></code> 包含在 <code class="docutils literal notranslate"><span class="pre">cache_page</span></code> 中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_page</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;foo/&lt;int:code&gt;/&quot;</span><span class="p">,</span> <span class="n">cache_page</span><span class="p">(</span><span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">)(</span><span class="n">my_view</span><span class="p">)),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-template-fragment-caching">
+<span id="s-std-templatetag-cache"></span><span id="s-std:templatetag-cache"></span><span id="template-fragment-caching"></span><span id="std-templatetag-cache"></span><span id="std:templatetag-cache"></span><h2>模板片段缓存<a class="headerlink" href="#template-fragment-caching" title="永久链接至标题">¶</a></h2>
+<p>如果你获得更多的控制，你也可以使用 <code class="docutils literal notranslate"><span class="pre">cache</span></code> 模板标签(tag)来缓存模板片段。要使你的模板能够访问这个标签，请将 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">load</span> <span class="pre">cache</span> <span class="pre">%}</span></code> 放在模板顶部。</p>
+<p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">cache</span> <span class="pre">%}</span></code> 模板标签在给定的时间里缓存片段内容。它需要至少两个参数：缓存时效时间（以秒为单位），缓存片段的名称。如果缓存失效时间被设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code> ，那么片段将被永久缓存。名称不能使变量名。例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">cache</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">cache</span> <span class="m">500</span> <span class="nv">sidebar</span> <span class="cp">%}</span>
+    .. sidebar ..
+<span class="cp">{%</span> <span class="k">endcache</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>有时你想缓存片段的多个副本，这取决于显示在的片段内一些动态数据。比如，你可能想为你的站点内每个用户分别独立缓存上面例子中的使用的 sidebar 副本。通过传递一个或多个附加参数，参数可能是带有或不带过滤器的变量，<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">cache</span> <span class="pre">%}</span></code> 模板标签必须在缓存片断中被唯一识别：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">cache</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">cache</span> <span class="m">500</span> <span class="nv">sidebar</span> <span class="nv">request.user.username</span> <span class="cp">%}</span>
+    .. sidebar for logged in user ..
+<span class="cp">{%</span> <span class="k">endcache</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>如果 <a class="reference internal" href="../ref/settings.html#std-setting-USE_I18N"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_I18N</span></code></a> 被设为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，那么站点中间件缓存将支持多语言（ <span class="xref std std-ref">respect the active language</span> ）。对于 <code class="docutils literal notranslate"><span class="pre">cache</span></code> 模板标签来说，你可以使用模板中可用的特定翻译变量之一（ <span class="xref std std-ref">translation-specific variables</span> ）来达到同样的结果：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">i18n</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">load</span> <span class="nv">cache</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">get_current_language</span> <span class="k">as</span> <span class="nv">LANGUAGE_CODE</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">cache</span> <span class="m">600</span> <span class="nv">welcome</span> <span class="nv">LANGUAGE_CODE</span> <span class="cp">%}</span>
+    <span class="cp">{%</span> <span class="k">translate</span> <span class="s2">&quot;Welcome to example.com&quot;</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">endcache</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>缓存失效时间可以是模板变量，只要模板变量解析为一个整数值即可。例如，如果模板变量 <code class="docutils literal notranslate"><span class="pre">my_timeout</span></code> 被设置成 <code class="docutils literal notranslate"><span class="pre">600</span></code>，那么下面两个例子是一样的：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">cache</span> <span class="m">600</span> <span class="nv">sidebar</span> <span class="cp">%}</span> ... <span class="cp">{%</span> <span class="k">endcache</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">cache</span> <span class="nv">my_timeout</span> <span class="nv">sidebar</span> <span class="cp">%}</span> ... <span class="cp">{%</span> <span class="k">endcache</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>这个可以避免在模板中重复。你可以在某处设置缓存失效时间，然后复用这个值。</p>
+<p>默认情况下，缓存标签会先尝试使用名为 &quot;template_fragments&quot; 的缓存。如果这个缓存不存在，它将回退使用默认缓存。你可以选择一个备用缓存后端与 <code class="docutils literal notranslate"><span class="pre">using</span></code> 关键字参数一起使用，这个参数必须是标签的最后一个参数。</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">cache</span> <span class="m">300</span> <span class="nv">local-thing</span> <span class="p">...</span>  <span class="nv">using</span><span class="o">=</span><span class="s2">&quot;localcache&quot;</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>未设置指定的缓存名称将被视为错误。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.core.cache.utils.make_template_fragment_key">
+<code class="sig-prename descclassname"><span class="pre">django.core.cache.utils.</span></code><code class="sig-name descname"><span class="pre">make_template_fragment_key</span></code>(<em><span class="n"><span class="pre">fragment_name</span></span></em>, <em><span class="n"><span class="pre">vary_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.utils.make_template_fragment_key" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果你想获得用于缓存片段的缓存键，你可以使用 <code class="docutils literal notranslate"><span class="pre">make_template_fragment_key</span></code> 。<code class="docutils literal notranslate"><span class="pre">fragment_name</span></code> 是 <code class="docutils literal notranslate"><span class="pre">cache</span></code> 模板标签的第二个参数；<code class="docutils literal notranslate"><span class="pre">vary_on</span></code> 是所有传递给标签的附加参数列表。这个函数可用来使缓存项无效或者重写。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">cache</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.cache.utils</span> <span class="kn">import</span> <span class="n">make_template_fragment_key</span>
+<span class="go"># cache key for {% cache 500 sidebar username %}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span> <span class="o">=</span> <span class="n">make_template_fragment_key</span><span class="p">(</span><span class="s2">&quot;sidebar&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">username</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># invalidates cached template fragment</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-the-low-level-cache-api">
+<span id="s-low-level-cache-api"></span><span id="the-low-level-cache-api"></span><span id="low-level-cache-api"></span><h2>底层缓存 API<a class="headerlink" href="#the-low-level-cache-api" title="永久链接至标题">¶</a></h2>
+<p>有时，缓存整个渲染页面并不会带来太多好处，事实上，这样会很不方便。</p>
+<p>或许，你的站点包含了一个视图，它的结果依赖于许多费时的查询，而且结果会随着时间变化而改变。在这个情况下，使用站点或视图缓存策略提供的全页面缓存并不理想，因为不能缓存所有结果（一些数据经常变动），不过你仍然可以缓存几乎没有变化的结果。</p>
+<p>像这样的情况，Django 公开了一个底层的缓存 API 。你可以使用这个 API 以任意级别粒度在缓存中存储对象。你可以缓存任何可以安全的 pickle 的 Python 对象：模型对象的字符串、字典、列表，或者其他。（大部分通用的 Python 对象都可以被 pickle；可以参考 Python 文档关于 pickling 的信息）</p>
+<div class="section" id="s-accessing-the-cache">
+<span id="accessing-the-cache"></span><h3>访问缓存<a class="headerlink" href="#accessing-the-cache" title="永久链接至标题">¶</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="django.core.cache.caches">
+<code class="sig-prename descclassname"><span class="pre">django.core.cache.</span></code><code class="sig-name descname"><span class="pre">caches</span></code><a class="headerlink" href="#django.core.cache.caches" title="永久链接至目标">¶</a></dt>
+<dd><p>你可以通过类似字典一样的  object: <code class="docutils literal notranslate"><span class="pre">django.core.cache.caches</span></code> 对象访问在 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 配置的缓存。重复请求同一个线程里的同一个别名将返回同一个对象。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">caches</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache1</span> <span class="o">=</span> <span class="n">caches</span><span class="p">[</span><span class="s1">&#39;myalias&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache2</span> <span class="o">=</span> <span class="n">caches</span><span class="p">[</span><span class="s1">&#39;myalias&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache1</span> <span class="ow">is</span> <span class="n">cache2</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>如果键名不存在，将会引发 <code class="docutils literal notranslate"><span class="pre">InvalidCacheBackendError</span></code> 错误。</p>
+<p>为了支持线程安全，将为每个线程返回缓存后端的不同实例。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="django.core.cache.cache">
+<code class="sig-prename descclassname"><span class="pre">django.core.cache.</span></code><code class="sig-name descname"><span class="pre">cache</span></code><a class="headerlink" href="#django.core.cache.cache" title="永久链接至目标">¶</a></dt>
+<dd><p>As a shortcut, the default cache is available as
+<code class="docutils literal notranslate"><span class="pre">django.core.cache.cache</span></code>:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">cache</span>
+</pre></div>
+</div>
+<p>这个对象等价于 <code class="docutils literal notranslate"><span class="pre">caches['default']</span></code> 。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-basic-usage">
+<span id="s-cache-basic-interface"></span><span id="basic-usage"></span><span id="cache-basic-interface"></span><h3>基本用法<a class="headerlink" href="#basic-usage" title="永久链接至标题">¶</a></h3>
+<p>基本接口是：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.set">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">set</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">value</span></span></em>, <em><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_TIMEOUT</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.set" title="永久链接至目标">¶</a></dt>
+<dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;my_key&#39;</span><span class="p">,</span> <span class="s1">&#39;hello, world!&#39;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.get">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">get</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.get" title="永久链接至目标">¶</a></dt>
+<dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;my_key&#39;</span><span class="p">)</span>
+<span class="go">&#39;hello, world!&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">key</span></code> 是一个字符串，<code class="docutils literal notranslate"><span class="pre">value</span></code> 可以任何 picklable 形式的 Python 对象。</p>
+<p><code class="docutils literal notranslate"><span class="pre">timeout</span></code> 参数是可选的，默认为 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 中相应后端的 <code class="docutils literal notranslate"><span class="pre">timeout</span></code> 参数。它是值存在缓存里的秒数。<code class="docutils literal notranslate"><span class="pre">timeout</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code> 时将永久缓存。<code class="docutils literal notranslate"><span class="pre">timeout</span></code> 为0将不缓存值。</p>
+<p>If the object doesn't exist in the cache, <code class="docutils literal notranslate"><span class="pre">cache.get()</span></code> returns <code class="docutils literal notranslate"><span class="pre">None</span></code>:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Wait 30 seconds for &#39;my_key&#39; to expire...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
+<span class="go">None</span>
+</pre></div>
+</div>
+<p>If you need to determine whether the object exists in the cache and you have
+stored a literal value <code class="docutils literal notranslate"><span class="pre">None</span></code>, use a sentinel object as the default:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sentinel</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="n">sentinel</span><span class="p">)</span> <span class="ow">is</span> <span class="n">sentinel</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Wait 30 seconds for &#39;my_key&#39; to expire...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="n">sentinel</span><span class="p">)</span> <span class="ow">is</span> <span class="n">sentinel</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">cache.get()</span></code> can take a <code class="docutils literal notranslate"><span class="pre">default</span></code> argument. This specifies which value to
+return if the object doesn't exist in the cache:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="s2">&quot;has expired&quot;</span><span class="p">)</span>
+<span class="go">&#39;has expired&#39;</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.add">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">add</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">value</span></span></em>, <em><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_TIMEOUT</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.add" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>To add a key only if it doesn't already exist, use the <code class="docutils literal notranslate"><span class="pre">add()</span></code> method.
+It takes the same parameters as <code class="docutils literal notranslate"><span class="pre">set()</span></code>, but it will not attempt to
+update the cache if the key specified is already present:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;add_key&quot;</span><span class="p">,</span> <span class="s2">&quot;Initial value&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;add_key&quot;</span><span class="p">,</span> <span class="s2">&quot;New value&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;add_key&quot;</span><span class="p">)</span>
+<span class="go">&#39;Initial value&#39;</span>
+</pre></div>
+</div>
+<p>如果你想知道通过 <code class="docutils literal notranslate"><span class="pre">add()</span></code> 存储的值是否在缓存中，你可以检查返回值。如果值已保存，将返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>&nbsp;，否则返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>&nbsp;。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.get_or_set">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">get_or_set</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">default</span></span></em>, <em><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_TIMEOUT</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.get_or_set" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>If you want to get a key's value or set a value if the key isn't in the cache,
+there is the <code class="docutils literal notranslate"><span class="pre">get_or_set()</span></code> method. It takes the same parameters as <code class="docutils literal notranslate"><span class="pre">get()</span></code>
+but the default is set as the new cache value for that key, rather than
+returned:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_new_key&quot;</span><span class="p">)</span>  <span class="c1"># returns None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get_or_set</span><span class="p">(</span><span class="s2">&quot;my_new_key&quot;</span><span class="p">,</span> <span class="s2">&quot;my new value&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="go">&#39;my new value&#39;</span>
+</pre></div>
+</div>
+<p>You can also pass any callable as a <em>default</em> value:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get_or_set</span><span class="p">(</span><span class="s2">&quot;some-timestamp-key&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+<span class="go">datetime.datetime(2014, 12, 11, 0, 15, 49, 457920)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.get_many">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">get_many</span></code>(<em><span class="n"><span class="pre">keys</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.get_many" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>There's also a <code class="docutils literal notranslate"><span class="pre">get_many()</span></code> interface that only hits the cache once.
+<code class="docutils literal notranslate"><span class="pre">get_many()</span></code> returns a dictionary with all the keys you asked for that
+actually exist in the cache (and haven't expired):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get_many</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
+<span class="go">{&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.set_many">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">set_many</span></code>(<em><span class="n"><span class="pre">dict</span></span></em>, <em><span class="n"><span class="pre">timeout</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.set_many" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>To set multiple values more efficiently, use <code class="docutils literal notranslate"><span class="pre">set_many()</span></code> to pass a dictionary
+of key-value pairs:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set_many</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get_many</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
+<span class="go">{&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}</span>
+</pre></div>
+</div>
+<p>类似 <code class="docutils literal notranslate"><span class="pre">cache.set()</span></code>，<code class="docutils literal notranslate"><span class="pre">set_many()</span></code> 带有一个可选的 <code class="docutils literal notranslate"><span class="pre">timeout</span></code>&nbsp;参数。</p>
+<p>在已支持的后端（memcached），<code class="docutils literal notranslate"><span class="pre">set_many()</span></code> 会返回无法插入的键列表。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.delete">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">delete</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.delete" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>You can delete keys explicitly with <code class="docutils literal notranslate"><span class="pre">delete()</span></code> to clear the cache for a
+particular object:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>如果键被成功删除，将返回 <code class="docutils literal notranslate"><span class="pre">delete()</span></code> ，否则返回 <code class="docutils literal notranslate"><span class="pre">False</span></code> 。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.delete_many">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">delete_many</span></code>(<em><span class="n"><span class="pre">keys</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.delete_many" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>If you want to clear a bunch of keys at once, <code class="docutils literal notranslate"><span class="pre">delete_many()</span></code> can take a list
+of keys to be cleared:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">delete_many</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.clear">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">clear</span></code>()<a class="headerlink" href="#django.core.cache.cache.clear" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>Finally, if you want to delete all the keys in the cache, use
+<code class="docutils literal notranslate"><span class="pre">cache.clear()</span></code>.  Be careful with this; <code class="docutils literal notranslate"><span class="pre">clear()</span></code> will remove <em>everything</em>
+from the cache, not just the keys set by your application. :</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.touch">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">touch</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_TIMEOUT</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.touch" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">cache.touch()</span></code> sets a new expiration for a key. For example, to update a key
+to expire 10 seconds from now:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">touch</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>和其他方法一样，<code class="docutils literal notranslate"><span class="pre">timeout</span></code> 参数是可选的，并且默认是 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 设置的相应后端的 <code class="docutils literal notranslate"><span class="pre">TIMEOUT</span></code> 选项。</p>
+<p>如果键被成功 <code class="docutils literal notranslate"><span class="pre">touch()</span></code>，将返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>，否则返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.incr">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">incr</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.incr" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.decr">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">decr</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.cache.cache.decr" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>You can also increment or decrement a key that already exists using the
+<code class="docutils literal notranslate"><span class="pre">incr()</span></code> or <code class="docutils literal notranslate"><span class="pre">decr()</span></code> methods, respectively. By default, the existing cache
+value will be incremented or decremented by 1. Other increment/decrement values
+can be specified by providing an argument to the increment/decrement call. A
+ValueError will be raised if you attempt to increment or decrement a
+nonexistent cache key:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">12</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">decr</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
+<span class="go">11</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">decr</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">不保证 <code class="docutils literal notranslate"><span class="pre">incr()</span></code> / <code class="docutils literal notranslate"><span class="pre">decr()</span></code> 方法是原子。那些后端支持原子递增/递减（最值得注意的是 memcached 后端），递增和递减操作是原子的。然而，如果后端本身没有提供递增/递减方法，则将使用两步（检索和更新）来实现。</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.cache.cache.close">
+<code class="sig-prename descclassname"><span class="pre">cache.</span></code><code class="sig-name descname"><span class="pre">close</span></code>()<a class="headerlink" href="#django.core.cache.cache.close" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果缓存后端已经实现了 <code class="docutils literal notranslate"><span class="pre">close()</span></code> 方法，你可以关闭和缓存的连接。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">对于没有实现 <code class="docutils literal notranslate"><span class="pre">close</span></code> 方法的缓存，它将无效操作。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">The async variants of base methods are prefixed with <code class="docutils literal notranslate"><span class="pre">a</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">cache.aadd()</span></code> or <code class="docutils literal notranslate"><span class="pre">cache.adelete_many()</span></code>. See <a class="reference internal" href="#id14">Asynchronous support</a>
+for more details.</p>
+</div>
+</div>
+<div class="section" id="s-cache-key-prefixing">
+<span id="s-id11"></span><span id="cache-key-prefixing"></span><span id="id11"></span><h3>缓存键前缀<a class="headerlink" href="#cache-key-prefixing" title="永久链接至标题">¶</a></h3>
+<p>如果你正在服务器之间或者生产/开发缓存之间共享缓存实例，有可能会使得一个服务器使用另一个服务器的缓存数据。如果缓存数据格式是相同的，这会导致一些难以诊断的问题。</p>
+<p>为了防止这个问题，Django 为单台服务器提供了为所有缓存键提供前缀的方法。当一个特殊的缓存键被保存或检索时，Django 会为缓存键自动添加 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-KEY_PREFIX"><code class="xref std std-setting docutils literal notranslate"><span class="pre">KEY_PREFIX</span></code></a> 缓存设置的前缀值。</p>
+<p>要确保每个 Django 实例有不同的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-KEY_PREFIX"><code class="xref std std-setting docutils literal notranslate"><span class="pre">KEY_PREFIX</span></code></a> ，这样就保证缓存值不会发生冲突。</p>
+</div>
+<div class="section" id="s-cache-versioning">
+<span id="s-id12"></span><span id="cache-versioning"></span><span id="id12"></span><h3>缓存版本控制<a class="headerlink" href="#cache-versioning" title="永久链接至标题">¶</a></h3>
+<p>当更改使用缓存值的运行代码时，你可能需要清除任何已存的缓存值。最简单的方法是刷新整个缓存，但这会导致那些仍然有用且有效的缓存值。</p>
+<p>Django 提供更好的方式来指向单个缓存值。Django 缓存框架有一个系统范围的版本标识，需要在 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-VERSION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">VERSION</span></code></a> 缓存配置中指定。这个配置的值将自动与缓存前缀和用户提供的缓存键组合起来获取最终的缓存键。</p>
+<p>By default, any key request will automatically include the site
+default cache key version. However, the primitive cache functions all
+include a <code class="docutils literal notranslate"><span class="pre">version</span></code> argument, so you can specify a particular cache
+key version to set or get. For example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set version 2 of a cache key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="s2">&quot;hello world!&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get the default version (assuming version=1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get version 2 of the same key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">&#39;hello world!&#39;</span>
+</pre></div>
+</div>
+<p>The version of a specific key can be incremented and decremented using
+the <code class="docutils literal notranslate"><span class="pre">incr_version()</span></code> and <code class="docutils literal notranslate"><span class="pre">decr_version()</span></code> methods. This
+enables specific keys to be bumped to a new version, leaving other
+keys unaffected. Continuing our previous example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Increment the version of &#39;my_key&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">incr_version</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The default version still isn&#39;t available</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">)</span>
+<span class="go">None</span>
+<span class="go"># Version 2 isn&#39;t available, either</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># But version 3 *is* available</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;my_key&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">&#39;hello world!&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-cache-key-transformation">
+<span id="s-id13"></span><span id="cache-key-transformation"></span><span id="id13"></span><h3>缓存键转换<a class="headerlink" href="#cache-key-transformation" title="永久链接至标题">¶</a></h3>
+<p>如前面两节所述，用户提供的缓存键不是单独使用的，它是与缓存前缀和键版本组合后获取最终缓存键。默认情况下，使用冒号连接这三部分生成最终的字符串：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">make_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key_prefix</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key_prefix</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果你想用不同方式组合，或者应用其他处理来获得最终键（比如，获得关键部分的哈希摘要），那么你可以提供一个自定义的键函数。</p>
+<p><a class="reference internal" href="../ref/settings.html#std-setting-CACHES-KEY_FUNCTION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">KEY_FUNCTION</span></code></a> 缓存设置指定一个与上面的 <code class="docutils literal notranslate"><span class="pre">make_key()</span></code> 原型匹配的函数路径。如果提供，这个自定义键函数将代替默认的键组合函数来使用。</p>
+</div>
+<div class="section" id="s-cache-key-warnings">
+<span id="cache-key-warnings"></span><h3>缓存键警告<a class="headerlink" href="#cache-key-warnings" title="永久链接至标题">¶</a></h3>
+<p>Memcached 作为最常用的缓存后端，不允许缓存键超过250个字符、包含空格或控制字符，并且使用这些键将会导致异常。为了增加代码可移植性和最小惊讶，如果使用会导致 memcached 报错的键，那么其他内置的缓存框架会发出警告（ <code class="docutils literal notranslate"><span class="pre">django.core.cache.backends.base.CacheKeyWarning</span></code> ）。</p>
+<p>如果你正在使用的生产后端能接受更大范围的键（自定义后端或非 memcached 的内置后端），并且在没有警告的情况下使用更广的范围，你可以在 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中的 <code class="docutils literal notranslate"><span class="pre">management</span></code> 模块里静默 <code class="docutils literal notranslate"><span class="pre">CacheKeyWarning</span></code> 使用这个代码：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">CacheKeyWarning</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">CacheKeyWarning</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果你想为某个内置的后端提供自定义的键检验逻辑，你可以将其子类化，只覆盖 <code class="docutils literal notranslate"><span class="pre">validate_key</span></code> 方法，并且按照 <code class="docutils literal notranslate"><span class="pre">使用自定义缓存后端</span></code> 的说明操作。比如，想要为 <code class="docutils literal notranslate"><span class="pre">locmem</span></code> 后端执行此操作，请将下面代码放入模块中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.cache.backends.locmem</span> <span class="kn">import</span> <span class="n">LocMemCache</span>
+
+
+<span class="k">class</span> <span class="nc">CustomLocMemCache</span><span class="p">(</span><span class="n">LocMemCache</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">validate_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Custom validation, raising exceptions or warnings as needed.&quot;&quot;&quot;</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p>...然后在 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 里的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES-BACKEND"><code class="xref std std-setting docutils literal notranslate"><span class="pre">BACKEND</span></code></a> 部分使用路径导入此类。</p>
+</div>
+</div>
+<div class="section" id="s-asynchronous-support">
+<span id="s-id14"></span><span id="asynchronous-support"></span><span id="id14"></span><h2>异步支持<a class="headerlink" href="#asynchronous-support" title="永久链接至标题">¶</a></h2>
+<p>Django has developing support for asynchronous cache backends, but does not
+yet support asynchronous caching. It will be coming in a future release.</p>
+<p><code class="docutils literal notranslate"><span class="pre">django.core.cache.backends.base.BaseCache</span></code> has async variants of <a class="reference internal" href="#cache-basic-interface"><span class="std std-ref">all
+base methods</span></a>. By convention, the asynchronous versions
+of all methods are prefixed with <code class="docutils literal notranslate"><span class="pre">a</span></code>. By default, the arguments for both
+variants are the same:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">cache</span><span class="o">.</span><span class="n">aset</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">await</span> <span class="n">cache</span><span class="o">.</span><span class="n">ahas_key</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-downstream-caches">
+<span id="s-id15"></span><span id="downstream-caches"></span><span id="id15"></span><h2>下游缓存<a class="headerlink" href="#downstream-caches" title="永久链接至标题">¶</a></h2>
+<p>So far, this document has focused on caching your <em>own</em> data. But another type
+of caching is relevant to web development, too: caching performed by
+&quot;downstream&quot; caches. These are systems that cache pages for users even before
+the request reaches your website.</p>
+<p>下面是一些下游缓存的例子：</p>
+<ul class="simple">
+<li>When using HTTP, your <abbr title="Internet Service Provider">ISP</abbr> may cache
+certain pages, so if you requested a page from <code class="docutils literal notranslate"><span class="pre">http://example.com/</span></code>, your
+ISP would send you the page without having to access example.com directly.
+The maintainers of example.com have no knowledge of this caching; the ISP
+sits between example.com and your web browser, handling all of the caching
+transparently. Such caching is not possible under HTTPS as it would
+constitute a man-in-the-middle attack.</li>
+<li>您的 Django 网站可能会在一个*代理缓存*的后面，例如Squid 网页代理缓存（<a class="reference external" href="http://www.squid-cache.org/">http://www.squid-cache.org/</a>），为了性能而缓存页面。在这种情况下，每个请求首先由代理来处理，只有在需要时才将其传递给应用程序。</li>
+<li>Your web browser caches pages, too. If a web page sends out the
+appropriate headers, your browser will use the local cached copy for
+subsequent requests to that page, without even contacting the web page
+again to see whether it has changed.</li>
+</ul>
+<p>Downstream caching is a nice efficiency boost, but there's a danger to it:
+Many web pages' contents differ based on authentication and a host of other
+variables, and cache systems that blindly save pages based purely on URLs could
+expose incorrect or sensitive data to subsequent visitors to those pages.</p>
+<p>For example, if you operate a web email system, then the contents of the
+&quot;inbox&quot; page depend on which user is logged in. If an ISP blindly cached your
+site, then the first user who logged in through that ISP would have their
+user-specific inbox page cached for subsequent visitors to the site.  That's
+not cool.</p>
+<p>幸运的是，HTTP 为这个问题提供了解决方案。存在许多 HTTP 报头以指示下游缓存根据指定的变量来区分它们的缓存内容，并且告诉缓存机制不缓存特定的页面。我们将在下面的章节中查看这些标题。</p>
+</div>
+<div class="section" id="s-using-vary-headers">
+<span id="s-id16"></span><span id="using-vary-headers"></span><span id="id16"></span><h2>使用 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 标头<a class="headerlink" href="#using-vary-headers" title="永久链接至标题">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Vary</span></code> header defines which request headers a cache
+mechanism should take into account when building its cache key. For example, if
+the contents of a web page depend on a user's language preference, the page is
+said to &quot;vary on language.&quot;</p>
+<p>默认情况下，Django 的缓存系统使用请求的完全合格的URL创建它的缓存密钥——例如，<code class="docutils literal notranslate"><span class="pre">&quot;https://www.example.com/stories/2005/?order_by=author&quot;</span></code>。这意味着对该 URL 的每个请求都将使用相同的缓存版本，而不管用户代理差异（如 cookies 或语言首选项）。但是，如果这个页面基于请求头（如 cookie、语言或用户代理）中的某些差异而产生不同的内容，则需要使用``Vary`` 标头来告诉缓存机制，页面输出取决于这些东西。</p>
+<p>要在 Django 中执行此操作，请使用方便的 <a class="reference internal" href="http/decorators.html#django.views.decorators.vary.vary_on_headers" title="django.views.decorators.vary.vary_on_headers"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.views.decorators.vary.vary_on_headers()</span></code></a> 视图装饰器，像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.vary</span> <span class="kn">import</span> <span class="n">vary_on_headers</span>
+
+
+<span class="nd">@vary_on_headers</span><span class="p">(</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>在这里，一个缓存机制（比如 Django 自带的缓存中间件）将为每一个唯一的用户代理缓存一个独立的页面版本。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">vary_on_headers</span></code> 装饰器而不是手动设置 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头（使用 <code class="docutils literal notranslate"><span class="pre">response.headers['Vary']</span> <span class="pre">=</span> <span class="pre">'user-agent'</span></code>）的好处是，装饰器 <em>添加</em> 到 <a href="#id1"><span class="problematic" id="id2">``</span></a>Vary `` 头（可能已经存在），而不是从头开始设置，可能会覆盖已经存在的东西。</p>
+<p>你可以传递多个头参数给 <code class="docutils literal notranslate"><span class="pre">vary_on_headers()</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vary_on_headers</span><span class="p">(</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">,</span> <span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>这告诉下游缓存两者有所不同，意味着每个用户代理和 cookie 的组合将获取它自己的缓存值。比如，一个请求带有用户代理 <code class="docutils literal notranslate"><span class="pre">Mozilla</span></code> 和 cookie 值 <code class="docutils literal notranslate"><span class="pre">foo=bar</span></code> 被认为和用户代理 <code class="docutils literal notranslate"><span class="pre">Mozilla</span></code> 和 cookie 值 <code class="docutils literal notranslate"><span class="pre">foo=ham</span></code> 是不同的。</p>
+<p>因为 cookie 的变化如此普遍，所以这里有个 <a class="reference internal" href="http/decorators.html#django.views.decorators.vary.vary_on_cookie" title="django.views.decorators.vary.vary_on_cookie"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.views.decorators.vary.vary_on_cookie()</span></code></a> 装饰器。这两个视图是等价的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@vary_on_cookie</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@vary_on_headers</span><span class="p">(</span><span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>传递给 <code class="docutils literal notranslate"><span class="pre">vary_on_headers</span></code>&nbsp;的头是不区分大小写的；<code class="docutils literal notranslate"><span class="pre">&quot;User-Agent&quot;</span></code> 和 <code class="docutils literal notranslate"><span class="pre">&quot;user-agent&quot;</span></code> 是一样的。</p>
+<p>你也可以直接使用帮助函数 <a class="reference internal" href="../ref/utils.html#django.utils.cache.patch_vary_headers" title="django.utils.cache.patch_vary_headers"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.cache.patch_vary_headers()</span></code></a> 。这个函数可以设置或添加 <code class="docutils literal notranslate"><span class="pre">Vary</span> <span class="pre">header</span></code> 。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">django.utils.cache</span> <span class="kn">import</span> <span class="n">patch_vary_headers</span>
+
+
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;template_name&quot;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+    <span class="n">patch_vary_headers</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Cookie&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">patch_vary_headers</span></code> 带有一个 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 作为它的第一个参数，一个不区分大小写的头名的列表/元组作为它的第二个参数。</p>
+<p>For more on Vary headers, see the <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-12.5.5"><strong>official Vary spec</strong></a>.</p>
+</div>
+<div class="section" id="s-controlling-cache-using-other-headers">
+<span id="controlling-cache-using-other-headers"></span><h2>使用其他标头控制高速缓存<a class="headerlink" href="#controlling-cache-using-other-headers" title="永久链接至标题">¶</a></h2>
+<p>缓存的其他问题是数据的隐私和数据应该存储在缓存的级联中的问题。</p>
+<p>A user usually faces two kinds of caches: their own browser cache (a private
+cache) and their provider's cache (a public cache). A public cache is used by
+multiple users and controlled by someone else. This poses problems with
+sensitive data--you don't want, say, your bank account number stored in a
+public cache. So web applications need a way to tell caches which data is
+private and which is public.</p>
+<p>解决方案是指出一个页面的缓存应该是“私有的”。在 Django中，使用 <a class="reference internal" href="http/decorators.html#django.views.decorators.cache.cache_control" title="django.views.decorators.cache.cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">cache_control()</span></code></a> 。例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_control</span>
+
+
+<span class="nd">@cache_control</span><span class="p">(</span><span class="n">private</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>这个装饰器负责在场景后面发送适当的 HTTP 头。</p>
+<p>注意，缓存控制设置“私有”和“公共”是互斥的。装饰器确保“公共”指令被移除，如果应该设置“私有”（反之亦然）。这两个指令的一个示例使用将是一个提供私人和公共条目的博客站点。公共条目可以缓存在任何共享缓存上。下面的代码使用 <a class="reference internal" href="../ref/utils.html#django.utils.cache.patch_cache_control" title="django.utils.cache.patch_cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch_cache_control()</span></code></a>，手动修改缓存控制头的方法（内部调用的是 <a class="reference internal" href="http/decorators.html#django.views.decorators.cache.cache_control" title="django.views.decorators.cache.cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">cache_control()</span></code></a> 装饰器）：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">patch_cache_control</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.vary</span> <span class="kn">import</span> <span class="n">vary_on_cookie</span>
+
+
+<span class="nd">@vary_on_cookie</span>
+<span class="k">def</span> <span class="nf">list_blog_entries_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_anonymous</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">render_only_public_entries</span><span class="p">()</span>
+        <span class="n">patch_cache_control</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">public</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">render_private_and_public_entries</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">patch_cache_control</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">private</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+</div>
+<p>You can control downstream caches in other ways as well (see <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9111.html"><strong>RFC 9111</strong></a> for
+details on HTTP caching). For example, even if you don't use Django's
+server-side cache framework, you can still tell clients to cache a view for a
+certain amount of time with the <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9111.html#section-5.2.2.1"><strong>max-age</strong></a>
+directive:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_control</span>
+
+
+<span class="nd">@cache_control</span><span class="p">(</span><span class="n">max_age</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>（如果你使用缓存中间件，它已经使用 <a class="reference internal" href="../ref/settings.html#std-setting-CACHE_MIDDLEWARE_SECONDS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHE_MIDDLEWARE_SECONDS</span></code></a> 设置的值设置了 <code class="docutils literal notranslate"><span class="pre">max-age</span></code> 。在这个例子里，<a class="reference internal" href="http/decorators.html#django.views.decorators.cache.cache_control" title="django.views.decorators.cache.cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">cache_control()</span></code></a> 装饰器里自定义的 <code class="docutils literal notranslate"><span class="pre">max_age</span></code>&nbsp;将被优先使用，头值将被正确合并。）</p>
+<p>任何有效的 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> 响应指令在 <code class="docutils literal notranslate"><span class="pre">cache_control()</span></code> 中是有效的。这里有很多例子：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">no_transform=True</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">must_revalidate=True</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">stale_while_revalidate=num_seconds</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">no_cache=True</span></code></li>
+</ul>
+<p>已知指令的列表在  IANA registry 都能被找到（注意不是所有的都适用于响应）。</p>
+<p>如果你想使用头部来完全禁用缓存，<a class="reference internal" href="http/decorators.html#django.views.decorators.cache.never_cache" title="django.views.decorators.cache.never_cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">never_cache()</span></code></a> 是一个视图装饰器，用来添加头部确保响应不被浏览器或其他缓存进行缓存。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">never_cache</span>
+
+
+<span class="nd">@never_cache</span>
+<span class="k">def</span> <span class="nf">myview</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-order-of-middleware">
+<span id="order-of-middleware"></span><h2><code class="docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code> 顺序<a class="headerlink" href="#order-of-middleware" title="永久链接至标题">¶</a></h2>
+<p>如果使用缓存中间件，重要的是将每一半放在 <a class="reference internal" href="../ref/settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 设置的正确位置。这是因为缓存中间件需要知道哪些头可以改变缓存存储。中间件总是可以在 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 响应头中添加一些东西。</p>
+<p><code class="docutils literal notranslate"><span class="pre">UpdateCacheMiddleware</span></code> 在响应阶段运行，其中中间件以相反的顺序运行，因此列表顶部的项目在响应阶段的*最后*运行。因此，您需要确保 <code class="docutils literal notranslate"><span class="pre">UpdateCacheMiddleware</span></code> 出现在任何其他可能添加到 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 标头的其他中间件*之前*。下面的中间件模块类似：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">SessionMiddleware</span></code> 添加 <code class="docutils literal notranslate"><span class="pre">Cookie</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">GZipMiddleware</span></code> 添加 <code class="docutils literal notranslate"><span class="pre">Accept-Encoding</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">LocaleMiddleware</span></code> 添加 <code class="docutils literal notranslate"><span class="pre">Accept-Language</span></code></li>
+</ul>
+<p>另一方面，<code class="docutils literal notranslate"><span class="pre">FetchFromCacheMiddleware</span></code> 在请求阶段运行，从头到尾应用中间件，因此列表顶部的条目首先在请求阶段运行。在其他中间件更新 <code class="docutils literal notranslate"><span class="pre">Vary</span></code>&nbsp;头部后，<code class="docutils literal notranslate"><span class="pre">FetchFromCacheMiddleware</span></code> 也需要运行，因此 <code class="docutils literal notranslate"><span class="pre">FetchFromCacheMiddleware</span></code> 必须在任何条目之后运行。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 缓存框架</a><ul>
+<li><a class="reference internal" href="#setting-up-the-cache">设置缓存</a><ul>
+<li><a class="reference internal" href="#memcached">Memcached</a></li>
+<li><a class="reference internal" href="#redis">Redis</a></li>
+<li><a class="reference internal" href="#database-caching">数据库缓存</a><ul>
+<li><a class="reference internal" href="#creating-the-cache-table">创建缓存表</a></li>
+<li><a class="reference internal" href="#multiple-databases">多数据库</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#filesystem-caching">文件系统缓存</a></li>
+<li><a class="reference internal" href="#local-memory-caching">本地内存缓存</a></li>
+<li><a class="reference internal" href="#dummy-caching-for-development">虚拟缓存（用于开发模式）</a></li>
+<li><a class="reference internal" href="#using-a-custom-cache-backend">使用自定义缓存后端</a></li>
+<li><a class="reference internal" href="#cache-arguments">缓存参数</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-per-site-cache">站点缓存</a></li>
+<li><a class="reference internal" href="#the-per-view-cache">视图缓存</a><ul>
+<li><a class="reference internal" href="#specifying-per-view-cache-in-the-urlconf">在 URLconf 中指定视图缓存</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#template-fragment-caching">模板片段缓存</a></li>
+<li><a class="reference internal" href="#the-low-level-cache-api">底层缓存 API</a><ul>
+<li><a class="reference internal" href="#accessing-the-cache">访问缓存</a></li>
+<li><a class="reference internal" href="#basic-usage">基本用法</a></li>
+<li><a class="reference internal" href="#cache-key-prefixing">缓存键前缀</a></li>
+<li><a class="reference internal" href="#cache-versioning">缓存版本控制</a></li>
+<li><a class="reference internal" href="#cache-key-transformation">缓存键转换</a></li>
+<li><a class="reference internal" href="#cache-key-warnings">缓存键警告</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asynchronous-support">异步支持</a></li>
+<li><a class="reference internal" href="#downstream-caches">下游缓存</a></li>
+<li><a class="reference internal" href="#using-vary-headers">使用 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 标头</a></li>
+<li><a class="reference internal" href="#controlling-cache-using-other-headers">使用其他标头控制高速缓存</a></li>
+<li><a class="reference internal" href="#order-of-middleware"><code class="docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code> 顺序</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="auth/customizing.html"
+                          title="上一章">Django 中的自定义验证</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="conditional-view-processing.html"
+                          title="下一章">条件视图处理</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../sources/topics/cache.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">9月 04, 2023</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="auth/customizing.html" title="Django 中的自定义验证">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="conditional-view-processing.html" title="条件视图处理">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>
