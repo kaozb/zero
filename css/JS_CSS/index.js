@@ -83,7 +83,7 @@ var comm_list = [{
         tag: "常去",
         link: [{
             name: "📝笔记",
-            url: "http://xl.hoao.fun/markdown"
+            url: "http://xl.hoao.fun/git/markdown"
         }, {
             name: "🔱Alist",
             url: "http://xl.hoao.fun:5244"
@@ -127,7 +127,7 @@ var comm_list = [{
             url: "http://xl.hoao.fun:9090/ui"
         }, {
             name: "做饭",
-            url: "https://cook.hoao.fun/"
+            url: "http://xl.hoao.fun/git/HowToCook"
         }, {
             name: "Processon",
             url: "https://www.processon.com/diagrams"
