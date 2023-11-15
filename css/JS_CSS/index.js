@@ -1335,9 +1335,9 @@ var comm_list = [{
                 name: "search",
                 placeholder: "维基百科"
             })
-        } else if (o(t).hasClass("torrent")) o(".search-form").attr("action", "https://torrentz2.eu/search"), o(".search-keyword").attr({
-            name: "f",
-            placeholder: "磁力链，种子搜索"
+        } else if (o(t).hasClass("torrent")) o(".search-form").attr("action", "https://www.shodan.io/search"), o(".search-keyword").attr({
+            name: "query",
+            placeholder: "shodan搜索"
         })
         else if (o(t).hasClass("scholar")) {
             o(".search-form").attr("action", "https://xueshu.baidu.com/s"), o(".search-keyword").attr({
