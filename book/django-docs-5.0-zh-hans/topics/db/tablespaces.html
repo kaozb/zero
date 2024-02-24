@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>表空间（Tablespaces） &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="数据库访问优化" href="optimization.html" />
+    <link rel="prev" title="多数据库" href="multi-db.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="multi-db.html" title="多数据库">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="optimization.html" title="数据库访问优化">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-tablespaces">
+            
+  <div class="section" id="s-tablespaces">
+<span id="tablespaces"></span><h1>表空间（Tablespaces）<a class="headerlink" href="#tablespaces" title="永久链接至标题">¶</a></h1>
+<p>优化数据库表现的常见方式是利用 <a class="reference external" href="https://en.wikipedia.org/wiki/Tablespace">表空间</a> 来组织磁盘布局。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">Django 没有为你创建表空间。请参考你使用的数据库引擎的文档了解如何创建和管理表空间。</p>
+</div>
+<div class="section" id="s-declaring-tablespaces-for-tables">
+<span id="declaring-tablespaces-for-tables"></span><h2>为表格申明表空间<a class="headerlink" href="#declaring-tablespaces-for-tables" title="永久链接至标题">¶</a></h2>
+<p>表空间可被指定给特定模型生成的数据表，通过在该模型的 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Meta</span></code> 中提供 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.db_tablespace" title="django.db.models.Options.db_tablespace"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_tablespace</span></code></a>&nbsp; 选项。该选项也影响此模型中为 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 自动创建的数据表。</p>
+<p>你可以用 <a class="reference internal" href="../../ref/settings.html#std-setting-DEFAULT_TABLESPACE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEFAULT_TABLESPACE</span></code></a> 配置为 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.db_tablespace" title="django.db.models.Options.db_tablespace"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_tablespace</span></code></a> 指定一个默认值。这在配置内置的 Django 应用或其它你无法修改代码的应用的表空间时非常有用。</p>
+</div>
+<div class="section" id="s-declaring-tablespaces-for-indexes">
+<span id="declaring-tablespaces-for-indexes"></span><h2>为索引申明表空间<a class="headerlink" href="#declaring-tablespaces-for-indexes" title="永久链接至标题">¶</a></h2>
+<p>你可以为 <code class="docutils literal notranslate"><span class="pre">Index</span></code> 构造器传入 <a class="reference internal" href="../../ref/models/indexes.html#django.db.models.Index.db_tablespace" title="django.db.models.Index.db_tablespace"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_tablespace</span></code></a> 选项指定索引使用的表空间名。对于单个字段的索引，你可以向 <code class="docutils literal notranslate"><span class="pre">Field</span></code> 构造器传入 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.db_tablespace" title="django.db.models.Field.db_tablespace"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_tablespace</span></code></a> 选项，为字段列索引指定可选的表空间。若此列没有索引，会忽略该选项。</p>
+<p>你可以用 <a class="reference internal" href="../../ref/settings.html#std-setting-DEFAULT_INDEX_TABLESPACE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEFAULT_INDEX_TABLESPACE</span></code></a> 配置项为 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.db_tablespace" title="django.db.models.Field.db_tablespace"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_tablespace</span></code></a> 指定一个默认值。</p>
+<p>若未指定 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.db_tablespace" title="django.db.models.Field.db_tablespace"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_tablespace</span></code></a> 和 <a class="reference internal" href="../../ref/settings.html#std-setting-DEFAULT_INDEX_TABLESPACE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEFAULT_INDEX_TABLESPACE</span></code></a>，索引会在与数据表相同的表空间中创建。</p>
+</div>
+<div class="section" id="s-an-example">
+<span id="an-example"></span><h2>一个例子<a class="headerlink" href="#an-example" title="永久链接至标题">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TablespaceExample</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">db_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">db_tablespace</span><span class="o">=</span><span class="s2">&quot;indexes&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">db_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">shortcut</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">to</span><span class="o">=</span><span class="s2">&quot;self&quot;</span><span class="p">,</span> <span class="n">db_tablespace</span><span class="o">=</span><span class="s2">&quot;indexes&quot;</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">db_tablespace</span> <span class="o">=</span> <span class="s2">&quot;tables&quot;</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;shortcut&quot;</span><span class="p">],</span> <span class="n">db_tablespace</span><span class="o">=</span><span class="s2">&quot;other_indexes&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>本例中， <code class="docutils literal notranslate"><span class="pre">TablespaceExample</span></code> 模型（即模型表和多对多表）创建的表会被存在 <code class="docutils literal notranslate"><span class="pre">tables</span></code> 表空间。名称字段和多对多表的索引会被存在该 <code class="docutils literal notranslate"><span class="pre">indexes</span></code> 表空间中。 <code class="docutils literal notranslate"><span class="pre">data</span></code> 字段也会生成一个索引，但因为并未为其指定表空间，所以它会被默认存入模型的表空间 <code class="docutils literal notranslate"><span class="pre">tables</span></code> 中。 <code class="docutils literal notranslate"><span class="pre">shortcut</span></code> 字段的索引会被存入 <code class="docutils literal notranslate"><span class="pre">other_indexes</span></code> 表空间。</p>
+</div>
+<div class="section" id="s-database-support">
+<span id="database-support"></span><h2>数据库支持<a class="headerlink" href="#database-support" title="永久链接至标题">¶</a></h2>
+<p>PostgreSQL 和 Oracle 支持表空间。而 SQLite， MariaDB 和 MySQL 不支持。</p>
+<p>若你使用的后端不支持表空间，Django 会忽略所有与表空间相关的选项。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">表空间（Tablespaces）</a><ul>
+<li><a class="reference internal" href="#declaring-tablespaces-for-tables">为表格申明表空间</a></li>
+<li><a class="reference internal" href="#declaring-tablespaces-for-indexes">为索引申明表空间</a></li>
+<li><a class="reference internal" href="#an-example">一个例子</a></li>
+<li><a class="reference internal" href="#database-support">数据库支持</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="multi-db.html"
+                          title="上一章">多数据库</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="optimization.html"
+                          title="下一章">数据库访问优化</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/db/tablespaces.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="multi-db.html" title="多数据库">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="optimization.html" title="数据库访问优化">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

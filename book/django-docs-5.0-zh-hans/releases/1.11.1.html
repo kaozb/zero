@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.11.1 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.11 版本发行说明" href="1.11.html" />
+    <link rel="prev" title="Django 1.11.2 版本发行说明" href="1.11.2.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.11.2.html" title="Django 1.11.2 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.11.html" title="Django 1.11 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.11.1">
+            
+  <div class="section" id="s-django-1-11-1-release-notes">
+<span id="django-1-11-1-release-notes"></span><h1>Django 1.11.1 版本发行说明<a class="headerlink" href="#django-1-11-1-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2017 年 5 月 6 日</em></p>
+<p>Django 1.11.1 添加了一个小功能，并修复了 1.11 中的若干错误。</p>
+<div class="section" id="s-allowed-disabling-server-side-cursors-on-postgresql">
+<span id="allowed-disabling-server-side-cursors-on-postgresql"></span><h2>允许在 PostgreSQL 上禁用服务器端游标<a class="headerlink" href="#allowed-disabling-server-side-cursors-on-postgresql" title="永久链接至标题">¶</a></h2>
+<p>Django 1.11 中对 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.iterator" title="django.db.models.query.QuerySet.iterator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.iterator()</span></code></a> 的更改使其在 PostgreSQL 上使用服务器端游标，这会阻止在事务池模式下使用 PgBouncer 运行 Django。要重新允许这个行为，请在 <a class="reference internal" href="../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 的设置中使用 <a class="reference internal" href="../ref/settings.html#std-setting-DATABASE-DISABLE_SERVER_SIDE_CURSORS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DISABLE_SERVER_SIDE_CURSORS</span></code></a> 设置。</p>
+<p>有关更多讨论，请参阅 <a class="reference internal" href="../ref/databases.html#transaction-pooling-server-side-cursors"><span class="std std-ref">事务池和服务器端游标</span></a>。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>迁移现在会尊重 <code class="docutils literal notranslate"><span class="pre">Index</span></code> 的 <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数。如果你在 Django 1.11 中创建了一个具有名称的索引，<code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 将创建一个迁移来重新创建具有正确名称的索引 (<a class="reference external" href="https://code.djangoproject.com/ticket/28051">#28051</a>)。</li>
+<li>修复了在 <code class="docutils literal notranslate"><span class="pre">ArrayField</span></code> 上使用 <code class="docutils literal notranslate"><span class="pre">__icontains</span></code> 查找时的崩溃问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/28038">#28038</a>)。</li>
+<li>修复了在 <code class="docutils literal notranslate"><span class="pre">EmailMessage</span></code> 的 <code class="docutils literal notranslate"><span class="pre">attachments</span></code> 参数中使用 2 元组时崩溃的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/28042">#28042</a>)。</li>
+<li>修复了当 <code class="docutils literal notranslate"><span class="pre">QuerySet.filter()</span></code> 引用 <code class="docutils literal notranslate"><span class="pre">OneToOneField</span></code> 主键的名称时导致的崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/28047">#28047</a>)。</li>
+<li>修复了在 HTML 调试页面中出现空的 POST 数据表格，而不是显示 &quot;No POST data&quot; (<a class="reference external" href="https://code.djangoproject.com/ticket/28079">#28079</a>)。</li>
+<li>恢复了 <code class="docutils literal notranslate"><span class="pre">BoundField</span></code> 中没有任何 <code class="docutils literal notranslate"><span class="pre">choices</span></code> 的情况下被评估为 <code class="docutils literal notranslate"><span class="pre">True</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/28058">#28058</a>)。</li>
+<li>防止在 <code class="docutils literal notranslate"><span class="pre">_session_cache</span></code> 未填充的情况下使 <code class="docutils literal notranslate"><span class="pre">SessionBase.cycle_key()</span></code> 丢失会话数据 (<a class="reference external" href="https://code.djangoproject.com/ticket/28066">#28066</a>)。</li>
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">ReadOnlyPasswordHashWidget</span></code> 的布局（在管理员的用户更改页面中使用） (<a class="reference external" href="https://code.djangoproject.com/ticket/28097">#28097</a>)。</li>
+<li>允许在具有自定义 <code class="docutils literal notranslate"><span class="pre">ModelIterable</span></code> 子类的管理器上进行预取调用 (<a class="reference external" href="https://code.djangoproject.com/ticket/28096">#28096</a>)。</li>
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">contrib.auth</span></code> 管理员中的更改密码链接，适用于 <code class="docutils literal notranslate"><span class="pre">el</span></code>、<code class="docutils literal notranslate"><span class="pre">es_MX</span></code> 和 <code class="docutils literal notranslate"><span class="pre">pt</span></code> 翻译 (<a class="reference external" href="https://code.djangoproject.com/ticket/28100">#28100</a>)。</li>
+<li>恢复了在使用 <code class="docutils literal notranslate"><span class="pre">multiple_input.html</span></code> 模板的小部件的 <code class="docutils literal notranslate"><span class="pre">&lt;ul&gt;</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">class</span></code> 属性的输出。这修复了使用 <code class="docutils literal notranslate"><span class="pre">admin.HORIZONTAL</span></code> 的 <code class="docutils literal notranslate"><span class="pre">ModelAdmin.radio_fields</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/28059">#28059</a>)。</li>
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">BaseGeometryWidget.subwidgets()</span></code> 中的崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/28039">#28039</a>)。</li>
+<li>修复了在 ORM 查询执行中，当 <code class="docutils literal notranslate"><span class="pre">cursor.execute()</span></code> 失败并且随后的 <code class="docutils literal notranslate"><span class="pre">cursor.close()</span></code> 也失败时重新引发异常 (<a class="reference external" href="https://code.djangoproject.com/ticket/28091">#28091</a>)。</li>
+<li>修复了一个回归问题，其中 <code class="docutils literal notranslate"><span class="pre">CheckboxSelectMultiple</span></code>、<code class="docutils literal notranslate"><span class="pre">NullBooleanSelect</span></code>、<code class="docutils literal notranslate"><span class="pre">RadioSelect</span></code>、<code class="docutils literal notranslate"><span class="pre">SelectMultiple</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Select</span></code> 的本地化选项值 (<a class="reference external" href="https://code.djangoproject.com/ticket/28075">#28075</a>)。</li>
+<li>修正了无序查询集分页警告的堆栈级别 (<a class="reference external" href="https://code.djangoproject.com/ticket/28109">#28109</a>)。</li>
+<li>修复了回归问题，当模型使用 <code class="docutils literal notranslate"><span class="pre">ForeignKey.to_field</span></code> 时，导致 <code class="docutils literal notranslate"><span class="pre">__in</span></code> 子查询查找的查询不正确 (<a class="reference external" href="https://code.djangoproject.com/ticket/28101">#28101</a>)。</li>
+<li>修复了在重写 <code class="docutils literal notranslate"><span class="pre">django.views.static.directory_index()</span></code> 模板时的崩溃问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/28122">#28122</a>)。</li>
+<li>修复了在表单集 <code class="docutils literal notranslate"><span class="pre">min_num</span></code> 验证中的回归问题，当未更改具有初始数据的表单时 (<a class="reference external" href="https://code.djangoproject.com/ticket/28130">#28130</a>)。</li>
+<li>准备好支持 <code class="docutils literal notranslate"><span class="pre">cx_Oracle</span></code> 6.0 (<a class="reference external" href="https://code.djangoproject.com/ticket/28138">#28138</a>)。</li>
+<li>更新了 <code class="docutils literal notranslate"><span class="pre">contrib.postgres</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">SplitArrayWidget</span></code>，使用基于模板的小部件渲染 (<a class="reference external" href="https://code.djangoproject.com/ticket/28040">#28040</a>)。</li>
+<li>修复了在覆盖现有 <code class="docutils literal notranslate"><span class="pre">attrs</span></code> 时导致的 <code class="docutils literal notranslate"><span class="pre">BaseGeometryWidget.get_context()</span></code> 崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/28105">#28105</a>)。</li>
+<li>阻止了 <code class="docutils literal notranslate"><span class="pre">AddIndex</span></code> 和 <code class="docutils literal notranslate"><span class="pre">RemoveIndex</span></code> 对模型状态进行更改 (<a class="reference external" href="https://code.djangoproject.com/ticket/28043">#28043</a>)。</li>
+<li>阻止了在将 <code class="docutils literal notranslate"><span class="pre">Field.db_index</span></code> 更改为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 时，迁移从 <code class="docutils literal notranslate"><span class="pre">Meta.indexes</span></code> 中删除数据库索引 (<a class="reference external" href="https://code.djangoproject.com/ticket/28052">#28052</a>)。</li>
+<li>修复了在具有分组和非分组选项的表单字段中选择顺序的退化问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/28157">#28157</a>)。</li>
+<li>修复了在使用 <code class="docutils literal notranslate"><span class="pre">save_as_new</span></code> 时导致的 <code class="docutils literal notranslate"><span class="pre">BaseInlineFormSet._construct_form()</span></code> 崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/28159">#28159</a>)。</li>
+<li>修复了在保存子模型后，多表继承父模型上未正确设置 <code class="docutils literal notranslate"><span class="pre">Model._state.db</span></code> 的退化问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/28166">#28166</a>)。</li>
+<li>已更正从数据库中检索的 <code class="docutils literal notranslate"><span class="pre">ArrayField(CITextField())</span></code> 值的返回类型 (<a class="reference external" href="https://code.djangoproject.com/ticket/28161">#28161</a>)。</li>
+<li>修复了在获取嵌套的 <code class="docutils literal notranslate"><span class="pre">Prefetch</span></code> 对象中的关系时导致的 <code class="docutils literal notranslate"><span class="pre">QuerySet.prefetch_related()</span></code> 崩溃问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/27554">#27554</a>)。</li>
+<li>在使用 <code class="docutils literal notranslate"><span class="pre">contrib.gis</span></code> 时，防止隐藏 GDAL 错误，如果它未安装的话 (<a class="reference external" href="https://code.djangoproject.com/ticket/28160">#28160</a>)。 (自 Django 1.11 起，它是一个必需的依赖项。)</li>
+<li>修复了使用外键的父模型作为查找值时导致 <code class="docutils literal notranslate"><span class="pre">__in</span></code> 查找失败的退化问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/28175">#28175</a>)。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.11.1 版本发行说明</a><ul>
+<li><a class="reference internal" href="#allowed-disabling-server-side-cursors-on-postgresql">允许在 PostgreSQL 上禁用服务器端游标</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.11.2.html"
+                          title="上一章">Django 1.11.2 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.11.html"
+                          title="下一章">Django 1.11 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.11.1.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.11.2.html" title="Django 1.11.2 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.11.html" title="Django 1.11 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

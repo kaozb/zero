@@ -1,0 +1,750 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>进阶测试主题 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="Django中的用户认证" href="../auth/index.html" />
+    <link rel="prev" title="测试工具" href="tools.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="tools.html" title="测试工具">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="../auth/index.html" title="Django中的用户认证">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-testing-advanced">
+            
+  <div class="section" id="s-advanced-testing-topics">
+<span id="advanced-testing-topics"></span><h1>进阶测试主题<a class="headerlink" href="#advanced-testing-topics" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-the-request-factory">
+<span id="the-request-factory"></span><h2>请求工厂<a class="headerlink" href="#the-request-factory" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.test.RequestFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RequestFactory</span></code><a class="headerlink" href="#django.test.RequestFactory" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><a class="reference internal" href="#django.test.RequestFactory" title="django.test.RequestFactory"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestFactory</span></code></a> 与测试客户端共享相同的 API。 但是，RequestFactory 不能像浏览器那样运行，而是提供一种生成请求实例的方法，该实例可用作任何视图的第一个参数。 这意味着您可以像测试任何其他功能一样测试视图函数——就像一个黑匣子一样，具有确切已知的输入，可以测试特定的输出。</p>
+<p><a class="reference internal" href="#django.test.RequestFactory" title="django.test.RequestFactory"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestFactory</span></code></a> 的 API 是测试客户端 API 的一个稍加限制的子集。</p>
+<ul class="simple">
+<li>它只能访问 HTTP 的 <a class="reference internal" href="tools.html#django.test.Client.get" title="django.test.Client.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a>、<a class="reference internal" href="tools.html#django.test.Client.post" title="django.test.Client.post"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post()</span></code></a>、<a class="reference internal" href="tools.html#django.test.Client.put" title="django.test.Client.put"><code class="xref py py-meth docutils literal notranslate"><span class="pre">put()</span></code></a>、<a class="reference internal" href="tools.html#django.test.Client.delete" title="django.test.Client.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code></a>、<a class="reference internal" href="tools.html#django.test.Client.head" title="django.test.Client.head"><code class="xref py py-meth docutils literal notranslate"><span class="pre">head()</span></code></a>、<a class="reference internal" href="tools.html#django.test.Client.options" title="django.test.Client.options"><code class="xref py py-meth docutils literal notranslate"><span class="pre">options()</span></code></a> 和 <a class="reference internal" href="tools.html#django.test.Client.trace" title="django.test.Client.trace"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trace()</span></code></a> 方法。</li>
+<li>这些方法接受所有相同的参数，<em>除了</em> <code class="docutils literal notranslate"><span class="pre">follow</span></code>。因为这只是一个产生请求的工厂，所以由你来处理响应。</li>
+<li>它不支持中间件。如果需要视图正常运行，会话和认证属性必须由测试本身提供。</li>
+</ul>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>已添加 <code class="docutils literal notranslate"><span class="pre">headers</span></code> 参数。</p>
+</div>
+<div class="section" id="s-example">
+<span id="example"></span><h3>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h3>
+<p>下面是一个使用请求工厂的单元测试：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="n">AnonymousUser</span><span class="p">,</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">RequestFactory</span><span class="p">,</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">.views</span> <span class="kn">import</span> <span class="n">MyView</span><span class="p">,</span> <span class="n">my_view</span>
+
+
+<span class="k">class</span> <span class="nc">SimpleTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Every test needs access to the request factory.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factory</span> <span class="o">=</span> <span class="n">RequestFactory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="s2">&quot;jacob&quot;</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s2">&quot;jacob@…&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;top_secret&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">test_details</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Create an instance of a GET request.</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/customer/details&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Recall that middleware are not supported. You can simulate a</span>
+        <span class="c1"># logged-in user by setting request.user manually.</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span>
+
+        <span class="c1"># Or you can simulate an anonymous user by setting request.user to</span>
+        <span class="c1"># an AnonymousUser instance.</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">AnonymousUser</span><span class="p">()</span>
+
+        <span class="c1"># Test my_view() as if it were deployed at /customer/details</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="c1"># Use this syntax for class-based views.</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">MyView</span><span class="o">.</span><span class="n">as_view</span><span class="p">()(</span><span class="n">request</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-asyncrequestfactory">
+<span id="asyncrequestfactory"></span><h3>AsyncRequestFactory<a class="headerlink" href="#asyncrequestfactory" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.test.AsyncRequestFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AsyncRequestFactory</span></code><a class="headerlink" href="#django.test.AsyncRequestFactory" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">RequestFactory</span></code> 创建 WSGI 类的请求。如果你想创建 ASGI 类的请求，包括有一个正确的 ASGI <code class="docutils literal notranslate"><span class="pre">scope</span></code>，你可以使用 <code class="docutils literal notranslate"><span class="pre">django.test.AsyncRequestFactory</span></code>。</p>
+<p>该类与 <code class="docutils literal notranslate"><span class="pre">RequestFactory</span></code> 直接 API 兼容，唯一的区别是它返回 <code class="docutils literal notranslate"><span class="pre">ASGIRequest</span></code> 实例，而不是 <code class="docutils literal notranslate"><span class="pre">WSGIRequest</span></code> 实例。它的所有方法仍然是可同步调用的。</p>
+<p>在 <code class="docutils literal notranslate"><span class="pre">defaults</span></code> 中的任意关键字参数被直接添加到 ASGI 范围中。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>已添加 <code class="docutils literal notranslate"><span class="pre">headers</span></code> 参数。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-testing-class-based-views">
+<span id="testing-class-based-views"></span><h2>测试基于类的视图<a class="headerlink" href="#testing-class-based-views" title="永久链接至标题">¶</a></h2>
+<p>为了在请求／响应周期之外测试基于类的视图，你必须确保它们配置正确，在实例化之后调用 <code class="xref py py-meth docutils literal notranslate"><span class="pre">setup()</span></code>。</p>
+<p>例如，假设基于类的视图如下：</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">views.py</span></code></span><a class="headerlink" href="#id1" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.generic</span> <span class="kn">import</span> <span class="n">TemplateView</span>
+
+
+<span class="k">class</span> <span class="nc">HomeView</span><span class="p">(</span><span class="n">TemplateView</span><span class="p">):</span>
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s2">&quot;myapp/home.html&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;environment&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Production&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>你可以直接测试 <code class="docutils literal notranslate"><span class="pre">get_context_data()</span></code> 方法，首先实例化视图，然后向 <code class="docutils literal notranslate"><span class="pre">setup()</span></code> 传递一个 <code class="docutils literal notranslate"><span class="pre">request</span></code>，然后再进行测试代码。</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">tests.py</span></code></span><a class="headerlink" href="#id2" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">RequestFactory</span><span class="p">,</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">.views</span> <span class="kn">import</span> <span class="n">HomeView</span>
+
+
+<span class="k">class</span> <span class="nc">HomePageTest</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_environment_set_in_context</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">RequestFactory</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="n">view</span> <span class="o">=</span> <span class="n">HomeView</span><span class="p">()</span>
+        <span class="n">view</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+        <span class="n">context</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="s2">&quot;environment&quot;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-tests-and-multiple-host-names">
+<span id="s-topics-testing-advanced-multiple-hosts"></span><span id="tests-and-multiple-host-names"></span><span id="topics-testing-advanced-multiple-hosts"></span><h2>测试与多主机名<a class="headerlink" href="#tests-and-multiple-host-names" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="../../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 配置在运行测试时被验证。这允许测试客户端区分内部和外部 URL。</p>
+<p>支持多租户或根据请求的主机改变业务逻辑的项目，以及在测试中使用自定义主机名的项目，必须在 <a class="reference internal" href="../../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 中包含这些主机。</p>
+<p>第一个选项是将主机添加到你的配置文件中。例如，docs.djangoproject.com 的测试套件包括以下内容：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+
+<span class="k">class</span> <span class="nc">SearchFormTestCase</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_empty_get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;/en/dev/search/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;docs.djangoproject.dev:8000&quot;</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>同时配置文件包含项目支持的域列表：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ALLOWED_HOSTS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;www.djangoproject.dev&quot;</span><span class="p">,</span> <span class="s2">&quot;docs.djangoproject.dev&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>另一个选项是使用 <a class="reference internal" href="tools.html#django.test.override_settings" title="django.test.override_settings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">override_settings()</span></code></a> 或 <a class="reference internal" href="tools.html#django.test.SimpleTestCase.modify_settings" title="django.test.SimpleTestCase.modify_settings"><code class="xref py py-attr docutils literal notranslate"><span class="pre">modify_settings()</span></code></a> 将所需的主机添加到 <a class="reference internal" href="../../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 中。这个选项在不能打包自己配置文件的独立应用中可能比较好，或者对于域列表不是静态的项目（例如，多租户的子域）。例如，你可以为域 <code class="docutils literal notranslate"><span class="pre">http://otherserver/</span></code> 写一个测试，如下所示：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">override_settings</span>
+
+
+<span class="k">class</span> <span class="nc">MultiDomainTestCase</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="nd">@override_settings</span><span class="p">(</span><span class="n">ALLOWED_HOSTS</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;otherserver&quot;</span><span class="p">])</span>
+    <span class="k">def</span> <span class="nf">test_other_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;http://otherserver/foo/bar/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>当运行测试时，禁用 <a class="reference internal" href="../../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 检查（<code class="docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span> <span class="pre">=</span> <span class="pre">['*']</span></code>），可以防止测试客户端在遵循重定向到外部 URL 时发出有用的错误信息。</p>
+</div>
+<div class="section" id="s-tests-and-multiple-databases">
+<span id="s-topics-testing-advanced-multidb"></span><span id="tests-and-multiple-databases"></span><span id="topics-testing-advanced-multidb"></span><h2>测试与多数据库<a class="headerlink" href="#tests-and-multiple-databases" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-testing-primary-replica-configurations">
+<span id="s-topics-testing-primaryreplica"></span><span id="testing-primary-replica-configurations"></span><span id="topics-testing-primaryreplica"></span><h3>测试主／副配置<a class="headerlink" href="#testing-primary-replica-configurations" title="永久链接至标题">¶</a></h3>
+<p>如果你使用主／副本（某些数据库称为主／从）复制来测试多数据库配置，那么这种创建测试数据库的策略会带来问题。当创建测试数据库时，不会有任何复制，因此，在主服务器上创建的数据在副本上看不到。</p>
+<p>为了弥补这一点，Django 允许你定义一个数据库是 <em>测试镜像</em>。考虑以下（简化的）数据库配置示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.mysql&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;myproject&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;HOST&quot;</span><span class="p">:</span> <span class="s2">&quot;dbprimary&quot;</span><span class="p">,</span>
+        <span class="c1"># ... plus some other settings</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;replica&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.db.backends.mysql&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;myproject&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;HOST&quot;</span><span class="p">:</span> <span class="s2">&quot;dbreplica&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;TEST&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;MIRROR&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="c1"># ... plus some other settings</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>在这个设置中，我们有两个数据库服务器。<code class="docutils literal notranslate"><span class="pre">dbprimary</span></code>，用数据库别名 <code class="docutils literal notranslate"><span class="pre">default</span></code> 描述，<code class="docutils literal notranslate"><span class="pre">dbreplica</span></code> 用别名 <code class="docutils literal notranslate"><span class="pre">replica</span></code> 描述。正如你所期望的那样，<code class="docutils literal notranslate"><span class="pre">dbreplica</span></code> 被数据库管理员配置为 <code class="docutils literal notranslate"><span class="pre">dbprimary</span></code> 的读副本，因此在正常活动中，对 <code class="docutils literal notranslate"><span class="pre">default</span></code> 的任何写入都会出现在 <code class="docutils literal notranslate"><span class="pre">replica</span></code> 上。</p>
+<p>如果 Django 创建了两个独立的测试数据库，就会破坏任何期望复制发生的测试。然而，<code class="docutils literal notranslate"><span class="pre">replica</span></code> 数据库已经被配置为测试镜像（使用 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_MIRROR"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIRROR</span></code></a> 测试设置），表明在测试中，<code class="docutils literal notranslate"><span class="pre">replica</span></code> 应该被当作 <code class="docutils literal notranslate"><span class="pre">default</span></code> 的镜像。</p>
+<p>在配置测试环境时，<em>不会</em> 创建 <code class="docutils literal notranslate"><span class="pre">replica</span></code> 的测试版本。相反，连接到 <code class="docutils literal notranslate"><span class="pre">replica</span></code> 的连接将被重定向到指向 <code class="docutils literal notranslate"><span class="pre">default</span></code>。因此，对 <code class="docutils literal notranslate"><span class="pre">default</span></code> 的写操作将出现在 <code class="docutils literal notranslate"><span class="pre">replica</span></code> 上 -- 但这是因为它们实际上是同一个数据库，而不是因为两个数据库之间有数据复制。由于这依赖于事务，测试必须使用 <a class="reference internal" href="tools.html#django.test.TransactionTestCase" title="django.test.TransactionTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionTestCase</span></code></a> 而不是 <a class="reference internal" href="tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a>。</p>
+</div>
+<div class="section" id="s-controlling-creation-order-for-test-databases">
+<span id="s-topics-testing-creation-dependencies"></span><span id="controlling-creation-order-for-test-databases"></span><span id="topics-testing-creation-dependencies"></span><h3>控制测试数据库的创建顺序<a class="headerlink" href="#controlling-creation-order-for-test-databases" title="永久链接至标题">¶</a></h3>
+<p>默认情况下，Django 会假设所有的数据库都依赖于 <code class="docutils literal notranslate"><span class="pre">default</span></code> 数据库，因此总是先创建 <code class="docutils literal notranslate"><span class="pre">default</span></code> 数据库。但是，我们不保证测试配置中其他数据库的创建顺序。</p>
+<p>如果你的数据库配置需要特定的创建顺序，你可以使用 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_DEPENDENCIES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEPENDENCIES</span></code></a> 测试设置指定存在的依赖关系。考虑以下（简化的）数据库配置示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># ... db settings</span>
+        <span class="s2">&quot;TEST&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;DEPENDENCIES&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;diamonds&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;diamonds&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># ... db settings</span>
+        <span class="s2">&quot;TEST&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;DEPENDENCIES&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;clubs&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># ... db settings</span>
+        <span class="s2">&quot;TEST&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;DEPENDENCIES&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;diamonds&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;spades&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># ... db settings</span>
+        <span class="s2">&quot;TEST&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;DEPENDENCIES&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;diamonds&quot;</span><span class="p">,</span> <span class="s2">&quot;hearts&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;hearts&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># ... db settings</span>
+        <span class="s2">&quot;TEST&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;DEPENDENCIES&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;diamonds&quot;</span><span class="p">,</span> <span class="s2">&quot;clubs&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>在这种配置下，将首先创建 <code class="docutils literal notranslate"><span class="pre">diamonds</span></code> 数据库，因为它是唯一没有依赖性的数据库。接下来将创建 <code class="docutils literal notranslate"><span class="pre">default</span></code> 和 <code class="docutils literal notranslate"><span class="pre">clubs</span></code> 数据库（尽管这两个数据库的创建顺序没有保证），然后是 <code class="docutils literal notranslate"><span class="pre">hearts</span></code>，最后是 <code class="docutils literal notranslate"><span class="pre">spades</span></code>。</p>
+<p>如果在 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_DEPENDENCIES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEPENDENCIES</span></code></a> 定义中存在任何循环依赖关系，将引发 <a class="reference internal" href="../../ref/exceptions.html#django.core.exceptions.ImproperlyConfigured" title="django.core.exceptions.ImproperlyConfigured"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImproperlyConfigured</span></code></a> 异常。</p>
+</div>
+</div>
+<div class="section" id="s-advanced-features-of-transactiontestcase">
+<span id="advanced-features-of-transactiontestcase"></span><h2><code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 高级特性<a class="headerlink" href="#advanced-features-of-transactiontestcase" title="永久链接至标题">¶</a></h2>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.test.TransactionTestCase.available_apps">
+<code class="sig-prename descclassname"><span class="pre">TransactionTestCase.</span></code><code class="sig-name descname"><span class="pre">available_apps</span></code><a class="headerlink" href="#django.test.TransactionTestCase.available_apps" title="永久链接至目标">¶</a></dt>
+<dd><div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>这个属性是一个私有的 API。它可能会在未来被更改或删除，而不会有废弃期，例如为了适应应用程序加载的变化。</p>
+<p class="last">它用来优化 Django 自己的测试套件，其中包含数百个模型，但不同应用中的模型之间没有关系。</p>
+</div>
+<p>默认情况下，<code class="docutils literal notranslate"><span class="pre">available_apps</span></code> 是设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。每次测试后，Django 都会调用 <a class="reference internal" href="../../ref/django-admin.html#django-admin-flush"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">flush</span></code></a> 来重置数据库状态。这将清空所有表，并发出 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 信号，为每个模型重新创建一个内容类型和四个权限。这个操作的花费和模型的数量成正比。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">available_apps</span></code> 设置为应用程序列表会指示 Django 的行为就像只有这些应用程序的模型是可用的一样。<code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 的行为改变如下：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 在每次测试前都会被触发，以创建可用应用中每个模型的内容类型和权限，以防它们缺失。</li>
+<li>每次测试后，Django 只清空可用应用中模型对应的表。但在数据库层面，清空表可能会级联到不可用应用中的相关模型。此外 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 并没有被触发，它将在选择了正确的应用集后，由下一个 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 触发。</li>
+</ul>
+<p>由于数据库没有完全刷新，如果测试创建了没有包含在 <code class="docutils literal notranslate"><span class="pre">available_apps</span></code> 中的模型实例，它们就会泄漏，并可能导致不相关的测试失败。小心使用了会话的测试；默认的会话引擎将它们存储在数据库中。</p>
+<p>由于 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 在刷新数据库后并没有发出，所以它在一个 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 后的状态与一个 <code class="docutils literal notranslate"><span class="pre">TestCase</span></code> 后的状态是不一样的：它丢失了由 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 监听器创建的行。考虑到 <a class="reference internal" href="overview.html#order-of-tests"><span class="std std-ref">执行测试的顺序</span></a>，这并不是一个问题，只要给定的测试套件中的所有 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 都声明 <code class="docutils literal notranslate"><span class="pre">available_apps</span></code>，或者都没有声明。</p>
+<p><code class="docutils literal notranslate"><span class="pre">available_apps</span></code> 在 Django 自己的测试套件中是强制性的。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.test.TransactionTestCase.reset_sequences">
+<code class="sig-prename descclassname"><span class="pre">TransactionTestCase.</span></code><code class="sig-name descname"><span class="pre">reset_sequences</span></code><a class="headerlink" href="#django.test.TransactionTestCase.reset_sequences" title="永久链接至目标">¶</a></dt>
+<dd><p>在 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 上设置 <code class="docutils literal notranslate"><span class="pre">reset_sequences</span> <span class="pre">=</span> <span class="pre">True</span></code> 将确保队列在测试运行前总是被重置：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TestsThatDependsOnPrimaryKeySequences</span><span class="p">(</span><span class="n">TransactionTestCase</span><span class="p">):</span>
+    <span class="n">reset_sequences</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">test_animal_pk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lion</span> <span class="o">=</span> <span class="n">Animal</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;lion&quot;</span><span class="p">,</span> <span class="n">sound</span><span class="o">=</span><span class="s2">&quot;roar&quot;</span><span class="p">)</span>
+        <span class="c1"># lion.pk is guaranteed to always be 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">lion</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>除非明确测试主键序列号，否则建议你不要在测试中硬编码主键值。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">reset_sequences</span> <span class="pre">=</span> <span class="pre">True</span></code> 会减慢测试速度，因为主键重置是一个相对昂贵的数据库操作。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-enforce-running-test-classes-sequentially">
+<span id="s-topics-testing-enforce-run-sequentially"></span><span id="enforce-running-test-classes-sequentially"></span><span id="topics-testing-enforce-run-sequentially"></span><h2>强制按顺序运行测试类<a class="headerlink" href="#enforce-running-test-classes-sequentially" title="永久链接至标题">¶</a></h2>
+<p>如果你有一些测试类不能并行运行（例如，因为它们共享一个公共资源），你可以使用 <code class="docutils literal notranslate"><span class="pre">django.test.testcases.SerializeMixin</span></code> 来依次运行它们。这个 mixin 使用一个文件系统 <code class="docutils literal notranslate"><span class="pre">lockfile</span></code>。</p>
+<p>例如，你可以使用 <code class="docutils literal notranslate"><span class="pre">__file__</span></code> 来确定同一文件中所有继承自 <code class="docutils literal notranslate"><span class="pre">SerializeMixin</span></code> 的测试类将依次运行：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">django.test.testcases</span> <span class="kn">import</span> <span class="n">SerializeMixin</span>
+
+
+<span class="k">class</span> <span class="nc">ImageTestCaseMixin</span><span class="p">(</span><span class="n">SerializeMixin</span><span class="p">):</span>
+    <span class="n">lockfile</span> <span class="o">=</span> <span class="vm">__file__</span>
+
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">temp_storage_dir</span><span class="p">,</span> <span class="s2">&quot;my_file.png&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">create_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">RemoveImageTests</span><span class="p">(</span><span class="n">ImageTestCaseMixin</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_remove_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">ResizeImageTests</span><span class="p">(</span><span class="n">ImageTestCaseMixin</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">test_resize_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resize_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span> <span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="mi">48</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">get_image_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">),</span> <span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="mi">48</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-using-the-django-test-runner-to-test-reusable-applications">
+<span id="s-testing-reusable-applications"></span><span id="using-the-django-test-runner-to-test-reusable-applications"></span><span id="testing-reusable-applications"></span><h2>使用 Django 测试运行器测试可重用的应用程序<a class="headerlink" href="#using-the-django-test-runner-to-test-reusable-applications" title="永久链接至标题">¶</a></h2>
+<p>如果你正在编写一个 <a class="reference internal" href="../../intro/reusable-apps.html"><span class="doc">可重用的应用程序</span></a>，你可能想使用 Django 测试运行器来运行你自己的测试套件，从而从 Django 测试基础设施中获益。</p>
+<p>常见的做法是在应用程序代码旁边创建一个 <em>tests</em> 目录，具有以下结构：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runtests.py
+polls/
+    __init__.py
+    models.py
+    ...
+tests/
+    __init__.py
+    models.py
+    test_settings.py
+    tests.py
+</pre></div>
+</div>
+<p>让我们看一下其中的两个文件：</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">runtests.py</span></code></span><a class="headerlink" href="#id3" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">django</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.test.utils</span> <span class="kn">import</span> <span class="n">get_runner</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DJANGO_SETTINGS_MODULE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tests.test_settings&quot;</span>
+    <span class="n">django</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+    <span class="n">TestRunner</span> <span class="o">=</span> <span class="n">get_runner</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+    <span class="n">test_runner</span> <span class="o">=</span> <span class="n">TestRunner</span><span class="p">()</span>
+    <span class="n">failures</span> <span class="o">=</span> <span class="n">test_runner</span><span class="o">.</span><span class="n">run_tests</span><span class="p">([</span><span class="s2">&quot;tests&quot;</span><span class="p">])</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">failures</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<p>这是运行测试套件的脚本。它设置 Django 环境，创建测试数据库并运行测试。</p>
+<p>为了清楚起见，这个例子只包含了使用 Django 测试运行器所需的最基本的内容。你可能会要添加命令行选项来控制详细程度，传递要运行的特定测试标签等。</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">tests/test_settings.py</span></code></span><a class="headerlink" href="#id4" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="s2">&quot;fake-key&quot;</span>
+<span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;tests&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>该文件包含运行应用程序测试所需的 <a class="reference internal" href="../settings.html"><span class="doc">Django 配置</span></a>。</p>
+<p>再次，这是一个最小的例子；你的测试可能需要其他设置才能运行。</p>
+<p>由于 <em>tests</em> 包在运行测试时被包含在 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中，你可以在它的 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件中定义只用于测试的模型。</p>
+</div>
+<div class="section" id="s-using-different-testing-frameworks">
+<span id="s-other-testing-frameworks"></span><span id="using-different-testing-frameworks"></span><span id="other-testing-frameworks"></span><h2>使用不同的测试框架<a class="headerlink" href="#using-different-testing-frameworks" title="永久链接至标题">¶</a></h2>
+<p>显然，<a class="reference external" href="https://docs.python.org/3/library/unittest.html#module-unittest" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a> 并不是唯一的 Python 测试框架。虽然 Django 并没有提供对替代框架的明确支持，但它确实提供了一种方法来调用为替代框架构建的测试，就像它们是正常的 Django 测试一样。</p>
+<p>当你运行 <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">test</span></code> 时，Django 会查看 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_RUNNER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST_RUNNER</span></code></a> 的配置来决定做什么。默认情况下， <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_RUNNER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST_RUNNER</span></code></a> 指向 <code class="docutils literal notranslate"><span class="pre">'django.test.runner.DiscoverRunner'</span></code>。这个类定义了默认的 Django 测试行为。这个行为包括：</p>
+<ol class="arabic simple">
+<li>进行全局性的测试前设置。</li>
+<li>在当前目录下的任何文件中寻找名称符合 <code class="docutils literal notranslate"><span class="pre">test*.py</span></code> 模式的测试。</li>
+<li>创建测试数据库。</li>
+<li>运行 <code class="docutils literal notranslate"><span class="pre">migrate</span></code> 将模型和初始数据安装到测试数据库中。</li>
+<li>运行 <a class="reference internal" href="../checks.html"><span class="doc">系统检查</span></a>。</li>
+<li>运行找到的测试。</li>
+<li>销毁测试数据库。</li>
+<li>进行全局性的测试后拆解。</li>
+</ol>
+<p>如果你定义了自己的测试运行器类，并将 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_RUNNER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST_RUNNER</span></code></a> 指向该类，那么每当你运行 <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">test</span></code> 时，Django 就会执行你的测试运行器。通过这种方式，可以使用任何可以从 Python 代码中执行的测试框架，也可以修改 Django 测试执行过程来满足你的任何测试需求。</p>
+<div class="section" id="s-defining-a-test-runner">
+<span id="s-topics-testing-test-runner"></span><span id="defining-a-test-runner"></span><span id="topics-testing-test-runner"></span><h3>定义测试运行器<a class="headerlink" href="#defining-a-test-runner" title="永久链接至标题">¶</a></h3>
+<p>测试运行器是一个类，他定义了 <code class="docutils literal notranslate"><span class="pre">run_tests()</span></code> 方法。Django 自带一个 <code class="docutils literal notranslate"><span class="pre">DiscoverRunner</span></code> 类，它定义了默认的 Django 测试行为。该类定义了进入点 <code class="docutils literal notranslate"><span class="pre">run_tests()</span></code>，再加上对 <code class="docutils literal notranslate"><span class="pre">run_tests()</span></code> 所使用的其他方法的选择，以此来建立，执行和拆除测试套件。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DiscoverRunner</span></code>(<em><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test*.py'</span></span></em>, <em><span class="n"><span class="pre">top_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">failfast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">keepdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">debug_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">debug_sql</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">exclude_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">test_name_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">pdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">enable_faulthandler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">timing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">durations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">DiscoverRunner</span></code> 将在任何符合 <code class="docutils literal notranslate"><span class="pre">pattern</span></code> 的文件中搜索测试。</p>
+<p><code class="docutils literal notranslate"><span class="pre">top_level</span></code> 可以用来指定包含顶级 Python 模块的目录。通常 Django 会自动计算出这个目录，所以不需要指定这个选项。如果指定了这个选项，一般来说，它应该是包含你的 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 文件的目录。</p>
+<p><code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 决定将打印到控制台的通知和调试信息的数量；<code class="docutils literal notranslate"><span class="pre">0</span></code> 为无输出，<code class="docutils literal notranslate"><span class="pre">1</span></code> 为正常输出，<code class="docutils literal notranslate"><span class="pre">2</span></code> 为详细输出。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则测试套件在执行测试套件时，有权限向用户请求指令。这种行为的一个例子是要求允许删除一个现有的测试数据库。如果 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，测试套件必须能够在没有任何人工干预的情况下运行。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">failfast</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，测试套件将在检测到第一次测试失败后停止运行。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">keepdb</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，测试套件将使用现有数据库，或在必要时创建一个数据库。如果 <code class="docutils literal notranslate"><span class="pre">False</span></code>，将创建一个新的数据库，并提示用户删除现有的数据库。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">reverse</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则测试用例将按相反的顺序执行。这对于调试未正确隔离并具有副作用的测试非常有用。在使用此选项时，仍然会保留按测试类分组的方式（<a class="reference internal" href="overview.html#order-of-tests"><span class="std std-ref">按测试类分组</span></a>）。此选项可以与 <code class="docutils literal notranslate"><span class="pre">--shuffle</span></code> 一起使用，以反转特定随机种子的顺序。</p>
+<p><code class="docutils literal notranslate"><span class="pre">debug_mode</span></code> 指定 <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 设置在运行测试之前应该设置成什么。</p>
+<p><code class="docutils literal notranslate"><span class="pre">parallel</span></code> 指定了进程的数量。如果 <code class="docutils literal notranslate"><span class="pre">parallel</span></code> 大于 <code class="docutils literal notranslate"><span class="pre">1</span></code>，测试套件将在 <code class="docutils literal notranslate"><span class="pre">parallel</span></code> 个进程中运行。如果测试用例类的数量少于配置的进程数，Django 将相应地减少进程数。每个进程都有自己的数据库。此选项需要第三方包 <code class="docutils literal notranslate"><span class="pre">tblib</span></code> 以正确显示回溯信息。</p>
+<p><code class="docutils literal notranslate"><span class="pre">tags</span></code> 用于指定一系列 <a class="reference internal" href="tools.html#topics-tagging-tests"><span class="std std-ref">测试标签</span></a>。可以与 <code class="docutils literal notranslate"><span class="pre">exclude_tags</span></code> 结合使用。</p>
+<p><code class="docutils literal notranslate"><span class="pre">exclude_tags</span></code> 用于指定一系列 <a class="reference internal" href="tools.html#topics-tagging-tests"><span class="std std-ref">排除测试标签</span></a>。可以与 <code class="docutils literal notranslate"><span class="pre">tags</span></code> 结合使用。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">debug_sql</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，失败的测试用例会输出 SQL 查询记录到 <a class="reference internal" href="../../ref/logging.html#django-db-logger"><span class="std std-ref">django.db.backends logger</span></a> 以及回溯。如果 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 是 <code class="docutils literal notranslate"><span class="pre">2</span></code>，那么所有测试中的查询都会输出。</p>
+<p><code class="docutils literal notranslate"><span class="pre">test_name_patterns</span></code> 可以用来指定一套模式，通过名称过滤测试方法和类。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">pdb</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则每次测试错误或失败时都会产生一个调试器（<code class="docutils literal notranslate"><span class="pre">pdb</span></code> 或 <code class="docutils literal notranslate"><span class="pre">ipdb</span></code>）。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">buffer</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，通过测试的输出将被丢弃。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">enable_faulthandler</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，那么 <a class="reference external" href="https://docs.python.org/3/library/faulthandler.html#module-faulthandler" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">faulthandler</span></code></a> 将被启用。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">timing</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，将显示测试时间，包括数据库设置和总运行时间。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">shuffle</span></code> 是一个整数，测试用例将在执行之前以随机顺序进行洗牌，使用整数作为随机种子。如果 <code class="docutils literal notranslate"><span class="pre">shuffle</span></code> 是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则将随机生成种子。在这两种情况下，种子将在运行测试之前被记录并设置为 <code class="docutils literal notranslate"><span class="pre">self.shuffle_seed</span></code>。此选项可以用于帮助检测未正确隔离的测试。在使用此选项时，将保留按测试类分组的方式（<a class="reference internal" href="overview.html#order-of-tests"><span class="std std-ref">按测试类分组</span></a>）。</p>
+<p><code class="docutils literal notranslate"><span class="pre">logger</span></code> 可以用于传递一个 Python <a class="reference external" href="https://docs.python.org/3/library/logging.html#logger" title="(在 Python v3.12)"><span class="xref std std-ref">Logger 对象</span></a>。如果提供了该对象，将使用它来记录消息，而不是打印到控制台。日志记录对象将遵循其日志记录级别，而不是 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">durations</span></code> 会显示 N 个最慢的测试用例列表。将此选项设置为 <code class="docutils literal notranslate"><span class="pre">0</span></code> 将显示所有测试的持续时间。需要 Python 3.12+。</p>
+<p>Django 可能会不时地通过添加新的参数来扩展测试运行器的功能。<code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> 声明允许这种扩展。如果你将 <code class="docutils literal notranslate"><span class="pre">DiscoverRunner</span></code> 子类化，或者编写你自己的测试运行器，确保它接受 <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>。</p>
+<p>你的测试运行器也可以定义额外的命令行选项。创建或覆盖一个 <code class="docutils literal notranslate"><span class="pre">add_arguments(cls,</span> <span class="pre">parser)</span></code> 类方法，并通过在该方法中调用 <code class="docutils literal notranslate"><span class="pre">parser.add_argument()</span></code> 来添加自定义参数，这样 <a class="reference internal" href="../../ref/django-admin.html#django-admin-test"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">test</span></code></a> 命令就可以使用这些参数。</p>
+<div class="versionadded">
+<span class="title">New in Django 5.0:</span> <p>已添加 <code class="docutils literal notranslate"><span class="pre">durations</span></code> 参数。</p>
+</div>
+</dd></dl>
+
+<div class="section" id="s-attributes">
+<span id="attributes"></span><h4>属性<a class="headerlink" href="#attributes" title="永久链接至标题">¶</a></h4>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.test_suite">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">test_suite</span></code><a class="headerlink" href="#django.test.runner.DiscoverRunner.test_suite" title="永久链接至目标">¶</a></dt>
+<dd><p>用于构建测试套件的类。默认情况下，它被设置为 <code class="docutils literal notranslate"><span class="pre">unittest.TestSuite</span></code>。如果你想实现不同的测试收集逻辑，可以重写这个类。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.test_runner">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">test_runner</span></code><a class="headerlink" href="#django.test.runner.DiscoverRunner.test_runner" title="永久链接至目标">¶</a></dt>
+<dd><p>这是低级测试运行器的类，用于执行各个测试和格式化结果。默认情况下，它被设置为 <code class="docutils literal notranslate"><span class="pre">unittest.TextTestRunner</span></code>。尽管在命名习惯上有不幸的相似之处，但这与 <code class="docutils literal notranslate"><span class="pre">DiscoverRunner</span></code> 不是同一类型的类，后者涵盖了更广泛的职责。你可以覆盖这个属性来修改测试运行和报告的方式。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.test_loader">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">test_loader</span></code><a class="headerlink" href="#django.test.runner.DiscoverRunner.test_loader" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个加载测试的类，无论是从 TestCases 还是模块或其他方面加载测试，并将它们捆绑成测试套件供运行者执行。默认情况下，它被设置为 <code class="docutils literal notranslate"><span class="pre">unittest.defaultTestLoader</span></code>。如果你的测试要以不寻常的方式加载，你可以重写这个属性。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-methods">
+<span id="methods"></span><h4>方法<a class="headerlink" href="#methods" title="永久链接至标题">¶</a></h4>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.run_tests">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">run_tests</span></code>(<em><span class="n"><span class="pre">test_labels</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.run_tests" title="永久链接至目标">¶</a></dt>
+<dd><p>运行测试套件。</p>
+<p><code class="docutils literal notranslate"><span class="pre">test_labels</span></code> 允许你指定要运行的测试，并支持多种格式（参见 <a class="reference internal" href="#django.test.runner.DiscoverRunner.build_suite" title="django.test.runner.DiscoverRunner.build_suite"><code class="xref py py-meth docutils literal notranslate"><span class="pre">DiscoverRunner.build_suite()</span></code></a> 获取支持的格式列表）。</p>
+<p>这个方法应该返回失败的测试次数。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.add_arguments">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">add_arguments</span></code>(<em><span class="n"><span class="pre">parser</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.add_arguments" title="永久链接至目标">¶</a></dt>
+<dd><p>重写这个类方法来添加 <a class="reference internal" href="../../ref/django-admin.html#django-admin-test"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">test</span></code></a> 管理命令接受的自定义参数。参见 <a class="reference external" href="https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_argument" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">argparse.ArgumentParser.add_argument()</span></code></a> 了解关于向解析器添加参数的详细信息。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.setup_test_environment">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">setup_test_environment</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.setup_test_environment" title="永久链接至目标">¶</a></dt>
+<dd><p>通过调用 <a class="reference internal" href="#django.test.utils.setup_test_environment" title="django.test.utils.setup_test_environment"><code class="xref py py-func docutils literal notranslate"><span class="pre">setup_test_environment()</span></code></a> 和设置 <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">self.debug_mode</span></code> （默认为 <code class="docutils literal notranslate"><span class="pre">False</span></code>）来设置测试环境。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.build_suite">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">build_suite</span></code>(<em><span class="n"><span class="pre">test_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.build_suite" title="永久链接至目标">¶</a></dt>
+<dd><p>构建一个与提供的测试标签相匹配的测试套件。</p>
+<p><code class="docutils literal notranslate"><span class="pre">test_labels</span></code> 是描述要运行的测试的字符串列表。测试标签可以采取以下四种形式之一：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">path.to.test_module.TestCase.test_method</span></code> -- 运行测试用例类中的单个测试方法。</li>
+<li><code class="docutils literal notranslate"><span class="pre">path.to.test_module.TestCase</span></code>——运行测试用例中的所有测试方法。</li>
+<li><code class="docutils literal notranslate"><span class="pre">path.to.module</span></code>——搜索并运行命名的 Python 包或模块中的所有测试。</li>
+<li><code class="docutils literal notranslate"><span class="pre">path/to/directory</span></code>——搜索并运行指定目录下的所有测试。</li>
+</ul>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">test_labels</span></code> 的值为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，测试运行器将在当前目录下所有文件中搜索名称符合 <code class="docutils literal notranslate"><span class="pre">pattern</span></code> 的测试（见上文）。</p>
+<p>返回一个准备运行的 <code class="docutils literal notranslate"><span class="pre">TestSuite</span></code> 实例。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.setup_databases">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">setup_databases</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.setup_databases" title="永久链接至目标">¶</a></dt>
+<dd><p>通过调用 <a class="reference internal" href="#django.test.utils.setup_databases" title="django.test.utils.setup_databases"><code class="xref py py-func docutils literal notranslate"><span class="pre">setup_databases()</span></code></a> 创建测试数据库。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.run_checks">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">run_checks</span></code>(<em><span class="n"><span class="pre">databases</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.run_checks" title="永久链接至目标">¶</a></dt>
+<dd><p>在测试的 <code class="docutils literal notranslate"><span class="pre">databases</span></code> 上运行 <a class="reference internal" href="../checks.html"><span class="doc">系统检查</span></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.run_suite">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">run_suite</span></code>(<em><span class="n"><span class="pre">suite</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.run_suite" title="永久链接至目标">¶</a></dt>
+<dd><p>运行测试套件。</p>
+<p>返回运行测试套件所产生的结果。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.get_test_runner_kwargs">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">get_test_runner_kwargs</span></code>()<a class="headerlink" href="#django.test.runner.DiscoverRunner.get_test_runner_kwargs" title="永久链接至目标">¶</a></dt>
+<dd><p>返回实例化 <code class="docutils literal notranslate"><span class="pre">DiscoverRunner.test_runner</span></code> 的关键字参数。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.teardown_databases">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">teardown_databases</span></code>(<em><span class="n"><span class="pre">old_config</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.teardown_databases" title="永久链接至目标">¶</a></dt>
+<dd><p>通过调用 <code class="xref py py-func docutils literal notranslate"><span class="pre">trapdown_databases()</span></code> 来销毁测试数据库，恢复测试前的条件。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.teardown_test_environment">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">teardown_test_environment</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.teardown_test_environment" title="永久链接至目标">¶</a></dt>
+<dd><p>恢复测试前的环境。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.suite_result">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">suite_result</span></code>(<em><span class="n"><span class="pre">suite</span></span></em>, <em><span class="n"><span class="pre">result</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.suite_result" title="永久链接至目标">¶</a></dt>
+<dd><p>计算并返回一个返回码，基于测试套件和测试套件返回的结果。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.test.runner.DiscoverRunner.log">
+<code class="sig-prename descclassname"><span class="pre">DiscoverRunner.</span></code><code class="sig-name descname"><span class="pre">log</span></code>(<em><span class="n"><span class="pre">msg</span></span></em>, <em><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.test.runner.DiscoverRunner.log" title="永久链接至目标">¶</a></dt>
+<dd><p>如果设置了 <code class="docutils literal notranslate"><span class="pre">logger</span></code>，则以给定的整数 <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">logging level</a> （例如 <code class="docutils literal notranslate"><span class="pre">logging.DEBUG</span></code>、<code class="docutils literal notranslate"><span class="pre">logging.INFO</span></code> 或 <code class="docutils literal notranslate"><span class="pre">logging.WARNING</span></code>）记录消息。否则，消息将打印到控制台，并考虑当前的 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code>。例如，如果 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 为 0，则不会打印任何消息；如果 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 至少为 1，则将打印 <code class="docutils literal notranslate"><span class="pre">INFO</span></code> 及以上的消息；如果至少为 2，则会打印 <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>。<code class="docutils literal notranslate"><span class="pre">level</span></code> 默认为 <code class="docutils literal notranslate"><span class="pre">logging.INFO</span></code>。</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-testing-utilities">
+<span id="testing-utilities"></span><h3>测试工具集<a class="headerlink" href="#testing-utilities" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-module-django.test.utils">
+<span id="s-django-test-utils"></span><span id="module-django.test.utils"></span><span id="django-test-utils"></span><h4><code class="docutils literal notranslate"><span class="pre">django.test.utils</span></code><a class="headerlink" href="#module-django.test.utils" title="永久链接至标题">¶</a></h4>
+<p>为了帮助创建自己的测试运行器，Django 在 <code class="docutils literal notranslate"><span class="pre">django.test.utils</span></code> 模块中提供了一些实用的方法。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.test.utils.setup_test_environment">
+<code class="sig-name descname"><span class="pre">setup_test_environment</span></code>(<em><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.test.utils.setup_test_environment" title="永久链接至目标">¶</a></dt>
+<dd><p>执行全局性的测试前设置，如为模板渲染系统安装仪器，设置虚拟的电子邮件发件箱。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">debug</span></code> 不是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则 <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 配置更新为其值。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.test.utils.teardown_test_environment">
+<code class="sig-name descname"><span class="pre">teardown_test_environment</span></code>()<a class="headerlink" href="#django.test.utils.teardown_test_environment" title="永久链接至目标">¶</a></dt>
+<dd><p>进行全局性的测试后拆解，如从模板系统中删除仪器设备，恢复正常的邮件服务。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.test.utils.setup_databases">
+<code class="sig-name descname"><span class="pre">setup_databases</span></code>(<em><span class="n"><span class="pre">verbosity</span></span></em>, <em><span class="n"><span class="pre">interactive</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">time_keeper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">keepdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">debug_sql</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">aliases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">serialized_aliases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.test.utils.setup_databases" title="永久链接至目标">¶</a></dt>
+<dd><p>创建测试数据库。</p>
+<p>返回一个数据结构，该结构提供了足够的细节来撤销已做的更改。这些数据将在测试结束后提供给 <a class="reference internal" href="#django.test.utils.teardown_databases" title="django.test.utils.teardown_databases"><code class="xref py py-func docutils literal notranslate"><span class="pre">teardown_databases()</span></code></a> 函数。</p>
+<p><code class="docutils literal notranslate"><span class="pre">aliases</span></code> 参数确定应为哪些 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 别名设置测试数据库。如果未提供，默认为所有 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 别名。</p>
+<p><code class="docutils literal notranslate"><span class="pre">serialized_aliases</span></code> 参数确定哪些子集的 <code class="docutils literal notranslate"><span class="pre">aliases</span></code> 应将其状态序列化以允许使用 <a class="reference internal" href="overview.html#test-case-serialized-rollback"><span class="std std-ref">serialized_rollback</span></a> 功能。如果未提供，默认为 <code class="docutils literal notranslate"><span class="pre">aliases</span></code>。<code class="docutils literal notranslate"><span class="pre">serialized_aliases</span></code> 参数确定哪些子集的 <code class="docutils literal notranslate"><span class="pre">aliases</span></code> 应将其状态序列化以允许使用 <a class="reference internal" href="overview.html#test-case-serialized-rollback"><span class="std std-ref">serialized_rollback</span></a> 功能。如果未提供，默认为 <code class="docutils literal notranslate"><span class="pre">aliases</span></code>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.test.utils.teardown_databases">
+<code class="sig-name descname"><span class="pre">teardown_databases</span></code>(<em><span class="n"><span class="pre">old_config</span></span></em>, <em><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">keepdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.test.utils.teardown_databases" title="永久链接至目标">¶</a></dt>
+<dd><p>销毁测试数据库，恢复测试前的条件。</p>
+<p><code class="docutils literal notranslate"><span class="pre">old_config</span></code> 是一个数据结构，定义了数据库配置中需要撤销的变化。它是 <a class="reference internal" href="#django.test.utils.setup_databases" title="django.test.utils.setup_databases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_databases()</span></code></a> 方法的返回值。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-django-db-connection-creation">
+<span id="django-db-connection-creation"></span><h4><code class="docutils literal notranslate"><span class="pre">django.db.connection.creation</span></code><a class="headerlink" href="#django-db-connection-creation" title="永久链接至标题">¶</a></h4>
+<p>数据库后台的创建模块还提供了一些在测试过程中有用的实用程序。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.connection.creation.create_test_db">
+<code class="sig-name descname"><span class="pre">create_test_db</span></code>(<em><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">autoclobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">serialize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">keepdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.db.connection.creation.create_test_db" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个新的测试数据库并对其运行 <code class="docutils literal notranslate"><span class="pre">migrate</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 与 <code class="docutils literal notranslate"><span class="pre">run_tests()</span></code> 中的行为相同。</p>
+<p><code class="docutils literal notranslate"><span class="pre">autoclobber</span></code> 描述了在发现与测试数据库同名的数据库时将发生的行为。</p>
+<ul class="simple">
+<li>如果 <code class="docutils literal notranslate"><span class="pre">autoclobber</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，将要求用户批准销毁现有数据库。如果用户不同意，则调用 <code class="docutils literal notranslate"><span class="pre">sys.exit</span></code>。</li>
+<li>如果 <code class="docutils literal notranslate"><span class="pre">autoclobber</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，数据库将被销毁，而无需与用户协商。</li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">serialize</span></code> 决定 Django 是否在运行测试之前将数据库序列化为内存中的 JSON 字符串（如果没有事务，用于在测试之间恢复数据库状态）。如果你没有使用 <a class="reference internal" href="overview.html#test-case-serialized-rollback"><span class="std std-ref">serialized_rollback=True</span></a> 的测试类，你可以将其设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 以加快创建时间。</p>
+<p><code class="docutils literal notranslate"><span class="pre">keepdb</span></code> 决定测试运行是否应使用现有数据库，还是创建一个新的数据库。如果 True`，则使用现有的数据库，如果不存在，则创建新的数据库。如果 <code class="docutils literal notranslate"><span class="pre">False</span></code>，则创建一个新的数据库，并提示用户删除现有的数据库（如果存在）。</p>
+<p>返回其创建的测试数据库的名称。</p>
+<p><code class="docutils literal notranslate"><span class="pre">create_test_db()</span></code> 的副作用是修改 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中的 <a class="reference internal" href="../../ref/settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a> 的值，使其与测试数据库的名称相匹配。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.connection.creation.destroy_test_db">
+<code class="sig-name descname"><span class="pre">destroy_test_db</span></code>(<em><span class="n"><span class="pre">old_database_name</span></span></em>, <em><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">keepdb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.db.connection.creation.destroy_test_db" title="永久链接至目标">¶</a></dt>
+<dd><p>销毁名称为 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中 <a class="reference internal" href="../../ref/settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a> 值的数据库，并将 <a class="reference internal" href="../../ref/settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">old_database_name</span></code> 值。</p>
+<p><code class="docutils literal notranslate"><span class="pre">verbosity</span></code>  参数和测试类 <a class="reference internal" href="#django.test.runner.DiscoverRunner" title="django.test.runner.DiscoverRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiscoverRunner</span></code></a> 的行为一样。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">keepdb</span></code> 的参数为 <code class="docutils literal notranslate"><span class="pre">True</span></code> ，数据库连接会被关闭，但是数据库不会被销毁。</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="s-integration-with-coverage-py">
+<span id="s-topics-testing-code-coverage"></span><span id="integration-with-coverage-py"></span><span id="topics-testing-code-coverage"></span><h2>集成 <code class="docutils literal notranslate"><span class="pre">coverage.py</span></code><a class="headerlink" href="#integration-with-coverage-py" title="永久链接至标题">¶</a></h2>
+<p>代码覆盖度表示有多少源代码被测试了。它表明了代码的哪些部分被测试用例覆盖，哪些没有。这是测试应用很重要的部分，所以强烈推荐检查测试用例的覆盖度。</p>
+<p>Django 可以很容易地与 <a class="reference external" href="https://coverage.readthedocs.io/">coverage.py</a> 集成，这是一个用于测量 Python 程序代码覆盖率的工具。首先，安装 <a class="reference external" href="https://pypi.org/project/coverage/">coverage</a>。然后，从包含 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 的项目文件夹运行以下命令：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>coverage run --source<span class="o">=</span><span class="s1">&#39;.&#39;</span> manage.py <span class="nb">test</span> myapp
+</pre></div>
+</div>
+<p>这将运行你的测试并收集项目中执行的文件的覆盖数据。你可以通过输入以下命令来查看这些数据的报告：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>coverage report
+</pre></div>
+</div>
+<p>请注意一些Django代码会在运行期间被执行，但是因为在上一条命令中没有 <code class="docutils literal notranslate"><span class="pre">source</span></code> 选项所以在这里没有列出。</p>
+<p>关于类似于输出详细内容的HTML列举的没有覆盖区域的选项，请查阅 <a class="reference external" href="https://coverage.readthedocs.io/">coverage.py</a> 的文档。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">进阶测试主题</a><ul>
+<li><a class="reference internal" href="#the-request-factory">请求工厂</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+<li><a class="reference internal" href="#asyncrequestfactory">AsyncRequestFactory</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testing-class-based-views">测试基于类的视图</a></li>
+<li><a class="reference internal" href="#tests-and-multiple-host-names">测试与多主机名</a></li>
+<li><a class="reference internal" href="#tests-and-multiple-databases">测试与多数据库</a><ul>
+<li><a class="reference internal" href="#testing-primary-replica-configurations">测试主／副配置</a></li>
+<li><a class="reference internal" href="#controlling-creation-order-for-test-databases">控制测试数据库的创建顺序</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-features-of-transactiontestcase"><code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 高级特性</a></li>
+<li><a class="reference internal" href="#enforce-running-test-classes-sequentially">强制按顺序运行测试类</a></li>
+<li><a class="reference internal" href="#using-the-django-test-runner-to-test-reusable-applications">使用 Django 测试运行器测试可重用的应用程序</a></li>
+<li><a class="reference internal" href="#using-different-testing-frameworks">使用不同的测试框架</a><ul>
+<li><a class="reference internal" href="#defining-a-test-runner">定义测试运行器</a><ul>
+<li><a class="reference internal" href="#attributes">属性</a></li>
+<li><a class="reference internal" href="#methods">方法</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testing-utilities">测试工具集</a><ul>
+<li><a class="reference internal" href="#module-django.test.utils"><code class="docutils literal notranslate"><span class="pre">django.test.utils</span></code></a></li>
+<li><a class="reference internal" href="#django-db-connection-creation"><code class="docutils literal notranslate"><span class="pre">django.db.connection.creation</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integration-with-coverage-py">集成 <code class="docutils literal notranslate"><span class="pre">coverage.py</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="tools.html"
+                          title="上一章">测试工具</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../auth/index.html"
+                          title="下一章">Django中的用户认证</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/testing/advanced.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="tools.html" title="测试工具">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="../auth/index.html" title="Django中的用户认证">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

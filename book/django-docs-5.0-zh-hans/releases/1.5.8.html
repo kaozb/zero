@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.5.8 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.5.7 版本发行说明" href="1.5.7.html" />
+    <link rel="prev" title="Django 1.5.9 版本发行说明" href="1.5.9.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.5.9.html" title="Django 1.5.9 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.5.7.html" title="Django 1.5.7 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.5.8">
+            
+  <div class="section" id="s-django-1-5-8-release-notes">
+<span id="django-1-5-8-release-notes"></span><h1>Django 1.5.8 版本发行说明<a class="headerlink" href="#django-1-5-8-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2014 年 5 月 14 日</em></p>
+<p>Django 1.5.8 修复了 1.5.8 中的两个安全问题。</p>
+<div class="section" id="s-caches-may-incorrectly-be-allowed-to-store-and-serve-private-data">
+<span id="caches-may-incorrectly-be-allowed-to-store-and-serve-private-data"></span><h2>缓存可能会错误地允许存储和提供私有数据<a class="headerlink" href="#caches-may-incorrectly-be-allowed-to-store-and-serve-private-data" title="永久链接至标题">¶</a></h2>
+<p>在某些情况下，Django 可能允许缓存存储与特定会话相关的私有数据，然后将该数据提供给具有不同会话或根本没有会话的请求。这可能导致信息泄露，并可能成为缓存中毒的途径。</p>
+<p>在使用 Django 会话时，Django 会设置一个 <code class="docutils literal notranslate"><span class="pre">Vary:</span> <span class="pre">Cookie</span></code> 头，以确保缓存不会向来自其他会话的请求提供缓存的数据。但是，较旧版本的 Internet Explorer（可能只有 Internet Explorer 6，以及如果在 Windows XP 或 Windows Server 2003 上运行的 Internet Explorer 7）无法处理 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头与许多内容类型的组合。因此，如果请求是由 Internet Explorer 发出的，Django 会删除该头。</p>
+<p>为了解决这个问题，已经移除了对这些较旧的 Internet Explorer 版本的特殊行为，并且不再从响应中删除 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头。此外，对所有具有 <code class="docutils literal notranslate"><span class="pre">Content-Disposition</span></code> 头的 Internet Explorer 请求的 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> 头的修改也已被移除，因为发现它们具有类似的问题。</p>
+</div>
+<div class="section" id="s-malformed-redirect-urls-from-user-input-not-correctly-validated">
+<span id="malformed-redirect-urls-from-user-input-not-correctly-validated"></span><h2>来自用户输入的格式错误的重定向 URL 未正确验证<a class="headerlink" href="#malformed-redirect-urls-from-user-input-not-correctly-validated" title="永久链接至标题">¶</a></h2>
+<p>重定向验证未正确验证某些格式错误的 URL，这些 URL 被某些浏览器接受。这使得用户可能意外地被重定向到不安全的 URL 。</p>
+<p>Django 在某些情况下（例如 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.views.login()</span></code>、<code class="docutils literal notranslate"><span class="pre">django.contrib.comments</span></code> 和 <a class="reference internal" href="../topics/i18n/index.html"><span class="doc">i18n</span></a>）依赖于用户输入来将用户重定向到“成功”URL。对于这些重定向的安全性检查（即 <code class="docutils literal notranslate"><span class="pre">django.utils.http.is_safe_url()</span></code>），未正确验证一些格式错误的 URL，例如 <code class="docutils literal notranslate"><span class="pre">http:\\\\\\djangoproject.com</span></code>，这些 URL 可以被一些具有更自由 URL 解析的浏览器接受。</p>
+<p>为了解决这个问题，<code class="docutils literal notranslate"><span class="pre">is_safe_url()</span></code> 中的验证已经加强，能够处理和正确验证这些格式错误的 URL。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.5.8 版本发行说明</a><ul>
+<li><a class="reference internal" href="#caches-may-incorrectly-be-allowed-to-store-and-serve-private-data">缓存可能会错误地允许存储和提供私有数据</a></li>
+<li><a class="reference internal" href="#malformed-redirect-urls-from-user-input-not-correctly-validated">来自用户输入的格式错误的重定向 URL 未正确验证</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.5.9.html"
+                          title="上一章">Django 1.5.9 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.5.7.html"
+                          title="下一章">Django 1.5.7 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.5.8.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.5.9.html" title="Django 1.5.9 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.5.7.html" title="Django 1.5.7 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,586 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>消息框架 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="django.contrib.postgres" href="postgres/index.html" />
+    <link rel="prev" title="django.contrib.humanize" href="humanize.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="humanize.html" title="&lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django.contrib.humanize&lt;/span&gt;&lt;/code&gt;">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="postgres/index.html" title="&lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django.contrib.postgres&lt;/span&gt;&lt;/code&gt;">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-messages">
+            
+  <div class="section" id="s-module-django.contrib.messages">
+<span id="s-the-messages-framework"></span><span id="module-django.contrib.messages"></span><span id="the-messages-framework"></span><h1>消息框架<a class="headerlink" href="#module-django.contrib.messages" title="永久链接至标题">¶</a></h1>
+<p>在网页应用中，相当常见的是，你需要在处理完一个表单或一些其他类型的用户输入后，向用户显示一个一次性的通知消息（也称为“即时消息”）。</p>
+<p>为此，Django 为匿名用户和认证用户提供了对基于 cookie 和会话的消息传递的全面支持。消息框架允许你在一个请求中临时存储消息，并在随后的请求（通常是下一个请求）中检索显示。每条消息都有一个特定的 <code class="docutils literal notranslate"><span class="pre">level</span></code> 标签，以确定其优先级（例如，<code class="docutils literal notranslate"><span class="pre">info</span></code>、<code class="docutils literal notranslate"><span class="pre">warning</span></code> 或 <code class="docutils literal notranslate"><span class="pre">error</span></code>）。</p>
+<div class="section" id="s-enabling-messages">
+<span id="enabling-messages"></span><h2>启用消息<a class="headerlink" href="#enabling-messages" title="永久链接至标题">¶</a></h2>
+<p>消息是通过一个 <a class="reference internal" href="../middleware.html"><span class="doc">中间件</span></a> 类和相应的 <a class="reference internal" href="../templates/api.html"><span class="doc">上下文处理器</span></a> 来实现的。</p>
+<p>由 <code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">startproject</span></code> 创建的默认 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 已经包含了启用消息功能所需的所有配置：</p>
+<ul>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">'django.contrib.messages'</span></code> 在 <a class="reference internal" href="../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 包含 <code class="docutils literal notranslate"><span class="pre">'django.contrib.session.middleware.SessionMiddleware'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'django.contrib.message.middleware.MessageMiddleware'</span></code>。</p>
+<p>默认的 <a class="reference internal" href="#message-storage-backends"><span class="std std-ref">存储后端</span></a> 依赖于 <a class="reference internal" href="../../topics/http/sessions.html"><span class="doc">会话</span></a>。这就是为什么 <code class="docutils literal notranslate"><span class="pre">SessionMiddleware</span></code> 必须被启用，并且出现在 <a class="reference internal" href="../settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 中 <code class="docutils literal notranslate"><span class="pre">MessageMiddleware</span></code> 之前。</p>
+</li>
+<li><p class="first">在你的 <a class="reference internal" href="../settings.html#std-setting-TEMPLATES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEMPLATES</span></code></a> 配置中定义的 <code class="docutils literal notranslate"><span class="pre">DjangoTemplates</span></code> 后端的 <code class="docutils literal notranslate"><span class="pre">''context_processors'</span></code> 选项中包含 <code class="docutils literal notranslate"><span class="pre">'django.contrib.messages.context_processors.messages'</span></code>。</p>
+</li>
+</ul>
+<p>如果你不想使用消息，你可以从你的 <a class="reference internal" href="../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中删除 <code class="docutils literal notranslate"><span class="pre">'django.contrib.messages'</span></code>，从 <a class="reference internal" href="../settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 中删除 <code class="docutils literal notranslate"><span class="pre">MessageMiddleware</span></code> 行，从 <a class="reference internal" href="../settings.html#std-setting-TEMPLATES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEMPLATES</span></code></a> 中删除 <code class="docutils literal notranslate"><span class="pre">messages</span></code> 上下文处理器。</p>
+</div>
+<div class="section" id="s-configuring-the-message-engine">
+<span id="configuring-the-message-engine"></span><h2>设置消息引擎<a class="headerlink" href="#configuring-the-message-engine" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-storage-backends">
+<span id="s-message-storage-backends"></span><span id="storage-backends"></span><span id="message-storage-backends"></span><h3>存储后端<a class="headerlink" href="#storage-backends" title="永久链接至标题">¶</a></h3>
+<p>消息框架可以使用不同的后端来存储临时消息。</p>
+<p>Django 在 <a class="reference internal" href="#module-django.contrib.messages" title="django.contrib.messages: Provides cookie- and session-based temporary message storage."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.messages</span></code></a> 中提供了三个内置的存储类。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.messages.storage.session.SessionStorage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">storage.session.</span></code><code class="sig-name descname"><span class="pre">SessionStorage</span></code><a class="headerlink" href="#django.contrib.messages.storage.session.SessionStorage" title="永久链接至目标">¶</a></dt>
+<dd><p>这个类在请求的会话中存储所有的消息。因此它需要 Django 的 <code class="docutils literal notranslate"><span class="pre">contrib.session</span></code> 应用。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.messages.storage.cookie.CookieStorage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">storage.cookie.</span></code><code class="sig-name descname"><span class="pre">CookieStorage</span></code><a class="headerlink" href="#django.contrib.messages.storage.cookie.CookieStorage" title="永久链接至目标">¶</a></dt>
+<dd><p>该类将消息数据存储在 cookie 中（用密钥哈希签名，以防止被篡改），以便在不同的请求中持久保存通知。如果 cookie 数据大小超过 2048 字节，旧的消息就会被删除。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.messages.storage.fallback.FallbackStorage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">storage.fallback.</span></code><code class="sig-name descname"><span class="pre">FallbackStorage</span></code><a class="headerlink" href="#django.contrib.messages.storage.fallback.FallbackStorage" title="永久链接至目标">¶</a></dt>
+<dd><p>这个类首先使用了 <code class="docutils literal notranslate"><span class="pre">CookieStorage</span></code>，然后又回到了使用 <code class="docutils literal notranslate"><span class="pre">SessionStorage</span></code> 来处理无法放入单个 cookie 的消息。它也需要 Django 的 <code class="docutils literal notranslate"><span class="pre">contrib.session</span></code> 应用。</p>
+<p>这种行为尽可能避免向会话写入。在一般情况下，它应该提供最好的性能。</p>
+</dd></dl>
+
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">FallbackStorage</span></code> 是默认的存储类。如果它不适合你的需求，你可以通过设置 <a class="reference internal" href="../settings.html#std-setting-MESSAGE_STORAGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_STORAGE</span></code></a> 到它的完整导入路径来选择其他存储类，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MESSAGE_STORAGE</span> <span class="o">=</span> <span class="s2">&quot;django.contrib.messages.storage.cookie.CookieStorage&quot;</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.messages.storage.base.BaseStorage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">storage.base.</span></code><code class="sig-name descname"><span class="pre">BaseStorage</span></code><a class="headerlink" href="#django.contrib.messages.storage.base.BaseStorage" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>要编写自己的存储类，请将 <code class="docutils literal notranslate"><span class="pre">django.contrib.messages.storage.base</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">BaseStorage</span></code> 类子类化，并实现 <code class="docutils literal notranslate"><span class="pre">_get</span></code> 和 <code class="docutils literal notranslate"><span class="pre">_store</span></code> 方法。</p>
+</div>
+<div class="section" id="s-message-levels">
+<span id="s-message-level"></span><span id="message-levels"></span><span id="message-level"></span><h3>消息级别<a class="headerlink" href="#message-levels" title="永久链接至标题">¶</a></h3>
+<p>消息框架是基于一个类似于 Python 日志模块的可配置级别架构。消息级别允许你按类型对消息进行分组，以便在视图和模板中以不同的方式对它们进行过滤或显示。</p>
+<p>可以直接从 <code class="docutils literal notranslate"><span class="pre">django.contrib.messages</span></code> 导入的内置级别有：</p>
+<table class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="89%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">常量</th>
+<th class="head">目的</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">DEBUG</span></code></td>
+<td>与开发相关的消息，在生产部署中将被忽略（或删除）</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">INFO</span></code></td>
+<td>给用户的参考消息</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">SUCCESS</span></code></td>
+<td>一个动作成功了，例如：“您的资料更新成功”</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">WARNING</span></code></td>
+<td>未发生的故障，但可能即将发生</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ERROR</span></code></td>
+<td>某项动作 <strong>没有</strong> 成功或发生了其他故障</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference internal" href="../settings.html#std-setting-MESSAGE_LEVEL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_LEVEL</span></code></a> 的配置可以用来改变最小记录级别（或者可以 <a class="reference internal" href="#changing-the-minimum-recorded-level-per-request">按请求改变</a> ）。试图添加小于这个级别的信息将被忽略。</p>
+</div>
+<div class="section" id="s-message-tags">
+<span id="message-tags"></span><h3>消息标签<a class="headerlink" href="#message-tags" title="永久链接至标题">¶</a></h3>
+<p>消息标签是消息级别的字符串表示，加上任何直接在视图中添加的额外标签（更多细节请参见下面的 <a class="reference internal" href="#adding-extra-message-tags">添加额外的消息标签</a> ）。标签存储在一个字符串中，并由空格分隔。通常情况下，消息标签被用作 CSS 类，以根据消息类型自定义消息样式。默认情况下，每个级别都有一个单独的标签，它是自己常量的小写版本。</p>
+<table class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">消息常量</th>
+<th class="head">标签</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">DEBUG</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">debug</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">INFO</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">info</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">SUCCESS</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">success</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">WARNING</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">warning</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ERROR</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">error</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>要更改消息级别（内置或自定义）的默认标签，请将 <a class="reference internal" href="../settings.html#std-setting-MESSAGE_TAGS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_TAGS</span></code></a> 设置为包含你希望更改的级别的字典。由于这扩展了默认标签，你只需要为你希望覆盖的级别提供标签：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.messages</span> <span class="kn">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">messages</span>
+
+<span class="n">MESSAGE_TAGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">messages</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="mi">50</span><span class="p">:</span> <span class="s2">&quot;critical&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-using-messages-in-views-and-templates">
+<span id="using-messages-in-views-and-templates"></span><h2>在视图和模板中使用消息<a class="headerlink" href="#using-messages-in-views-and-templates" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.messages.add_message">
+<code class="sig-name descname"><span class="pre">add_message</span></code>(<em><span class="n"><span class="pre">request</span></span></em>, <em><span class="n"><span class="pre">level</span></span></em>, <em><span class="n"><span class="pre">message</span></span></em>, <em><span class="n"><span class="pre">extra_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em><span class="n"><span class="pre">fail_silently</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.messages.add_message" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="s-adding-a-message">
+<span id="adding-a-message"></span><h3>添加一个消息<a class="headerlink" href="#adding-a-message" title="永久链接至标题">¶</a></h3>
+<p>要添加一个消息，调用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">messages</span>
+
+<span class="n">messages</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s2">&quot;Hello world.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>一些快捷方法提供了一种添加消息的标准方法，常用的标签（通常表示为消息的 HTML 类）：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">messages</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> SQL statements were executed.&quot;</span> <span class="o">%</span> <span class="n">count</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Three credits remain in your account.&quot;</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Profile details updated.&quot;</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Your account expires in three days.&quot;</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Document deleted.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-displaying-messages">
+<span id="s-message-displaying"></span><span id="displaying-messages"></span><span id="message-displaying"></span><h3>显示消息<a class="headerlink" href="#displaying-messages" title="永久链接至标题">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.messages.get_messages">
+<code class="sig-name descname"><span class="pre">get_messages</span></code>(<em><span class="n"><span class="pre">request</span></span></em>)<a class="headerlink" href="#django.contrib.messages.get_messages" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><strong>在您的模板中</strong>，使用类似以下的方式：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">messages</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;messages&quot;</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">for</span> <span class="nv">message</span> <span class="k">in</span> <span class="nv">messages</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">li</span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">message.tags</span> <span class="cp">%}</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">message.tags</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">message</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>如果你正在使用上下文处理器，你的模板应该用 <code class="docutils literal notranslate"><span class="pre">RequestContext</span></code> 来渲染。否则，确保模板上下文有 <code class="docutils literal notranslate"><span class="pre">messages</span></code> 可用。</p>
+<p>即使你知道只有一条消息，你仍然应该遍历 <code class="docutils literal notranslate"><span class="pre">messages</span></code> 序列，因为否则消息存储将不会为下一个请求清除。</p>
+<p>上下文处理器还提供了一个 <code class="docutils literal notranslate"><span class="pre">DEFAULT_MESSAGE_LEVELS</span></code> 变量，它是消息级别名称与它们的数值值之间的映射：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">messages</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">ul</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;messages&quot;</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">for</span> <span class="nv">message</span> <span class="k">in</span> <span class="nv">messages</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">li</span><span class="cp">{%</span> <span class="k">if</span> <span class="nv">message.tags</span> <span class="cp">%}</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">message.tags</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span><span class="p">&gt;</span>
+        <span class="cp">{%</span> <span class="k">if</span> <span class="nv">message.level</span> <span class="o">==</span> <span class="nv">DEFAULT_MESSAGE_LEVELS.ERROR</span> <span class="cp">%}</span>Important: <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+        <span class="cp">{{</span> <span class="nv">message</span> <span class="cp">}}</span>
+    <span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    <span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p><strong>在模板之外</strong>，你可以使用 <a class="reference internal" href="#django.contrib.messages.get_messages" title="django.contrib.messages.get_messages"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_messages()</span></code></a>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.messages</span> <span class="kn">import</span> <span class="n">get_messages</span>
+
+<span class="n">storage</span> <span class="o">=</span> <span class="n">get_messages</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">storage</span><span class="p">:</span>
+    <span class="n">do_something_with_the_message</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>例如，你可以获取所有的消息，以一个 <span class="xref std std-ref">JSONResponseMixin</span> 而不是一个 <a class="reference internal" href="../class-based-views/mixins-simple.html#django.views.generic.base.TemplateResponseMixin" title="django.views.generic.base.TemplateResponseMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemplateResponseMixin</span></code></a> 来返回它们。</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">get_messages()</span></code> 将返回一个配置好的存储后端的实例。</p>
+</div>
+<div class="section" id="s-the-message-class">
+<span id="the-message-class"></span><h3><code class="docutils literal notranslate"><span class="pre">Message</span></code> 类<a class="headerlink" href="#the-message-class" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.messages.Message">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Message</span></code><a class="headerlink" href="#django.contrib.messages.Message" title="永久链接至目标">¶</a></dt>
+<dd><p>当你循环浏览模板中的消息列表时，你得到的是 <code class="docutils literal notranslate"><span class="pre">Message</span></code> 类的实例。它们只有几个属性。</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">message</span></code>：消息的实际内容。</li>
+<li><code class="docutils literal notranslate"><span class="pre">level</span></code>：描述消息类型的整数（见上文 <a class="reference internal" href="#message-levels">消息级别</a> 一节）。</li>
+<li><code class="docutils literal notranslate"><span class="pre">tags</span></code>：由消息的所有标签（<code class="docutils literal notranslate"><span class="pre">extra_tags</span></code> 和 <code class="docutils literal notranslate"><span class="pre">level_tag</span></code>）组成的字符串，用空格分隔。</li>
+<li><code class="docutils literal notranslate"><span class="pre">extra_tags</span></code>：包含该消息的自定义标签的字符串，用空格隔开。默认为空。</li>
+<li><code class="docutils literal notranslate"><span class="pre">level_tag</span></code>：级别的字符串表示。默认情况下，它是相关常量名称的小写版本，但如果需要的话，可以使用 <a class="reference internal" href="../settings.html#std-setting-MESSAGE_TAGS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_TAGS</span></code></a> 配置来更改。</li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="s-creating-custom-message-levels">
+<span id="creating-custom-message-levels"></span><h3>创建自定义消息级别<a class="headerlink" href="#creating-custom-message-levels" title="永久链接至标题">¶</a></h3>
+<p>消息级别不过是整数，所以你可以定义自己的级别常数，并使用它们来创建更多定制化的用户反馈，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CRITICAL</span> <span class="o">=</span> <span class="mi">50</span>
+
+
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">messages</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">CRITICAL</span><span class="p">,</span> <span class="s2">&quot;A serious error occurred.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>当创建自定义消息级别时，你应该注意避免重载现有级别。内置级别的值是：</p>
+<table class="docutils" id="message-level-constants">
+<colgroup>
+<col width="74%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">消息常量</th>
+<th class="head">值</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">DEBUG</span></code></td>
+<td>10</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">INFO</span></code></td>
+<td>20</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">SUCCESS</span></code></td>
+<td>25</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">WARNING</span></code></td>
+<td>30</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ERROR</span></code></td>
+<td>40</td>
+</tr>
+</tbody>
+</table>
+<p>如果你需要在你的 HTML 或 CSS 中识别自定义级别，你需要通过 <a class="reference internal" href="../settings.html#std-setting-MESSAGE_TAGS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_TAGS</span></code></a> 配置提供一个映射。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">如果你正在创建一个可重用的应用程序，建议只使用内置的 <a class="reference internal" href="#message-levels">消息级别</a> ，而不要依赖任何自定义级别。</p>
+</div>
+</div>
+<div class="section" id="s-changing-the-minimum-recorded-level-per-request">
+<span id="changing-the-minimum-recorded-level-per-request"></span><h3>改变每次请求的最低记录级别<a class="headerlink" href="#changing-the-minimum-recorded-level-per-request" title="永久链接至标题">¶</a></h3>
+<p>可以通过 <code class="docutils literal notranslate"><span class="pre">set_level</span></code> 方法为每个请求设置最低记录级别：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">messages</span>
+
+<span class="c1"># Change the messages level to ensure the debug message is added.</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">set_level</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Test message...&quot;</span><span class="p">)</span>
+
+<span class="c1"># In another request, record only messages with a level of WARNING and higher</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">set_level</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Your profile was updated.&quot;</span><span class="p">)</span>  <span class="c1"># ignored</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Your account is about to expire.&quot;</span><span class="p">)</span>  <span class="c1"># recorded</span>
+
+<span class="c1"># Set the messages level back to default.</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">set_level</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>同样，当前的有效级别可以用 <code class="docutils literal notranslate"><span class="pre">get_level</span></code> 检索：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">messages</span>
+
+<span class="n">current_level</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">get_level</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>关于最低记录级别如何发挥作用的更多信息，请参见上文 <a class="reference internal" href="#message-levels">消息级别</a> 。</p>
+</div>
+<div class="section" id="s-adding-extra-message-tags">
+<span id="adding-extra-message-tags"></span><h3>添加额外的消息标签<a class="headerlink" href="#adding-extra-message-tags" title="永久链接至标题">¶</a></h3>
+<p>为了更直接地控制消息标签，你可以选择向任何一个添加方法提供一个包含额外标签的字符串：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">messages</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="s2">&quot;Over 9000!&quot;</span><span class="p">,</span> <span class="n">extra_tags</span><span class="o">=</span><span class="s2">&quot;dragonball&quot;</span><span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Email box full&quot;</span><span class="p">,</span> <span class="n">extra_tags</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>额外的标签添加在该级别的默认标签之前，并以空格分隔。</p>
+</div>
+<div class="section" id="s-failing-silently-when-the-message-framework-is-disabled">
+<span id="failing-silently-when-the-message-framework-is-disabled"></span><h3>当消息框架被禁用时静默的失败了<a class="headerlink" href="#failing-silently-when-the-message-framework-is-disabled" title="永久链接至标题">¶</a></h3>
+<p>如果你正在编写一个可重用的应用程序（或其他代码），并希望包含消息功能，但不想要求用户在不愿意的情况下启用它，你可以传递一个额外的关键字参数 <code class="docutils literal notranslate"><span class="pre">fail_silently=True</span></code> 到任何 <code class="docutils literal notranslate"><span class="pre">add_message</span></code> 系列方法中。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">messages</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,</span>
+    <span class="s2">&quot;Profile details updated.&quot;</span><span class="p">,</span>
+    <span class="n">fail_silently</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">messages</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Hello world.&quot;</span><span class="p">,</span> <span class="n">fail_silently</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">设置 <code class="docutils literal notranslate"><span class="pre">fail_silently=True</span></code> 只隐藏 <code class="docutils literal notranslate"><span class="pre">MessageFailure</span></code>，否则当消息框架被禁用，人们试图使用 <code class="docutils literal notranslate"><span class="pre">add_message</span></code> 系列方法之一时，就会发生 <code class="docutils literal notranslate"><span class="pre">MessageFailure</span></code>。它不隐藏可能因其他原因而发生的失败。</p>
+</div>
+</div>
+<div class="section" id="s-adding-messages-in-class-based-views">
+<span id="adding-messages-in-class-based-views"></span><h3>在基于类的视图中添加消息<a class="headerlink" href="#adding-messages-in-class-based-views" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.messages.views.SuccessMessageMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">views.</span></code><code class="sig-name descname"><span class="pre">SuccessMessageMixin</span></code><a class="headerlink" href="#django.contrib.messages.views.SuccessMessageMixin" title="永久链接至目标">¶</a></dt>
+<dd><p>为 <code class="xref py py-class docutils literal notranslate"><span class="pre">FormView</span></code> 基础类添加成功消息属性。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.messages.views.SuccessMessageMixin.get_success_message">
+<code class="sig-name descname"><span class="pre">get_success_message</span></code>(<em><span class="n"><span class="pre">cleaned_data</span></span></em>)<a class="headerlink" href="#django.contrib.messages.views.SuccessMessageMixin.get_success_message" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">cleaned_data</span></code> 是指表单中干净的数据，用于字符串格式化。</p>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>示例 views.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.messages.views</span> <span class="kn">import</span> <span class="n">SuccessMessageMixin</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">CreateView</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Author</span>
+
+
+<span class="k">class</span> <span class="nc">AuthorCreateView</span><span class="p">(</span><span class="n">SuccessMessageMixin</span><span class="p">,</span> <span class="n">CreateView</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Author</span>
+    <span class="n">success_url</span> <span class="o">=</span> <span class="s2">&quot;/success/&quot;</span>
+    <span class="n">success_message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(name)s</span><span class="s2"> was created successfully&quot;</span>
+</pre></div>
+</div>
+<p>从 <code class="docutils literal notranslate"><span class="pre">form</span></code> 中清理出来的数据可以使用 <code class="docutils literal notranslate"><span class="pre">%(field_name)s</span></code> 语法进行字符串插值。对于模型表单，如果你需要访问保存的 <code class="docutils literal notranslate"><span class="pre">object</span></code> 中的字段，可以覆盖  <a class="reference internal" href="#django.contrib.messages.views.SuccessMessageMixin.get_success_message" title="django.contrib.messages.views.SuccessMessageMixin.get_success_message"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_success_message()</span></code></a> 方法。</p>
+<p><strong>模型表单的示例 views.py</strong>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.messages.views</span> <span class="kn">import</span> <span class="n">SuccessMessageMixin</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.edit</span> <span class="kn">import</span> <span class="n">CreateView</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">ComplicatedModel</span>
+
+
+<span class="k">class</span> <span class="nc">ComplicatedCreateView</span><span class="p">(</span><span class="n">SuccessMessageMixin</span><span class="p">,</span> <span class="n">CreateView</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">ComplicatedModel</span>
+    <span class="n">success_url</span> <span class="o">=</span> <span class="s2">&quot;/success/&quot;</span>
+    <span class="n">success_message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(calculated_field)s</span><span class="s2"> was created successfully&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_success_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cleaned_data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">success_message</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">cleaned_data</span><span class="p">,</span>
+            <span class="n">calculated_field</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">object</span><span class="o">.</span><span class="n">calculated_field</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-expiration-of-messages">
+<span id="expiration-of-messages"></span><h2>消息过期<a class="headerlink" href="#expiration-of-messages" title="永久链接至标题">¶</a></h2>
+<p>这些消息被标记为在存储实例迭代时清除（在处理响应时清除）。</p>
+<p>为了避免消息被清除，可以在迭代后将消息存储设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">storage</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">get_messages</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">storage</span><span class="p">:</span>
+    <span class="n">do_something_with</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+<span class="n">storage</span><span class="o">.</span><span class="n">used</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-behavior-of-parallel-requests">
+<span id="behavior-of-parallel-requests"></span><h2>并行请求的行为<a class="headerlink" href="#behavior-of-parallel-requests" title="永久链接至标题">¶</a></h2>
+<p>由于 cookie（以及会话）的工作方式，<strong>当同一客户端发出多个请求，并行设置或获取消息时，任何使用 cookie 或会话的后端的行为都是未定义的</strong>。例如，如果客户端发起一个在一个窗口（或标签页）中创建消息的请求，然后在第一个窗口重定向之前发起另一个在另一个窗口中获取任何单元化消息的请求，则消息可能会出现在第二个窗口中，而不是在第一个窗口中。</p>
+<p>简而言之，当涉及来自同一客户端的多个同步请求时，不能保证将消息传递到创建这些请求的同一个窗口，在某些情况下，也不能保证将消息传递到所有窗口。请注意，这在大多数应用程序中通常不是问题，在 HTML5 中，这将成为不是问题，因为在 HTML5 中，每个窗口／标签都有自己的浏览上下文。</p>
+</div>
+<div class="section" id="s-settings">
+<span id="settings"></span><h2>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h2>
+<p>一些 <a class="reference internal" href="../settings.html#settings-messages"><span class="std std-ref">配置</span></a> 给你控制消息行为。</p>
+<ul class="simple">
+<li><a class="reference internal" href="../settings.html#std-setting-MESSAGE_LEVEL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_LEVEL</span></code></a></li>
+<li><a class="reference internal" href="../settings.html#std-setting-MESSAGE_STORAGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_STORAGE</span></code></a></li>
+<li><a class="reference internal" href="../settings.html#std-setting-MESSAGE_TAGS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MESSAGE_TAGS</span></code></a></li>
+</ul>
+<p>对于使用 cookie 的后端，cookie 的配置来自会话 cookie 配置：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../settings.html#std-setting-SESSION_COOKIE_DOMAIN"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_DOMAIN</span></code></a></li>
+<li><a class="reference internal" href="../settings.html#std-setting-SESSION_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_SECURE</span></code></a></li>
+<li><a class="reference internal" href="../settings.html#std-setting-SESSION_COOKIE_HTTPONLY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_HTTPONLY</span></code></a></li>
+</ul>
+</div>
+<div class="section" id="s-testing">
+<span id="testing"></span><h2>测试中<a class="headerlink" href="#testing" title="永久链接至标题">¶</a></h2>
+<div class="versionadded">
+<span class="title">New in Django 5.0.</span> </div>
+<p>该模块提供了一个专门的测试断言方法，用于测试附加到 <a class="reference internal" href="../request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 的消息。</p>
+<p>为了使用这个断言，将 <code class="docutils literal notranslate"><span class="pre">MessagesTestMixin</span></code> 添加到类层次结构中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.messages.test</span> <span class="kn">import</span> <span class="n">MessagesTestMixin</span>
+<span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">TestCase</span>
+
+
+<span class="k">class</span> <span class="nc">MsgTestCase</span><span class="p">(</span><span class="n">MessagesTestMixin</span><span class="p">,</span> <span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>然后，在你的测试中继承 <code class="docutils literal notranslate"><span class="pre">MsgTestCase</span></code>。</p>
+<span class="target" id="module-django.contrib.messages.test"></span><dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.messages.test.MessagesTestMixin.assertMessages">
+<code class="sig-prename descclassname"><span class="pre">MessagesTestMixin.</span></code><code class="sig-name descname"><span class="pre">assertMessages</span></code>(<em><span class="n"><span class="pre">response</span></span></em>, <em><span class="n"><span class="pre">expected_messages</span></span></em>, <em><span class="n"><span class="pre">ordered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>)<a class="headerlink" href="#django.contrib.messages.test.MessagesTestMixin.assertMessages" title="永久链接至目标">¶</a></dt>
+<dd><p>断言 <a class="reference internal" href="#module-django.contrib.messages" title="django.contrib.messages: Provides cookie- and session-based temporary message storage."><code class="xref py py-mod docutils literal notranslate"><span class="pre">messages</span></code></a> 添加到 <a class="reference internal" href="../request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">response</span></code></a> 的消息与 <code class="docutils literal notranslate"><span class="pre">expected_messages</span></code> 匹配。</p>
+<p><code class="docutils literal notranslate"><span class="pre">expected_messages</span></code> 是一个 <a class="reference internal" href="#django.contrib.messages.Message" title="django.contrib.messages.Message"><code class="xref py py-class docutils literal notranslate"><span class="pre">Message</span></code></a> 对象的列表。</p>
+<p>默认情况下，比较是依赖于顺序的。你可以通过将 <code class="docutils literal notranslate"><span class="pre">ordered</span></code> 参数设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 来禁用这一特性。</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">消息框架</a><ul>
+<li><a class="reference internal" href="#enabling-messages">启用消息</a></li>
+<li><a class="reference internal" href="#configuring-the-message-engine">设置消息引擎</a><ul>
+<li><a class="reference internal" href="#storage-backends">存储后端</a></li>
+<li><a class="reference internal" href="#message-levels">消息级别</a></li>
+<li><a class="reference internal" href="#message-tags">消息标签</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-messages-in-views-and-templates">在视图和模板中使用消息</a><ul>
+<li><a class="reference internal" href="#adding-a-message">添加一个消息</a></li>
+<li><a class="reference internal" href="#displaying-messages">显示消息</a></li>
+<li><a class="reference internal" href="#the-message-class"><code class="docutils literal notranslate"><span class="pre">Message</span></code> 类</a></li>
+<li><a class="reference internal" href="#creating-custom-message-levels">创建自定义消息级别</a></li>
+<li><a class="reference internal" href="#changing-the-minimum-recorded-level-per-request">改变每次请求的最低记录级别</a></li>
+<li><a class="reference internal" href="#adding-extra-message-tags">添加额外的消息标签</a></li>
+<li><a class="reference internal" href="#failing-silently-when-the-message-framework-is-disabled">当消息框架被禁用时静默的失败了</a></li>
+<li><a class="reference internal" href="#adding-messages-in-class-based-views">在基于类的视图中添加消息</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#expiration-of-messages">消息过期</a></li>
+<li><a class="reference internal" href="#behavior-of-parallel-requests">并行请求的行为</a></li>
+<li><a class="reference internal" href="#settings">配置</a></li>
+<li><a class="reference internal" href="#testing">测试中</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="humanize.html"
+                          title="上一章"><code class="docutils literal notranslate"><span class="pre">django.contrib.humanize</span></code></a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="postgres/index.html"
+                          title="下一章"><code class="docutils literal notranslate"><span class="pre">django.contrib.postgres</span></code></a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/ref/contrib/messages.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="humanize.html" title="&lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django.contrib.humanize&lt;/span&gt;&lt;/code&gt;">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="postgres/index.html" title="&lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;django.contrib.postgres&lt;/span&gt;&lt;/code&gt;">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

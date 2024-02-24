@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.7.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.7.2 版本发行说明" href="1.7.2.html" />
+    <link rel="prev" title="Django 1.7.4 版本发行说明" href="1.7.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.7.4.html" title="Django 1.7.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.7.2.html" title="Django 1.7.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.7.3">
+            
+  <div class="section" id="s-django-1-7-3-release-notes">
+<span id="django-1-7-3-release-notes"></span><h1>Django 1.7.3 版本发行说明<a class="headerlink" href="#django-1-7-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2015 年 1 月 13 日</em></p>
+<p>Django 1.7.3 修复了 1.7.2 版本中的一些安全问题和错误。</p>
+<div class="section" id="s-wsgi-header-spoofing-via-underscore-dash-conflation">
+<span id="wsgi-header-spoofing-via-underscore-dash-conflation"></span><h2>通过下划线/破折号混淆进行 WSGI 头欺骗<a class="headerlink" href="#wsgi-header-spoofing-via-underscore-dash-conflation" title="永久链接至标题">¶</a></h2>
+<p>当将 HTTP 头放入 WSGI 环境时，它们会被规范化，即转换为大写，将所有破折号转换为下划线，并在前面添加 <code class="docutils literal notranslate"><span class="pre">HTTP_</span></code>。例如，一个名为 <code class="docutils literal notranslate"><span class="pre">X-Auth-User</span></code> 的头部在 WSGI 环境中会变成 <code class="docutils literal notranslate"><span class="pre">HTTP_X_AUTH_USER</span></code> （因此也会出现在 Django 的 <code class="docutils literal notranslate"><span class="pre">request.META</span></code> 字典中）。</p>
+<p>不幸的是，这意味着 WSGI 环境无法区分包含破折号和包含下划线的头部：<code class="docutils literal notranslate"><span class="pre">X-Auth-User</span></code> 和 <code class="docutils literal notranslate"><span class="pre">X-Auth_User</span></code> 都会变成 <code class="docutils literal notranslate"><span class="pre">HTTP_X_AUTH_USER</span></code>。这意味着如果一个头部以安全敏感的方式使用（例如，从前端代理传递身份验证信息），即使代理仔细删除了 <code class="docutils literal notranslate"><span class="pre">X-Auth-User</span></code> 的任何传入值，攻击者仍然可以提供一个带下划线的 <code class="docutils literal notranslate"><span class="pre">X-Auth_User</span></code> 头部，并绕过这种保护。</p>
+<p>为了防止此类攻击，Nginx 和 Apache 2.4+ 默认会从传入的请求中剥离包含下划线的所有标头。 Django 的内置开发服务器现在也采用相同的做法。不建议将 Django 的开发服务器用于生产环境，但匹配常见生产服务器的行为可以减少部署过程中行为变化的可能性。</p>
+</div>
+<div class="section" id="s-mitigated-possible-xss-attack-via-user-supplied-redirect-urls">
+<span id="mitigated-possible-xss-attack-via-user-supplied-redirect-urls"></span><h2>通过用户提供的重定向 URL 减轻了可能的 XSS 攻击风险。<a class="headerlink" href="#mitigated-possible-xss-attack-via-user-supplied-redirect-urls" title="永久链接至标题">¶</a></h2>
+<p>在某些情况下，Django 依赖于用户输入（例如 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.views.login()</span></code> 和 <a class="reference internal" href="../topics/i18n/index.html"><span class="doc">i18n</span></a>）来将用户重定向到“成功”URL。这些重定向的安全性检查（即 <code class="docutils literal notranslate"><span class="pre">django.utils.http.is_safe_url()</span></code>）未删除在测试的 URL 上的前导空格，因此将类似于 <code class="docutils literal notranslate"><span class="pre">\njavascript:...</span></code> 的 URL 视为安全的。如果开发人员依赖于 <code class="docutils literal notranslate"><span class="pre">is_safe_url()</span></code> 提供安全的重定向目标，并将这样的 URL 放入链接中，他们可能会受到 XSS 攻击的影响。目前这个错误不会影响 Django，因为我们只将这个 URL 放入 <code class="docutils literal notranslate"><span class="pre">Location</span></code> 响应头中，而浏览器似乎会忽略那里的 JavaScript。</p>
+</div>
+<div class="section" id="s-denial-of-service-attack-against-django-views-static-serve">
+<span id="denial-of-service-attack-against-django-views-static-serve"></span><h2>对 <code class="docutils literal notranslate"><span class="pre">django.views.static.serve</span></code> 的拒绝服务攻击<a class="headerlink" href="#denial-of-service-attack-against-django-views-static-serve" title="永久链接至标题">¶</a></h2>
+<p>在旧版本的 Django 中，<a class="reference internal" href="../ref/views.html#django.views.static.serve" title="django.views.static.serve"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.views.static.serve()</span></code></a> 视图逐行读取它提供的文件。因此，一个没有换行符的大文件将导致内存使用量等于该文件的大小。攻击者可以利用这一点，通过同时请求许多大文件来发动拒绝服务攻击。现在，这个视图会按块读取文件，以防止大量内存使用。</p>
+<p>然而，请注意，这个视图一直带有一个警告，即它没有经过生产环境的强化，只应作为开发辅助工具使用。如果您还没有这样做，现在可能是一个好时机来审计您的项目，并在生产环境中使用真正的前端 Web 服务器提供文件。</p>
+</div>
+<div class="section" id="s-database-denial-of-service-with-modelmultiplechoicefield">
+<span id="database-denial-of-service-with-modelmultiplechoicefield"></span><h2>使用 <code class="docutils literal notranslate"><span class="pre">ModelMultipleChoiceField</span></code> 存在数据库拒绝服务漏洞<a class="headerlink" href="#database-denial-of-service-with-modelmultiplechoicefield" title="永久链接至标题">¶</a></h2>
+<p>针对使用 <code class="docutils literal notranslate"><span class="pre">ModelMultipleChoiceField</span></code> 并且使用 <code class="docutils literal notranslate"><span class="pre">show_hidden_initial=True</span></code> 的表单（这不是文档化的 API）可能会导致用户通过提交字段数据的重复值来引发不合理数量的 SQL 查询。<code class="docutils literal notranslate"><span class="pre">ModelMultipleChoiceField</span></code> 中的验证逻辑现在会去重提交的值，以解决这个问题。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>PBKDF2 密码哈希器的默认迭代次数增加了 25%。这是正常的主要发布流程的一部分，在 1.7 版中无意中被遗漏。这个向后兼容的更改不会影响那些已经子类化了 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.hashers.PBKDF2PasswordHasher</span></code> 以更改默认值的用户。</li>
+<li>修复了 CSRF 中间件在处理非 ASCII referer 头部时的崩溃问题（<a class="reference external" href="https://code.djangoproject.com/ticket/23815">#23815</a>）。</li>
+<li>修复了在 Python 3 上传递 <code class="docutils literal notranslate"><span class="pre">reverse_lazy()</span></code> 结果时，<code class="docutils literal notranslate"><span class="pre">django.contrib.auth.redirect_to_login</span></code> 视图中的崩溃问题（<a class="reference external" href="https://code.djangoproject.com/ticket/24097">#24097</a>）。</li>
+<li>为希腊语（<code class="docutils literal notranslate"><span class="pre">el</span></code>）添加了正确的格式（<a class="reference external" href="https://code.djangoproject.com/ticket/23967">#23967</a>)。</li>
+<li>修复了在取消应用多个操作与同一模型交互的迁移时出现的崩溃问题（<a class="reference external" href="https://code.djangoproject.com/ticket/24110">#24110</a>)。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.7.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#wsgi-header-spoofing-via-underscore-dash-conflation">通过下划线/破折号混淆进行 WSGI 头欺骗</a></li>
+<li><a class="reference internal" href="#mitigated-possible-xss-attack-via-user-supplied-redirect-urls">通过用户提供的重定向 URL 减轻了可能的 XSS 攻击风险。</a></li>
+<li><a class="reference internal" href="#denial-of-service-attack-against-django-views-static-serve">对 <code class="docutils literal notranslate"><span class="pre">django.views.static.serve</span></code> 的拒绝服务攻击</a></li>
+<li><a class="reference internal" href="#database-denial-of-service-with-modelmultiplechoicefield">使用 <code class="docutils literal notranslate"><span class="pre">ModelMultipleChoiceField</span></code> 存在数据库拒绝服务漏洞</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.7.4.html"
+                          title="上一章">Django 1.7.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.7.2.html"
+                          title="下一章">Django 1.7.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.7.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.7.4.html" title="Django 1.7.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.7.2.html" title="Django 1.7.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

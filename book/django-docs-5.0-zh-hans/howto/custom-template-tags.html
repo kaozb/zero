@@ -1,0 +1,887 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何编写自定义的模板标签和过滤器 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何编写一个自定义的文件存储类" href="custom-file-storage.html" />
+    <link rel="prev" title="如何编写一个自定义的模板后端" href="custom-template-backend.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="custom-template-backend.html" title="如何编写一个自定义的模板后端">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="custom-file-storage.html" title="如何编写一个自定义的文件存储类">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-custom-template-tags">
+            
+  <div class="section" id="s-how-to-create-custom-template-tags-and-filters">
+<span id="how-to-create-custom-template-tags-and-filters"></span><h1>如何编写自定义的模板标签和过滤器<a class="headerlink" href="#how-to-create-custom-template-tags-and-filters" title="永久链接至标题">¶</a></h1>
+<p>Django  模板语言包含了很多 <a class="reference internal" href="../ref/templates/builtins.html"><span class="doc">内置 tags 和 filters</span></a>，设计目的是满足应用需要占位逻辑需求。极少情况下，你可能发现需要的功能未被核心模板集覆盖。你能通过 Python 代码自定义 tags 和 filters 扩展集成模板引擎，通过 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-load"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">load</span> <span class="pre">%}</span></code></a> 标签使其可用。</p>
+<div class="section" id="s-code-layout">
+<span id="code-layout"></span><h2>代码布局<a class="headerlink" href="#code-layout" title="永久链接至标题">¶</a></h2>
+<p>定制自定义模板 tags 和 filters 的位置就是 Django 应用内。如果它们关联至某个已存在的应用，在那里将它们打包就很有用；否则，它们能被添加至新应用。当一个 Django 应用被添加至 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a>，所以其在常规位置（下面介绍）定义的标签都可以在模板中自动加载。</p>
+<p>该应用应包含一个 <code class="docutils literal notranslate"><span class="pre">templatetags</span></code> 目录，与 <code class="docutils literal notranslate"><span class="pre">models.py</span></code>， <code class="docutils literal notranslate"><span class="pre">views.py</span></code> 等同级。若该目录不存在，创建它——不要忘了用 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 文件确保目录被视作一个 Python 包。</p>
+<div class="admonition-development-server-won-t-automatically-restart admonition">
+<p class="first admonition-title">开发服务器并不会自动重启</p>
+<p class="last">添加 <code class="docutils literal notranslate"><span class="pre">templatetags</span></code> 模块后，你需要重启服务器，这样才能在模板中使用 tags 和 filters。</p>
+</div>
+<p>自定义的 tags 和 filters 会保存在模块名为 <code class="docutils literal notranslate"><span class="pre">templatetags</span></code> 的目录内。模块文件的名字即稍候你用来加载 tags 的名字，所以小心不要采用一个可能与其它应用自定义的 tags 和 filters 冲突的名字。</p>
+<p>例如，如果你的自定义标签/过滤器位于一个名为 <code class="docutils literal notranslate"><span class="pre">poll_extras.py</span></code> 的文件中，你的应用程序布局可能如下所示：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>polls/
+    __init__.py
+    models.py
+    templatetags/
+        __init__.py
+        poll_extras.py
+    views.py
+</pre></div>
+</div>
+<p>在模板中你会使用以下代码：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">poll_extras</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>为了使 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-load"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">load</span> <span class="pre">%}</span></code></a> 标签生效，包含自定义标签的应用必须包含在 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a>&nbsp;中。这是个安全特性：它允许你在一个主机上持有多个模板库，而不是让每个 Django 安装都能访问所有的库。</p>
+<p>我们并未限制放入 <code class="docutils literal notranslate"><span class="pre">templatetags</span></code> 包中的模块数量。只需牢记 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-load"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">load</span> <span class="pre">%}</span></code></a> 语句会加载名字指定 Python 模块的 tags/filters，而不是应用。</p>
+<p>要成为一个可用的 tag 库，模块必须包含一个名为 <code class="docutils literal notranslate"><span class="pre">register</span></code> 的模块级变量，它是一个 <code class="docutils literal notranslate"><span class="pre">template.Library</span></code> 实例。所有的 tags 和 filters 均在其中注册。所以，在模块的开始，输入以下内容:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+<span class="n">register</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">Library</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>或者，模板标签模块能通过 <a class="reference internal" href="../topics/templates.html#django.template.backends.django.DjangoTemplates" title="django.template.backends.django.DjangoTemplates"><code class="xref py py-class docutils literal notranslate"><span class="pre">DjangoTemplates</span></code></a> 的 <code class="docutils literal notranslate"><span class="pre">'libraries'</span></code> 参数注册。这在加载模板名字时，想为模板标签起个别名时很有用。这也让你能在未安装应用的情况下注册标签。</p>
+<div class="admonition-behind-the-scenes admonition">
+<p class="first admonition-title">幕后</p>
+<p>要获取大量示例，请阅读 Django 默认过滤器和标签的源代码。它们分别位于 <a class="reference external" href="https://github.com/django/django/blob/main/django/template/defaultfilters.py">django/template/defaultfilters.py</a> 和 <a class="reference external" href="https://github.com/django/django/blob/main/django/template/defaulttags.py">django/template/defaulttags.py</a> 中。</p>
+<p class="last">更多关于 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-load"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">load</span></code></a> 标签的信息，阅读本文档。</p>
+</div>
+</div>
+<div class="section" id="s-writing-custom-template-filters">
+<span id="s-howto-writing-custom-template-filters"></span><span id="writing-custom-template-filters"></span><span id="howto-writing-custom-template-filters"></span><h2>编写自定义的模板过滤器<a class="headerlink" href="#writing-custom-template-filters" title="永久链接至标题">¶</a></h2>
+<p>自定义的过滤器就是一些有一到两个参数的 Python 函数：</p>
+<ul class="simple">
+<li>（输入的）变量的值，不一定得是字符串类型</li>
+<li>而参数的值，它们可以有一个默认值，或者被排除在外</li>
+</ul>
+<p>举个例子，在过滤器 <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">var|foo:&quot;bar&quot;</span> <span class="pre">}}</span></code> 中，变量 <code class="docutils literal notranslate"><span class="pre">var</span></code> 和参数 <code class="docutils literal notranslate"><span class="pre">bar</span></code> 会传递给过滤器 <code class="docutils literal notranslate"><span class="pre">foo</span></code>。</p>
+<p>因为模板语言不提供异常处理机制，所以任何从模板过滤器中抛出的异常都将被视为服务器异常。因此，如果有一个合理的返回值将要被返回的话，过滤器函数应当避免产生异常。万一模板中出现有明显错误的输入，产生异常也仍然比隐藏这个 bug 要好。</p>
+<p>这是一个过滤器定义的例子:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Removes all values of arg from the given string&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这个例子展示了如何使用这个过滤器：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span> <span class="nv">somevariable</span><span class="o">|</span><span class="nf">cut</span><span class="s2">:&quot;0&quot;</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+<p>大部分的过滤器并没有参数。这样的话，只需要把这些参数从你的函数中去掉就好。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>  <span class="c1"># Only one argument.</span>
+    <span class="sd">&quot;&quot;&quot;Converts a string into all lowercase&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="s-registering-custom-filters">
+<span id="registering-custom-filters"></span><h3>注册自定义过滤器<a class="headerlink" href="#registering-custom-filters" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.template.Library.filter">
+<code class="sig-prename descclassname"><span class="pre">django.template.Library.</span></code><code class="sig-name descname"><span class="pre">filter</span></code>()<a class="headerlink" href="#django.template.Library.filter" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>每当你写好你的过滤器定义的时候，你需要用你的 <code class="docutils literal notranslate"><span class="pre">Library</span></code> 实例去注册它，从而让它对于 Django 模板语言而言是可用的</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;cut&quot;</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+<span class="n">register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Library.filter()</span></code> 方法有两个参数：</p>
+<ol class="arabic simple">
+<li>过滤器的名称——字符串。</li>
+<li>编辑函数——一个 Python 函数（不是函数名的字符串）。</li>
+</ol>
+<p>你也能以装饰器的模式使用 <code class="docutils literal notranslate"><span class="pre">register.filter()</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cut&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">filter</span>
+<span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>若你不填 <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数，像第二个例子展示的一样，Django 会将函数名当做过滤器名。</p>
+<p>最后， <code class="docutils literal notranslate"><span class="pre">register.filter()</span></code> 也接受 3 个关键字参数， <code class="docutils literal notranslate"><span class="pre">is_sage</span></code>， <code class="docutils literal notranslate"><span class="pre">needs_autoescape</span></code>，和 <code class="docutils literal notranslate"><span class="pre">expects_localtime</span></code>。这些参数在下面的 <a class="reference internal" href="#filters-auto-escaping"><span class="std std-ref">过滤器和自动转义</span></a> 和 <a class="reference internal" href="#filters-timezones"><span class="std std-ref">过滤器和时区</span></a> 介绍。</p>
+</div>
+<div class="section" id="s-template-filters-that-expect-strings">
+<span id="template-filters-that-expect-strings"></span><h3>模板过滤器期望字符串<a class="headerlink" href="#template-filters-that-expect-strings" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.template.defaultfilters.stringfilter">
+<code class="sig-prename descclassname"><span class="pre">django.template.defaultfilters.</span></code><code class="sig-name descname"><span class="pre">stringfilter</span></code>()<a class="headerlink" href="#django.template.defaultfilters.stringfilter" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果编写只接收一个字符串作为第一个参数的模板过滤器，你需要使用 <code class="docutils literal notranslate"><span class="pre">stringfilter</span></code> 的装饰器。它会将参数前转为字符串后传递给函数:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+<span class="kn">from</span> <span class="nn">django.template.defaultfilters</span> <span class="kn">import</span> <span class="n">stringfilter</span>
+
+<span class="n">register</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">Library</span><span class="p">()</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">filter</span>
+<span class="nd">@stringfilter</span>
+<span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>这样，您就可以将一个整数传递给这个过滤器，而不会导致 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> (因为整数没有 <code class="docutils literal notranslate"><span class="pre">lower()</span></code> 方法)。</p>
+</div>
+<div class="section" id="s-filters-and-auto-escaping">
+<span id="s-filters-auto-escaping"></span><span id="filters-and-auto-escaping"></span><span id="filters-auto-escaping"></span><h3>过滤器和自动转义<a class="headerlink" href="#filters-and-auto-escaping" title="永久链接至标题">¶</a></h3>
+<p>编写自定义过滤器时，考虑一下过滤器将如何与 Django 的自动转义行为交互。</p>
+<ul>
+<li><p class="first"><strong>原始字符串</strong> 指原生 Python 字符串。在输出时，如果自动转义生效，则对它们进行转义，否则将保持不变。</p>
+</li>
+<li><p class="first"><strong>安全字符串</strong> 是在输出时被标记为安全的字符串，不会进一步转义。必要的转义已在之前完成。它们通常用于原样输出 HTML，HTML 会在客户端被解释。</p>
+<p>实质上，这些字符串是 <a class="reference internal" href="../ref/utils.html#django.utils.safestring.SafeString" title="django.utils.safestring.SafeString"><code class="xref py py-class docutils literal notranslate"><span class="pre">SafeString</span></code></a> 类的实例。你能用以下代码测试它们:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.safestring</span> <span class="kn">import</span> <span class="n">SafeString</span>
+
+<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">SafeString</span><span class="p">):</span>
+    <span class="c1"># Do something with the &quot;safe&quot; string.</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>模板过滤器代码有两种情况：</p>
+<ol class="arabic">
+<li><p class="first">你的过滤器不会将任何 HTML 不安全的字符(<code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">'</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>)引入尚未出现的结果中。这种情况下，可以让 Django 自动为您处理所有的转义操作。你只需在注册自己的过滤器函数时，将 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 标志置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，像这样:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">is_safe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">myfilter</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>该标志告诉 Django，若一个“安全”字符串传给您的过滤器，结果仍会是安全的。若传入了不安全的字符串，Django 会在需要时自动转义。</p>
+<p>你可以这么认为，“过滤器是安全的——它不会产生任何不安全的 HTML。”</p>
+<p>一定要 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 的原因是大量的字符串操作会将 <code class="docutils literal notranslate"><span class="pre">SafeData</span></code> 对象返回为普通 <code class="docutils literal notranslate"><span class="pre">str</span></code> 对象，而不是尝试全部捕获（挺难的），Django 在过滤完成后尝试修复这些损伤。</p>
+<p>举例来说，假定有个过滤器，会在任何输入后追加 <code class="docutils literal notranslate"><span class="pre">xx</span></code>。由于此操作不会在结果产生任何 HTML 危险的字符（除了那些已存在的），你需要用 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 标记你的过滤器:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">is_safe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add_xx</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">xx&quot;</span> <span class="o">%</span> <span class="n">value</span>
+</pre></div>
+</div>
+<p>当该过滤器对某个启用了自动转义的模板生效时，Django 会对输出自动转义，不管输入是否被标记为“安全的”。</p>
+<p>默认情况下， <code class="docutils literal notranslate"><span class="pre">is_sate</span></code> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，你可以为不要求此项的过滤器忽略它。</p>
+<p>在确定过滤器是否确实将安全字符串保留为安全字符串时要千万小心。如果你正在 <strong>删除</strong> 字符，你可能不经意的在结果中留下不成对的 HTML 标记或实体。例如，从输入中删除一个 <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> 可能将 <code class="docutils literal notranslate"><span class="pre">&lt;a&gt;</span></code> 转为 <code class="docutils literal notranslate"><span class="pre">&lt;a</span></code>，后者可能需要转移，避免导致输出错误。类似的，删除一个分号(<code class="docutils literal notranslate"><span class="pre">;</span></code>)会将 <code class="docutils literal notranslate"><span class="pre">&amp;amp;</span></code> 转为 <code class="docutils literal notranslate"><span class="pre">&amp;amp</span></code>，后者不再是一个有效的实体，因此需要转义。大多数情况下都没这么复杂，但是检查代码时要注意类似的问题。</p>
+<p>标记过滤器的 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 会强制该过滤器的返回值为字符串。如果你的过滤器要返回一个布尔值或非字符串值，将其标记为 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 可能会导致出乎意料的结果（类似将一个布尔值 False 转为字符串 'False'）。</p>
+</li>
+<li><p class="first">或者，你的过滤器代码要手动关注必须的转义操作。这在输出新 HTML 标记时是必须的。想要避免你的 HTML 标记不被后续操作转义，你要将输出标记为安全的，且需要自己处理输入。</p>
+<p>要将输出标记为安全字符串，使用 <a class="reference internal" href="../ref/utils.html#django.utils.safestring.mark_safe" title="django.utils.safestring.mark_safe"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.utils.safestring.mark_safe()</span></code></a>。</p>
+<p>不过还是要小心，你要做的不只是将输出标记为安全的。你需要确保它 <em>真的是</em> 安全的，你所做的取决于自动转义是否生效。理想状态下，编写的过滤器在自动转义开启与关闭的情况下均能正确的操作模板，这样模板作者用起来就更简单了。</p>
+<p>为了让你的过滤器知道自动转移开关的状态，在你注册过滤器函数时将 <code class="docutils literal notranslate"><span class="pre">needs_autoescape</span></code> 标志（默认 <code class="docutils literal notranslate"><span class="pre">False</span></code>）设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。该标志告诉 Django 过滤器函数额外接受一个名为 <code class="docutils literal notranslate"><span class="pre">autoescape</span></code> 关键字参数，值为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时说明自动转义生效中， <code class="docutils literal notranslate"><span class="pre">False</span></code> 说明关闭。推荐将 <code class="docutils literal notranslate"><span class="pre">autoescape</span></code> 参数的默认值设为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，这样，从 Python 代码调用此函数时，默认开启自动转义功能。</p>
+<p>例子，让我们编写一个强制大写字符串的首字母的过滤器:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+<span class="kn">from</span> <span class="nn">django.utils.html</span> <span class="kn">import</span> <span class="n">conditional_escape</span>
+<span class="kn">from</span> <span class="nn">django.utils.safestring</span> <span class="kn">import</span> <span class="n">mark_safe</span>
+
+<span class="n">register</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">Library</span><span class="p">()</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">needs_autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">initial_letter_filter</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">first</span><span class="p">,</span> <span class="n">other</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">autoescape</span><span class="p">:</span>
+        <span class="n">esc</span> <span class="o">=</span> <span class="n">conditional_escape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">esc</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;&lt;strong&gt;</span><span class="si">%s</span><span class="s2">&lt;/strong&gt;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">esc</span><span class="p">(</span><span class="n">first</span><span class="p">),</span> <span class="n">esc</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">mark_safe</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">needs_autoescape</span></code> 标志和 <code class="docutils literal notranslate"><span class="pre">autoescape</span></code> 自动转义关键字参数意味着函数会在过滤器被调用时知道自动转义是否生效。我们利用 <code class="docutils literal notranslate"><span class="pre">autoescape</span></code> 来决定是否要将输入数据传递给 <code class="docutils literal notranslate"><span class="pre">django.utils.html.conditional_escape</span></code>。（后续实例中，我们使用同一函数作为“转义”函数。） <code class="docutils literal notranslate"><span class="pre">conditional_escape()</span></code> 函数除了它只转义 <strong>不是</strong> 一个 <code class="docutils literal notranslate"><span class="pre">SafeData</span></code> 的实例的输入之外其他等同于 <code class="docutils literal notranslate"><span class="pre">escape()</span></code> 。如果一个 <code class="docutils literal notranslate"><span class="pre">SafeData</span></code> 实例经过 <code class="docutils literal notranslate"><span class="pre">conditional_escape()</span></code> ，数据将会不经过修改返回。</p>
+<p>最后，在上述例子中，我们牢记将结果标为安全的，所以 HMTL 未经转义就直接插入模板中。</p>
+<p>这种场景下无需担心 <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 标志（虽然包含它不会有什么问题）。无论你何时决定手动处理自动转义，并返回安全字符串， <code class="docutils literal notranslate"><span class="pre">is_safe</span></code> 标志不会有任何影响。</p>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>在重用内置过滤器时避免 XSS 漏洞</p>
+<p>Django 内置的过滤器默认配置 <code class="docutils literal notranslate"><span class="pre">autoescape=True</span></code>，获取合适的自动转义行为，并避免跨站脚本漏洞。</p>
+<p>在旧版本的 Django 中，复用 Django 内置过滤器时要小心，因为 <code class="docutils literal notranslate"><span class="pre">自动转义</span></code> 默认为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。你需要传入 <code class="docutils literal notranslate"><span class="pre">autoescape=True</span></code> 启用自动转义。</p>
+<p>举个例子，如果你想编写一个联合 <a class="reference internal" href="../ref/templates/builtins.html#std-templatefilter-urlize"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">urlize</span></code></a> 和 <a class="reference internal" href="../ref/templates/builtins.html#std-templatefilter-linebreaksbr"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">linebreaksbr</span></code></a> 过滤器的，名为 <code class="docutils literal notranslate"><span class="pre">urlize_and_linebreaks</span></code> 的自定义过滤器，可通过以下代码:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.template.defaultfilters</span> <span class="kn">import</span> <span class="n">linebreaksbr</span><span class="p">,</span> <span class="n">urlize</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">needs_autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">urlize_and_linebreaks</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">linebreaksbr</span><span class="p">(</span><span class="n">urlize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="n">autoescape</span><span class="p">),</span> <span class="n">autoescape</span><span class="o">=</span><span class="n">autoescape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>接下来：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span> <span class="nv">comment</span><span class="o">|</span><span class="nf">urlize_and_linebreaks</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+<p>等价于：</p>
+<div class="last highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span> <span class="nv">comment</span><span class="o">|</span><span class="nf">urlize</span><span class="o">|</span><span class="nf">linebreaksbr</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-filters-and-time-zones">
+<span id="s-filters-timezones"></span><span id="filters-and-time-zones"></span><span id="filters-timezones"></span><h3>过滤器和时区<a class="headerlink" href="#filters-and-time-zones" title="永久链接至标题">¶</a></h3>
+<p>如果你编写了一个自定义过滤器，处理 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 对象，注册过滤器时通常将 <code class="docutils literal notranslate"><span class="pre">expects_localtime</span></code> 标志置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">expects_localtime</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">businesshours</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">9</span> <span class="o">&lt;=</span> <span class="n">value</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">17</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+<p>设置该标志后，如果过滤器接收的第一个参数是一个时区敏感的 datetime，Django 在将其传递给过滤器前的某个合适时间将其转换为当前时区的时间，依据 <a class="reference internal" href="../topics/i18n/timezones.html#time-zones-in-templates"><span class="std std-ref">模板中的时区转换规则</span></a>。</p>
+</div>
+</div>
+<div class="section" id="s-writing-custom-template-tags">
+<span id="s-howto-writing-custom-template-tags"></span><span id="writing-custom-template-tags"></span><span id="howto-writing-custom-template-tags"></span><h2>编写自定义模板标签<a class="headerlink" href="#writing-custom-template-tags" title="永久链接至标题">¶</a></h2>
+<p>标签比过滤器更复杂，因为标签啥都能做。Django 提供了很多快捷方式，简化了编写绝大多数类型的标签过程。我们先探索这些快捷方式，然后解释如何在快捷方式不够强大的情况下从零编写标签。</p>
+<div class="section" id="s-simple-tags">
+<span id="s-howto-custom-template-tags-simple-tags"></span><span id="simple-tags"></span><span id="howto-custom-template-tags-simple-tags"></span><h3>简单标签<a class="headerlink" href="#simple-tags" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.template.Library.simple_tag">
+<code class="sig-prename descclassname"><span class="pre">django.template.Library.</span></code><code class="sig-name descname"><span class="pre">simple_tag</span></code>()<a class="headerlink" href="#django.template.Library.simple_tag" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>许多模板标签接受多个参数——字符串或模板变量——并仅根据输入参数和一些额外信息进行某种处理，并返回结果。例如， <code class="docutils literal notranslate"><span class="pre">current_time</span></code> 标签可能接受一个格式字符串，并将时间按照字符串要求的格式返回。</p>
+<p>为了简化创建标签类型的流程，Django 提供了一个助手函数， <code class="docutils literal notranslate"><span class="pre">simple_tag</span></code>。该函数实际是 <code class="docutils literal notranslate"><span class="pre">django.template.Library</span></code> 的一个方法，该函数接受任意个数的参数，将其封装在一个 <code class="docutils literal notranslate"><span class="pre">render</span></code> 函数以及上述其它必要的位置，并用模板系统注册它。</p>
+<p>我们的 <code class="docutils literal notranslate"><span class="pre">current_time</span></code> 函数因此能这样写:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+<span class="n">register</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">Library</span><span class="p">()</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">simple_tag</span>
+<span class="k">def</span> <span class="nf">current_time</span><span class="p">(</span><span class="n">format_string</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">format_string</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>关于 <code class="docutils literal notranslate"><span class="pre">simple_tag</span></code> 助手函数，有几点要注意：</p>
+<ul class="simple">
+<li>检测要求参数的个数等在调用函数时就已完成，所以我们无需再做。</li>
+<li>包裹参数（如果有的话）的引号已被删除，所以我们收到一个普通字符串。</li>
+<li>如果参数是一个模板变量，函数将传递变量值，而不是变量本身。</li>
+</ul>
+<p>若模板上下文处于自动转义模式，不像其它标签实体， <code class="docutils literal notranslate"><span class="pre">simple_tag</span></code> 通过 <a class="reference internal" href="../ref/utils.html#django.utils.html.conditional_escape" title="django.utils.html.conditional_escape"><code class="xref py py-func docutils literal notranslate"><span class="pre">conditional_escape()</span></code></a> 传递输出，为了确保输出正确的 HTML，避免 XSS 漏洞的威胁。</p>
+<p>如果不需要额外转义，你可能需要在万分确定您的代码不会引入任何 XSS 漏洞的情况下使用 <a class="reference internal" href="../ref/utils.html#django.utils.safestring.mark_safe" title="django.utils.safestring.mark_safe"><code class="xref py py-func docutils literal notranslate"><span class="pre">mark_safe()</span></code></a>。如果只是构建小的 HTML 片段，强烈建议使用 <a class="reference internal" href="../ref/utils.html#django.utils.html.format_html" title="django.utils.html.format_html"><code class="xref py py-func docutils literal notranslate"><span class="pre">format_html()</span></code></a>，而不是 <code class="docutils literal notranslate"><span class="pre">mark_safe()</span></code>。</p>
+<p>若您的模板标签需要访问当前上下文，你可以在注册标签时传入 <code class="docutils literal notranslate"><span class="pre">takes_context</span></code> 参数:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">simple_tag</span><span class="p">(</span><span class="n">takes_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">current_time</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">format_string</span><span class="p">):</span>
+    <span class="n">timezone</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;timezone&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">your_get_current_time_method</span><span class="p">(</span><span class="n">timezone</span><span class="p">,</span> <span class="n">format_string</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>注意，第一个参数必须是 <code class="docutils literal notranslate"><span class="pre">context</span></code>。</p>
+<p>更多关于 <code class="docutils literal notranslate"><span class="pre">takes_context</span></code> 选项如何工作的信息，参见章节 <a class="reference internal" href="#howto-custom-template-tags-inclusion-tags"><span class="std std-ref">包含标签</span></a>。</p>
+<p>若你需要重命名标签，你可以为其提供一个自定义名称:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">register</span><span class="o">.</span><span class="n">simple_tag</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;minusone&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">simple_tag</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;minustwo&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">some_function</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">-</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">simple_tag</span></code> 函数可以接受任意数量的位置或关键字参数。例如:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">simple_tag</span>
+<span class="k">def</span> <span class="nf">my_tag</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">warning</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;warning&quot;</span><span class="p">]</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">]</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>随后在模板中，任意数量的，以空格分隔的参数会被传递给模板标签。与 Python 中类似，关键字参数的赋值使用等号（&quot;<code class="docutils literal notranslate"><span class="pre">=</span></code>&quot;），且必须在位置参数后提供。例子：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">my_tag</span> <span class="m">123</span> <span class="s2">&quot;abcd&quot;</span> <span class="nv">book.title</span> <span class="nv">warning</span><span class="o">=</span><span class="nv">message</span><span class="o">|</span><span class="nf">lower</span> <span class="nv">profile</span><span class="o">=</span><span class="nv">user.profile</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>将标签结果存入一个模板变量而不是直接将其输出是可能的。这能通过使用 <code class="docutils literal notranslate"><span class="pre">as</span></code> 参数，后跟变量名实现。这样做能让你在期望的位置输出内容：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">current_time</span> <span class="s2">&quot;%Y-%m-%d %I:%M %p&quot;</span> <span class="k">as</span> <span class="nv">the_time</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>The time is <span class="cp">{{</span> <span class="nv">the_time</span> <span class="cp">}}</span>.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-inclusion-tags">
+<span id="s-howto-custom-template-tags-inclusion-tags"></span><span id="inclusion-tags"></span><span id="howto-custom-template-tags-inclusion-tags"></span><h3>包含标签<a class="headerlink" href="#inclusion-tags" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.template.Library.inclusion_tag">
+<code class="sig-prename descclassname"><span class="pre">django.template.Library.</span></code><code class="sig-name descname"><span class="pre">inclusion_tag</span></code>()<a class="headerlink" href="#django.template.Library.inclusion_tag" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>另一种常见的模板标签会为 <em>另一个</em> 模板渲染数据。例如， Django 的后台利用自定义模板标签在表单页的底部展示按钮。这些按钮看起来一样，但是连接目标根据被编辑的对象不同而不同——所以，这是一个极好的例子，展示如何用当前对象的细节填充小模板。（在后台例子中，即 <code class="docutils literal notranslate"><span class="pre">submit_row</span></code> 标签。）</p>
+<p>这种标签被称为“包含标签”。</p>
+<p>编写包含标签可能最好通过实例来展示。让我们编写一个标签，它会将指定 <code class="docutils literal notranslate"><span class="pre">Poll</span></code> 对象（就像 <a class="reference internal" href="../intro/tutorial02.html#creating-models"><span class="std std-ref">教程</span></a> 中创建的那样）的选项以列表输出。我们像这样使用标签：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">show_results</span> <span class="nv">poll</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>输出看起来像这样：</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>First choice<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>Second choice<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>Third choice<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>首先，定义一个函数，接受参数，并返回一个字典。此处的要点是我们只需返回一个字典，不是任何其它复杂的东西。这将作为一个模板上下文被模板碎片使用。例子:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">show_results</span><span class="p">(</span><span class="n">poll</span><span class="p">):</span>
+    <span class="n">choices</span> <span class="o">=</span> <span class="n">poll</span><span class="o">.</span><span class="n">choice_set</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="n">choices</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>随后，创建用于渲染标签输出的模板。该模板是标签的一个固有特性：标签作者指定它，而不是模板设计者。跟随我们的例子，模板非常简短：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">for</span> <span class="nv">choice</span> <span class="k">in</span> <span class="nv">choices</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span> <span class="cp">{{</span> <span class="nv">choice</span> <span class="cp">}}</span> <span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>现在，在 <code class="docutils literal notranslate"><span class="pre">Library</span></code> 对象上调用 <code class="docutils literal notranslate"><span class="pre">inclusion_tag()</span></code> 创建并注册该包含标签。如果上述模板位于一个名为 <code class="docutils literal notranslate"><span class="pre">results.html</span></code> 的文件中，在模板加载器搜索的目录中，我们像这样注册该标签:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Here, register is a django.template.Library instance, as before</span>
+<span class="nd">@register</span><span class="o">.</span><span class="n">inclusion_tag</span><span class="p">(</span><span class="s2">&quot;results.html&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">show_results</span><span class="p">(</span><span class="n">poll</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>或者，也能用 <a class="reference internal" href="../ref/templates/api.html#django.template.Template" title="django.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.template.Template</span></code></a> 实例注册包含标签:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.template.loader</span> <span class="kn">import</span> <span class="n">get_template</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;results.html&quot;</span><span class="p">)</span>
+<span class="n">register</span><span class="o">.</span><span class="n">inclusion_tag</span><span class="p">(</span><span class="n">t</span><span class="p">)(</span><span class="n">show_results</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>在第一次创建该函数时。</p>
+<p>有时候，你的包含标签可能要求超多参数，模板作者不得不传入所有参数，并牢记它们的顺序，非常痛苦。为了解决此问题， Django 为包含标签提供了一个 <code class="docutils literal notranslate"><span class="pre">take_context</span></code> 选项。如果在创建模板标签时指定了 <code class="docutils literal notranslate"><span class="pre">takes_context</span></code>，该标签将没有必要的参数，底层 Python 函数将只有一个参数——标签创建时的模板上下文。</p>
+<p>举个例子，假设你编写了一个包含标签，总会在一个包含指向首页的 <code class="docutils literal notranslate"><span class="pre">home_link</span></code> 和 <code class="docutils literal notranslate"><span class="pre">home_title</span></code> 的上下文环境下使用。Python 函数看起来会像这样:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">inclusion_tag</span><span class="p">(</span><span class="s2">&quot;link.html&quot;</span><span class="p">,</span> <span class="n">takes_context</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">jump_link</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;link&quot;</span><span class="p">:</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;home_link&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;home_title&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>注意，该函数的第一个参数 <em>必须</em> 是 <code class="docutils literal notranslate"><span class="pre">context</span></code>。</p>
+<p>在 <code class="docutils literal notranslate"><span class="pre">register.inclusion_tag()</span></code> 行，我们制定了模板名并设置 <code class="docutils literal notranslate"><span class="pre">takes_context=True</span></code>。以下是模板 <code class="docutils literal notranslate"><span class="pre">link.html</span></code> 的样子：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span>Jump directly to <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{{</span> <span class="nv">link</span> <span class="cp">}}</span><span class="s">&quot;</span><span class="p">&gt;</span><span class="cp">{{</span> <span class="nv">title</span> <span class="cp">}}</span><span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>.
+</pre></div>
+</div>
+<p>后面，当你想用该自定义标签时，加载它的库，并不带任何参数的调用它，像这样：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">jump_link</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>注意，只要使用了 <code class="docutils literal notranslate"><span class="pre">takes_context=True</span></code>，就无需为模板标签传递参数。它自动从上下文获取。</p>
+<p><code class="docutils literal notranslate"><span class="pre">takes_context</span></code> 参数默认为 <code class="docutils literal notranslate"><span class="pre">False</span></code>。当其为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，标签会被传入上下文对象，像本例展示的那样。这是本例和之前的 <code class="docutils literal notranslate"><span class="pre">包含标签</span></code> 实例的唯一不同之处。</p>
+<p><code class="docutils literal notranslate"><span class="pre">包含标签</span></code> 函数能接受任意个数的位置或关键字参数。例子:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">inclusion_tag</span><span class="p">(</span><span class="s2">&quot;my_template.html&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_tag</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">warning</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;warning&quot;</span><span class="p">]</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">]</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>随后在模板中，任意数量的，以空格分隔的参数会被传递给模板标签。与 Python 中类似，关键字参数的赋值使用等号（&quot;<code class="docutils literal notranslate"><span class="pre">=</span></code>&quot;），且必须在位置参数后提供。例子：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">my_tag</span> <span class="m">123</span> <span class="s2">&quot;abcd&quot;</span> <span class="nv">book.title</span> <span class="nv">warning</span><span class="o">=</span><span class="nv">message</span><span class="o">|</span><span class="nf">lower</span> <span class="nv">profile</span><span class="o">=</span><span class="nv">user.profile</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-advanced-custom-template-tags">
+<span id="advanced-custom-template-tags"></span><h3>进阶自定义模板标签<a class="headerlink" href="#advanced-custom-template-tags" title="永久链接至标题">¶</a></h3>
+<p>有时候，用于自定义模板标签的基础特性不够用。不要担心，Django 开放了从零开始构建模板标签所需的所有内置机制。</p>
+</div>
+<div class="section" id="s-a-quick-overview">
+<span id="a-quick-overview"></span><h3>简介<a class="headerlink" href="#a-quick-overview" title="永久链接至标题">¶</a></h3>
+<p>模板系统工作只需两步：编译和渲染。为了定义自定义模板标签，你需指定如何编译和渲染。</p>
+<p>Django 编译模板时，会将原始模板文本划为“节点”。每个节点都是一个 <code class="docutils literal notranslate"><span class="pre">django.template.Node</span></code> 实例，拥有一个 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法。编译完的模板就是一个包含 <code class="docutils literal notranslate"><span class="pre">节点</span></code> 对象的列表。当你在已编译的模板上调用 <code class="docutils literal notranslate"><span class="pre">render()</span></code>，该模板会为节点列表中的每个 <code class="docutils literal notranslate"><span class="pre">节点</span></code> 携带指定上下文调用 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法。结果会自动连接，形成模板的输出。</p>
+<p>因此，要定义一个自定义模板标签，你要指定如何将原始模板标签转换为 <code class="docutils literal notranslate"><span class="pre">节点</span></code> （编译函数），还要指定 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法的操作。</p>
+</div>
+<div class="section" id="s-writing-the-compilation-function">
+<span id="writing-the-compilation-function"></span><h3>编写编译函数<a class="headerlink" href="#writing-the-compilation-function" title="永久链接至标题">¶</a></h3>
+<p>模板解析器遇到的每个模板标签，解析器都会调用一个 Python 函数，参数是标签内容和解析器对象本身。该函数需要基于标签的内容返回一个 <code class="docutils literal notranslate"><span class="pre">节点</span></code> 实例。</p>
+<p>举个例子，让我们完整地实现模板标签 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">current_time</span> <span class="pre">%}</span></code>，该标签根据标签中指定的参数，以 <a class="reference external" href="https://docs.python.org/3/library/time.html#time.strftime" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">strftime()</span></code></a> 语法格式化当前时间或日期。先决定标签语法是个不错的主意。在本例中，我们要这样使用标签：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>The time is <span class="cp">{%</span> <span class="k">current_time</span> <span class="s2">&quot;%Y-%m-%d %I:%M %p&quot;</span> <span class="cp">%}</span>.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>这个函数的解析器应用获取参数，并创建一个 <code class="docutils literal notranslate"><span class="pre">节点</span></code> 对象:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+
+<span class="k">def</span> <span class="nf">do_current_time</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># split_contents() knows not to split quoted strings.</span>
+        <span class="n">tag_name</span><span class="p">,</span> <span class="n">format_string</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split_contents</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag requires a single argument&quot;</span> <span class="o">%</span> <span class="n">token</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">format_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">format_string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">format_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag&#39;s argument should be in quotes&quot;</span> <span class="o">%</span> <span class="n">tag_name</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">CurrentTimeNode</span><span class="p">(</span><span class="n">format_string</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>注意：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">parser</span></code> 是模板解析器对象。本例中不需要。</li>
+<li><code class="docutils literal notranslate"><span class="pre">token.contents</span></code> 是包含标签原始内容的字符串。本例中是 <code class="docutils literal notranslate"><span class="pre">'current_time</span> <span class="pre">&quot;%Y-%m-%d</span> <span class="pre">%I:%M</span> <span class="pre">%p&quot;'</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">token.split_contents()</span></code> 方法按空格分隔字符串，但不会分隔引号包裹的部分。二愣子 <code class="docutils literal notranslate"><span class="pre">token.contents.split()</span></code> 就没那么健壮了，它直接在空格处分割字符串，不论它们是否被引号包裹。推荐总是使用 <code class="docutils literal notranslate"><span class="pre">token.split_contents()</span></code>。</li>
+<li>该方法要在语法错误发生时抛出包含有用信息的 <code class="docutils literal notranslate"><span class="pre">django.template.TemplateSyntaxError</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">TemplateSyntaxError</span></code> 异常使用了 <code class="docutils literal notranslate"><span class="pre">tag_name</span></code> 变量。不要在错误消息中硬编码标签名，因为这会使的标签名与函数耦合。 <code class="docutils literal notranslate"><span class="pre">token.contents.split()[0]</span></code> 总会返回标签名——即便标签没有参数。</li>
+<li>该函数返回一个 <code class="docutils literal notranslate"><span class="pre">CurrentTimeNode</span></code>，内含节点需要了解的标签的一切信息。在本例中，传递了参数—— <code class="docutils literal notranslate"><span class="pre">&quot;%Y-%m-%d</span> <span class="pre">%I:%M</span> <span class="pre">%p&quot;</span></code>。开头和结尾的引号由 <code class="docutils literal notranslate"><span class="pre">format_string[1:-1]</span></code> 删除。</li>
+<li>这种解析是很低级的。Django 开发者已试着在该解析系统之上编写小型解析框架，使用类似 EBNF 语法，但这些尝试使得模板引擎运行的很慢。低级意味着快。</li>
+</ul>
+</div>
+<div class="section" id="s-writing-the-renderer">
+<span id="writing-the-renderer"></span><h3>编写渲染器<a class="headerlink" href="#writing-the-renderer" title="永久链接至标题">¶</a></h3>
+<p>编写自定义标签的第二步是定义一个 <code class="docutils literal notranslate"><span class="pre">Node</span></code> 子类，带有一个 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法。</p>
+<p>承接上述例子，我们需要定义 <code class="docutils literal notranslate"><span class="pre">CurrentTimeNode</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+
+<span class="k">class</span> <span class="nc">CurrentTimeNode</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_string</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_string</span> <span class="o">=</span> <span class="n">format_string</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format_string</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>注意：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 从 <code class="docutils literal notranslate"><span class="pre">do_current_time()</span></code> 获取 <code class="docutils literal notranslate"><span class="pre">format_string</span></code>。总是通过 <code class="docutils literal notranslate"><span class="pre">节点</span></code> 的 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 方法为其传入  options/parameters/arguments。</li>
+<li><code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法是实际干活的地方。</li>
+<li><code class="docutils literal notranslate"><span class="pre">render()</span></code> 应该无声失败，尤其是在生产环境。不过，某些场景下，尤其是 <code class="docutils literal notranslate"><span class="pre">context.template.engine.debug</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，该方法可能抛出一个异常，简化调式流程。例如，某些核心标签在接受个数不对的参数时抛出 <code class="docutils literal notranslate"><span class="pre">django.template.TemplateSyntaxError</span></code>。</li>
+</ul>
+<p>最终，这种对编译和渲染的解耦会产生一个高效的模板系统，因为一个模板无需多次解析就能渲染多个上下文。</p>
+</div>
+<div class="section" id="s-auto-escaping-considerations">
+<span id="s-tags-auto-escaping"></span><span id="auto-escaping-considerations"></span><span id="tags-auto-escaping"></span><h3>自动转义的注意事项<a class="headerlink" href="#auto-escaping-considerations" title="永久链接至标题">¶</a></h3>
+<p>模板标签的输出 <strong>不会</strong> 自动通过自动转义过滤器（除了上述的 <a class="reference internal" href="#django.template.Library.simple_tag" title="django.template.Library.simple_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simple_tag()</span></code></a> 之外）。不过，在编写模板标签时，你仍需牢记几点。</p>
+<p>若模板标签的 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法在上下文变量中存储结果（而不是以字符串返回结果），它要小心地在合适的时机调用 <code class="docutils literal notranslate"><span class="pre">mark_safe()</span></code>。当变量最后一次被渲染时，它会在这个时候受到自动转义配置的影响，所以为了避免变量被进一步转义，需要如此配置。</p>
+<p>同理，如果你的模板标签为某些子渲染进程创建了新的上下文，那么就需要将当前上下文对应的自动转义属性传入。 <code class="docutils literal notranslate"><span class="pre">Context</span></code> 类的方法 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 的参数 <code class="docutils literal notranslate"><span class="pre">autoescape</span></code> 就是为此目的设计的。例如:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.template</span> <span class="kn">import</span> <span class="n">Context</span>
+
+
+<span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="n">new_context</span> <span class="o">=</span> <span class="n">Context</span><span class="p">({</span><span class="s2">&quot;var&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="p">},</span> <span class="n">autoescape</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">autoescape</span><span class="p">)</span>
+    <span class="c1"># ... Do something with new_context ...</span>
+</pre></div>
+</div>
+<p>该场景不常见，但在自助渲染模板时很有用。例如:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;small_fragment.html&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">Context</span><span class="p">({</span><span class="s2">&quot;var&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="p">},</span> <span class="n">autoescape</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">autoescape</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>在本例中，如果我们忽略了将当前的 <code class="docutils literal notranslate"><span class="pre">context.autoescape</span></code> 值传递给新 <code class="docutils literal notranslate"><span class="pre">Context</span></code>，结果 <em>总会</em> 被自动转义，这可能与期望不同，尤其是模板标签被用于 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-autoescape"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">autoescape</span> <span class="pre">off</span> <span class="pre">%}</span></code></a> 块之内的时候。</p>
+</div>
+<div class="section" id="s-thread-safety-considerations">
+<span id="s-template-tag-thread-safety"></span><span id="thread-safety-considerations"></span><span id="template-tag-thread-safety"></span><h3>线程安全的注意事项<a class="headerlink" href="#thread-safety-considerations" title="永久链接至标题">¶</a></h3>
+<p>节点被解析后，其 <code class="docutils literal notranslate"><span class="pre">render</span></code> 方法可能被任意次地调用。由于 Django 有可能运行于多线程环境，一个节点可能同时以不同的上下文进行渲染，以相应不同的请求。因此，确保你的模板标签是线程安全就非常重要了。</p>
+<p>为了确保你的模板标签是线程安全的，你应该永远不要在节点中存储状态信息。例如，Django 提供了一个内置的 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-cycle"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">cycle</span></code></a> 模板标签，每次渲染时它都在一个给定字符串列表间循环：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">o</span> <span class="k">in</span> <span class="nv">some_list</span> <span class="cp">%}</span>
+    <span class="p">&lt;</span><span class="nt">tr</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">cycle</span> <span class="s1">&#39;row1&#39;</span> <span class="s1">&#39;row2&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="p">&gt;</span>
+        ...
+    <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CycleNode</span></code> 的原生实现看起来可能像这样:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+
+<span class="k">class</span> <span class="nc">CycleNode</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cyclevars</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_iter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">cycle</span><span class="p">(</span><span class="n">cyclevars</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cycle_iter</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>但是，假设有两个模板渲染器同时渲染上述模板片段：</p>
+<ol class="arabic simple">
+<li>线程 1 执行其第一次迭代， <code class="docutils literal notranslate"><span class="pre">CycleNode.render()</span></code> 返回 'row1'</li>
+<li>线程 2 执行其第一次迭代， <code class="docutils literal notranslate"><span class="pre">CycleNode.render()</span></code> 返回 'row2'</li>
+<li>线程 1 执行其第二次迭代， <code class="docutils literal notranslate"><span class="pre">CycleNode.render()</span></code> 返回 'row1'</li>
+<li>线程 2 执行其第二次迭代， <code class="docutils literal notranslate"><span class="pre">CycleNode.render()</span></code> 返回 'row2'</li>
+</ol>
+<p>CycleNode 正在被迭代，却是全局范围的。就像线程 1 和线程 2 担心的那样，它们总是返回同样的值。这不是我们想要的。</p>
+<p>为了定位此问题，Django 提供了一个 <code class="docutils literal notranslate"><span class="pre">render_context</span></code>，关联至当前正在渲染的模板的 <code class="docutils literal notranslate"><span class="pre">context</span></code>。 <code class="docutils literal notranslate"><span class="pre">render_context</span></code> 表现的像一个 Python 字典，应该在其中保存多次同时调用 <code class="docutils literal notranslate"><span class="pre">render</span></code> 方法时的 <code class="docutils literal notranslate"><span class="pre">Node</span></code> 状态。</p>
+<p>让我们用 <code class="docutils literal notranslate"><span class="pre">render_context</span></code> 重构我们的 <code class="docutils literal notranslate"><span class="pre">CycleNode</span></code> 实现:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CycleNode</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cyclevars</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cyclevars</span> <span class="o">=</span> <span class="n">cyclevars</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">render_context</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">render_context</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">cycle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cyclevars</span><span class="p">)</span>
+        <span class="n">cycle_iter</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">render_context</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">cycle_iter</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>注意，将 <code class="docutils literal notranslate"><span class="pre">Node</span></code> 生命周期中都不会发生变化的全局信息保存为属性是非常安全的。在 <code class="docutils literal notranslate"><span class="pre">CycleNode</span></code> 例中， <code class="docutils literal notranslate"><span class="pre">cyclevars</span></code> 参数在 <code class="docutils literal notranslate"><span class="pre">Node</span></code> 初始化后就不会变了，所以无需将其放入 <code class="docutils literal notranslate"><span class="pre">render_context</span></code>。但是当前正在渲染的模板的状态信息，类似 <code class="docutils literal notranslate"><span class="pre">CycleNode</span></code> 的当前迭代信息，就应该被保存在 <code class="docutils literal notranslate"><span class="pre">render_context</span></code>。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">注意我们是如何利用 <code class="docutils literal notranslate"><span class="pre">self</span></code> 将 <code class="docutils literal notranslate"><span class="pre">CycleNode</span></code> 的特定参数装入 <code class="docutils literal notranslate"><span class="pre">render_context</span></code> 的。一个模板中可能有多个 <code class="docutils literal notranslate"><span class="pre">CycleNodes</span></code>，所以我们要十分小心，不要破坏其它节点的状态信息。最简单的方式就是一直将 <code class="docutils literal notranslate"><span class="pre">self</span></code> 作为键存入 <code class="docutils literal notranslate"><span class="pre">render_context</span></code>。如果你同时追踪好几个状态变量，将 <code class="docutils literal notranslate"><span class="pre">render_context[self]</span></code> 做成一个字典。</p>
+</div>
+</div>
+<div class="section" id="s-registering-the-tag">
+<span id="registering-the-tag"></span><h3>注册该标签<a class="headerlink" href="#registering-the-tag" title="永久链接至标题">¶</a></h3>
+<p>最后，用你的模块的 <code class="docutils literal notranslate"><span class="pre">Library</span></code> 实例注册该标签，像上文 <span class="xref std std-ref">编写自定义模板标签 1</span> 介绍的那样。举个例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">register</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="s2">&quot;current_time&quot;</span><span class="p">,</span> <span class="n">do_current_time</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tag</span></code> 方法接收两个参数：</p>
+<ol class="arabic simple">
+<li>模板标签的名字——一个字符串。若为空，将会使用编译函数的名字。</li>
+<li>编辑函数——一个 Python 函数（不是函数名的字符串）。</li>
+</ol>
+<p>就像过滤器注册一样，这里也能用装饰器:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;current_time&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">do_current_time</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span> <span class="o">...</span>
+
+
+<span class="nd">@register</span><span class="o">.</span><span class="n">tag</span>
+<span class="k">def</span> <span class="nf">shout</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>若未输入 <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数，像上述第二个例子一样，Django 会将函数名作为标签名。</p>
+</div>
+<div class="section" id="s-passing-template-variables-to-the-tag">
+<span id="passing-template-variables-to-the-tag"></span><h3>传递模板变量给标签<a class="headerlink" href="#passing-template-variables-to-the-tag" title="永久链接至标题">¶</a></h3>
+<p>虽然你能利用 <code class="docutils literal notranslate"><span class="pre">token.split_contents()</span></code> 将任意数量的变量传递给一个模板标签，但是解包出来的参数均是字符串文本。要将一个动态内容（一个模板变量）作为参数传递给模板标签需要额外工作。</p>
+<p>前文的例子已经成功将当前时间转为字符串并将之返回，假设你想传入一个 <a class="reference internal" href="../ref/models/fields.html#django.db.models.DateTimeField" title="django.db.models.DateTimeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeField</span></code></a> 对象，并想用该模板标签格式化这个对象：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>This post was last updated at <span class="cp">{%</span> <span class="k">format_time</span> <span class="nv">blog_entry.date_updated</span> <span class="s2">&quot;%Y-%m-%d %I:%M %p&quot;</span> <span class="cp">%}</span>.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>首先，<code class="docutils literal notranslate"><span class="pre">token.split_contents()</span></code> 会返回 3 个值：</p>
+<ol class="arabic simple">
+<li>标签名 <code class="docutils literal notranslate"><span class="pre">format_time</span></code>。</li>
+<li>字符串 <code class="docutils literal notranslate"><span class="pre">'blog_entry.date_updated'</span></code> （不包含引号）。</li>
+<li>格式化字符串 <code class="docutils literal notranslate"><span class="pre">'&quot;%Y-%m-%d</span> <span class="pre">%I:%M</span> <span class="pre">%p&quot;'</span></code>。 <code class="docutils literal notranslate"><span class="pre">split_contents()</span></code> 的返回值会为类似这样的字符串保留引号。</li>
+</ol>
+<p>现在，你的标签应该看起来像这样:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+
+<span class="k">def</span> <span class="nf">do_format_time</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># split_contents() knows not to split quoted strings.</span>
+        <span class="n">tag_name</span><span class="p">,</span> <span class="n">date_to_be_formatted</span><span class="p">,</span> <span class="n">format_string</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split_contents</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag requires exactly two arguments&quot;</span> <span class="o">%</span> <span class="n">token</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">format_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">format_string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">format_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag&#39;s argument should be in quotes&quot;</span> <span class="o">%</span> <span class="n">tag_name</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">FormatTimeNode</span><span class="p">(</span><span class="n">date_to_be_formatted</span><span class="p">,</span> <span class="n">format_string</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>你也需要修改 renderer，让其获取 <code class="docutils literal notranslate"><span class="pre">blog_entry</span></code> 对象的 <code class="docutils literal notranslate"><span class="pre">date_updated</span></code> 属性的真实内容。这能通过在 <code class="docutils literal notranslate"><span class="pre">django.template</span></code> 中使用 <code class="docutils literal notranslate"><span class="pre">Variable()</span></code> 完成。</p>
+<p>要使用 <code class="docutils literal notranslate"><span class="pre">Variable</span></code> 类，用变量名实例化它，并调用 <code class="docutils literal notranslate"><span class="pre">variable.resolve(context)</span></code> 上下文。举个例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">FormatTimeNode</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date_to_be_formatted</span><span class="p">,</span> <span class="n">format_string</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">date_to_be_formatted</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">date_to_be_formatted</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_string</span> <span class="o">=</span> <span class="n">format_string</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">actual_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_to_be_formatted</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">actual_date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format_string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">template</span><span class="o">.</span><span class="n">VariableDoesNotExist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+<p>变量解决方案会在无法在当前页的上下文中找到指定字符串时抛出 <code class="docutils literal notranslate"><span class="pre">VariableDoesNotExist</span></code> 异常。</p>
+</div>
+<div class="section" id="s-setting-a-variable-in-the-context">
+<span id="setting-a-variable-in-the-context"></span><h3>在上下文中设置变量<a class="headerlink" href="#setting-a-variable-in-the-context" title="永久链接至标题">¶</a></h3>
+<p>上述例子输出了一个值。一般来说，如果你的模板标签设置模板变量，会比直接输出更加灵活。这样，模板作者在你的模板标签创建时能复用这些值。</p>
+<p>要在上下文中设置变量，需要在 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 方法中对其上下文使用字典赋值。新版的 <code class="docutils literal notranslate"><span class="pre">CurrentTimeNode</span></code> 设置了一个模板变量 <code class="docutils literal notranslate"><span class="pre">current_time</span></code>，而不是直接输出:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">template</span>
+
+
+<span class="k">class</span> <span class="nc">CurrentTimeNode2</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_string</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_string</span> <span class="o">=</span> <span class="n">format_string</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;current_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format_string</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+<p>注意， <code class="docutils literal notranslate"><span class="pre">render()</span></code> 返回了空字符串。 <code class="docutils literal notranslate"><span class="pre">render()</span></code> 应该总是返回字符串。如果所有的模板标签都设置了变量， <code class="docutils literal notranslate"><span class="pre">render()</span></code> 应该返回空字符串。</p>
+<p>下面是如何使用新版标签的实例：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">current_time</span> <span class="s2">&quot;%Y-%m-%d %I:%M %p&quot;</span> <span class="cp">%}</span><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>The time is <span class="cp">{{</span> <span class="nv">current_time</span> <span class="cp">}}</span>.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<div class="admonition-variable-scope-in-context admonition">
+<p class="first admonition-title">上下文中的变量作用域</p>
+<p class="last">上下文内变量仅在模板中相同 <code class="docutils literal notranslate"><span class="pre">block</span></code> 内生效。这是故意的；提供有作用域的变量不会与其它区块中的上下文发生冲突。</p>
+</div>
+<p>但是， <code class="docutils literal notranslate"><span class="pre">CurrentTimeNode2</span></code> 有个问题：变量名 <code class="docutils literal notranslate"><span class="pre">current_time</span></code> 是硬编码的。这意味着你需要确认模板未在其它地方使用 <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">current_time</span> <span class="pre">}}</span></code>，因为 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">current_time</span> <span class="pre">%}</span></code> 会绑定兵重写该变量的值。一个简洁的方法是让模板标签指定输出变量的值，像这样：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">current_time</span> <span class="s2">&quot;%Y-%m-%d %I:%M %p&quot;</span> <span class="k">as</span> <span class="nv">my_current_time</span> <span class="cp">%}</span>
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>The current time is <span class="cp">{{</span> <span class="nv">my_current_time</span> <span class="cp">}}</span>.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>为此，你需要重构编译函数和 <code class="docutils literal notranslate"><span class="pre">Node</span></code> 类，像这样:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="k">class</span> <span class="nc">CurrentTimeNode3</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_string</span><span class="p">,</span> <span class="n">var_name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format_string</span> <span class="o">=</span> <span class="n">format_string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_name</span> <span class="o">=</span> <span class="n">var_name</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">context</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format_string</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">do_current_time</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="c1"># This version uses a regular expression to parse tag contents.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Splitting by None == splitting by spaces.</span>
+        <span class="n">tag_name</span><span class="p">,</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag requires arguments&quot;</span> <span class="o">%</span> <span class="n">token</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(.*?) as (\w+)&quot;</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag had invalid arguments&quot;</span> <span class="o">%</span> <span class="n">tag_name</span><span class="p">)</span>
+    <span class="n">format_string</span><span class="p">,</span> <span class="n">var_name</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">format_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">format_string</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">format_string</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">template</span><span class="o">.</span><span class="n">TemplateSyntaxError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">%r</span><span class="s2"> tag&#39;s argument should be in quotes&quot;</span> <span class="o">%</span> <span class="n">tag_name</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">CurrentTimeNode3</span><span class="p">(</span><span class="n">format_string</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">var_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>此处的不同点是 <code class="docutils literal notranslate"><span class="pre">do_current_time()</span></code> 处理了格式化字符串和变量名，并将它们传递给 <code class="docutils literal notranslate"><span class="pre">CurrentTimeNode3</span></code>。</p>
+<p>最后，如果你的自定义上下文更新模板标签只需要简单的语法，考虑使用 <a class="reference internal" href="#django.template.Library.simple_tag" title="django.template.Library.simple_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simple_tag()</span></code></a> 快捷方式，它支持将标签结果分配给模板变量。</p>
+</div>
+<div class="section" id="s-parsing-until-another-block-tag">
+<span id="parsing-until-another-block-tag"></span><h3>解析直到碰到另一区块的标签<a class="headerlink" href="#parsing-until-another-block-tag" title="永久链接至标题">¶</a></h3>
+<p>模板标签能串联工作。例如，标准标签 ttag:{% comment %} &lt;comment&gt; 隐藏任何东西，直到碰到 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code>。要创建一个类似的标签，在编译函数中使用 <code class="docutils literal notranslate"><span class="pre">parser.parse()</span></code>。</p>
+<p>以下是如何实现一个简单的 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code> 标签的介绍:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">do_comment</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="n">nodelist</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">((</span><span class="s2">&quot;endcomment&quot;</span><span class="p">,))</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">delete_first_token</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">CommentNode</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">CommentNode</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last"><a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-comment"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code></a> 的实现略有不同，它允许 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code> 和 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code> 出现破损的标记。它通过调用 <code class="docutils literal notranslate"><span class="pre">parser.skip_past('endcomment')</span></code> （而不是 <code class="docutils literal notranslate"><span class="pre">parser.parse(('endcomment',))</span></code>），后跟 <code class="docutils literal notranslate"><span class="pre">parser.delete_first_token()</span></code>，从而避免生成节点列表。</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">parser.parse()</span></code> 接受一个包含 “解析直到” 区块标签的元组。它返回一个 <code class="docutils literal notranslate"><span class="pre">django.template.NodeList</span></code> 实例，它解析器遇到元组中的标签前解析的 <code class="docutils literal notranslate"><span class="pre">Node</span></code> 对象。</p>
+<p>上文例子 <code class="docutils literal notranslate"><span class="pre">&quot;nodelist</span> <span class="pre">=</span> <span class="pre">parser.parse(('endcomment',))&quot;</span></code> 中， <code class="docutils literal notranslate"><span class="pre">nodelist</span></code> 是一个包含了 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code> 和 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code> 之间所有节点的列表，但不包含 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code> 和 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code> 本身。</p>
+<p>在调用 <code class="docutils literal notranslate"><span class="pre">parser.parse()</span></code> 后，解析还未 “消费掉” <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code> 标签，所以代码需要显示地调用 <code class="docutils literal notranslate"><span class="pre">parser.delete_first_token()</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">CommentNode.render()</span></code> 返回了一个空字符串。 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code> 和 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code>  注释之间的全部内容均被忽略。</p>
+</div>
+<div class="section" id="s-parsing-until-another-block-tag-and-saving-contents">
+<span id="parsing-until-another-block-tag-and-saving-contents"></span><h3>解析直到碰到另一区块标签，并保存内容。<a class="headerlink" href="#parsing-until-another-block-tag-and-saving-contents" title="永久链接至标题">¶</a></h3>
+<p>在前文的例子中， <code class="docutils literal notranslate"><span class="pre">do_comment</span></code> 抛弃了 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">comment</span> <span class="pre">%}</span></code> 和 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endcomment</span> <span class="pre">%}</span></code> 之间的所有内容。现在我们不这么做，我们要对区块标签之间的东西做点什么。</p>
+<p>举个例子，这里有个模板标签， <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">upper</span> <span class="pre">%}</span></code>，它将自己与 <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endupper</span> <span class="pre">%}</span></code> 之间的内容全部大写。</p>
+<p>用法：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">upper</span> <span class="cp">%}</span>This will appear in uppercase, <span class="cp">{{</span> <span class="nv">your_name</span> <span class="cp">}}</span>.<span class="cp">{%</span> <span class="k">endupper</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>与之前的例子一样，我们将使用 <code class="docutils literal notranslate"><span class="pre">parser.parse()</span></code>。但这次，我们将生成的 <code class="docutils literal notranslate"><span class="pre">nodelist</span></code> 传递给 <code class="docutils literal notranslate"><span class="pre">Node</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">do_upper</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+    <span class="n">nodelist</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">((</span><span class="s2">&quot;endupper&quot;</span><span class="p">,))</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">delete_first_token</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">UpperNode</span><span class="p">(</span><span class="n">nodelist</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">UpperNode</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodelist</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodelist</span> <span class="o">=</span> <span class="n">nodelist</span>
+
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodelist</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>唯一的新概念是 <code class="docutils literal notranslate"><span class="pre">UpperNode.render()</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">self.nodelist.render(context)</span></code>。</p>
+<p>要获取更多复杂渲染的示例，请查看 <a class="reference external" href="https://github.com/django/django/blob/main/django/template/defaulttags.py">django/template/defaulttags.py</a> 中的 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-for"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">for</span> <span class="pre">%}</span></code></a> 和 <a class="reference external" href="https://github.com/django/django/blob/main/django/template/smartif.py">django/template/smartif.py</a> 中的 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-if"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">if</span> <span class="pre">%}</span></code></a> 的源代码。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何编写自定义的模板标签和过滤器</a><ul>
+<li><a class="reference internal" href="#code-layout">代码布局</a></li>
+<li><a class="reference internal" href="#writing-custom-template-filters">编写自定义的模板过滤器</a><ul>
+<li><a class="reference internal" href="#registering-custom-filters">注册自定义过滤器</a></li>
+<li><a class="reference internal" href="#template-filters-that-expect-strings">模板过滤器期望字符串</a></li>
+<li><a class="reference internal" href="#filters-and-auto-escaping">过滤器和自动转义</a></li>
+<li><a class="reference internal" href="#filters-and-time-zones">过滤器和时区</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-custom-template-tags">编写自定义模板标签</a><ul>
+<li><a class="reference internal" href="#simple-tags">简单标签</a></li>
+<li><a class="reference internal" href="#inclusion-tags">包含标签</a></li>
+<li><a class="reference internal" href="#advanced-custom-template-tags">进阶自定义模板标签</a></li>
+<li><a class="reference internal" href="#a-quick-overview">简介</a></li>
+<li><a class="reference internal" href="#writing-the-compilation-function">编写编译函数</a></li>
+<li><a class="reference internal" href="#writing-the-renderer">编写渲染器</a></li>
+<li><a class="reference internal" href="#auto-escaping-considerations">自动转义的注意事项</a></li>
+<li><a class="reference internal" href="#thread-safety-considerations">线程安全的注意事项</a></li>
+<li><a class="reference internal" href="#registering-the-tag">注册该标签</a></li>
+<li><a class="reference internal" href="#passing-template-variables-to-the-tag">传递模板变量给标签</a></li>
+<li><a class="reference internal" href="#setting-a-variable-in-the-context">在上下文中设置变量</a></li>
+<li><a class="reference internal" href="#parsing-until-another-block-tag">解析直到碰到另一区块的标签</a></li>
+<li><a class="reference internal" href="#parsing-until-another-block-tag-and-saving-contents">解析直到碰到另一区块标签，并保存内容。</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="custom-template-backend.html"
+                          title="上一章">如何编写一个自定义的模板后端</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="custom-file-storage.html"
+                          title="下一章">如何编写一个自定义的文件存储类</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/howto/custom-template-tags.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="custom-template-backend.html" title="如何编写一个自定义的模板后端">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="custom-file-storage.html" title="如何编写一个自定义的文件存储类">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

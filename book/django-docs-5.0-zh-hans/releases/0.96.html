@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 0.96 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 0.95 版本发布说明" href="0.95.html" />
+    <link rel="prev" title="将你的应用从 Django 0.96 移植到 1.0" href="1.0-porting-guide.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.0-porting-guide.html" title="将你的应用从 Django 0.96 移植到 1.0">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="0.95.html" title="Django 0.95 版本发布说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-0.96">
+            
+  <div class="section" id="s-django-version-0-96-release-notes">
+<span id="django-version-0-96-release-notes"></span><h1>Django 0.96 版本发行说明<a class="headerlink" href="#django-version-0-96-release-notes" title="永久链接至标题">¶</a></h1>
+<p>欢迎来到 Django 0.96 版本！</p>
+<p>Django 0.96 版本的主要目标是清理和稳定由 0.95 版本引入的特性。自从 0.95 过后，有很多小的 <a class="reference internal" href="#backwards-incompatible-changes">向后兼容变化</a>，但升级过程应该足够简单，且针对已有的应用不应该需要重大的更改。</p>
+<p>不过，我们现在发布 0.96 版本也是因为我们计划在不久的将来进行一系列向后不兼容的改动。一旦完成，它们将涉及到应用程序开发人员的一些代码变化，所以我们建议你坚持使用 Django 0.96，直到下一个正式发布；然后你就可以一步到位地升级，而不是需要做增量的变化来跟上 Django 的开发版本。</p>
+<div class="section" id="s-backwards-incompatible-changes">
+<span id="backwards-incompatible-changes"></span><h2>不向后兼容的变更<a class="headerlink" href="#backwards-incompatible-changes" title="永久链接至标题">¶</a></h2>
+<p>当你从 0.95 切换到 0.96 时，以下更改可能需要你更新代码：</p>
+<div class="section" id="s-mysqldb-version-requirement">
+<span id="mysqldb-version-requirement"></span><h3><code class="docutils literal notranslate"><span class="pre">MySQLdb</span></code> 版本需求<a class="headerlink" href="#mysqldb-version-requirement" title="永久链接至标题">¶</a></h3>
+<p>由于 <code class="docutils literal notranslate"><span class="pre">MySQLdb</span></code> Python 模块（Django 用来连接 MySQL 数据库）旧版本的一个漏洞，Django 的 MySQL 后端现在需要 1.2.1p2 或更高版本的 <code class="docutils literal notranslate"><span class="pre">MySQLdb</span></code>，如果你试图使用旧版本，会引发异常。</p>
+<p>如果你目前无法升级你的 <code class="docutils literal notranslate"><span class="pre">MySQLdb</span></code> 来满足这个要求，一个单独的，向后兼容的后端，叫做 “mysql_old”，已经被添加到 Django 中。要使用这个后端，将 Django 配置文件中的 <code class="docutils literal notranslate"><span class="pre">DATABASE_ENGINE</span></code> 配置从这个：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASE_ENGINE</span> <span class="o">=</span> <span class="s2">&quot;mysql&quot;</span>
+</pre></div>
+</div>
+<p>改成这个：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASE_ENGINE</span> <span class="o">=</span> <span class="s2">&quot;mysql_old&quot;</span>
+</pre></div>
+</div>
+<p>然而，我们强烈建议 MySQL 用户尽快升级到最新版本的 <code class="docutils literal notranslate"><span class="pre">MySQLdb</span></code>，提供 “mysql_old” 后端只是为了方便过渡，并且被认为是废弃的；除了任何必要的安全修复，它将不会被积极维护，并将在未来的 Django 版本中删除。</p>
+<p>另外，需要注意的是，有些功能，比如新的 <code class="docutils literal notranslate"><span class="pre">DATABASE_OPTIONS</span></code> 配置（详见 <a class="reference internal" href="../ref/databases.html"><span class="doc">数据库文档</span></a> ），只在 “mysql” 后端可用，不会对 “mysql_old” 提供。</p>
+</div>
+<div class="section" id="s-database-constraint-names-changed">
+<span id="database-constraint-names-changed"></span><h3>数据库约束名称已更改<a class="headerlink" href="#database-constraint-names-changed" title="永久链接至标题">¶</a></h3>
+<p>Django 为外键引用生成的约束名称的格式略有改变。这些名称一般只在无法将引用直接放在受影响的列上时才会使用，所以它们并不总是可见的。</p>
+<p>这一变化的影响是，对现有数据库运行 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">reset</span></code> 和类似的命令，可能会生成新形式的约束名称的 SQL，而数据库本身却包含旧形式的约束；这将导致数据库服务器发出关于修改不存在的约束的错误信息。</p>
+<p>若你需要解决此问题，那将有两种方法可用：</p>
+<ol class="arabic simple">
+<li>将 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 的输出重定向到一个文件中，并编辑生成的 SQL，在执行前使用正确的约束名。</li>
+<li>检查 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">sqlall</span></code> 的输出，看看新样式的约束名称，并以此为指导重命名数据库中的现有约束。</li>
+</ol>
+</div>
+<div class="section" id="s-name-changes-in-manage-py">
+<span id="name-changes-in-manage-py"></span><h3><code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 中的名称改变<a class="headerlink" href="#name-changes-in-manage-py" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 的一些选项在增加了固定数据支持后有所改变。</p>
+<ul class="simple">
+<li>有新的 <code class="docutils literal notranslate"><span class="pre">dumpdata</span></code> 和 <code class="docutils literal notranslate"><span class="pre">loaddata</span></code> 命令，正如你所期望的那样，这些命令将用来从数据库中导出和导入数据。这些命令可以对任何 Django 支持的序列化格式进行操作。</li>
+<li><code class="docutils literal notranslate"><span class="pre">sqlinitialdata</span></code> 命令已改名为 <code class="docutils literal notranslate"><span class="pre">sqlcustom</span></code>，以强调 <code class="docutils literal notranslate"><span class="pre">loaddata</span></code> 应用于数据（<code class="docutils literal notranslate"><span class="pre">sqlcustom</span></code> 用于其他自定义 SQL ——视图、存储过程等）。</li>
+<li><code class="docutils literal notranslate"><span class="pre">install</span></code> 命令已被删除。使用 <code class="docutils literal notranslate"><span class="pre">syncdb</span></code>。</li>
+</ul>
+</div>
+<div class="section" id="s-backslash-escaping-changed">
+<span id="backslash-escaping-changed"></span><h3>反斜杠转义的改变<a class="headerlink" href="#backslash-escaping-changed" title="永久链接至标题">¶</a></h3>
+<p>Django 数据库 API 现在可以转义作为查询参数的反斜线。如果你有任何匹配反斜线的数据库 API 代码，并且之前还能正常工作（尽管没有转义），你必须修改你的代码，将斜线“取消转义”一个级别。</p>
+<p>例如，下面的查询在以前可以生效：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find text containing a single backslash</span>
+<span class="n">MyModel</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">text__contains</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\\\\</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>但在现在上面的命令不再正确了，并且应该重写为下面这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find text containing a single backslash</span>
+<span class="n">MyModel</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">text__contains</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-removed-enable-psyco-setting">
+<span id="removed-enable-psyco-setting"></span><h3>被移除的 ENABLE_PSYCO 配置<a class="headerlink" href="#removed-enable-psyco-setting" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">ENABLE_PSYCO</span></code> 设定将不再存在。假如你的设定文件包括 <code class="docutils literal notranslate"><span class="pre">ENABLE_PSYCO</span></code> ，那么它将不再生效。为了使用 <a class="reference external" href="http://psyco.sourceforge.net/">Psyco</a>，我们建议写一个中间件类来激活它。</p>
+</div>
+</div>
+<div class="section" id="s-what-s-new-in-0-96">
+<span id="what-s-new-in-0-96"></span><h2>0.96 新特性<a class="headerlink" href="#what-s-new-in-0-96" title="永久链接至标题">¶</a></h2>
+<p>本次版本号的更改代表有超过 1000 次代码提交和超过 400 次漏洞修复，所以我们不能详细罗列所有的变化。在这里我们将描述本次发布中最为重要的变化。</p>
+<div class="section" id="s-new-forms-library">
+<span id="new-forms-library"></span><h3>新的表单库<a class="headerlink" href="#new-forms-library" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">django.newforms</span></code> 是 Django 新的表单处理库。它是 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 这个旧的表单／操作器／验证框架的一个替代。这两个 API 在 0.96 版本中都可用，但在接下来的两个版本发布中，我们计划完全切换到新的表单系统，并标记失效和移除旧的系统。</p>
+<p>针对这个的过渡将分三步：</p>
+<ul>
+<li><p class="first">我们已经将当前的 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 复制到了 <code class="docutils literal notranslate"><span class="pre">django.oldforms</span></code>。这将允许你 <em>现在</em> 升级你的代码而不是等待向后不兼容的改变，然后匆忙修复你的代码。只需要像下面这样更改你的 import 声明：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>  <span class="c1"># 0.95-style</span>
+<span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">oldforms</span> <span class="k">as</span> <span class="n">forms</span>  <span class="c1"># 0.96-style</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Django 的下一个正式版本将把当前的 <code class="docutils literal notranslate"><span class="pre">django.newforms</span></code> 移到 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code>。这将是一个向后不兼容的变化，届时还在使用旧版 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 的人将需要如上所述修改他们的导入语句。</p>
+</li>
+<li><p class="first">在那之后的下一个发布版本将完全移除 <code class="docutils literal notranslate"><span class="pre">django.oldforms</span></code>。</p>
+</li>
+</ul>
+<p>尽管 <code class="docutils literal notranslate"><span class="pre">newforms</span></code> 将会继续演进，但它足以应付大多数场景。我们建议任何新接触表单处理的人员跳过旧的表单系统而直接使用新的表单系统。</p>
+<p>想了解更多关于 <code class="docutils literal notranslate"><span class="pre">django.newforms</span></code> 的信息，请阅读 <a class="reference internal" href="../topics/forms/index.html"><span class="doc">新表单</span></a>。</p>
+</div>
+<div class="section" id="s-urlconf-improvements">
+<span id="urlconf-improvements"></span><h3>URLconf 的改进<a class="headerlink" href="#urlconf-improvements" title="永久链接至标题">¶</a></h3>
+<p>现在，你可以在 URLconfs 中使用任何可调用对象作为回调内容（以前，只允许使用引用可调用对象的字符串）。这使得 URLconfs 的使用更加自然。例如，这个 URLconf：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf.urls.defaults</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;^myview/$&quot;</span><span class="p">,</span> <span class="s2">&quot;mysite.myapp.views.myview&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>可以被重写为：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf.urls.defaults</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">mysite.myapp.views</span> <span class="kn">import</span> <span class="n">myview</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;^myview/$&quot;</span><span class="p">,</span> <span class="n">myview</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>一个有用的应用程序可以在使用装饰器时看到；这个变化允许你将装饰器应用到 <em>你的 URLconf</em> 中的视图。因此，你可以很容易地使一个通用的视图需要登录：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf.urls.defaults</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.decorators</span> <span class="kn">import</span> <span class="n">login_required</span>
+<span class="kn">from</span> <span class="nn">django.views.generic.list_detail</span> <span class="kn">import</span> <span class="n">object_list</span>
+<span class="kn">from</span> <span class="nn">mysite.myapp.models</span> <span class="kn">import</span> <span class="n">MyModel</span>
+
+<span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;queryset&quot;</span><span class="p">:</span> <span class="n">MyModel</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span>
+<span class="p">}</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;^myview/$&quot;</span><span class="p">,</span> <span class="n">login_required</span><span class="p">(</span><span class="n">object_list</span><span class="p">),</span> <span class="n">info</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>请注意，这两种语法（字符串和可调用对象）都是有效的，并且在可预见的未来将继续有效。</p>
+</div>
+<div class="section" id="s-the-test-framework">
+<span id="the-test-framework"></span><h3>测试框架<a class="headerlink" href="#the-test-framework" title="永久链接至标题">¶</a></h3>
+<p>Django 现在包含了一个测试框架，所以你可以开始将恐惧转化为无聊（向 Kent Beck 道歉）。你可以基于 <a class="reference external" href="https://docs.python.org/3/library/doctest.html#module-doctest" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">doctest</span></code></a> 或 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#module-unittest" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a> 来编写测试，并用一个简单的测试客户端来测试你的视图。</p>
+<p>还有对 “固定数据” 的新支持——初始数据，存储在任何支持的 <a class="reference internal" href="../topics/serialization.html"><span class="doc">序列化格式</span></a> 中，将在测试开始时加载到你的数据库中。这使得使用真实数据进行测试变得更加容易。</p>
+<p>详见 <a class="reference internal" href="../topics/testing/index.html"><span class="doc">测试文档</span></a>。</p>
+</div>
+<div class="section" id="s-improvements-to-the-admin-interface">
+<span id="improvements-to-the-admin-interface"></span><h3>管理界面的改进<a class="headerlink" href="#improvements-to-the-admin-interface" title="永久链接至标题">¶</a></h3>
+<p>一个很小但是很不错的修改：在管理界面中增加了用于添加和更新用户的专用视图，所以你不再需要担心在管理中使用哈希密码的问题。</p>
+</div>
+</div>
+<div class="section" id="s-thanks">
+<span id="thanks"></span><h2>谢谢<a class="headerlink" href="#thanks" title="永久链接至标题">¶</a></h2>
+<p>从版本 0.95 起，有许多人站了出来并在 Django 的项目发展中扮演了主要角色。我们想要向这些人的辛勤工作表达我们的谢意。</p>
+<ul class="simple">
+<li>Russell Keith-Magee 和 Malcolm Tredinnick 对代码的主要贡献。没有他们，这个版本是不可能的。</li>
+<li>我们的新发行版管理者 James Bennett，感谢他在发布 0.95.1、0.96 和（希望）未来版本方面所做的工作。</li>
+<li>我们的工单管理者 Chris Beaven（又名 SmileyChris）、Simon Greenhill、Michael Radziej 和 Gary Wilson。他们同意承担起将我们的工单整理成目录提交的艰巨任务。找出要做什么现在是一百万倍的容易；再次感谢，伙计们。</li>
+<li>所有提交错误报告、补丁或工单评论的人。我们不可能对每个人的名字表示感谢——超过 200 个开发者提交了 0.96 版本的补丁——但每个为 Django 做出贡献的人都在 <a class="reference external" href="https://github.com/django/django/blob/main/AUTHORS">AUTHORS</a> 中列出。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 0.96 版本发行说明</a><ul>
+<li><a class="reference internal" href="#backwards-incompatible-changes">不向后兼容的变更</a><ul>
+<li><a class="reference internal" href="#mysqldb-version-requirement"><code class="docutils literal notranslate"><span class="pre">MySQLdb</span></code> 版本需求</a></li>
+<li><a class="reference internal" href="#database-constraint-names-changed">数据库约束名称已更改</a></li>
+<li><a class="reference internal" href="#name-changes-in-manage-py"><code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 中的名称改变</a></li>
+<li><a class="reference internal" href="#backslash-escaping-changed">反斜杠转义的改变</a></li>
+<li><a class="reference internal" href="#removed-enable-psyco-setting">被移除的 ENABLE_PSYCO 配置</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#what-s-new-in-0-96">0.96 新特性</a><ul>
+<li><a class="reference internal" href="#new-forms-library">新的表单库</a></li>
+<li><a class="reference internal" href="#urlconf-improvements">URLconf 的改进</a></li>
+<li><a class="reference internal" href="#the-test-framework">测试框架</a></li>
+<li><a class="reference internal" href="#improvements-to-the-admin-interface">管理界面的改进</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thanks">谢谢</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.0-porting-guide.html"
+                          title="上一章">将你的应用从 Django 0.96 移植到 1.0</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="0.95.html"
+                          title="下一章">Django 0.95 版本发布说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/0.96.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.0-porting-guide.html" title="将你的应用从 Django 0.96 移植到 1.0">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="0.95.html" title="Django 0.95 版本发布说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

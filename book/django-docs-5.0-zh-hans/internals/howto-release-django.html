@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 是如何形成的？ &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="prev" title="Django源代码库" href="git.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="git.html" title="Django源代码库">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a></div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-howto-release-django">
+            
+  <div class="section" id="s-how-is-django-formed">
+<span id="how-is-django-formed"></span><h1>Django 是如何形成的？<a class="headerlink" href="#how-is-django-formed" title="永久链接至标题">¶</a></h1>
+<p>这份文档解释了如何发布 Django。</p>
+<p><strong>请在进行更改时保持这些说明的最新状态！</strong> 这里的重点是描述性的，而不是规范性的，所以请随意简化或进行其他更改，但 <strong>相应地更新这份文档！</strong></p>
+<div class="section" id="s-overview">
+<span id="overview"></span><h2>概况<a class="headerlink" href="#overview" title="永久链接至标题">¶</a></h2>
+<p>有三种类型的发布可能需要进行：</p>
+<ul class="simple">
+<li>安全性发布：揭示和修复漏洞。这通常涉及到两个或三个同时发布的版本，例如 3.2.x、4.0.x，根据时间的安排，可能还包括 4.1.x。</li>
+<li>常规版本发布：可以是最终发布（例如 4.1）或错误修复更新（例如 4.1.1）。</li>
+<li>预发布版本：例如 4.2 alpha、beta 或 rc。</li>
+</ul>
+<p>涉及的步骤的简短版本是：</p>
+<ol class="arabic simple">
+<li>如果这是一个安全性发布，请在实际发布前一周预先通知安全性发布列表。</li>
+<li>校对发布说明，查找组织和写作错误。起草一篇博客文章和电子邮件公告。</li>
+<li>更新版本号并创建发布包。</li>
+<li>将包上传到 <code class="docutils literal notranslate"><span class="pre">djangoproject.com</span></code> 服务器。</li>
+<li>验证包的签名，检查它们是否可以安装，并确保最小功能可用。</li>
+<li>将新版本上传到 PyPI。</li>
+<li>在 <code class="docutils literal notranslate"><span class="pre">djangoproject.com</span></code> 的管理员界面中声明新版本。</li>
+<li>发布博客文章并发送电子邮件公告。</li>
+<li>发布后更新版本号。</li>
+</ol>
+<p>有很多细节，请继续阅读。</p>
+</div>
+<div class="section" id="s-prerequisites">
+<span id="prerequisites"></span><h2>先决条件<a class="headerlink" href="#prerequisites" title="永久链接至标题">¶</a></h2>
+<p>在开始之前，你需要准备一些东西：</p>
+<ul>
+<li><p class="first">一个 GPG 密钥。如果你想要使用的密钥不是你的默认签名密钥，你需要在下面的每个 GPG 签名命令中添加 <code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">you&#64;example.com</span></code>，其中 <code class="docutils literal notranslate"><span class="pre">you&#64;example.com</span></code> 是与你想要使用的密钥关联的电子邮件地址。你还需要在 <code class="docutils literal notranslate"><span class="pre">twine</span></code> 调用中添加 <code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">you&#64;example.com</span></code>。</p>
+</li>
+<li><p class="first">安装一些必需的 Python 包：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python -m pip install wheel twine
+</pre></div>
+</div>
+</li>
+<li><p class="first">访问 Django 在 PyPI 上的项目。根据官方文档创建一个项目范围的令牌，并配置你的 <code class="docutils literal notranslate"><span class="pre">$HOME/.pypirc</span></code> 文件如下：</p>
+<div class="literal-block-wrapper docutils container" id="id10">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">~/.pypirc</span></code></span><a class="headerlink" href="#id10" title="永久链接至代码">¶</a></div>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[distutils]</span><span class="w"></span>
+<span class="w">  </span><span class="na">index-servers</span><span class="w"> </span><span class="o">=</span><span class="w"></span>
+<span class="w">    </span><span class="na">pypi</span><span class="w"></span>
+<span class="w">    </span><span class="na">django</span><span class="w"></span>
+
+<span class="k">[pypi]</span><span class="w"></span>
+<span class="w">  </span><span class="na">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">__token__</span><span class="w"></span>
+<span class="w">  </span><span class="na">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s"># User-scoped or project-scoped token, to set as the default.</span><span class="w"></span>
+
+<span class="k">[django]</span><span class="w"></span>
+<span class="w">  </span><span class="na">repository</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">https://upload.pypi.org/legacy/</span><span class="w"></span>
+<span class="w">  </span><span class="na">username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">__token__</span><span class="w"></span>
+<span class="w">  </span><span class="na">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s"># A project token.</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</li>
+<li><p class="first">访问 <code class="docutils literal notranslate"><span class="pre">djangoproject.com</span></code> 服务器以上传文件。</p>
+</li>
+<li><p class="first">以 &quot;站点维护者&quot; 的身份访问 <code class="docutils literal notranslate"><span class="pre">djangoproject.com</span></code> 上的管理员界面。</p>
+</li>
+<li><p class="first">访问 <code class="docutils literal notranslate"><span class="pre">django-announce</span></code> 发布消息。</p>
+</li>
+<li><p class="first">如果这是一个安全发布，请访问预通知分发列表。</p>
+</li>
+</ul>
+<p>如果这是你的第一次发布，你需要与另一位发布者协调，以确保所有这些事项都得到妥善安排。</p>
+</div>
+<div class="section" id="s-pre-release-tasks">
+<span id="pre-release-tasks"></span><h2>发布前的任务<a class="headerlink" href="#pre-release-tasks" title="永久链接至标题">¶</a></h2>
+<p>在开始发布过程之前，需要处理一些事项。这些事项大约在发布前一周开始，大部分可以在实际发布之前的任何时间完成：</p>
+<ol class="arabic">
+<li><p class="first">如果这是一个安全发布，请在发布前 <strong>一周</strong> 发送预通知。预通知的电子邮件模板和收件人列表位于私有的 <code class="docutils literal notranslate"><span class="pre">django-security</span></code> GitHub wiki 中。将预通知的收件人添加到密送列表中。使用你将用于发布的密钥签署邮件，并包括每个要修复的问题的 CVE IDs &lt;https://cveform.mitre.org/&gt;`_（使用 Vendor: djangoproject, Product: django 请求）和补丁。此外，:ref:`通知 django-announce &lt;security-disclosure&gt; 即将发布的安全版本。</p>
+</li>
+<li><p class="first">随着发布日期的临近，监视 Trac，确保即将发布的版本中没有任何阻碍发布的问题。</p>
+</li>
+<li><p class="first">与其他合并人员核对，确保他们没有为发布而提交的未提交更改。</p>
+</li>
+<li><p class="first">校对发布说明，包括查看在线版本以 <a class="reference internal" href="contributing/writing-documentation.html#documentation-link-check"><span class="std std-ref">捕捉任何损坏的链接</span></a> 或 reST 错误，并确保发布说明包含正确的日期。</p>
+</li>
+<li><p class="first">再次确认发布说明中提到了任何已经标记为弃用的 API 的弃用时间表，并且提到了对 Python 版本支持的任何更改。</p>
+</li>
+<li><p class="first">再次检查发布说明索引中是否有指向新发布版本说明的链接；这将在 <code class="docutils literal notranslate"><span class="pre">docs/releases/index.txt</span></code> 中。</p>
+</li>
+<li><p class="first">如果这是一个功能发布，请确保来自 Transifex 的翻译已经被整合。通常，这是由独立的翻译管理员完成，而不是由发布者，但以下是步骤。假设你在 Transifex 上有帐户：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python scripts/manage_translations.py fetch
+</pre></div>
+</div>
+<p>然后提交已更改/添加的文件（包括 <code class="docutils literal notranslate"><span class="pre">.po</span></code> 和 <code class="docutils literal notranslate"><span class="pre">.mo</span></code> 文件）。有时会出现需要调试的验证错误，因此避免在需要立即发布时立即执行此任务。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="contributing/writing-documentation.html#django-admin-manpage"><span class="std std-ref">更新 django-admin 手册页面</span></a>：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> docs
+$ make man
+$ man _build/man/django-admin.1  <span class="c1"># do a quick sanity check</span>
+$ cp _build/man/django-admin.1 man/django-admin.1
+</pre></div>
+</div>
+<p>然后提交已更改的手册页面。</p>
+</li>
+<li><p class="first">如果这是一个新系列的 alpha 版本，请从主分支创建一个新的稳定分支。例如，发布 Django 4.2 时：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git checkout -b stable/4.2.x origin/main
+$ git push origin -u stable/4.2.x:stable/4.2.x
+</pre></div>
+</div>
+<p>同时，在稳定发布分支上的 <code class="docutils literal notranslate"><span class="pre">docs/conf.py</span></code> 中更新 <code class="docutils literal notranslate"><span class="pre">django_next_version</span></code> 变量，将其指向新的开发版本。例如，创建 <code class="docutils literal notranslate"><span class="pre">stable/4.2.x</span></code> 时，在新分支上将 <code class="docutils literal notranslate"><span class="pre">django_next_version</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">'5.0'</span></code>。</p>
+</li>
+<li><p class="first">如果这是一个新系列的 &quot;点零&quot; 发布，请从当前稳定分支在 <a class="reference external" href="https://github.com/django/django-docs-translations">django-docs-translations</a> 存储库中创建一个新分支。例如，发布 Django 4.2 时：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git checkout -b stable/4.2.x origin/stable/4.1.x
+$ git push origin stable/4.2.x:stable/4.2.x
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="s-preparing-for-release">
+<span id="preparing-for-release"></span><h2>发布准备工作<a class="headerlink" href="#preparing-for-release" title="永久链接至标题">¶</a></h2>
+<p>为发布撰写公告博客文章。你可以随时输入它到管理员界面并将其标记为非活动状态。以下是一些示例：<a class="reference external" href="https://www.djangoproject.com/weblog/2013/feb/19/security/">示例安全发布公告</a>、<a class="reference external" href="https://www.djangoproject.com/weblog/2012/mar/23/14/">示例常规发布公告</a>、<a class="reference external" href="https://www.djangoproject.com/weblog/2012/nov/27/15-beta-1/">示例预发布公告</a>。</p>
+</div>
+<div class="section" id="s-actually-rolling-the-release">
+<span id="actually-rolling-the-release"></span><h2>实际发布版本<a class="headerlink" href="#actually-rolling-the-release" title="永久链接至标题">¶</a></h2>
+<p>好的，这是有趣的部分，我们实际发布版本！</p>
+<ol class="arabic">
+<li><p class="first">检查 <a class="reference external" href="https://djangoci.com">Jenkins</a> 是否对你要发布的版本（或版本）是正常的。在它变为正常之前，你可能不应该发布版本。</p>
+</li>
+<li><p class="first">发布始终始于一个发布分支，所以你应该确保你在一个稳定的分支上，并且是最新的。例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git checkout stable/4.1.x
+$ git pull
+</pre></div>
+</div>
+</li>
+<li><p class="first">如果这是一个安全发布，请从 <code class="docutils literal notranslate"><span class="pre">django-security</span></code> 合并适当的补丁。根据需要重新基于这些补丁，使每个补丁都成为发布分支上的普通提交，而不是合并提交。为了确保这一点，使用 <code class="docutils literal notranslate"><span class="pre">--ff-only</span></code> 标志合并它们，例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git checkout stable/4.1.x
+$ git merge --ff-only security/4.1.x
+</pre></div>
+</div>
+<p>（这假设 <code class="docutils literal notranslate"><span class="pre">security/4.1.x</span></code> 是 <code class="docutils literal notranslate"><span class="pre">django-security</span></code> 存储库中包含下一个 4.1 系列发布所需的安全补丁的分支。）</p>
+<p>如果 git 拒绝使用 <code class="docutils literal notranslate"><span class="pre">--ff-only</span></code> 合并，请切换到 security-patch 分支，并在你将要合并的分支上重新基于它（<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">security/4.1.x;</span> <span class="pre">git</span> <span class="pre">rebase</span> <span class="pre">stable/4.1.x</span></code>），然后切换回来并执行合并操作。确保每个安全修复的提交消息解释了这个提交是一个安全修复，并且会有一个公告随后发布（<a class="reference external" href="https://github.com/django/django/commit/bf39978a53f117ca02e9a0c78b76664a41a54745">示例安全提交</a>）。</p>
+</li>
+<li><p class="first">对于功能发布，删除发布说明顶部的 <code class="docutils literal notranslate"><span class="pre">UNDER</span> <span class="pre">DEVELOPMENT</span></code> 标头，并在下一行添加发布日期。对于补丁发布，如果需要，删除 <code class="docutils literal notranslate"><span class="pre">Expected</span></code> 前缀并更新发布日期。在包含特定版本发布说明的所有分支上进行此更改。</p>
+</li>
+<li><p class="first">在发布中更新 <code class="docutils literal notranslate"><span class="pre">django/__init__.py</span></code> 中的版本号。请参阅下面关于设置 <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> 元组的注意事项以获取有关 <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> 的详细信息。</p>
+</li>
+<li><p class="first">如果这是一个预发布包，请在 <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code> 中更新 &quot;Development Status&quot; trove 分类以反映这一点。否则，请确保分类设置为 <code class="docutils literal notranslate"><span class="pre">Development</span> <span class="pre">Status</span> <span class="pre">::</span> <span class="pre">5</span> <span class="pre">-</span> <span class="pre">Production/Stable</span></code>。</p>
+</li>
+<li><p class="first">使用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">tag</span></code> 标记发布。例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git tag --sign --message<span class="o">=</span><span class="s2">&quot;Tag 4.1.1&quot;</span> <span class="m">4</span>.1.1
+</pre></div>
+</div>
+<p>你可以通过运行 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">tag</span> <span class="pre">--verify</span> <span class="pre">&lt;tag&gt;</span></code> 来检查你的工作。</p>
+</li>
+<li><p class="first">推送你的工作，包括标签：<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">--tags</span></code>。</p>
+</li>
+<li><p class="first">确保你的代码库是绝对干净的，通过运行 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-dfx</span></code>。</p>
+</li>
+<li><p class="first">运行 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-f</span> <span class="pre">extras/Makefile</span></code> 生成发布包。这将在 <code class="docutils literal notranslate"><span class="pre">dist/</span></code> 目录中创建发布包。</p>
+</li>
+<li><p class="first">生成发布包的哈希值：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> dist
+$ md5sum *
+$ sha1sum *
+$ sha256sum *
+</pre></div>
+</div>
+</li>
+<li><p class="first">创建一个名为 <code class="docutils literal notranslate"><span class="pre">Django-&lt;&lt;VERSION&gt;&gt;.checksum.txt</span></code> 的 &quot;checksums&quot; 文件，其中包含哈希值和发布信息。使用以下模板，并插入正确的版本、日期、GPG 密钥 ID（从 <code class="docutils literal notranslate"><span class="pre">gpg</span> <span class="pre">--list-keys</span> <span class="pre">--keyid-format</span> <span class="pre">LONG</span></code> 获取）、发布管理器的 GitHub 用户名、发布 URL 和哈希值：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>This file contains MD5, SHA1, and SHA256 checksums for the source-code
+tarball and wheel files of Django &lt;&lt;VERSION&gt;&gt;, released &lt;&lt;DATE&gt;&gt;.
+
+To use this file, you will need a working install of PGP or other
+compatible public-key encryption software. You will also need to have
+the Django release manager&#39;s public key in your keyring. This key has
+the ID ``XXXXXXXXXXXXXXXX`` and can be imported from the MIT
+keyserver, for example, if using the open-source GNU Privacy Guard
+implementation of PGP:
+
+    gpg --keyserver pgp.mit.edu --recv-key XXXXXXXXXXXXXXXX
+
+or via the GitHub API:
+
+    curl https://github.com/&lt;&lt;RELEASE MANAGER GITHUB USERNAME&gt;&gt;.gpg | gpg --import -
+
+Once the key is imported, verify this file:
+
+    gpg --verify &lt;&lt;THIS FILENAME&gt;&gt;
+
+Once you have verified this file, you can use normal MD5, SHA1, or SHA256
+checksumming applications to generate the checksums of the Django
+package and compare them to the checksums listed below.
+
+Release packages
+================
+
+https://www.djangoproject.com/m/releases/&lt;&lt;MAJOR VERSION&gt;&gt;/&lt;&lt;RELEASE TAR.GZ FILENAME&gt;&gt;
+https://www.djangoproject.com/m/releases/&lt;&lt;MAJOR VERSION&gt;&gt;/&lt;&lt;RELEASE WHL FILENAME&gt;&gt;
+
+MD5 checksums
+=============
+
+&lt;&lt;MD5SUM&gt;&gt;  &lt;&lt;RELEASE TAR.GZ FILENAME&gt;&gt;
+&lt;&lt;MD5SUM&gt;&gt;  &lt;&lt;RELEASE WHL FILENAME&gt;&gt;
+
+SHA1 checksums
+==============
+
+&lt;&lt;SHA1SUM&gt;&gt;  &lt;&lt;RELEASE TAR.GZ FILENAME&gt;&gt;
+&lt;&lt;SHA1SUM&gt;&gt;  &lt;&lt;RELEASE WHL FILENAME&gt;&gt;
+
+SHA256 checksums
+================
+
+&lt;&lt;SHA256SUM&gt;&gt;  &lt;&lt;RELEASE TAR.GZ FILENAME&gt;&gt;
+&lt;&lt;SHA256SUM&gt;&gt;  &lt;&lt;RELEASE WHL FILENAME&gt;&gt;
+</pre></div>
+</div>
+</li>
+<li><p class="first">签名 &quot;checksum&quot; 文件（<code class="docutils literal notranslate"><span class="pre">gpg</span> <span class="pre">--clearsign</span> <span class="pre">--digest-algo</span> <span class="pre">SHA256</span> <span class="pre">Django-&lt;version&gt;.checksum.txt</span></code>）。这将生成一个已签名的文档，<code class="docutils literal notranslate"><span class="pre">Django-&lt;version&gt;.checksum.txt.asc</span></code>，你可以使用 <code class="docutils literal notranslate"><span class="pre">gpg</span> <span class="pre">--verify</span> <span class="pre">Django-&lt;version&gt;.checksum.txt.asc</span></code> 来验证它。</p>
+</li>
+</ol>
+<p>如果你要发布多个版本，为每个版本重复这些步骤。</p>
+</div>
+<div class="section" id="s-making-the-release-s-available-to-the-public">
+<span id="making-the-release-s-available-to-the-public"></span><h2>将发布版本提供给公众<a class="headerlink" href="#making-the-release-s-available-to-the-public" title="永久链接至标题">¶</a></h2>
+<p>现在，你准备好将发布版本发布出去了。为了做到这一点：</p>
+<ol class="arabic">
+<li><p class="first">将发布包上传到 djangoproject 服务器，将 A.B. 替换为相应的版本号，例如，对于 4.1.x 发布，请将其替换为 4.1：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ scp Django-* djangoproject.com:/home/www/www/media/releases/A.B
+</pre></div>
+</div>
+<p>如果这是新系列的 alpha 发布，你需要创建目录 A.B。</p>
+</li>
+<li><p class="first">上传 checksum 文件：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ scp Django-A.B.C.checksum.txt.asc djangoproject.com:/home/www/www/media/pgp/Django-A.B.C.checksum.txt
+</pre></div>
+</div>
+</li>
+<li><p class="first">使用 <code class="docutils literal notranslate"><span class="pre">pip</span></code> 测试发布包是否正确安装。以下是一种方法：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ <span class="nv">RELEASE_VERSION</span><span class="o">=</span><span class="s1">&#39;4.1.1&#39;</span>
+$ <span class="nv">MAJOR_VERSION</span><span class="o">=</span><span class="sb">`</span><span class="nb">echo</span> <span class="nv">$RELEASE_VERSION</span><span class="p">|</span> cut -c <span class="m">1</span>-3<span class="sb">`</span>
+
+$ python -m venv django-pip
+$ . django-pip/bin/activate
+$ python -m pip install https://www.djangoproject.com/m/releases/<span class="nv">$MAJOR_VERSION</span>/Django-<span class="nv">$RELEASE_VERSION</span>.tar.gz
+$ deactivate
+$ python -m venv django-pip-wheel
+$ . django-pip-wheel/bin/activate
+$ python -m pip install https://www.djangoproject.com/m/releases/<span class="nv">$MAJOR_VERSION</span>/Django-<span class="nv">$RELEASE_VERSION</span>-py3-none-any.whl
+$ deactivate
+</pre></div>
+</div>
+<p>这只是测试 tarball 是否可用（即重定向是否正常），以及它们是否正确安装，但它可以捕捉到愚蠢的错误。</p>
+</li>
+<li><p class="first">在 Jenkins 上运行 <a class="reference external" href="https://djangoci.com/job/confirm-release/">confirm-release</a> 构建，以验证 checksum 文件（例如，对于 <a class="reference external" href="https://media.djangoproject.com/pgp/Django-4.2rc1.checksum.txt">https://media.djangoproject.com/pgp/Django-4.2rc1.checksum.txt</a>，使用 <code class="docutils literal notranslate"><span class="pre">4.2rc1</span></code>）。</p>
+</li>
+<li><p class="first">将发布包上传到 PyPI（对于预发布版本，只上传 wheel 文件）：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ twine upload -s dist/*
+</pre></div>
+</div>
+</li>
+<li><p class="first">前往管理员界面的 <a class="reference external" href="https://www.djangoproject.com/admin/releases/release/add/">Add release page</a>，输入新的版本号，确保与 tarball 名称中的版本号完全一致（<code class="docutils literal notranslate"><span class="pre">Django-&lt;version&gt;.tar.gz</span></code>）。例如，输入 &quot;4.1.1&quot; 或 &quot;4.2rc1&quot; 等。如果发布属于 LTS 分支，请标记为 LTS。</p>
+<p>如果这是新系列的 alpha 发布，还要为 <em>最终</em> 发布创建一个 Release 对象，确保 <em>Release date</em> 字段为空，从而标记为 <em>未发布</em>。例如，创建 <code class="docutils literal notranslate"><span class="pre">4.2a1</span></code> 的 Release 对象时，也创建一个 <code class="docutils literal notranslate"><span class="pre">4.2</span></code>，其中 <em>Release date</em> 字段为空。</p>
+</li>
+<li><p class="first">发布公告发布的博客文章。</p>
+</li>
+<li><p class="first">对于新版本发布（例如 4.1、4.2），通过将 <code class="docutils literal notranslate"><span class="pre">docs.djangoproject.com</span></code> 数据库中适当的 <code class="docutils literal notranslate"><span class="pre">DocumentRelease</span></code> 对象上的 <code class="docutils literal notranslate"><span class="pre">is_default</span></code> 标志设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 来更新文档的默认稳定版本（这将自动将其设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，对于所有其他版本）；你可以使用站点的管理员界面来完成这个操作。</p>
+<p>为每个具有上一个版本条目的语言创建新的 <code class="docutils literal notranslate"><span class="pre">DocumentRelease</span></code> 对象。通过从 <code class="docutils literal notranslate"><span class="pre">django-docs-translations</span></code> 存储库中当前稳定分支的 <code class="docutils literal notranslate"><span class="pre">manage_translations.py</span> <span class="pre">robots_txt</span></code> 复制条目来更新 djangoproject.com 的 <a class="reference external" href="https://github.com/django/djangoproject.com/blob/main/djangoproject/static/robots.docs.txt">robots.docs.txt</a> 文件。例如，发布 Django 4.2 时：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git checkout stable/4.2.x
+$ git pull
+$ python manage_translations.py robots_txt
+</pre></div>
+</div>
+</li>
+<li><p class="first">将发布公告发布到 <a class="reference internal" href="mailing-lists.html#django-announce-mailing-list"><span class="std std-ref">django-announce</span></a>、<a class="reference internal" href="mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a>、<a class="reference internal" href="mailing-lists.html#django-users-mailing-list"><span class="std std-ref">django-users</span></a> 邮件列表以及 Django 论坛。这应包括一个指向公告博客文章的链接。</p>
+</li>
+<li><p class="first">如果这是一个安全发布，请发送单独的电子邮件到 <a class="reference external" href="mailto:oss-security&#37;&#52;&#48;lists&#46;openwall&#46;com">oss-security<span>&#64;</span>lists<span>&#46;</span>openwall<span>&#46;</span>com</a>。提供一个描述性的主题，例如，&quot;Django&quot; 加上发布说明中的问题标题（包括 CVE ID）。消息正文应包括漏洞详细信息，例如，公告博客文章的内容。包括一个指向公告博客文章的链接。</p>
+</li>
+<li><p class="first">在 <code class="docutils literal notranslate"><span class="pre">#django</span></code> IRC 频道的主题中添加一个指向博客文章的链接：<code class="docutils literal notranslate"><span class="pre">/msg</span> <span class="pre">chanserv</span> <span class="pre">TOPIC</span> <span class="pre">#django</span> <span class="pre">new</span> <span class="pre">topic</span> <span class="pre">goes</span> <span class="pre">here</span></code>。</p>
+</li>
+</ol>
+</div>
+<div class="section" id="s-post-release">
+<span id="post-release"></span><h2>发布后<a class="headerlink" href="#post-release" title="永久链接至标题">¶</a></h2>
+<p>你差不多完成了！现在剩下要做的只有：</p>
+<ol class="arabic simple">
+<li>再次更新 <code class="docutils literal notranslate"><span class="pre">django/__init__.py</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> 元组，增加到下一个预期的发布版本。例如，在发布 4.1.1 后，将 <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> 更新为 <code class="docutils literal notranslate"><span class="pre">VERSION</span> <span class="pre">=</span> <span class="pre">(4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">'alpha',</span> <span class="pre">0)</span></code>。</li>
+<li>如果需要的话，在 <a class="reference external" href="https://code.djangoproject.com/admin/ticket/versions">Trac 的版本列表</a> 中添加发布（如果是最终发布，请通过修改 code.djangoproject.com 的 <a class="reference external" href="https://github.com/django/code.djangoproject.com/blob/main/trac-env/conf/trac.ini">trac.ini</a> 中的 <code class="docutils literal notranslate"><span class="pre">default_version</span></code> 设置将其设置为默认版本）。新的 X.Y 版本应该在 alpha 发布之后添加，并且在 &quot;点零&quot; 发布之后更新默认版本。</li>
+<li>如果这是一个最终发布，请在 Trac 上的 <a class="reference external" href="https://code.djangoproject.com/#Djangoreleaseprocess">Django release process</a> 中更新当前稳定分支并删除预发布分支。</li>
+<li>如果这是一个安全发布，请更新 <a class="reference internal" href="../releases/security.html"><span class="doc">安全问题档案</span></a>，提供解决问题的详细信息。</li>
+</ol>
+</div>
+<div class="section" id="s-new-stable-branch-tasks">
+<span id="new-stable-branch-tasks"></span><h2>新稳定分支任务<a class="headerlink" href="#new-stable-branch-tasks" title="永久链接至标题">¶</a></h2>
+<p>在创建新的稳定分支（通常在 alpha 版本发布后）后，有几项任务需要在接下来的时间内完成。其中一些任务不需要由发布者完成。</p>
+<ol class="arabic simple">
+<li>在 <code class="docutils literal notranslate"><span class="pre">docs.djangoproject.com</span></code> 数据库中为新版本的文档创建一个新的 <code class="docutils literal notranslate"><span class="pre">DocumentRelease</span></code> 对象，并更新 <code class="docutils literal notranslate"><span class="pre">docs/fixtures/doc_releases.json</span></code> JSON fixture，以便没有访问生产数据库权限的人仍然可以运行一个最新的文档站点副本。</li>
+<li>为新的功能版本创建一个简化版的发布说明。可以使用上一个功能版本的简化版或者复制上一个功能版本的内容，然后删除大部分内容，只保留标题。</li>
+<li>将 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.hashers.PBKDF2PasswordHasher</span></code> 中的默认 PBKDF2 迭代次数增加约 20%（选择一个整数）。运行测试，并使用新值更新 3 个失败的哈希器测试。确保在发布说明中有记录（查看 4.1 版本说明以获取示例）。</li>
+<li>移除已经达到弃用周期末的功能。每个移除操作应该在单独的提交中完成，以确保清晰可见。在提交消息中，如果可能的话，添加一个 &quot;refs #XXXX&quot; 到最初的弃用开始的问题。</li>
+<li>从两个版本前的文档中删除 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">versionadded::</span></code>、<code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">versionadded::</span></code> 和 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">deprecated::</span></code> 注释。例如，在 Django 4.2 中，将删除 4.0 版本的注释。</li>
+<li>将新分支添加到 <a class="reference external" href="https://readthedocs.org/projects/django/">Read the Docs</a>。由于自动生成的版本名称（&quot;stable-A.B.x&quot;）与 Read the Docs 中使用的版本名称（&quot;A.B.x&quot;）不同，因此请创建一个 <a class="reference external" href="https://github.com/readthedocs/readthedocs.org/issues/5537">票务请求</a> 请求新版本。</li>
+<li><a class="reference external" href="https://github.com/pypa/trove-classifiers/issues/29">在 PyPI 上请求新的分类器</a>。例如 <code class="docutils literal notranslate"><span class="pre">Framework</span> <span class="pre">::</span> <span class="pre">Django</span> <span class="pre">::</span> <span class="pre">3.1</span></code>。</li>
+<li>更新当前处于活跃开发中的分支，并在 Trac 上的 <a class="reference external" href="https://code.djangoproject.com/#Djangoreleaseprocess">Django 发布流程</a> 中添加预发布分支。</li>
+</ol>
+</div>
+<div class="section" id="s-notes-on-setting-the-version-tuple">
+<span id="notes-on-setting-the-version-tuple"></span><h2>关于设置 VERSION 元组的注意事项<a class="headerlink" href="#notes-on-setting-the-version-tuple" title="永久链接至标题">¶</a></h2>
+<p>Django 的版本报告受控于 <code class="docutils literal notranslate"><span class="pre">django/__init__.py</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">VERSION</span></code> 元组。这是一个包含五个元素的元组，其元素分别是：</p>
+<ol class="arabic simple">
+<li>主要版本。</li>
+<li>次要版本。</li>
+<li>微版本。</li>
+<li>状态 -- 可以是 &quot;alpha&quot;、&quot;beta&quot;、&quot;rc&quot; 或 &quot;final&quot; 中的一个。</li>
+<li>系列号，用于按顺序运行的 alpha/beta/RC 包（例如，&quot;beta 1&quot;、&quot;beta 2&quot; 等）。</li>
+</ol>
+<p>对于最终发布，状态始终为 &quot;final&quot;，系列号始终为 0。状态为 &quot;alpha&quot; 的系列号为 0 将被报告为 &quot;pre-alpha&quot;。</p>
+<p>一些示例：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">&quot;final&quot;,</span> <span class="pre">0)</span></code> → &quot;4.1.1&quot;</li>
+<li><code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">2,</span> <span class="pre">0,</span> <span class="pre">&quot;alpha&quot;,</span> <span class="pre">0)</span></code> → &quot;4.2 pre-alpha&quot;</li>
+<li><code class="docutils literal notranslate"><span class="pre">(4,</span> <span class="pre">2,</span> <span class="pre">0,</span> <span class="pre">&quot;beta&quot;,</span> <span class="pre">1)</span></code> → &quot;4.2 beta 1&quot;</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 是如何形成的？</a><ul>
+<li><a class="reference internal" href="#overview">概况</a></li>
+<li><a class="reference internal" href="#prerequisites">先决条件</a></li>
+<li><a class="reference internal" href="#pre-release-tasks">发布前的任务</a></li>
+<li><a class="reference internal" href="#preparing-for-release">发布准备工作</a></li>
+<li><a class="reference internal" href="#actually-rolling-the-release">实际发布版本</a></li>
+<li><a class="reference internal" href="#making-the-release-s-available-to-the-public">将发布版本提供给公众</a></li>
+<li><a class="reference internal" href="#post-release">发布后</a></li>
+<li><a class="reference internal" href="#new-stable-branch-tasks">新稳定分支任务</a></li>
+<li><a class="reference internal" href="#notes-on-setting-the-version-tuple">关于设置 VERSION 元组的注意事项</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="git.html"
+                          title="上一章">Django源代码库</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/internals/howto-release-django.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="git.html" title="Django源代码库">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a></div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

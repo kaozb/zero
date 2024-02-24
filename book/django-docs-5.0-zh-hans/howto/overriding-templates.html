@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何覆盖模板 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何管理静态文件（如图片、JavaScript、CSS）" href="static-files/index.html" />
+    <link rel="prev" title="如何创建 PDF 文件" href="outputting-pdf.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="outputting-pdf.html" title="如何创建 PDF 文件">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="static-files/index.html" title="如何管理静态文件（如图片、JavaScript、CSS）">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-overriding-templates">
+            
+  <div class="section" id="s-how-to-override-templates">
+<span id="how-to-override-templates"></span><h1>如何覆盖模板<a class="headerlink" href="#how-to-override-templates" title="永久链接至标题">¶</a></h1>
+<p>在项目中，你可以想要在另一个 Django 应用中重写模板，不论它是第三方应用或 contrib 应用，例如 <code class="docutils literal notranslate"><span class="pre">django.contrib.admin</span></code>。你可以将重写的模板置于工程的模板目录或应用的模板目录。</p>
+<p>若应用和工程的模板模板都包含被重写的模板，默认的 Django 模板加载器会先尝试加载工程目录下的模板。换句话说，先查找 <a class="reference internal" href="../ref/settings.html#std-setting-TEMPLATES-DIRS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DIRS</span></code></a>，其次 <a class="reference internal" href="../ref/settings.html#std-setting-TEMPLATES-APP_DIRS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APP_DIRS</span></code></a>。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">阅读 <span class="xref std std-ref">重写内置视图模板</span> 若你正在找相关资料。</p>
+</div>
+<div class="section" id="s-overriding-from-the-project-s-templates-directory">
+<span id="overriding-from-the-project-s-templates-directory"></span><h2>重写来自工程目录的模板<a class="headerlink" href="#overriding-from-the-project-s-templates-directory" title="永久链接至标题">¶</a></h2>
+<p>首先，我们探索用在工程模板目录创建替代模板的方法。</p>
+<p>假设你正在重写第三方应用 <code class="docutils literal notranslate"><span class="pre">blog</span></code> 的模板，该应用提供了 <code class="docutils literal notranslate"><span class="pre">blog/post.html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">blog/list.html</span></code> 模板。工程关键配置如下:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">BASE_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+
+<span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="s2">&quot;blog&quot;</span><span class="p">,</span>
+    <span class="o">...</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">TEMPLATES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django.template.backends.django.DjangoTemplates&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DIRS&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">BASE_DIR</span> <span class="o">/</span> <span class="s2">&quot;templates&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;APP_DIRS&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="c1"># ...</span>
+    <span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>若用模板工程模板创建工程，则 <a class="reference internal" href="../ref/settings.html#std-setting-TEMPLATES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEMPLATES</span></code></a> 和 <code class="docutils literal notranslate"><span class="pre">BASE_DIR</span></code> 早已存在。需要修改的配置是 <a class="reference internal" href="../ref/settings.html#std-setting-TEMPLATES-DIRS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DIRS</span></code></a>。</p>
+<p>这些配置假定在工程根目录下有个 <code class="docutils literal notranslate"><span class="pre">templates</span></code> 目录。要重写 <code class="docutils literal notranslate"><span class="pre">blog</span></code> 应用的模板，在 <code class="docutils literal notranslate"><span class="pre">templates</span></code> 目录中创建一个文件夹，然后将以下模板文件添加至该目录：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>templates/
+    blog/
+        list.html
+        post.html
+</pre></div>
+</div>
+<p>模板加载器会先查找 <code class="docutils literal notranslate"><span class="pre">DIRS</span></code> 目录下的模板。当 <code class="docutils literal notranslate"><span class="pre">blog</span></code> 应用中的视图要求 <code class="docutils literal notranslate"><span class="pre">blog/post.html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">blog/list.html</span></code> 模板，加载器会返回你刚创建的文件。</p>
+</div>
+<div class="section" id="s-overriding-from-an-app-s-template-directory">
+<span id="overriding-from-an-app-s-template-directory"></span><h2>重写来自应用模板目录的模板<a class="headerlink" href="#overriding-from-an-app-s-template-directory" title="永久链接至标题">¶</a></h2>
+<p>由于重写的模板位于工程应用之外，更常见的做法是使用第一个方法，然后将重写的模板置于工程模板目录。然而，如果你偏爱将重写的模板放入应用模板目录，也是可以的。</p>
+<p>首先，确保模板配置会搜索应用模板目录:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TEMPLATES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="c1"># ...</span>
+        <span class="s2">&quot;APP_DIRS&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="c1"># ...</span>
+    <span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>若你想重写名为 <code class="docutils literal notranslate"><span class="pre">blog/list.html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">blog/post.html</span></code> 的模板，并将它们置于名为 <code class="docutils literal notranslate"><span class="pre">myapp</span></code> 的应用中，那么目录结构应该看起来像这样：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>myapp/
+    templates/
+        blog/
+            list.html
+            post.html
+</pre></div>
+</div>
+<p>当 <a class="reference internal" href="../ref/settings.html#std-setting-TEMPLATES-APP_DIRS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APP_DIRS</span></code></a> 置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，模板加载器会深入应用的模板目录查找模板。</p>
+</div>
+<div class="section" id="s-extending-an-overridden-template">
+<span id="s-id1"></span><span id="extending-an-overridden-template"></span><span id="id1"></span><h2>扩展复写模板<a class="headerlink" href="#extending-an-overridden-template" title="永久链接至标题">¶</a></h2>
+<p>当你配置好你的模板加载器后，你可以使用 <code class="xref std std-ttag docutils literal notranslate"><span class="pre">{%</span> <span class="pre">extends</span> <span class="pre">%}</span></code> 模板标签的同时来覆盖它。这样可以让你不用重写整个模板就可以做一些微小的改动。</p>
+<p>举个例子，你可以使用这项技术在 <code class="docutils literal notranslate"><span class="pre">admin/base_site.html</span></code> 管理员模板中添加自定义的Logo：</p>
+<blockquote>
+<div><div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">templates/admin/base_site.html</span></code></span><a class="headerlink" href="#id2" title="永久链接至代码">¶</a></div>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span> <span class="cp">{%</span> <span class="k">extends</span> <span class="s2">&quot;admin/base_site.html&quot;</span> <span class="cp">%}</span>
+
+ <span class="cp">{%</span> <span class="k">block</span> <span class="nv">branding</span> <span class="cp">%}</span>
+     <span class="p">&lt;</span><span class="nt">img</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;link/to/logo.png&quot;</span> <span class="na">alt</span><span class="o">=</span><span class="s">&quot;logo&quot;</span><span class="p">&gt;</span>
+     <span class="cp">{{</span> <span class="nb">block</span><span class="nv">.super</span> <span class="cp">}}</span>
+ <span class="cp">{%</span> <span class="k">endblock</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div>
+</div></blockquote>
+<p>关键注意点：</p>
+<ul class="simple">
+<li>这个例子创建了使用配置好的项目级 <code class="docutils literal notranslate"><span class="pre">templates</span></code> 目录创建了管理员文件 <code class="docutils literal notranslate"><span class="pre">templates/admin/base_site.html</span></code> 来覆盖管理员文件 <code class="docutils literal notranslate"><span class="pre">admin/base_site.html</span></code> 。</li>
+<li>新的管理员模板拓展了  <code class="docutils literal notranslate"><span class="pre">admin/base_site.html</span></code> 并覆盖了它。</li>
+<li>新模板只是替换了 <code class="docutils literal notranslate"><span class="pre">branding</span></code> 区域，添加了一个自定义的Logo，和使用了 <code class="docutils literal notranslate"><span class="pre">block.super</span></code> 以继承原有的内容。</li>
+<li>被继承的管理员模板 <code class="docutils literal notranslate"><span class="pre">admin/base_site.html</span></code> 的其他内容没有变化。</li>
+</ul>
+<p>这个技术起作用是因为当解析到 <code class="docutils literal notranslate"><span class="pre">extends</span></code> 标签时模板加载器不认为这是已经加载过的有覆盖的模板（管理员模板位于 <code class="docutils literal notranslate"><span class="pre">templates/admin/base_site.html</span></code>）。与 <code class="docutils literal notranslate"><span class="pre">block.super</span></code> 的结合是对原有内容做很小的改动的有力技术。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何覆盖模板</a><ul>
+<li><a class="reference internal" href="#overriding-from-the-project-s-templates-directory">重写来自工程目录的模板</a></li>
+<li><a class="reference internal" href="#overriding-from-an-app-s-template-directory">重写来自应用模板目录的模板</a></li>
+<li><a class="reference internal" href="#extending-an-overridden-template">扩展复写模板</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="outputting-pdf.html"
+                          title="上一章">如何创建 PDF 文件</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="static-files/index.html"
+                          title="下一章">如何管理静态文件（如图片、JavaScript、CSS）</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/howto/overriding-templates.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="outputting-pdf.html" title="如何创建 PDF 文件">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="static-files/index.html" title="如何管理静态文件（如图片、JavaScript、CSS）">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

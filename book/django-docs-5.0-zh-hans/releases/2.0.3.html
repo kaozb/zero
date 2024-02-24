@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 2.0.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 2.0.2 版本发行说明" href="2.0.2.html" />
+    <link rel="prev" title="Django 2.0.4 版本发行说明" href="2.0.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="2.0.4.html" title="Django 2.0.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="2.0.2.html" title="Django 2.0.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-2.0.3">
+            
+  <div class="section" id="s-django-2-0-3-release-notes">
+<span id="django-2-0-3-release-notes"></span><h1>Django 2.0.3 版本发行说明<a class="headerlink" href="#django-2-0-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2018 年 3 月 6 日</em></p>
+<p>Django 2.0.3 修复了 2.0.2 版本中的两个安全问题和一些错误。此外，还整合了来自 Transifex 的最新字符串翻译。</p>
+<div class="section" id="s-cve-2018-7536-denial-of-service-possibility-in-urlize-and-urlizetrunc-template-filters">
+<span id="cve-2018-7536-denial-of-service-possibility-in-urlize-and-urlizetrunc-template-filters"></span><h2>CVE-2018-7536: <code class="docutils literal notranslate"><span class="pre">urlize</span></code> 和 <code class="docutils literal notranslate"><span class="pre">urlizetrunc</span></code> 模板过滤器中的拒绝服务可能性问题<a class="headerlink" href="#cve-2018-7536-denial-of-service-possibility-in-urlize-and-urlizetrunc-template-filters" title="永久链接至标题">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">django.utils.html.urlize()</span></code> 函数在处理某些输入时非常慢，这是由于两个正则表达式中的灾难性回溯漏洞引起的。<code class="docutils literal notranslate"><span class="pre">urlize()</span></code> 函数用于实现 <code class="docutils literal notranslate"><span class="pre">urlize</span></code> 和 <code class="docutils literal notranslate"><span class="pre">urlizetrunc</span></code> 模板过滤器，因此这两个过滤器也存在漏洞。</p>
+<p>问题正则表达式被替换为具有相似行为的解析逻辑。</p>
+</div>
+<div class="section" id="s-cve-2018-7537-denial-of-service-possibility-in-truncatechars-html-and-truncatewords-html-template-filters">
+<span id="cve-2018-7537-denial-of-service-possibility-in-truncatechars-html-and-truncatewords-html-template-filters"></span><h2>CVE-2018-7537: <code class="docutils literal notranslate"><span class="pre">truncatechars_html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">truncatewords_html</span></code> 模板过滤器中存在拒绝服务可能性问题。<a class="headerlink" href="#cve-2018-7537-denial-of-service-possibility-in-truncatechars-html-and-truncatewords-html-template-filters" title="永久链接至标题">¶</a></h2>
+<p>如果给 <code class="docutils literal notranslate"><span class="pre">django.utils.text.Truncator</span></code> 的 <code class="docutils literal notranslate"><span class="pre">chars()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">words()</span></code> 方法传递了 <code class="docutils literal notranslate"><span class="pre">html=True</span></code> 参数，由于正则表达式中的灾难性回溯漏洞，它们在处理某些输入时非常慢。<code class="docutils literal notranslate"><span class="pre">chars()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">words()</span></code> 方法用于实现 <code class="docutils literal notranslate"><span class="pre">truncatechars_html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">truncatewords_html</span></code> 模板过滤器，因此这两个过滤器也存在漏洞。</p>
+<p>正则表达式中的回溯问题已经修复。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>已修复一个回归问题，该问题导致切片的 <code class="docutils literal notranslate"><span class="pre">QuerySet.distinct().order_by()</span></code> 后跟 <code class="docutils literal notranslate"><span class="pre">count()</span></code> 会导致崩溃（<a class="reference external" href="https://code.djangoproject.com/ticket/29108">#29108</a>）。</li>
+<li>优先考虑了在泰国区域设置下没有 <code class="docutils literal notranslate"><span class="pre">%f</span></code> 的日期时间和时间输入格式，以修复管理员时间选择器小部件显示 &quot;undefined&quot; 的问题（<a class="reference external" href="https://code.djangoproject.com/ticket/29109">#29109</a>）。</li>
+<li>已修复使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.order_by(Exists(...))</span></code> 时的崩溃问题（<a class="reference external" href="https://code.djangoproject.com/ticket/29118">#29118</a>）。</li>
+<li>使 <code class="docutils literal notranslate"><span class="pre">Q.deconstruct()</span></code> 在多个关键字参数的情况下具有确定性（<a class="reference external" href="https://code.djangoproject.com/ticket/29125">#29125</a>）。您可能需要修改现有迁移中的 <code class="docutils literal notranslate"><span class="pre">Q</span></code>，或者接受一个自动生成的迁移。</li>
+<li>已修复一个回归问题，其中带有列表参数的 <code class="docutils literal notranslate"><span class="pre">When()</span></code> 表达式会导致崩溃（<a class="reference external" href="https://code.djangoproject.com/ticket/29166">#29166</a>）。</li>
+<li>已修复在子查询中使用 <code class="docutils literal notranslate"><span class="pre">Window()</span></code> 表达式时的崩溃问题（<a class="reference external" href="https://code.djangoproject.com/ticket/29172">#29172</a>）。</li>
+<li>已修复 <code class="docutils literal notranslate"><span class="pre">AbstractBaseUser.normalize_username()</span></code> 在 <code class="docutils literal notranslate"><span class="pre">username</span></code> 参数不是字符串时的崩溃问题（<a class="reference external" href="https://code.djangoproject.com/ticket/29176">#29176</a>）。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 2.0.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#cve-2018-7536-denial-of-service-possibility-in-urlize-and-urlizetrunc-template-filters">CVE-2018-7536: <code class="docutils literal notranslate"><span class="pre">urlize</span></code> 和 <code class="docutils literal notranslate"><span class="pre">urlizetrunc</span></code> 模板过滤器中的拒绝服务可能性问题</a></li>
+<li><a class="reference internal" href="#cve-2018-7537-denial-of-service-possibility-in-truncatechars-html-and-truncatewords-html-template-filters">CVE-2018-7537: <code class="docutils literal notranslate"><span class="pre">truncatechars_html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">truncatewords_html</span></code> 模板过滤器中存在拒绝服务可能性问题。</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="2.0.4.html"
+                          title="上一章">Django 2.0.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="2.0.2.html"
+                          title="下一章">Django 2.0.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/2.0.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="2.0.4.html" title="Django 2.0.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="2.0.2.html" title="Django 2.0.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

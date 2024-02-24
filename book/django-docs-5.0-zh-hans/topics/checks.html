@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>系统检查框架 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="扩展包" href="external-packages.html" />
+    <link rel="prev" title="信号" href="signals.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="signals.html" title="信号">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="external-packages.html" title="扩展包">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-checks">
+            
+  <div class="section" id="s-module-django.core.checks">
+<span id="s-system-check-framework"></span><span id="module-django.core.checks"></span><span id="system-check-framework"></span><h1>系统检查框架<a class="headerlink" href="#module-django.core.checks" title="永久链接至标题">¶</a></h1>
+<p>系统检查框架是一组验证Django项目的静态检查。 它检测到常见的问题，并提供了如何解决这些问题的提示。 该框架是可扩展的，所以你可以轻松地添加自己的检查。</p>
+<p>通过 <a class="reference internal" href="../ref/django-admin.html#django-admin-check"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">check</span></code></a> 命令来显示的触发检查操作。检查会在大多数命令之前被隐式触发，包括 <a class="reference internal" href="../ref/django-admin.html#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 和 <a class="reference internal" href="../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> 。出于性能原因，检查不会作为部署中使用的 WSGI 堆栈的一部分来运行。如果你需要在部署系统上运行系统检查，可以使用 <a class="reference internal" href="../ref/django-admin.html#django-admin-check"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">check</span></code></a> 来触发他们。</p>
+<p>严重的错误将阻止 Django 命令（比如 <a class="reference internal" href="../ref/django-admin.html#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a>）运行。小问题将会在控制台上报告出来。如果你已经检查了警告的原因并愿意忽略它，你可以在 settings.py 文件里的 <a class="reference internal" href="../ref/settings.html#std-setting-SILENCED_SYSTEM_CHECKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SILENCED_SYSTEM_CHECKS</span></code></a> 设置隐藏指定的警告。</p>
+<p>Django 引发的所有检查的完整列表在 <a class="reference internal" href="../ref/checks.html"><span class="doc">System check reference</span></a> 中可查。</p>
+<div class="section" id="s-writing-your-own-checks">
+<span id="writing-your-own-checks"></span><h2>编写自定义的检查<a class="headerlink" href="#writing-your-own-checks" title="永久链接至标题">¶</a></h2>
+<p>框架是可伸缩的，并且允许你编写函数来执行其他你需要的其他检查。举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.checks</span> <span class="kn">import</span> <span class="n">Error</span><span class="p">,</span> <span class="n">register</span>
+
+
+<span class="nd">@register</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">example_check</span><span class="p">(</span><span class="n">app_configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># ... your check logic here</span>
+    <span class="k">if</span> <span class="n">check_failed</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Error</span><span class="p">(</span>
+                <span class="s2">&quot;an error&quot;</span><span class="p">,</span>
+                <span class="n">hint</span><span class="o">=</span><span class="s2">&quot;A hint.&quot;</span><span class="p">,</span>
+                <span class="n">obj</span><span class="o">=</span><span class="n">checked_object</span><span class="p">,</span>
+                <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;myapp.E001&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span>
+</pre></div>
+</div>
+<p>check 函数必须接受一个 <code class="docutils literal notranslate"><span class="pre">app_configs</span></code> 参数；这个参数是应该被检查的应用程序的列表。如果为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则必须在项目中的 <em>所有</em> 已安装的应用程序上运行检查。</p>
+<p>检查将接收一个 <code class="docutils literal notranslate"><span class="pre">databases</span></code> 关键字参数。这是一个数据库别名的列表，其连接可能用于检查数据库级别的配置。如果 <code class="docutils literal notranslate"><span class="pre">databases</span></code> 为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则检查必须不使用任何数据库连接。</p>
+<p><code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> 参数是为了将来扩展而必需的。</p>
+<div class="section" id="s-messages">
+<span id="messages"></span><h3>消息<a class="headerlink" href="#messages" title="永久链接至标题">¶</a></h3>
+<p>函数必须返回消息列表。如果检查结果没有发现问题，检查函数必须返回空列表。</p>
+<p>警告和错误由必须是 <a class="reference internal" href="../ref/checks.html#django.core.checks.CheckMessage" title="django.core.checks.CheckMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">CheckMessage</span></code></a> 的检查方法引发。<a class="reference internal" href="../ref/checks.html#django.core.checks.CheckMessage" title="django.core.checks.CheckMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">CheckMessage</span></code></a> 的实例概括了错误或警告。它也提供适合消息的上下文和消息，和用来过滤目的的唯一标示。</p>
+<p>这个概念与来自  <a class="reference internal" href="../ref/contrib/messages.html"><span class="doc">message framework</span></a> or the <a class="reference internal" href="logging.html"><span class="doc">logging framework</span></a> 的消息非常相似。消息标有 <code class="docutils literal notranslate"><span class="pre">level</span></code>&nbsp;，标示消息的严重性。</p>
+<p>也可以有快捷方式来简单创建公共级别的消息。当使用这些类你可以忽略 <code class="docutils literal notranslate"><span class="pre">level</span></code>&nbsp;参数，因为它已经通过类名隐含。</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/checks.html#django.core.checks.Debug" title="django.core.checks.Debug"><code class="xref py py-class docutils literal notranslate"><span class="pre">Debug</span></code></a></li>
+<li><a class="reference internal" href="../ref/checks.html#django.core.checks.Info" title="django.core.checks.Info"><code class="xref py py-class docutils literal notranslate"><span class="pre">Info</span></code></a></li>
+<li><a class="reference internal" href="../ref/checks.html#django.core.checks.Warning" title="django.core.checks.Warning"><code class="xref py py-class docutils literal notranslate"><span class="pre">Warning</span></code></a></li>
+<li><a class="reference internal" href="../ref/checks.html#django.core.checks.Error" title="django.core.checks.Error"><code class="xref py py-class docutils literal notranslate"><span class="pre">Error</span></code></a></li>
+<li><a class="reference internal" href="../ref/checks.html#django.core.checks.Critical" title="django.core.checks.Critical"><code class="xref py py-class docutils literal notranslate"><span class="pre">Critical</span></code></a></li>
+</ul>
+</div>
+<div class="section" id="s-registering-and-labeling-checks">
+<span id="s-registering-labeling-checks"></span><span id="registering-and-labeling-checks"></span><span id="registering-labeling-checks"></span><h3>注册和标记检查<a class="headerlink" href="#registering-and-labeling-checks" title="永久链接至标题">¶</a></h3>
+<p>最后，你的检查函数必须已经在系统检查注册表明确注册。检查应该在加载应用程序时加载文件中注册；比如，在 <a class="reference internal" href="../ref/applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AppConfig.ready()</span></code></a> 方法中。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.core.checks.register">
+<code class="sig-name descname"><span class="pre">register</span></code>(<em><span class="n"><span class="pre">*tags)(function</span></span></em>)<a class="headerlink" href="#django.core.checks.register" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>为了标记检查，你可以根据需要来传递很多标签给 <code class="docutils literal notranslate"><span class="pre">register</span></code>。标记检查很有用，因为它允许你仅运行一个特定的检查组。比如，为了注册一个兼容性检查，你可以进行以下调用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.checks</span> <span class="kn">import</span> <span class="n">register</span><span class="p">,</span> <span class="n">Tags</span>
+
+
+<span class="nd">@register</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">compatibility</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_check</span><span class="p">(</span><span class="n">app_configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># ... perform compatibility checks and collect errors</span>
+    <span class="k">return</span> <span class="n">errors</span>
+</pre></div>
+</div>
+<p>你可以注册仅与生产配置文件相关的&quot;部署检查&quot; ：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@register</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">security</span><span class="p">,</span> <span class="n">deploy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_check</span><span class="p">(</span><span class="n">app_configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>这些检查只在使用 <a class="reference internal" href="../ref/django-admin.html#cmdoption-check-deploy"><code class="xref std std-option docutils literal notranslate"><span class="pre">check</span> <span class="pre">--deploy</span></code></a> 选项时运行。</p>
+<p>你也可以把 <code class="docutils literal notranslate"><span class="pre">register</span></code> 当做函数而不是装饰器，通过传递一个可调用对象（通常是函数）作为第一参数传递给 <code class="docutils literal notranslate"><span class="pre">register</span></code>。</p>
+<p>下面的代码和上面的代码等同：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_check</span><span class="p">(</span><span class="n">app_configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="o">...</span>
+
+
+<span class="n">register</span><span class="p">(</span><span class="n">my_check</span><span class="p">,</span> <span class="n">Tags</span><span class="o">.</span><span class="n">security</span><span class="p">,</span> <span class="n">deploy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-field-model-manager-and-database-checks">
+<span id="s-field-checking"></span><span id="field-model-manager-and-database-checks"></span><span id="field-checking"></span><h3>字段，模型，管理器和数据库检查<a class="headerlink" href="#field-model-manager-and-database-checks" title="永久链接至标题">¶</a></h3>
+<p>在某些情况下，你不需要注册检查函数——你可以使用现有的注册。</p>
+<p>字段，模型，模型管理器和数据库后端都实现了一个检查方法，这个方法已经被检查框架注册。如果你想添加其他检查，你可以在基类上扩展实现，完成任何你需要的检查，将任何消息添加到基类生成的消息。建议你将每个检查委派给不同方法。</p>
+<p>考虑一个例子，你正在实现一个自定义字段 <code class="docutils literal notranslate"><span class="pre">RangedIntegerField</span></code>。这个字段添加 <code class="docutils literal notranslate"><span class="pre">min</span></code> 和 <code class="docutils literal notranslate"><span class="pre">max</span></code>&nbsp;参数给 <code class="docutils literal notranslate"><span class="pre">IntegerField</span></code> 的构造器。你可能想添加一个检查来确保用户提供小于或等于最大值的最小值。下面的代码片段显示如何实现这个检查：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core</span> <span class="kn">import</span> <span class="n">checks</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">RangedIntegerField</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="nb">min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="nb">max</span>
+
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Call the superclass</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Do some custom checks and add messages to `errors`:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_check_min_max_values</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+        <span class="c1"># Return all errors and warnings</span>
+        <span class="k">return</span> <span class="n">errors</span>
+
+    <span class="k">def</span> <span class="nf">_check_min_max_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">checks</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span>
+                    <span class="s2">&quot;min greater than max.&quot;</span><span class="p">,</span>
+                    <span class="n">hint</span><span class="o">=</span><span class="s2">&quot;Decrease min or increase max.&quot;</span><span class="p">,</span>
+                    <span class="n">obj</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;myapp.E001&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="c1"># When no error, return an empty list</span>
+        <span class="k">return</span> <span class="p">[]</span>
+</pre></div>
+</div>
+<p>如果你想对模型管理器添加检查，你应该对 <a class="reference internal" href="db/managers.html#django.db.models.Manager" title="django.db.models.Manager"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manager</span></code></a> 的子类采用相同方法。</p>
+<p>如果你想对模型类添加检查，这个方法几乎相同，唯一的区别是这个检查是一个类方法，而不是实例方法。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># ... your own checks ...</span>
+        <span class="k">return</span> <span class="n">errors</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-writing-tests">
+<span id="writing-tests"></span><h3>编写测试<a class="headerlink" href="#writing-tests" title="永久链接至标题">¶</a></h3>
+<p>消息具有可比性。允许你轻松编写测试：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.checks</span> <span class="kn">import</span> <span class="n">Error</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">checked_object</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">expected_errors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">Error</span><span class="p">(</span>
+        <span class="s2">&quot;an error&quot;</span><span class="p">,</span>
+        <span class="n">hint</span><span class="o">=</span><span class="s2">&quot;A hint.&quot;</span><span class="p">,</span>
+        <span class="n">obj</span><span class="o">=</span><span class="n">checked_object</span><span class="p">,</span>
+        <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;myapp.E001&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">]</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">expected_errors</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="s-writing-integration-tests">
+<span id="writing-integration-tests"></span><h4>编写集成测试<a class="headerlink" href="#writing-integration-tests" title="永久链接至标题">¶</a></h4>
+<p>由于在应用程序加载时需要注册某些检查，因此测试它们在系统检查框架内的集成可以是有用的。这可以通过使用 <a class="reference internal" href="../ref/django-admin.html#django.core.management.call_command" title="django.core.management.call_command"><code class="xref py py-func docutils literal notranslate"><span class="pre">call_command()</span></code></a> 函数来实现。</p>
+<p>例如，这个测试演示了:setting:SITE_ID 设置必须是一个整数，这是来自站点框架的内置 <a class="reference internal" href="../ref/checks.html#sites-system-checks"><span class="std std-ref">检查</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.management</span> <span class="kn">import</span> <span class="n">call_command</span>
+<span class="kn">from</span> <span class="nn">django.core.management.base</span> <span class="kn">import</span> <span class="n">SystemCheckError</span>
+<span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">SimpleTestCase</span><span class="p">,</span> <span class="n">modify_settings</span><span class="p">,</span> <span class="n">override_settings</span>
+
+
+<span class="k">class</span> <span class="nc">SystemCheckIntegrationTest</span><span class="p">(</span><span class="n">SimpleTestCase</span><span class="p">):</span>
+    <span class="nd">@override_settings</span><span class="p">(</span><span class="n">SITE_ID</span><span class="o">=</span><span class="s2">&quot;non_integer&quot;</span><span class="p">)</span>
+    <span class="nd">@modify_settings</span><span class="p">(</span><span class="n">INSTALLED_APPS</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;prepend&quot;</span><span class="p">:</span> <span class="s2">&quot;django.contrib.sites&quot;</span><span class="p">})</span>
+    <span class="k">def</span> <span class="nf">test_non_integer_site_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;(sites.E101) The SITE_ID setting must be an integer.&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaisesMessage</span><span class="p">(</span><span class="n">SystemCheckError</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+            <span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;check&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>考虑以下检查，如果自定义设置 <code class="docutils literal notranslate"><span class="pre">ENABLE_ANALYTICS</span></code> 未设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则在部署时发出警告：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.core.checks</span> <span class="kn">import</span> <span class="ne">Warning</span><span class="p">,</span> <span class="n">register</span>
+
+
+<span class="nd">@register</span><span class="p">(</span><span class="s2">&quot;myapp&quot;</span><span class="p">,</span> <span class="n">deploy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">check_enable_analytics_is_true_on_deploy</span><span class="p">(</span><span class="n">app_configs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;ENABLE_ANALYTICS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="ne">Warning</span><span class="p">(</span>
+                <span class="s2">&quot;The ENABLE_ANALYTICS setting should be set to True in deployment.&quot;</span><span class="p">,</span>
+                <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;myapp.W001&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">errors</span>
+</pre></div>
+</div>
+<p>鉴于这个检查不会引发 <code class="docutils literal notranslate"><span class="pre">SystemCheckError</span></code>，可以通过以下方式断言 <code class="docutils literal notranslate"><span class="pre">stderr</span></code> 输出中存在警告消息：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
+
+<span class="kn">from</span> <span class="nn">django.core.management</span> <span class="kn">import</span> <span class="n">call_command</span>
+<span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">SimpleTestCase</span><span class="p">,</span> <span class="n">override_settings</span>
+
+
+<span class="k">class</span> <span class="nc">EnableAnalyticsDeploymentCheckTest</span><span class="p">(</span><span class="n">SimpleTestCase</span><span class="p">):</span>
+    <span class="nd">@override_settings</span><span class="p">(</span><span class="n">ENABLE_ANALYTICS</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_when_set_to_none</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">stderr</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;check&quot;</span><span class="p">,</span> <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="s2">&quot;myapp&quot;</span><span class="p">,</span> <span class="s2">&quot;--deploy&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">stderr</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;(myapp.W001) The ENABLE_ANALYTICS setting should be set &quot;</span>
+            <span class="s2">&quot;to True in deployment.&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">stderr</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">系统检查框架</a><ul>
+<li><a class="reference internal" href="#writing-your-own-checks">编写自定义的检查</a><ul>
+<li><a class="reference internal" href="#messages">消息</a></li>
+<li><a class="reference internal" href="#registering-and-labeling-checks">注册和标记检查</a></li>
+<li><a class="reference internal" href="#field-model-manager-and-database-checks">字段，模型，管理器和数据库检查</a></li>
+<li><a class="reference internal" href="#writing-tests">编写测试</a><ul>
+<li><a class="reference internal" href="#writing-integration-tests">编写集成测试</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="signals.html"
+                          title="上一章">信号</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="external-packages.html"
+                          title="下一章">扩展包</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/topics/checks.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="signals.html" title="信号">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="external-packages.html" title="扩展包">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django源代码库 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 是如何形成的？" href="howto-release-django.html" />
+    <link rel="prev" title="Django废弃时间表" href="deprecation.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="deprecation.html" title="Django废弃时间表">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="howto-release-django.html" title="Django 是如何形成的？">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-git">
+            
+  <div class="section" id="s-the-django-source-code-repository">
+<span id="the-django-source-code-repository"></span><h1>Django源代码库<a class="headerlink" href="#the-django-source-code-repository" title="永久链接至标题">¶</a></h1>
+<p>当将Django应用程序部署到真实的生产环境中时，你几乎总是想使用“Django的正式打包发行版”。</p>
+<p>不过，如果你想尝试即将发布的开发版本中的代码，或者想参与Django的开发，就需要克隆一个Django源代码库。</p>
+<p>本文介绍了代码存储库的布局方式，以及如何使用和查找其中的内容。</p>
+<div class="section" id="s-high-level-overview">
+<span id="high-level-overview"></span><h2>高级概述<a class="headerlink" href="#high-level-overview" title="永久链接至标题">¶</a></h2>
+<p>Django 源代码仓库使用 <a class="reference external" href="https://git-scm.com/">Git</a> 跟踪代码随时间的变化，因此您需要在计算机上安装 Git 客户端（一个名为 <code class="docutils literal notranslate"><span class="pre">git</span></code> 的程序），并熟悉 Git 的基本工作原理。</p>
+<p>Git 的网站提供了各种操作系统的下载。该网站还包含大量的 <a class="reference external" href="https://git-scm.com/doc">文档</a>。</p>
+<p>Django 的 Git 仓库位于在线地址 <a class="reference external" href="https://github.com/django/django">github.com/django/django</a>。它包含了所有 Django 版本的完整源代码，您可以在线浏览。</p>
+<p>Git仓库包含了几个`分支`:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">main</span></code> 包含了即将成为下一个打包发布版本的 Django 的主要开发代码。这是大多数开发活动的焦点所在。</li>
+<li><code class="docutils literal notranslate"><span class="pre">stable/A.B.x</span></code> 是进行发布准备工作的分支。它们也用于在功能版本的初始发布后根据需要进行的错误修复和安全发布。</li>
+</ul>
+<p>Git仓库也包含`tags`。这些是Django从1.0版本开始打包发行的确切版本。</p>
+<p><code class="docutils literal notranslate"><span class="pre">archive/</span></code> 前缀下还存在许多标签，用于 <a class="reference internal" href="#archived-feature-development-work"><span class="std std-ref">已归档的工作</span></a>。</p>
+<p><a class="reference external" href="https://www.djangoproject.com/">Djangoproject.com</a> 网站的源代码可以在 <a class="reference external" href="https://github.com/django/djangoproject.com">github.com/django/djangoproject.com</a> 上找到。</p>
+</div>
+<div class="section" id="s-the-main-branch">
+<span id="the-main-branch"></span><h2>主要分支<a class="headerlink" href="#the-main-branch" title="永久链接至标题">¶</a></h2>
+<p>如果你想尝试下一版 Django 的开发代码，或者想通过修复错误或开发新功能来贡献于 Django，你需要从主要分支获取代码。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在 2021 年 3 月之前，主要分支被称为 <code class="docutils literal notranslate"><span class="pre">master</span></code>。</p>
+</div>
+<p>请注意，这将获取Django的* <em>全部</em> <a href="#id1"><span class="problematic" id="id2">*</span></a>信息:除了包含Python代码的顶级模块` ' Django' ，你还将获得Django文档、测试套件、打包脚本和其他杂项内容的副本。Django的代码将以目录 ' Django' <a href="#id3"><span class="problematic" id="id4">`</span></a>的形式出现在你的克隆文件中。</p>
+<p>要尝试使用你自己的应用程序来运行开发中的代码，请将包含克隆的目录放在你的 Python 导入路径上。然后，<code class="docutils literal notranslate"><span class="pre">import</span></code> 语句寻找 Django 的时候会在你的克隆中找到 <code class="docutils literal notranslate"><span class="pre">django</span></code> 模块。</p>
+<p>如果你打算在 Django 的代码上工作（比如修复错误或开发新功能），你可以停在这里阅读，然后转到 <a class="reference internal" href="contributing/index.html"><span class="doc">Django 贡献文档</span></a>，其中包括首选的编码风格以及如何生成和提交补丁等内容。</p>
+</div>
+<div class="section" id="s-stable-branches">
+<span id="stable-branches"></span><h2>稳定分支<a class="headerlink" href="#stable-branches" title="永久链接至标题">¶</a></h2>
+<p>Django 使用分支来准备 Django 的发布。每个主要发布系列都有自己的稳定分支。</p>
+<p>这些分支可以在仓库中找到，以 <code class="docutils literal notranslate"><span class="pre">stable/A.B.x</span></code> 分支的形式存在，并将在第一个 alpha 版本被标记后创建。</p>
+<p>例如，在 <em>Django 1.5 alpha 1</em> 被标记后不久，分支 <code class="docutils literal notranslate"><span class="pre">stable/1.5.x</span></code> 被创建，所有进一步准备代码以发布最终版本 1.5 的工作都在那里进行。</p>
+<p>这些分支还提供 bug 修复和安全支持，如 <span class="xref std std-ref">支持的版本策略</span> 中所描述的那样。</p>
+<p>例如，在发布 Django 1.5 后，分支 <code class="docutils literal notranslate"><span class="pre">stable/1.5.x</span></code> 只接收安全性和关键稳定性 bug 的修复，最终以 Django 1.5.1 等版本发布。而 <code class="docutils literal notranslate"><span class="pre">stable/1.4.x</span></code> 只接收安全性和数据丢失问题的修复，而 <code class="docutils literal notranslate"><span class="pre">stable/1.3.x</span></code> 则不再接收任何更新。</p>
+<div class="admonition-historical-information admonition">
+<p class="first admonition-title">历史信息</p>
+<p>这个处理 <code class="docutils literal notranslate"><span class="pre">stable/A.B.x</span></code> 分支的策略是从 Django 1.5 发布周期开始采用的。</p>
+<p>以前，这些分支直到发布后才会创建，而稳定工作是在主仓库分支上进行的。因此，在最终发布之前，无法提交关于下一版 Django 的新功能开发工作。</p>
+<p class="last">例如，在 Django 1.3 发布不久之后，分支 <code class="docutils literal notranslate"><span class="pre">stable/1.3.x</span></code> 被创建。该版本的官方支持已经到期，因此不再由 Django 项目直接维护。然而，所有类似命名的分支仍然存在，有兴趣的社区成员偶尔会使用它们来提供旧版 Django 的非官方支持。</p>
+</div>
+</div>
+<div class="section" id="s-id1">
+<span id="id1"></span><h2>标签(Tags)<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<p>每个 Django 发布版本都会被发布者打上标签并签名。</p>
+<p>这些标签可以在 GitHub 的 <a class="reference external" href="https://github.com/django/django/tags">tags</a> 页面上找到。</p>
+<div class="section" id="s-archived-feature-development-work">
+<span id="s-id3"></span><span id="archived-feature-development-work"></span><span id="id3"></span><h3>已归档的特性开发工作<a class="headerlink" href="#archived-feature-development-work" title="永久链接至标题">¶</a></h3>
+<div class="admonition-historical-information admonition">
+<p class="first admonition-title">历史信息</p>
+<p>自从 Django 在 2012 年转向 Git 后，任何人都可以克隆仓库并创建自己的分支，从而减轻了在源代码仓库中创建官方分支的需要。</p>
+<p class="last">如果您正在探索存储库的历史，例如，如果您试图了解一些功能是如何设计的，则下面的部分非常有用。</p>
+</div>
+<p>由于特性开发分支的性质，它们往往是临时的。有些特性分支会产生成功的功能，这些功能会合并到 Django 的主分支中，成为官方版本的一部分，但也有些不会；无论哪种情况，总会有一个时间点，分支不再由任何开发人员积极维护。在这个时候，分支被视为已关闭。</p>
+<p>Django 曾经使用 Subversion 版本控制系统进行维护，但这个系统没有标准的方法来表示已关闭的分支。作为一种解决方法，不再维护的 Django 分支被移动到了 <code class="docutils literal notranslate"><span class="pre">attic</span></code> 中。</p>
+<p>在 <code class="docutils literal notranslate"><span class="pre">archive/</span></code> 前缀下存在许多标签，以维护对这些以及其他具有历史兴趣的工作的引用。</p>
+<p>以下在 <code class="docutils literal notranslate"><span class="pre">archive/attic/</span></code> 前缀下的标签引用了最终成为 Django 本身一部分的分支的末尾：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">boulder-oracle-sprint</span></code>: 为 Django 的对象关系映射器添加了对 Oracle 数据库的支持。这个功能自 1.0 版本以来一直是 Django 的一部分。</li>
+<li><code class="docutils literal notranslate"><span class="pre">gis</span></code>: 为 Django 的对象关系映射器添加了对地理/空间查询的支持。这已经是自 1.0 版本以来的 Django 的一部分，作为捆绑的应用程序 <code class="docutils literal notranslate"><span class="pre">django.contrib.gis</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">i18n</span></code>: 为 Django 添加了 <a class="reference internal" href="../topics/i18n/index.html"><span class="doc">国际化支持</span></a>。这已经是自 0.90 版本以来的 Django 的一部分。</li>
+<li><code class="docutils literal notranslate"><span class="pre">magic-removal</span></code>:对Django的对象关系映射器的内部和公共api进行了重大重构。从0.95版本开始，Django就加入了这个功能。</li>
+<li><code class="docutils literal notranslate"><span class="pre">multi-auth</span></code>: 对 <a class="reference internal" href="../topics/auth/index.html"><span class="doc">Django 捆绑的身份验证框架</span></a> 进行了重构，添加了对 <a class="reference internal" href="../topics/auth/customizing.html#authentication-backends"><span class="std std-ref">身份验证后端</span></a> 的支持。这已经是自 0.95 版本以来的 Django 的一部分。</li>
+<li><code class="docutils literal notranslate"><span class="pre">new-admin</span></code>: 对 <a class="reference internal" href="../ref/contrib/admin/index.html"><span class="doc">Django 捆绑的管理应用程序</span></a> 进行了重构。这从 Django 0.91 版本开始成为 Django 的一部分，但在 Django 1.0 版本发布之前被另一个重构所取代。</li>
+<li><code class="docutils literal notranslate"><span class="pre">newforms-admin</span></code>: Django 捆绑的管理应用程序的第二次重构。这从 Django 1.0 版本开始成为 Django 的一部分，并且是当前版本的 <code class="docutils literal notranslate"><span class="pre">django.contrib.admin</span></code> 的基础。</li>
+<li><code class="docutils literal notranslate"><span class="pre">queryset-refactor</span></code>: Django 对象关系映射器内部的重构。这从 Django 1.0 版本开始成为 Django 的一部分。</li>
+<li><code class="docutils literal notranslate"><span class="pre">unicode</span></code>: Django 内部的重构，以在 Django 和 Django 应用程序的大多数地方一致使用基于 Unicode 的字符串。这从 Django 1.0 版本开始成为 Django 的一部分。</li>
+</ul>
+<p>此外，在 <code class="docutils literal notranslate"><span class="pre">archive/attic/</span></code> 前缀下的以下标签引用了已关闭的分支的末尾，但其代码从未合并到 Django 中，它们旨在实现的功能也从未完成：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">full-history</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">generic-auth</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">multiple-db-support</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">per-object-permissions</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">schema-evolution</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">schema-evolution-ng</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">search-api</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">sqlalchemy</span></code></li>
+</ul>
+<p>最后，在 <code class="docutils literal notranslate"><span class="pre">archive/</span></code> 前缀下，仓库包含了 <code class="docutils literal notranslate"><span class="pre">soc20XX/&lt;project&gt;</span></code> 标签，引用了在 2009 年和 2010 年 Google 夏季编程活动期间为 Django 工作的学生使用的分支末尾。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django源代码库</a><ul>
+<li><a class="reference internal" href="#high-level-overview">高级概述</a></li>
+<li><a class="reference internal" href="#the-main-branch">主要分支</a></li>
+<li><a class="reference internal" href="#stable-branches">稳定分支</a></li>
+<li><a class="reference internal" href="#id1">标签(Tags)</a><ul>
+<li><a class="reference internal" href="#archived-feature-development-work">已归档的特性开发工作</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="deprecation.html"
+                          title="上一章">Django废弃时间表</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="howto-release-django.html"
+                          title="下一章">Django 是如何形成的？</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/internals/git.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="deprecation.html" title="Django废弃时间表">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="howto-release-django.html" title="Django 是如何形成的？">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

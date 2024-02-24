@@ -82,11 +82,11 @@ var comm_list = [{
     list: [{
         tag: "常去",
         link: [{
+            name: "OpenAi",
+            url: "https://chat.openai.com/"
+        },{
             name: "📝笔记",
-            url: "http://xl.hoao.fun/git/markdown"
-        }, {
-            name: "🔱Alist",
-            url: "http://xl.hoao.fun:5244"
+            url: "https://a.hoao.fun/"
         }, {
             name: "Hellogithub",
             url: "https://hellogithub.com/periodical"
@@ -99,6 +99,9 @@ var comm_list = [{
         }, {
             name: "翻译",
             url: "https://www.deepl.com/translator"
+        }, {
+            name: "十年",
+            url: "https://www.foreverblog.cn/feeds.html"
         }
         ]
     }, {
@@ -118,39 +121,54 @@ var comm_list = [{
         }, {
             name: "芒果",
             url: "https://www.mgtv.com/"
+        },{
+            name: "西瓜",
+            url: "https://www.ixigua.com/"
+        },{
+            name: "假飞",
+            url: "https://www.naifei.in/"
         },
         ]
     }, {
-        tag: "工具",
-        link: [ {
+        tag: "局域服务",
+        link: [{
             name: "⛳Clash",
             url: "http://xl.hoao.fun:9090/ui"
         }, {
-            name: "做饭",
-            url: "http://xl.hoao.fun/git/HowToCook"
-        }, {
-            name: "Processon",
-            url: "https://www.processon.com/diagrams"
-        }, {
-            name: "在线转换",
-            url: "https://cn.office-converter.com/"
-        }, {
-            name: "🎣图片加水印",
-            url: "./tools/watermarks/index.html"
-        }, {
-            name: "🎃思维导图",
-            url: "./tools/mindmap/index.html"
-        }, {
-            name: "🎃emoji",
-            url: "https://www.webfx.com/tools/emoji-cheat-sheet/"
+            name: "🔱Alist",
+            url: "http://xl.hoao.fun:5244"
+        },{
+            name: "🔞AdGuard",
+            url: "http://xl.hoao.fun:3000"
         }
         ]
+    },{
+        tag: "本站服务",//////////////////
+        link: [
+            {
+                name: "📚Linux命令",
+                url: "./book/linux-command"
+            }, {
+                name: "🐬Aria-NG",
+                url: "./tools/Aria-NG.html"
+            }, {
+                name: "📋Django文档",
+                url: "./book/django-docs-5.0-zh-hans/index.html"
+            }, {
+                name: "🎨图片加水印",
+                url: "./tools/watermarks/index.html"
+            }, {
+                name: "🎃思维导图",
+                url: "./tools/mindmap/index.html"
+            },{
+                name: "🔆屏幕常亮",
+                url: "./tools/keepon/keepon.html"
+            },
+        ]
+
     }, {
-        tag: "乐",
+        tag: "跑到",
         link: [{
-            name: "openai",
-            url: "https://chat.openai.com/"
-        }, {
             name: "热榜",
             url: "https://dig.chouti.com/"
         }, {
@@ -168,29 +186,23 @@ var comm_list = [{
         }, {
             name: "临时邮箱",
             url: "https://www.moakt.com/"
+        }, {
+            name: "emoji",
+            url: "https://www.webfx.com/tools/emoji-cheat-sheet/"
         }
         ]
-    }, {
-        tag: "本地",//////////////////
-        link: [
-		{
-			name: "📖Linux命令",
-            url: "./book/linux-command"			
-        }, {
-            name: "🗿本地Aria-NG",
-            url: "./tools/Aria-NG.html"
-        }, {
-			name: "📋Django文档",
-            url: "./book/django-docs-4.2/index.html"
-        }, {
-            name: "🔞AdGuard",
-            url: "http://xl.hoao.fun:3000"
-        },
-        ]
-
-    }, {
-        tag: "博客",
+    },  {
+        tag: "开发",
         link: [{
+            name: "Github",
+            url: "https://github.com/kaozb?tab=repositories"
+        }, {
+            name: "Git云效",
+            url: "https://codeup.aliyun.com"
+        }, {
+            name: "Gitee",
+            url: "https://gitee.com/aofun/projects"
+        },{
             name: "博客园",
             url: "https://www.cnblogs.com/"
         }, {
@@ -205,39 +217,21 @@ var comm_list = [{
         }
         ]
     }, {
-        tag: "盗版软件",
-        link: [{
-            name: "异星",
-            url: "http://www.yxssp.com/"
-        }, {
-            name: "极客空间",
-            url: "https://www.cuiuc.com/"
-        },
-		{
-            name: "12306",
-            url: "https://kyfw.12306.cn/otn/index/init"
+        tag: "服务-1",
+        link: [ {
+            name: "天气云图",
+            url: "https://www.windy.com/"
         },
         ]
     }, {
-        tag: "记录",
-        link: [{
-            name: "Github",
-            url: "https://github.com/kaozb?tab=repositories"
-        }, {
-            name: "云效",
-            url: "https://codeup.aliyun.com"
-        }, {
-            name: "gitee",
-            url: "https://gitee.com/aofun/projects"
-
-        }, {
-            name: "天气云图",
-            url: "https://www.windy.com/"
-
+        tag: "服务-2",
+        link: [ {
+            name: "Processon",
+            url: "https://www.processon.com/diagrams"
         }, {
             name: "在线转换",
             url: "https://cn.office-converter.com/"
-        },{
+        }, {
             name: "小说下载",
             url: "https://www.zxcs.info/"
         },

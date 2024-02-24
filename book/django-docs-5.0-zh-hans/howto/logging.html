@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何配置和使用日志 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何输出 CSV" href="outputting-csv.html" />
+    <link rel="prev" title="如何将 Django 与旧有的数据库集成" href="legacy-databases.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="legacy-databases.html" title="如何将 Django 与旧有的数据库集成">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="outputting-csv.html" title="如何输出 CSV">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-logging">
+            
+  <div class="section" id="s-how-to-configure-and-use-logging">
+<span id="s-logging-how-to"></span><span id="how-to-configure-and-use-logging"></span><span id="logging-how-to"></span><h1>如何配置和使用日志<a class="headerlink" href="#how-to-configure-and-use-logging" title="永久链接至标题">¶</a></h1>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<ul class="last simple">
+<li><a class="reference internal" href="../ref/logging.html#logging-ref"><span class="std std-ref">Django 日志参考</span></a></li>
+<li><a class="reference internal" href="../topics/logging.html#logging-explanation"><span class="std std-ref">Django 日志概览</span></a></li>
+</ul>
+</div>
+<p>Django 提供了一个可扩展的 <a class="reference internal" href="../ref/logging.html#default-logging-configuration"><span class="std std-ref">默认日志配置</span></a>。</p>
+<div class="section" id="s-make-a-basic-logging-call">
+<span id="make-a-basic-logging-call"></span><h2>发起基本的 logging 调用<a class="headerlink" href="#make-a-basic-logging-call" title="永久链接至标题">¶</a></h2>
+<p>要从代码中发送日志消息，你需要在代码中添加日志调用。</p>
+<div class="admonition-don-t-be-tempted-to-use-logging-calls-in-settings-py admonition">
+<p class="first admonition-title">不要在 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 中使用日志调用。</p>
+<p class="last">Django 日志配置作为 <code class="docutils literal notranslate"><span class="pre">setup()</span></code> 函数的一部分配置的方式意味着在 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 中放置的日志调用可能不会按预期工作，因为在那个时候 <em>日志还没有设置好</em>。要探索日志，请使用下面示例中建议的视图函数。</p>
+</div>
+<p>首先，导入Python的日志库，然后使用 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.getLogger" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">logging.getLogger()</span></code></a> 获取一个日志记录器实例。为 <code class="docutils literal notranslate"><span class="pre">getLogger()</span></code> 方法提供一个用于识别它和它发出的记录的名称。一个好的选择是使用 <code class="docutils literal notranslate"><span class="pre">__name__</span></code> （参见下面的 <span class="xref std std-ref">命名日志记录器</span> 了解更多信息），它将提供当前Python模块的名称作为一个点分路径：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>在模块级别执行此声明是一个好的约定。</p>
+<p>然后在函数中，例如在视图中，向日志记录器发送一条记录：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="k">if</span> <span class="n">some_risky_state</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Platform is running at risk&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>当执行此代码时，将发送一个包含该消息的 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.LogRecord" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogRecord</span></code></a> 到日志记录器。如果你正在使用 Django 的默认日志配置，该消息将出现在控制台中。</p>
+<p>上面示例中使用的 <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> 级别是多个 <a class="reference internal" href="../topics/logging.html#topic-logging-parts-loggers"><span class="std std-ref">日志严重级别</span></a> 中的一个：<code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>, <code class="docutils literal notranslate"><span class="pre">INFO</span></code>, <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>。因此，另一个示例可能如下所示：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Payment system is not responding&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="first admonition-title">重要</p>
+<p class="last">级别低于 <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> 的记录默认情况下不会出现在控制台中。要更改此行为，需要额外的配置。</p>
+</div>
+</div>
+<div class="section" id="s-customize-logging-configuration">
+<span id="customize-logging-configuration"></span><h2>自定义日志配置<a class="headerlink" href="#customize-logging-configuration" title="永久链接至标题">¶</a></h2>
+<p>虽然 Django 的日志配置可以直接使用，但您可以通过一些额外的配置来精确控制日志发送到各种目标的方式，如日志文件、外部服务、电子邮件等。</p>
+<p>你可以配置：</p>
+<ul class="simple">
+<li>使用日志记录器映射来确定将哪些记录发送到哪些处理程序。</li>
+<li>使用处理程序来确定它们接收到的记录的处理方式</li>
+<li>使用过滤器来对记录的传递进行额外控制，甚至可以对记录进行原地修改</li>
+<li>格式化器，用于将 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.LogRecord" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogRecord</span></code></a> 对象转换为字符串或其他形式，以供人类或其他系统使用。</li>
+</ul>
+<p>有各种配置日志的方式。在Django中，最常用的是 <a class="reference internal" href="../ref/settings.html#std-setting-LOGGING"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGGING</span></code></a> 设置。该设置使用 <a class="reference external" href="https://docs.python.org/3/library/logging.config.html#logging-config-dictschema" title="(在 Python v3.12)"><span class="xref std std-ref">dictConfig 格式</span></a>，并扩展了 <a class="reference internal" href="../ref/logging.html#default-logging-definition"><span class="std std-ref">默认的日志配置</span></a>。</p>
+<p>请参阅 <a class="reference internal" href="../topics/logging.html#configuring-logging"><span class="std std-ref">日志模块的配置</span></a> 以了解如何将你的自定义设置与 Django 的默认设置合并的解释。</p>
+<p>有关其他配置日志的方式的详细信息，请参阅 <a class="reference external" href="https://docs.python.org/3/library/logging.config.html#module-logging.config" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">Python</span> <span class="pre">日志文档</span></code></a>。为了简单起见，本文档将仅考虑通过 <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> 设置进行配置。</p>
+<div class="section" id="s-basic-logging-configuration">
+<span id="s-basic-logger-configuration"></span><span id="basic-logging-configuration"></span><span id="basic-logger-configuration"></span><h3>基础日志配置<a class="headerlink" href="#basic-logging-configuration" title="永久链接至标题">¶</a></h3>
+<p>在配置日志时，以下操作是有意义的</p>
+<div class="section" id="s-create-a-logging-dictionary">
+<span id="create-a-logging-dictionary"></span><h4>创建一个 <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> 目录<a class="headerlink" href="#create-a-logging-dictionary" title="永久链接至标题">¶</a></h4>
+<p>在你的 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code>:: 中</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># the dictConfig format version</span>
+    <span class="s2">&quot;disable_existing_loggers&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># retain the default loggers</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>通常情况下，将 <code class="docutils literal notranslate"><span class="pre">disable_existing_loggers</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，保留并扩展默认的日志配置是有意义的。</p>
+</div>
+<div class="section" id="s-configure-a-handler">
+<span id="configure-a-handler"></span><h4>配置一个处理程序<a class="headerlink" href="#configure-a-handler" title="永久链接至标题">¶</a></h4>
+<p>这个示例配置了一个名为 <code class="docutils literal notranslate"><span class="pre">file</span></code> 的处理程序，使用Python的 <a class="reference external" href="https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileHandler</span></code></a> 将级别为 <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> 及更高的日志保存到文件 <code class="docutils literal notranslate"><span class="pre">general.log</span></code> （位于项目根目录）中：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+<span class="hll">    <span class="s2">&quot;handlers&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">        <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">            <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;logging.FileHandler&quot;</span><span class="p">,</span>
+</span><span class="hll">            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;general.log&quot;</span><span class="p">,</span>
+</span><span class="hll">        <span class="p">},</span>
+</span><span class="hll">    <span class="p">},</span>
+</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>不同的处理程序类接受不同的配置选项。有关可用处理程序类的更多信息，请参阅 Django 提供的 <a class="reference internal" href="../ref/logging.html#django.utils.log.AdminEmailHandler" title="django.utils.log.AdminEmailHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdminEmailHandler</span></code></a> 以及 Python 提供的各种 <a class="reference external" href="https://docs.python.org/3/library/logging.handlers.html#module-logging.handlers" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">处理程序类</span></code></a>。</p>
+<p>日志级别也可以在处理程序上进行设置（默认情况下，它们接受所有级别的日志消息）。使用上面的示例，添加以下内容：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;logging.FileHandler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;general.log&quot;</span><span class="p">,</span>
+<span class="hll">    <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span>
+</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>可以定义一个处理程序配置，该配置只接受级别为 <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> 及更高级别的记录。</p>
+</div>
+<div class="section" id="s-configure-a-logger-mapping">
+<span id="configure-a-logger-mapping"></span><h4>配置一个日志记录器映射<a class="headerlink" href="#configure-a-logger-mapping" title="永久链接至标题">¶</a></h4>
+<p>要将记录发送到该处理程序，请配置一个日志记录器映射，例如：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+<span class="hll">    <span class="s2">&quot;loggers&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">        <span class="s2">&quot;&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">            <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span>
+</span><span class="hll">            <span class="s2">&quot;handlers&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">],</span>
+</span><span class="hll">        <span class="p">},</span>
+</span><span class="hll">    <span class="p">},</span>
+</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>映射的名称决定了它将处理哪些日志记录。此配置（<code class="docutils literal notranslate"><span class="pre">''</span></code>）是 <em>无名称</em> 的。这意味着它将处理 <em>所有</em> 记录器的记录（请参阅下面的 <span class="xref std std-ref">命名记录器</span> 以了解如何使用映射名称来确定它将处理哪些记录器的记录）。</p>
+<p>它将级别为 <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> 及更高的消息发送给名为 <code class="docutils literal notranslate"><span class="pre">file</span></code> 的处理程序。</p>
+<p>请注意，一个日志记录器可以将消息转发给多个处理程序，因此日志记录器和处理程序之间的关系是多对多的。</p>
+<p>如果您执行以下操作：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Attempting to connect to API&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>在你的代码中，你将在项目根目录中的文件 <code class="docutils literal notranslate"><span class="pre">general.log</span></code> 中找到该消息。</p>
+</div>
+<div class="section" id="s-configure-a-formatter">
+<span id="configure-a-formatter"></span><h4>配置格式化器<a class="headerlink" href="#configure-a-formatter" title="永久链接至标题">¶</a></h4>
+<p>默认情况下，最终的日志输出包含每个 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.LogRecord" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">日志记录</span></code></a> 的消息部分。如果想要包含附加数据，可以使用格式化器。首先命名并定义你的格式化器 - 以下示例定义了名为 <code class="docutils literal notranslate"><span class="pre">verbose</span></code> 和 <code class="docutils literal notranslate"><span class="pre">simple</span></code> 的格式化器：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+<span class="hll">    <span class="s2">&quot;formatters&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">        <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{name}</span><span class="s2"> </span><span class="si">{levelname}</span><span class="s2"> </span><span class="si">{asctime}</span><span class="s2"> </span><span class="si">{module}</span><span class="s2"> </span><span class="si">{process:d}</span><span class="s2"> </span><span class="si">{thread:d}</span><span class="s2"> </span><span class="si">{message}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span class="hll">            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="s2">&quot;{&quot;</span><span class="p">,</span>
+</span><span class="hll">        <span class="p">},</span>
+</span><span class="hll">        <span class="s2">&quot;simple&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span class="hll">            <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{levelname}</span><span class="s2"> </span><span class="si">{message}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span class="hll">            <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="s2">&quot;{&quot;</span><span class="p">,</span>
+</span><span class="hll">        <span class="p">},</span>
+</span><span class="hll">    <span class="p">},</span>
+</span><span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">style</span></code> 关键字允许你指定 <code class="docutils literal notranslate"><span class="pre">{</span></code> 用于 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str.format" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a> 或 <code class="docutils literal notranslate"><span class="pre">$</span></code> 用于 <a class="reference external" href="https://docs.python.org/3/library/string.html#string.Template" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">string.Template</span></code></a> 格式化；默认值是 <code class="docutils literal notranslate"><span class="pre">$</span></code>。</p>
+<p>查看 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logrecord-attributes" title="(在 Python v3.12)"><span>LogRecord attributes</span></a> 以了解可以包含的 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.LogRecord" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogRecord</span></code></a> 属性。</p>
+<p>要将格式化器应用到处理程序，可以在处理程序的字典中添加一个指向格式化器的名称的 <code class="docutils literal notranslate"><span class="pre">formatter</span></code> 条目，例如：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;handlers&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;logging.FileHandler&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;general.log&quot;</span><span class="p">,</span>
+<span class="hll">        <span class="s2">&quot;formatter&quot;</span><span class="p">:</span> <span class="s2">&quot;verbose&quot;</span><span class="p">,</span>
+</span>    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-use-logger-namespacing">
+<span id="s-naming-loggers"></span><span id="use-logger-namespacing"></span><span id="naming-loggers"></span><h4>使用命名空间日志记录器<a class="headerlink" href="#use-logger-namespacing" title="永久链接至标题">¶</a></h4>
+<p>未命名的日志配置 <code class="docutils literal notranslate"><span class="pre">''</span></code> 捕获来自任何 Python 应用程序的日志。命名的日志配置将仅捕获名称匹配的记录器的日志。</p>
+<p>日志记录器实例的命名空间是使用 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.getLogger" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">getLogger()</span></code></a> 定义的。例如，在 <code class="docutils literal notranslate"><span class="pre">my_app</span></code> 的 <code class="docutils literal notranslate"><span class="pre">views.py</span></code> 中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>将在 <code class="docutils literal notranslate"><span class="pre">my_app.views</span></code> 命名空间中创建一个日志记录器。<code class="docutils literal notranslate"><span class="pre">__name__</span></code> 允许你自动根据项目中应用程序的来源组织日志消息。它还确保你不会遇到名称冲突。</p>
+<p>一个名为 <code class="docutils literal notranslate"><span class="pre">my_app.views</span></code> 的日志记录器映射将捕获来自这个记录器的记录：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;loggers&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="hll">        <span class="s2">&quot;my_app.views&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
+</span>    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>一个名为 <code class="docutils literal notranslate"><span class="pre">my_app</span></code> 的日志记录器映射将更加宽松，捕获来自 <code class="docutils literal notranslate"><span class="pre">my_app</span></code> 命名空间中任何地方的记录器（包括 <code class="docutils literal notranslate"><span class="pre">my_app.views</span></code>、<code class="docutils literal notranslate"><span class="pre">my_app.utils</span></code> 等等）：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;loggers&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="hll">        <span class="s2">&quot;my_app&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
+</span>    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>您还可以明确定义日志记录器的命名空间：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;project.payment&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>并相应地设置日志记录器映射。</p>
+<div class="section" id="s-using-logger-hierarchies-and-propagation">
+<span id="s-naming-loggers-hierarchy"></span><span id="using-logger-hierarchies-and-propagation"></span><span id="naming-loggers-hierarchy"></span><h5>使用日志记录器层次结构和传播<a class="headerlink" href="#using-logger-hierarchies-and-propagation" title="永久链接至标题">¶</a></h5>
+<p>日志记录器的命名是 <em>分层</em> 的。<code class="docutils literal notranslate"><span class="pre">my_app</span></code> 是 <code class="docutils literal notranslate"><span class="pre">my_app.views</span></code> 的父级，<code class="docutils literal notranslate"><span class="pre">my_app.views</span></code> 是 <code class="docutils literal notranslate"><span class="pre">my_app.views.private</span></code> 的父级。除非另有说明，否则日志记录器映射将将它们处理的记录传播给它们的父级 - 来自 <code class="docutils literal notranslate"><span class="pre">my_app.views.private</span></code> 命名空间中的记录器的记录将由 <code class="docutils literal notranslate"><span class="pre">my_app</span></code> 和 <code class="docutils literal notranslate"><span class="pre">my_app.views</span></code> 的映射处理。</p>
+<p>为了管理这种行为，请在您定义的映射中设置传播键：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;loggers&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;my_app&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># ...</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;my_app.views&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># ...</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;my_app.views.private&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># ...</span>
+            <span class="s2">&quot;propagate&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">propagate</span></code> 默认为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。在这个示例中，来自 <code class="docutils literal notranslate"><span class="pre">my_app.views.private</span></code> 的日志不会被父级处理，但来自 <code class="docutils literal notranslate"><span class="pre">my_app.views</span></code> 的日志会被处理。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-configure-responsive-logging">
+<span id="configure-responsive-logging"></span><h3>配置响应式日志记录<a class="headerlink" href="#configure-responsive-logging" title="永久链接至标题">¶</a></h3>
+<p>当日志包含尽可能多的信息，而不是您不需要的信息时，日志是最有用的——需要多少取决于您正在做的事情。在调试时，您需要一定程度的信息，如果您不得不在生产环境中处理这些信息，那么这些信息将是多余的，而且毫无用处。</p>
+<p>您可以配置日志记录，以在需要时为您提供所需的详细程度。与手动更改配置以实现此目的不同，更好的方式是根据环境自动应用配置。</p>
+<p>例如，你可以在开发和测试环境中适当设置一个环境变量 <code class="docutils literal notranslate"><span class="pre">DJANGO_LOG_LEVEL</span></code>，然后在日志记录器映射中使用它，如下所示：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DJANGO_LOG_LEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>因此，除非环境指定较低的日志级别，否则此配置将仅将严重性为 <code class="docutils literal notranslate"><span class="pre">WARNING</span></code> 及以上的记录转发到其处理程序。</p>
+<p>配置中的其他选项（例如处理程序的 <code class="docutils literal notranslate"><span class="pre">level</span></code> 或 <code class="docutils literal notranslate"><span class="pre">formatter</span></code> 选项）可以以类似的方式进行管理。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何配置和使用日志</a><ul>
+<li><a class="reference internal" href="#make-a-basic-logging-call">发起基本的 logging 调用</a></li>
+<li><a class="reference internal" href="#customize-logging-configuration">自定义日志配置</a><ul>
+<li><a class="reference internal" href="#basic-logging-configuration">基础日志配置</a><ul>
+<li><a class="reference internal" href="#create-a-logging-dictionary">创建一个 <code class="docutils literal notranslate"><span class="pre">LOGGING</span></code> 目录</a></li>
+<li><a class="reference internal" href="#configure-a-handler">配置一个处理程序</a></li>
+<li><a class="reference internal" href="#configure-a-logger-mapping">配置一个日志记录器映射</a></li>
+<li><a class="reference internal" href="#configure-a-formatter">配置格式化器</a></li>
+<li><a class="reference internal" href="#use-logger-namespacing">使用命名空间日志记录器</a><ul>
+<li><a class="reference internal" href="#using-logger-hierarchies-and-propagation">使用日志记录器层次结构和传播</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configure-responsive-logging">配置响应式日志记录</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="legacy-databases.html"
+                          title="上一章">如何将 Django 与旧有的数据库集成</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="outputting-csv.html"
+                          title="下一章">如何输出 CSV</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/howto/logging.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="legacy-databases.html" title="如何将 Django 与旧有的数据库集成">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="outputting-csv.html" title="如何输出 CSV">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

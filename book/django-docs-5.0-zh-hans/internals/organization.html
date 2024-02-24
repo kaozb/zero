@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 项目的组织 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 的安全策略" href="security.html" />
+    <link rel="prev" title="邮件列表和论坛" href="mailing-lists.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="mailing-lists.html" title="邮件列表和论坛">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="security.html" title="Django 的安全策略">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-organization">
+            
+  <div class="section" id="s-organization-of-the-django-project">
+<span id="organization-of-the-django-project"></span><h1>Django 项目的组织<a class="headerlink" href="#organization-of-the-django-project" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-principles">
+<span id="principles"></span><h2>原则<a class="headerlink" href="#principles" title="永久链接至标题">¶</a></h2>
+<p>Django 项目由一组志愿者管理，追求三个目标：</p>
+<ul class="simple">
+<li>推动 Django Web 框架的开发，</li>
+<li>促进与 Django 相关的软件生态系统，</li>
+<li>根据 <a class="reference external" href="https://www.djangoproject.com/conduct/">Django 行为准则</a> 中描述的价值观，领导 Django 社区。</li>
+</ul>
+<p>Django 项目并不是一个法律实体。非营利性组织 <a class="reference external" href="https://www.djangoproject.com/foundation/">Django Software Foundation</a> 负责处理与 Django 项目相关的财务和法律事务。除此之外，Django Software Foundation 让 Django 项目管理 Django 框架的开发、生态系统和社区。</p>
+</div>
+<div class="section" id="s-mergers">
+<span id="s-mergers-team"></span><span id="mergers"></span><span id="mergers-team"></span><h2>合并者<a class="headerlink" href="#mergers" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-role">
+<span id="role"></span><h3>角色<a class="headerlink" href="#role" title="永久链接至标题">¶</a></h3>
+<p><a class="reference external" href="https://www.djangoproject.com/foundation/teams/#mergers-team">Mergers</a> 是一小组人，他们将拉取请求合并到 <a class="reference external" href="https://github.com/django/django/">Django Git 仓库</a> 中。</p>
+</div>
+<div class="section" id="s-prerogatives">
+<span id="prerogatives"></span><h3>权利<a class="headerlink" href="#prerogatives" title="永久链接至标题">¶</a></h3>
+<p>合并者拥有以下 prerogatives：</p>
+<ul class="simple">
+<li>合并任何构成 <a class="reference external" href="https://github.com/django/deps/blob/main/accepted/0010-new-governance.rst#terminology">小改变</a> （足够小，不需要使用 <a class="reference external" href="https://github.com/django/deps/blob/main/final/0001-dep-process.rst">DEP 过程</a>）的拉取请求。合并者不得合并由其主要编写的更改，除非拉取请求已获得批准：<ul>
+<li>另一位合并者，</li>
+<li>一个管理委员会成员，</li>
+<li><a class="reference external" href="https://www.djangoproject.com/foundation/teams/#triage-review-team">triage &amp; review 团队</a> 的成员，或者</li>
+<li><a class="reference external" href="https://www.djangoproject.com/foundation/teams/#security-team">安全团队</a> 的成员。</li>
+</ul>
+</li>
+<li>在适当的场合启动关于小改变的讨论，并请求其他合并者在讨论进行期间不要合并它。</li>
+<li>如果在合并者看来，讨论未能达成共识，可以请求管理委员会就任何小改变进行投票。</li>
+<li>当一个 <a class="reference external" href="https://github.com/django/deps/blob/main/accepted/0010-new-governance.rst#terminology">重大更改</a> （足够重要以至于需要使用 <a class="reference external" href="https://github.com/django/deps/blob/main/final/0001-dep-process.rst">DEP 过程</a>）达到其中一个实施里程碑并打算合并时，请求管理委员会进行投票。</li>
+</ul>
+</div>
+<div class="section" id="s-membership">
+<span id="membership"></span><h3>成员资格<a class="headerlink" href="#membership" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#id4">管理委员会</a> 会根据需要选择 <a class="reference external" href="https://www.djangoproject.com/foundation/teams/#mergers-team">Mergers</a>，以保持其数量至少为三人，以分散工作负荷，避免过度负担或使个别合并者超负荷工作。合并者的数量没有上限。</p>
+<p>合并者不必是 Django Fellow 的要求，但 Django 软件基金会有权将 Fellow 职位的资金用作确保合并者角色的可持续性的方式。</p>
+<p>合并者角色受到以下限制：</p>
+<ul class="simple">
+<li>一个人不能同时担任管理委员会的成员。如果一个合并者被选为管理委员会成员，他们在加入管理委员会后立即停止成为合并者。</li>
+<li>一个人可以同时担任发布者和合并者的角色。</li>
+</ul>
+<p>当出现空缺或管理委员会认为有必要选择额外的人员担任此角色时，选择流程如下：</p>
+<ul class="simple">
+<li>任何在适当的讨论场合中保持良好地位的成员，或者在 DSF 的 Fellowship 委员会提供意见的情况下，Django 软件基金会董事会都可以提议考虑某个人。</li>
+<li>管理委员会考虑提出的建议，然后管理委员会的任何成员正式提名一个候选人担任该角色。</li>
+<li>管理委员会对提名者进行投票。</li>
+</ul>
+<p>合并者可以随时辞去他们的角色，但应该尽力提前通知，以便选择替代者。Django 软件基金会终止 Django Fellow 的合同会暂时暂停该人的合并者角色，直到管理委员会能够对他们的提名进行投票为止。</p>
+<p>否则，合并者可以被移除：</p>
+<ul class="simple">
+<li>因被选为管理委员会成员而被取消资格。</li>
+<li>因 Django 软件基金会的行为守则委员会采取的行动而被取消资格。</li>
+<li>管理委员会的投票。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-releasers">
+<span id="s-releasers-team"></span><span id="releasers"></span><span id="releasers-team"></span><h2>发布者<a class="headerlink" href="#releasers" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-id1">
+<span id="id1"></span><h3>角色<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h3>
+<p><a class="reference external" href="https://www.djangoproject.com/foundation/teams/#releasers-team">Releasers</a>  是一小组具有权力上传 Django 打包发布到 <a class="reference external" href="https://pypi.org/project/Django/">Python Package Index</a> 和 <a class="reference external" href="https://www.djangoproject.com/download/">djangoproject.com</a> 网站的人员。</p>
+</div>
+<div class="section" id="s-id2">
+<span id="id2"></span><h3>权利<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<p><a class="reference external" href="https://www.djangoproject.com/foundation/teams/#releasers-team">Releasers</a><a class="reference internal" href="howto-release-django.html"><span class="doc">构建 Django 发布版</span></a> 并上传到 <a class="reference external" href="https://pypi.org/project/Django/">Python Package Index</a> 和 <a class="reference external" href="https://www.djangoproject.com/download/">djangoproject.com</a> 网站。</p>
+</div>
+<div class="section" id="s-id3">
+<span id="id3"></span><h3>成员资格<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#id4">管理委员会</a> <a class="reference external" href="https://www.djangoproject.com/foundation/teams/#releasers-team">会根据需要选择发布者</a>，以保持其数量至少为三人，以分散工作负荷，避免过度负担或使个别发布者超负荷工作。发布者的数量没有上限。</p>
+<p>发布者不必是 Django Fellow 的要求，但 Django 软件基金会有权将 Fellow 职位的资金用作确保发布者角色的可持续性的方式。</p>
+<p>一个人可以同时担任发布者和合并者的角色。</p>
+<p>当出现空缺或管理委员会认为有必要选择额外的人员担任此角色时，选择流程如下：</p>
+<ul class="simple">
+<li>任何在适当的讨论场合中保持良好地位的成员，或者在 DSF 的 Fellowship 委员会提供意见的情况下，Django 软件基金会董事会都可以提议考虑某个人。</li>
+<li>管理委员会考虑提出的建议，然后管理委员会的任何成员正式提名一个候选人担任该角色。</li>
+<li>管理委员会对提名者进行投票。</li>
+</ul>
+<p>发布者可以随时辞去他们的角色，但应该尽力提前通知，以便选择替代者。Django 软件基金会终止 Django Fellow 的合同会暂时暂停该人的发布者角色，直到管理委员会能够对他们的提名进行投票为止。</p>
+<p>否则，发布者可以被移除：</p>
+<ul class="simple">
+<li>因 Django 软件基金会的行为守则委员会采取的行动而被取消资格。</li>
+<li>管理委员会的投票。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-steering-council">
+<span id="s-id4"></span><span id="steering-council"></span><span id="id4"></span><h2>管理委员会<a class="headerlink" href="#steering-council" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-id5">
+<span id="id5"></span><h3>角色<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<p>管理委员会是一组经验丰富的贡献者，他们：</p>
+<ul class="simple">
+<li>提供 Django 的开发和发布流程监督，</li>
+<li>协助设定功能开发和发布方向，</li>
+<li>参与填补某些角色，以及</li>
+<li>在其他决策过程失败时具有决定性的投票权。</li>
+</ul>
+<p>他们的主要关注点是维护 Django Web 框架的质量和稳定性。</p>
+</div>
+<div class="section" id="s-id6">
+<span id="id6"></span><h3>权利<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<p>管理委员会拥有以下 prerogatives：</p>
+<ul class="simple">
+<li>对于任何关于 Django 技术更改的问题做出具有约束力的决定。</li>
+<li>否决将任何特定代码合并到 Django 中或命令撤销任何特定合并或提交。</li>
+<li>宣布关于 Django 未来技术方向的提案和想法的征集。</li>
+<li>制定和调整 Django 发布的时间表。</li>
+<li>选择和移除合并者和发布者。</li>
+<li>在被视为适当时参与撤销管理委员会成员。</li>
+<li>在管理委员会认为适当的时候，在不自动触发的情况下召集管理委员会选举。</li>
+<li>参与修改 Django 的治理方式（参见 <a class="reference internal" href="#organization-change"><span class="std std-ref">改变组织</span></a>）。</li>
+<li>拒绝对管理委员会认为不适合做出具有约束力决定的问题进行投票，或者管理委员会认为超出其权力范围的问题。</li>
+<li>负责管理 Django 开源项目内的其他技术团队的治理，并相应地管理这些团队。</li>
+</ul>
+</div>
+<div class="section" id="s-id7">
+<span id="id7"></span><h3>成员资格<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#id4">管理委员会</a> 是一个由五位经验丰富的贡献者组成的选举团队，他们展示：</p>
+<ul class="simple">
+<li>对 Django 或 Django 生态系统进行实质性贡献的历史。这一历史必须至少在个人竞选管理委员会前的18个月开始，并包括以下至少两个方面的实质性贡献： - 在 Django 项目或 Django 生态系统的主要第三方包上的代码贡献 - 审查拉取请求和/或处理 Django 项目的问题 - 文档、教程或博客文章 - 在 django-developers 邮件列表或 Django 论坛上讨论 Django - 组织 Django 相关的活动或用户组</li>
+<li>对 Django 的方向和未来的参与历史。这不需要是最近的，但在过去三年内没有参与的候选人仍必须展示对这三年内 Django 的变化和方向的理解。</li>
+</ul>
+<p>每个 Django 的发布周期后都会选举一个新的管理委员会。选举过程如下：</p>
+<ol class="arabic simple">
+<li>管理委员会指定其成员之一以书面形式通知 Django 软件基金会的秘书触发选举的情况。秘书会在适当的场合发布选举通知，包括 <a class="reference internal" href="mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> 邮件列表和 <a class="reference external" href="https://forum.djangoproject.com/">Django 论坛</a>，并公布选举时间表。</li>
+<li>一旦选举被宣布，<a class="reference external" href="https://www.djangoproject.com/foundation/#board">DSF 董事会</a> 开始选民登记期。所有 <a class="reference external" href="https://www.djangoproject.com/foundation/individual-members/">DSF 的个人会员</a> 都会自动注册，无需明确注册。所有其他认为自己有资格投票但尚未注册投票的人可以向 DSF 董事会申请投票权。投票者注册表格和投票人名册由 DSF 董事会维护。DSF 董事会可以对那些它认为以不诚实的方式注册或者认为虚构了自己的资格或者以其他方式不具备资格的选民的注册提出质疑并拒绝注册。</li>
+<li>选民登记在选举宣布一周后关闭。此时开始候选人的注册。任何有资格的人都可以注册为候选人。候选人注册表格和候选人名册由 DSF 董事会维护，候选人必须在注册时提供资格证明。DSF 董事会可以对那些它认为不符合管理委员会成员资格的候选人的注册提出质疑并拒绝注册，或者认为他们是以不诚实的方式注册的。</li>
+<li>候选人的注册在开放后一周关闭。在候选人注册关闭一周后，DSF 的秘书将候选人名册发布到 <a class="reference internal" href="mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> 邮件列表和 <a class="reference external" href="https://forum.djangoproject.com/">Django 论坛</a>，选举正式开始。DSF 董事会提供一个供已注册选民使用的投票表格，并保管选票。</li>
+<li>投票采用包含候选人名册和有关候选人的任何相关材料的秘密投票方式，名单顺序是随机的。每个选民可以在选票上投最多五个候选人。</li>
+<li>选举在开始后一周结束。DSF 董事会随后计算选票并制作摘要，其中包括总投票数以及每位候选人获得的票数。这个摘要经过 DSF 董事会的多数票批准，然后由 DSF 的秘书发布到 <a class="reference internal" href="mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> 邮件列表和 Django 论坛。获得最高票数的五名候选人立即成为新的管理委员会成员。</li>
+</ol>
+<p>管理委员会成员可以被撤职：</p>
+<ul class="simple">
+<li>因 Django 软件基金会的行为守则委员会采取的行动而被取消资格。</li>
+<li>确定他们没有管理委员会成员的资格。这一决定必须由管理委员会的其他成员和 <a class="reference external" href="https://www.djangoproject.com/foundation/#board">DSF 董事会</a> 共同做出。有效的不合格裁定要求管理委员会的所有其他成员和 DSF 董事会的所有可以投票的成员（如果受影响的人是 DSF 董事会成员，则不能投票）在是否认为该人不合格的动议上投票 &quot;是&quot;。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-changing-the-organization">
+<span id="s-organization-change"></span><span id="changing-the-organization"></span><span id="organization-change"></span><h2>改变组织<a class="headerlink" href="#changing-the-organization" title="永久链接至标题">¶</a></h2>
+<p>对于此文件的更改需要使用 <a class="reference external" href="https://github.com/django/deps/blob/main/final/0001-dep-process.rst">DEP 过程</a>，其中修改已在 <a class="reference external" href="https://github.com/django/deps/blob/main/accepted/0010-new-governance.rst#changing-this-governance-process">DEP 0010</a> 中描述。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 项目的组织</a><ul>
+<li><a class="reference internal" href="#principles">原则</a></li>
+<li><a class="reference internal" href="#mergers">合并者</a><ul>
+<li><a class="reference internal" href="#role">角色</a></li>
+<li><a class="reference internal" href="#prerogatives">权利</a></li>
+<li><a class="reference internal" href="#membership">成员资格</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#releasers">发布者</a><ul>
+<li><a class="reference internal" href="#id1">角色</a></li>
+<li><a class="reference internal" href="#id2">权利</a></li>
+<li><a class="reference internal" href="#id3">成员资格</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#steering-council">管理委员会</a><ul>
+<li><a class="reference internal" href="#id5">角色</a></li>
+<li><a class="reference internal" href="#id6">权利</a></li>
+<li><a class="reference internal" href="#id7">成员资格</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#changing-the-organization">改变组织</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="mailing-lists.html"
+                          title="上一章">邮件列表和论坛</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="security.html"
+                          title="下一章">Django 的安全策略</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/internals/organization.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="mailing-lists.html" title="邮件列表和论坛">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="security.html" title="Django 的安全策略">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

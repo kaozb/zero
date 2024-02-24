@@ -1,0 +1,587 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.2.7 版本发行说明" href="1.2.7.html" />
+    <link rel="prev" title="Django 1.3.1 版本发行说明" href="1.3.1.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.3.1.html" title="Django 1.3.1 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.2.7.html" title="Django 1.2.7 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.3">
+            
+  <div class="section" id="s-django-1-3-release-notes">
+<span id="django-1-3-release-notes"></span><h1>Django 1.3 版本发行说明<a class="headerlink" href="#django-1-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2011 年 3 月 23 日</em></p>
+<p>欢迎来到 Django 1.3 版本！</p>
+<p>经过将近一年的努力，Django 1.3 包括了相当多的 <a class="reference internal" href="#whats-new-1-3"><span class="std std-ref">新功能</span></a>，以及对现有功能的大量错误修复和改进。这些发布说明涵盖了 1.3 中的新功能，以及从 Django 1.2 或更早版本升级时需要注意的一些 <a class="reference internal" href="#backwards-incompatible-changes-1-3"><span class="std std-ref">向后不兼容的更改</span></a>。</p>
+<div class="section" id="s-overview">
+<span id="overview"></span><h2>概况<a class="headerlink" href="#overview" title="永久链接至标题">¶</a></h2>
+<p>Django 1.3 的重点主要是解决较小的、长期存在的功能需求，但这并未阻止一些相当重要的新功能的实现，包括：</p>
+<ul class="simple">
+<li>一个用于编写 <a class="reference internal" href="#class-based-views">基于类的视图</a> 的框架。</li>
+<li>内置支持 <a class="reference internal" href="#logging">使用 Python 的日志记录工具</a>。</li>
+<li>为 <a class="reference internal" href="#extended-static-files-handling">静态文件的简单处理</a> 提供的贡献支持。</li>
+<li>Django 的测试框架现在支持（并随附了一份） <a class="reference internal" href="#unittest2-support">unittest2 库</a>。</li>
+</ul>
+<p>在可能的情况下，新功能都按照 <a class="reference internal" href="../misc/api-stability.html"><span class="doc">我们的 API 稳定性政策</span></a> 以向后兼容的方式引入。由于这个政策，Django 1.3 <a class="reference internal" href="#deprecated-features-1-3"><span class="std std-ref">开始了某些功能的弃用过程</span></a>。</p>
+</div>
+<div class="section" id="s-python-compatibility">
+<span id="python-compatibility"></span><h2>Python 兼容性<a class="headerlink" href="#python-compatibility" title="永久链接至标题">¶</a></h2>
+<p>Django 1.2 的发布引人注目，因为它是 Django Python 兼容性政策的第一个变化；在 Django 1.2 之前，Django 支持从 2.3 到任何 2.x 版本的 Python 。从 Django 1.2 开始，最低要求提高到 Python 2.4 。</p>
+<p>Django 1.3 继续支持 Python 2.4，但这将是最后一个支持该版本的 Django 发布系列；从 Django 1.4 开始，最低支持的 Python 版本将是 2.5 。在 Django 1.3 发布后不久，我们将发布一份详细说明废弃 Python 2.x 并转向 Python 3.x 的完整时间表的文档。</p>
+</div>
+<div class="section" id="s-what-s-new-in-django-1-3">
+<span id="s-whats-new-1-3"></span><span id="what-s-new-in-django-1-3"></span><span id="whats-new-1-3"></span><h2>Django 1.3 新特性<a class="headerlink" href="#what-s-new-in-django-1-3" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-class-based-views">
+<span id="class-based-views"></span><h3>基于类的视图<a class="headerlink" href="#class-based-views" title="永久链接至标题">¶</a></h3>
+<p>Django 1.3 添加了一个框架，允许您使用类作为视图。这意味着您可以使用一组方法组成一个视图，这些方法可以被子类化和重写，以提供数据的通用视图，而无需编写太多代码。</p>
+<p>已经提供了所有旧的基于函数的通用视图的类似物，以及一个完全通用的视图基类，可以用作可重用应用程序的基础，这些应用程序可以很容易地扩展。</p>
+<p>有关更多详细信息，请参阅 <a class="reference internal" href="../topics/class-based-views/index.html"><span class="doc">关于基于类的通用视图的文档</span></a>。还有一份文档可以帮助您将 <a class="reference external" href="https://raw.githubusercontent.com/django/django/ea9dc9f4b03ae034c1dc080730422dda7a9c2e47/docs/topics/generic-views-migration.txt">基于函数的通用视图转换为基于类的视图</a>。</p>
+</div>
+<div class="section" id="s-logging">
+<span id="logging"></span><h3>日志<a class="headerlink" href="#logging" title="永久链接至标题">¶</a></h3>
+<p>Django 1.3 在框架级别添加了对 Python 的 <code class="docutils literal notranslate"><span class="pre">logging</span></code> 模块的支持。这意味着现在您可以轻松地在您的 Django 项目中配置和控制日志记录。此外，Django 的代码中还添加了许多日志处理程序和日志调用，最显著的是，在发生 HTTP 500 服务器错误时发送的错误邮件现在被处理为日志活动。有关更多详细信息，请参阅 <a class="reference internal" href="../topics/logging.html"><span class="doc">关于 Django 日志记录接口的文档</span></a>。</p>
+</div>
+<div class="section" id="s-extended-static-files-handling">
+<span id="extended-static-files-handling"></span><h3>扩展静态文件处理<a class="headerlink" href="#extended-static-files-handling" title="永久链接至标题">¶</a></h3>
+<p>Django 1.3 随附了一个新的贡献应用程序 -- <code class="docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code> -- 以帮助开发人员处理渲染完整网页所需的静态媒体文件（图像、CSS、JavaScript 等）。</p>
+<p>在以前的 Django 版本中，通常会将静态资源与用户上传的文件一起放在 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a> 中，并同时在 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a> 上提供它们。引入 <code class="docutils literal notranslate"><span class="pre">staticfiles</span></code> 应用程序的部分目的是使将静态文件与用户上传的文件分开更加容易。现在，静态资源应该放在您的应用程序的 <code class="docutils literal notranslate"><span class="pre">static/</span></code> 子目录中或在 <a class="reference internal" href="../ref/settings.html#std-setting-STATICFILES_DIRS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATICFILES_DIRS</span></code></a> 中列出的其他静态资源目录中，并将在 <a class="reference internal" href="../ref/settings.html#std-setting-STATIC_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a> 上提供。</p>
+<p>有关更多详细信息，请参阅该应用程序的 <a class="reference internal" href="../ref/contrib/staticfiles.html"><span class="doc">参考文档</span></a> 或学习如何 <a class="reference internal" href="../howto/static-files/index.html"><span class="doc">管理静态文件</span></a>。</p>
+</div>
+<div class="section" id="s-unittest2-support">
+<span id="unittest2-support"></span><h3><code class="docutils literal notranslate"><span class="pre">unittest2</span></code> 支持<a class="headerlink" href="#unittest2-support" title="永久链接至标题">¶</a></h3>
+<p>Python 2.7 引入了对 <code class="docutils literal notranslate"><span class="pre">unittest</span></code> 库的一些重大更改，添加了一些非常有用的功能。为了确保每个 Django 项目都能受益于这些新功能，Django 随附了 <a class="reference external" href="https://pypi.org/project/unittest2/">unittest2</a> 的副本，这是 Python 2.7 <code class="docutils literal notranslate"><span class="pre">unittest</span></code> 库的一个副本，专为 Python 2.4 兼容性而进行了回退。</p>
+<p>要访问这个库，Django 提供了 <code class="docutils literal notranslate"><span class="pre">django.utils.unittest</span></code> 模块别名。如果您使用的是 Python 2.7，或者已经在本地安装了 <code class="docutils literal notranslate"><span class="pre">unittest2</span></code>，Django 会将别名映射到已安装的 <code class="docutils literal notranslate"><span class="pre">unittest</span></code> 库的版本。否则，Django 将使用其自带的 <code class="docutils literal notranslate"><span class="pre">unittest2</span></code> 版本。</p>
+<p>要利用这个别名，只需使用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">unittest</span>
+</pre></div>
+</div>
+<p>在你过去曾经使用过的地方：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">unittest</span>
+</pre></div>
+</div>
+<p>如果您想继续使用基本的 <code class="docutils literal notranslate"><span class="pre">unittest</span></code> 库，您可以这样做，只是您将不会获得任何新的 <code class="docutils literal notranslate"><span class="pre">unittest2</span></code> 功能。</p>
+</div>
+<div class="section" id="s-transaction-context-managers">
+<span id="transaction-context-managers"></span><h3>事务上下文管理器<a class="headerlink" href="#transaction-context-managers" title="永久链接至标题">¶</a></h3>
+<p>Python 2.5 及以上版本的用户现在可以将事务管理函数用作上下文管理器。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">transaction</span><span class="o">.</span><span class="n">autocommit</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-configurable-delete-cascade">
+<span id="configurable-delete-cascade"></span><h3>可配置的级联删除<a class="headerlink" href="#configurable-delete-cascade" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="../ref/models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a> 和 <a class="reference internal" href="../ref/models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 现在接受一个 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ForeignKey.on_delete" title="django.db.models.ForeignKey.on_delete"><code class="xref py py-attr docutils literal notranslate"><span class="pre">on_delete</span></code></a> 参数，用于在引用的对象被删除时自定义行为。以前，删除操作总是级联的；现在可用的替代方案包括设置为 null、设置为默认值、设置为任何值、保护或不采取任何行动。</p>
+<p>有关更多信息，请参阅 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ForeignKey.on_delete" title="django.db.models.ForeignKey.on_delete"><code class="xref py py-attr docutils literal notranslate"><span class="pre">on_delete</span></code></a> 的文档。</p>
+</div>
+<div class="section" id="s-contextual-markers-and-comments-for-translatable-strings">
+<span id="contextual-markers-and-comments-for-translatable-strings"></span><h3>可翻译字符串的上下文标记和注释<a class="headerlink" href="#contextual-markers-and-comments-for-translatable-strings" title="永久链接至标题">¶</a></h3>
+<p>对于具有模糊含义的翻译字符串，现在可以使用 <code class="docutils literal notranslate"><span class="pre">pgettext</span></code> 函数来指定字符串的上下文。</p>
+<p>如果你只想为翻译者添加一些信息，你还可以在源代码中添加特殊的翻译者注释。</p>
+<p>有关更多信息，请参阅 <span class="xref std std-ref">上下文标记</span> 和 <span class="xref std std-ref">翻译者注释</span>。</p>
+</div>
+<div class="section" id="s-improvements-to-built-in-template-tags">
+<span id="improvements-to-built-in-template-tags"></span><h3>内置模板标签的改进<a class="headerlink" href="#improvements-to-built-in-template-tags" title="永久链接至标题">¶</a></h3>
+<p>对 Django 内置模板标签进行了一些改进：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-include"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">include</span></code></a> 标签现在接受一个 <code class="docutils literal notranslate"><span class="pre">with</span></code> 选项，允许您指定要传递给包含的模板的上下文变量。</li>
+<li><a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-include"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">include</span></code></a> 标签现在接受一个 <code class="docutils literal notranslate"><span class="pre">only</span></code> 选项，允许您将当前上下文从包含的上下文中排除在外。</li>
+<li><a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-with"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">with</span></code></a> 标签现在允许您在单个 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-with"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">with</span></code></a> 块中定义多个上下文变量。</li>
+<li><a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-load"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">load</span></code></a> 标签现在接受一个 <code class="docutils literal notranslate"><span class="pre">from</span></code> 参数，允许您从一个库中加载单个标签或过滤器。</li>
+</ul>
+</div>
+<div class="section" id="s-templateresponse">
+<span id="templateresponse"></span><h3>模板响应<a class="headerlink" href="#templateresponse" title="永久链接至标题">¶</a></h3>
+<p>有时允许装饰器或中间件在视图构建响应之后修改响应可能是有益的。例如，您可能希望更改所使用的模板，或将额外的数据放入上下文中。</p>
+<p>然而，您不能（轻松地）在构建后修改基本的 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 内容。为了克服这个限制，Django 1.3 添加了一个新的 <a class="reference internal" href="../ref/template-response.html#django.template.response.TemplateResponse" title="django.template.response.TemplateResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemplateResponse</span></code></a> 类。与基本的 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 对象不同，<a class="reference internal" href="../ref/template-response.html#django.template.response.TemplateResponse" title="django.template.response.TemplateResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemplateResponse</span></code></a> 对象保留了视图提供的模板和上下文的详细信息，以计算响应。响应的最终输出直到后面的响应过程中才会计算。</p>
+<p>有关更多详细信息，请参阅 <a class="reference internal" href="../ref/template-response.html#django.template.response.TemplateResponse" title="django.template.response.TemplateResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemplateResponse</span></code></a> 类的 <a class="reference internal" href="../ref/template-response.html"><span class="doc">文档</span></a>。</p>
+</div>
+<div class="section" id="s-caching-changes">
+<span id="caching-changes"></span><h3>缓存更改<a class="headerlink" href="#caching-changes" title="永久链接至标题">¶</a></h3>
+<p>Django 1.3 引入了对 Django 缓存基础设施的若干改进。</p>
+<p>首先，Django 现在支持多个命名缓存。与 Django 1.2 引入多个数据库连接支持的方式类似，Django 1.3 允许您使用新的 <a class="reference internal" href="../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 设置来定义多个命名的缓存连接。</p>
+<p>其次，缓存 API 中添加了 <a class="reference internal" href="../topics/cache.html#cache-versioning"><span class="std std-ref">版本化</span></a>、<a class="reference internal" href="../topics/cache.html#cache-key-prefixing"><span class="std std-ref">站点范围的前缀</span></a> 和 <a class="reference internal" href="../topics/cache.html#cache-key-transformation"><span class="std std-ref">转换</span></a> 功能。</p>
+<p>第三，已更新 <a class="reference internal" href="../topics/cache.html#using-vary-headers"><span class="std std-ref">缓存键创建</span></a>，以考虑 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求中的请求查询字符串。</p>
+<p>最后，已经将对 <a class="reference external" href="http://sendapatch.se/projects/pylibmc/">pylibmc</a> 的支持添加到了 memcached 缓存后端。</p>
+<p>有关更多详细信息，请参阅 <a class="reference internal" href="../topics/cache.html"><span class="doc">Django 中的缓存文档</span></a>。</p>
+</div>
+<div class="section" id="s-permissions-for-inactive-users">
+<span id="permissions-for-inactive-users"></span><h3>对非活跃用户的权限<a class="headerlink" href="#permissions-for-inactive-users" title="永久链接至标题">¶</a></h3>
+<p>如果您提供一个自定义的身份验证后端，并将 <code class="docutils literal notranslate"><span class="pre">supports_inactive_user</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则不活动的 <code class="docutils literal notranslate"><span class="pre">User</span></code> 实例将检查后端以获取权限。这对于进一步集中权限处理非常有用。有关更多详细信息，请参阅 <a class="reference internal" href="../topics/auth/index.html"><span class="doc">身份验证文档</span></a>。</p>
+</div>
+<div class="section" id="s-geodjango">
+<span id="geodjango"></span><h3>GeoDjango<a class="headerlink" href="#geodjango" title="永久链接至标题">¶</a></h3>
+<p>使用 <a class="reference internal" href="../ref/contrib/gis/db-api.html#spatial-backends"><span class="std std-ref">空间数据库后端</span></a> 来 <a class="reference internal" href="../internals/contributing/writing-code/unit-tests.html#running-unit-tests"><span class="std std-ref">运行 Django 测试套件</span></a> 时，GeoDjango 测试套件现在已包含在 <code class="docutils literal notranslate"><span class="pre">runtests.py</span></code> 中。</p>
+</div>
+<div class="section" id="s-media-url-and-static-url-must-end-in-a-slash">
+<span id="media-url-and-static-url-must-end-in-a-slash"></span><h3><a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a> 和 <a class="reference internal" href="../ref/settings.html#std-setting-STATIC_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a> 必须以斜杠结尾。<a class="headerlink" href="#media-url-and-static-url-must-end-in-a-slash" title="永久链接至标题">¶</a></h3>
+<p>之前，<a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a> 设置只有在包含域名之后的后缀时才需要一个尾随斜杠。</p>
+<p>现在，只要不是空白的情况下，<a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a> 和新的 <a class="reference internal" href="../ref/settings.html#std-setting-STATIC_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a> 设置都需要一个尾随斜杠。这确保了在模板中组合路径的一致方式。</p>
+<p>提供了没有尾随斜杠的任何一个或两个设置的项目设置现在会引发一个 <code class="docutils literal notranslate"><span class="pre">PendingDeprecationWarning</span></code>。</p>
+<p>在 Django 1.4 中，相同的条件将引发 <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>，而在 Django 1.5 中将引发 <code class="docutils literal notranslate"><span class="pre">ImproperlyConfigured</span></code> 异常。</p>
+</div>
+<div class="section" id="s-everything-else">
+<span id="everything-else"></span><h3>其他所有内容<a class="headerlink" href="#everything-else" title="永久链接至标题">¶</a></h3>
+<p>Django <a class="reference internal" href="1.1.html"><span class="doc">1.1</span></a> 和 <a class="reference internal" href="1.2.html"><span class="doc">1.2</span></a> 在 Django 中引入了许多重要的功能，如多数据库支持、模型验证和基于会话的消息框架。然而，这种对重要功能的关注也导致了许多较小功能的牺牲。</p>
+<p>为了弥补这一点，Django 1.3 开发过程的重点是添加许多较小的、长期存在的功能需求。这些包括：</p>
+<ul class="simple">
+<li>在 <a class="reference internal" href="../ref/contrib/sites.html"><span class="doc">站点框架</span></a> 中，改进了访问和操作当前 <a class="reference internal" href="../ref/contrib/sites.html#django.contrib.sites.models.Site" title="django.contrib.sites.models.Site"><code class="xref py py-class docutils literal notranslate"><span class="pre">Site</span></code></a> 对象的工具。</li>
+<li>在测试中用于模拟请求的 <a class="reference internal" href="../topics/testing/advanced.html#django.test.RequestFactory" title="django.test.RequestFactory"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestFactory</span></code></a>。</li>
+<li>一个新的测试断言 -- <a class="reference internal" href="../topics/testing/tools.html#django.test.TransactionTestCase.assertNumQueries" title="django.test.TransactionTestCase.assertNumQueries"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertNumQueries()</span></code></a> -- 使得更容易测试与视图相关的数据库活动。</li>
+<li>在管理员的 <a class="reference internal" href="../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin.list_filter" title="django.contrib.admin.ModelAdmin.list_filter"><code class="xref py py-attr docutils literal notranslate"><span class="pre">list_filter</span></code></a> 中支持跨关系的查询。</li>
+<li>支持 <a class="reference external" href="https://owasp.org/www-community/HttpOnly">HttpOnly</a> cookies。</li>
+<li>现在，<a class="reference internal" href="../topics/email.html#django.core.mail.mail_admins" title="django.core.mail.mail_admins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mail_admins()</span></code></a> 和 <a class="reference internal" href="../topics/email.html#django.core.mail.mail_managers" title="django.core.mail.mail_managers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mail_managers()</span></code></a> 支持轻松附加 HTML 内容到消息中。</li>
+<li><a class="reference internal" href="../topics/email.html#django.core.mail.EmailMessage" title="django.core.mail.EmailMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">EmailMessage</span></code></a> 现在支持抄送 (CC)。</li>
+<li>错误邮件现在包含了更多关于调试服务器错误页面的详细信息和格式。</li>
+<li><a class="reference internal" href="../howto/custom-template-tags.html#django.template.Library.simple_tag" title="django.template.Library.simple_tag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simple_tag()</span></code></a> 现在接受一个 <code class="docutils literal notranslate"><span class="pre">takes_context</span></code> 参数，这使得编写需要访问模板上下文的简单模板标签变得更加容易。</li>
+<li>一个新的 <a class="reference internal" href="../topics/http/shortcuts.html#django.shortcuts.render" title="django.shortcuts.render"><code class="xref py py-meth docutils literal notranslate"><span class="pre">render()</span></code></a> 快捷方式 -- 作为 <code class="docutils literal notranslate"><span class="pre">django.shortcuts.render_to_response()</span></code> 的替代，默认提供一个 <a class="reference internal" href="../ref/templates/api.html#django.template.RequestContext" title="django.template.RequestContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestContext</span></code></a>。</li>
+<li>支持在检索或更新数据库值时将 <a class="reference internal" href="../ref/models/expressions.html#django.db.models.F" title="django.db.models.F"><code class="xref py py-class docutils literal notranslate"><span class="pre">F</span> <span class="pre">表达式</span></code></a> 与 <code class="docutils literal notranslate"><span class="pre">timedelta</span></code> 值组合使用。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-backwards-incompatible-changes-in-1-3">
+<span id="s-backwards-incompatible-changes-1-3"></span><span id="backwards-incompatible-changes-in-1-3"></span><span id="backwards-incompatible-changes-1-3"></span><h2>1.3 中的向后不兼容更改<a class="headerlink" href="#backwards-incompatible-changes-in-1-3" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-csrf-validation-now-applies-to-ajax-requests">
+<span id="csrf-validation-now-applies-to-ajax-requests"></span><h3>CSRF 验证现在适用于 AJAX 请求<a class="headerlink" href="#csrf-validation-now-applies-to-ajax-requests" title="永久链接至标题">¶</a></h3>
+<p>在 Django 1.2.5 之前，Django 的 CSRF 预防系统豁免了 AJAX 请求的 CSRF 验证；然而，由于我们收到的有关 <a class="reference external" href="https://www.djangoproject.com/weblog/2011/feb/08/security/">安全问题</a> 的报告，现在 <em>所有</em> 请求都需要进行 CSRF 验证。请参考 <a class="reference internal" href="../ref/csrf.html"><span class="doc">Django CSRF 文档</span></a> 以获取有关如何处理 AJAX 请求中的 CSRF 验证的详细信息。</p>
+</div>
+<div class="section" id="s-restricted-filters-in-admin-interface">
+<span id="restricted-filters-in-admin-interface"></span><h3>在管理界面中的受限过滤器<a class="headerlink" href="#restricted-filters-in-admin-interface" title="永久链接至标题">¶</a></h3>
+<p>在 Django 1.2.5 之前，Django 管理界面允许通过查询字符串操作对任何模型字段或关系进行过滤，而不仅仅是那些在 <code class="docutils literal notranslate"><span class="pre">list_filter</span></code> 中指定的字段。然而，由于我们收到的有关安全问题的报告，现在在管理界面中的查询字符串查找参数必须是在 <code class="docutils literal notranslate"><span class="pre">list_filter</span></code> 或 <code class="docutils literal notranslate"><span class="pre">date_hierarchy</span></code> 中指定的字段或关系。</p>
+</div>
+<div class="section" id="s-deleting-a-model-doesn-t-delete-associated-files">
+<span id="deleting-a-model-doesn-t-delete-associated-files"></span><h3>删除模型不会删除关联的文件<a class="headerlink" href="#deleting-a-model-doesn-t-delete-associated-files" title="永久链接至标题">¶</a></h3>
+<p>在早期的 Django 版本中，当删除包含 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 的模型实例时，<a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 会自行从后端存储中删除文件。这打开了许多数据丢失的可能性，包括已回滚的事务以及不同模型上的字段引用相同的文件。在 Django 1.3 中，当删除模型时，不会调用 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 的 <code class="docutils literal notranslate"><span class="pre">delete()</span></code> 方法。如果需要清理孤立的文件，您需要自行处理它（例如，使用自定义管理命令，可以手动运行或通过 cron 等定期运行）。</p>
+</div>
+<div class="section" id="s-passwordinput-default-rendering-behavior">
+<span id="passwordinput-default-rendering-behavior"></span><h3>PasswordInput 默认渲染行为<a class="headerlink" href="#passwordinput-default-rendering-behavior" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="../ref/forms/widgets.html#django.forms.PasswordInput" title="django.forms.PasswordInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordInput</span></code></a> 表单小部件，用于表示密码的表单字段，接受一个布尔关键字参数 <code class="docutils literal notranslate"><span class="pre">render_value</span></code>，指示在显示带有错误的提交表单时是否将其数据发送回浏览器。在 Django 1.3 之前，这个参数的默认值是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，这意味着提交的密码将作为表单的一部分发送回浏览器。希望通过将该值从重新显示的表单中排除以增加一些额外安全性的开发人员可以实例化一个 <a class="reference internal" href="../ref/forms/widgets.html#django.forms.PasswordInput" title="django.forms.PasswordInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PasswordInput</span></code></a> 并传递 <code class="docutils literal notranslate"><span class="pre">render_value=False</span></code>。</p>
+<p>然而，由于密码的敏感性质，Django 1.3 现在会自动采取这一步骤；<code class="docutils literal notranslate"><span class="pre">render_value</span></code> 的默认值现在为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，希望在出现错误的情况下将密码值返回到浏览器的开发人员（以前的行为）现在必须明确指出这一点。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">LoginForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">widget</span><span class="o">=</span><span class="n">forms</span><span class="o">.</span><span class="n">PasswordInput</span><span class="p">(</span><span class="n">render_value</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-clearable-default-widget-for-filefield">
+<span id="clearable-default-widget-for-filefield"></span><h3>FileField 的可清除默认小部件<a class="headerlink" href="#clearable-default-widget-for-filefield" title="永久链接至标题">¶</a></h3>
+<p>Django 1.3 现在除了 <a class="reference internal" href="../ref/forms/widgets.html#django.forms.FileInput" title="django.forms.FileInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileInput</span></code></a> 外还包括一个 <a class="reference internal" href="../ref/forms/widgets.html#django.forms.ClearableFileInput" title="django.forms.ClearableFileInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClearableFileInput</span></code></a> 表单小部件。<code class="docutils literal notranslate"><span class="pre">ClearableFileInput</span></code> 渲染时包含一个清除字段值的复选框（如果字段有值且不是必需的）；而 <code class="docutils literal notranslate"><span class="pre">FileInput</span></code> 无法清除 <code class="docutils literal notranslate"><span class="pre">FileField</span></code> 中的现有文件。</p>
+<p><code class="docutils literal notranslate"><span class="pre">ClearableFileInput</span></code> 现在是 <code class="docutils literal notranslate"><span class="pre">FileField</span></code> 的默认小部件，因此包含 <code class="docutils literal notranslate"><span class="pre">FileField</span></code> 的现有表单如果没有分配自定义小部件，需要考虑在渲染的表单输出中可能会出现额外的复选框。</p>
+<p>要返回到以前的渲染方式（不具备清除 <code class="docutils literal notranslate"><span class="pre">FileField</span></code> 的能力），可以在 <code class="docutils literal notranslate"><span class="pre">ClearableFileInput</span></code> 的位置使用 <code class="docutils literal notranslate"><span class="pre">FileInput</span></code> 小部件。例如，在假设有一个名为 <code class="docutils literal notranslate"><span class="pre">document</span></code> 的 <code class="docutils literal notranslate"><span class="pre">FileField</span></code> 的假设 <code class="docutils literal notranslate"><span class="pre">Document</span></code> 模型的 <code class="docutils literal notranslate"><span class="pre">ModelForm</span></code> 中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Document</span>
+
+
+<span class="k">class</span> <span class="nc">DocumentForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">ModelForm</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Document</span>
+        <span class="n">widgets</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;document&quot;</span><span class="p">:</span> <span class="n">forms</span><span class="o">.</span><span class="n">FileInput</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-new-index-on-database-session-table">
+<span id="new-index-on-database-session-table"></span><h3>数据库会话表上的新索引<a class="headerlink" href="#new-index-on-database-session-table" title="永久链接至标题">¶</a></h3>
+<p>在 Django 1.3 之前，数据库后端用于 <a class="reference internal" href="../topics/http/sessions.html"><span class="doc">sessions</span></a> 应用的数据库表上没有对 <code class="docutils literal notranslate"><span class="pre">expire_date</span></code> 列创建索引。因此，如果有大量会话，对会话表的日期查询（例如清除旧会话所需的查询）会非常慢。</p>
+<p>如果您有一个已经在使用数据库会话后端的现有项目，您无需采取任何措施来适应此更改。但是，如果您手动将新索引添加到会话表中，可能会显著提高性能。可以通过运行 <code class="docutils literal notranslate"><span class="pre">sqlindexes</span></code> 管理命令来找到添加索引的 SQL：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python manage.py sqlindexes sessions
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-no-more-naughty-words">
+<span id="no-more-naughty-words"></span><h3>不再有不雅词汇<a class="headerlink" href="#no-more-naughty-words" title="永久链接至标题">¶</a></h3>
+<p>Django 历史上提供了（并执行了）一份不雅词汇列表。评论应用程序已经执行了这个不雅词汇列表，防止人们提交包含这些不雅词汇之一的评论。</p>
+<p>不幸的是，用于实现这个粗话列表的技术非常天真，并容易受到 <a class="reference external" href="https://en.wikipedia.org/wiki/Scunthorpe_problem">斯肯索普问题</a> 的影响。要改进内置的过滤器以解决这个问题需要很大的努力，而且由于自然语言处理不是一个 Web 框架的正常领域，我们通过将禁止使用的单词列表设置为空来“解决”了这个问题。</p>
+<p>如果您想恢复旧的行为，只需在您的设置文件中设置一个包含您要禁止的单词的 <code class="docutils literal notranslate"><span class="pre">PROFANITIES_LIST</span></code> 设置（如果您想查看历史上被禁止的单词列表，请参考 <a class="reference external" href="https://github.com/django/django/commit/edd767d2612d891a906268cf590571f541dd164f">实施这个更改的提交</a>）。然而，如果避免粗话对您很重要，建议您寻找一个更好、不那么天真的解决方法来解决这个问题。</p>
+</div>
+<div class="section" id="s-localflavor-changes">
+<span id="localflavor-changes"></span><h3>Localflavor 更改<a class="headerlink" href="#localflavor-changes" title="永久链接至标题">¶</a></h3>
+<p>Django 1.3 引入了以下对本地风格的向后不兼容的更改：</p>
+<ul class="simple">
+<li>加拿大（ca）- 省份“纽芬兰与拉布拉多”已将其省份代码更新为“NL”，而不是较旧的“NF”。此外，育空地区的省份代码已更正为“YT”，而不是“YK”。</li>
+<li>印度尼西亚（id）- 省份“ Nanggroe Aceh Darussalam (NAD)”已从省份列表中移除，转而使用新的官方名称“ Aceh (ACE)”。</li>
+<li>美利坚合众国（us）-- 由 <code class="docutils literal notranslate"><span class="pre">USStateField</span></code> 使用的“州”列表已扩展，包括了武装部队的邮政编码。如果您依赖于 <code class="docutils literal notranslate"><span class="pre">USStateField</span></code> 不包括它们，这将是不兼容的。</li>
+</ul>
+</div>
+<div class="section" id="s-formset-updates">
+<span id="formset-updates"></span><h3>FormSet 更新<a class="headerlink" href="#formset-updates" title="永久链接至标题">¶</a></h3>
+<p>在 Django 1.3 中，<code class="docutils literal notranslate"><span class="pre">FormSet</span></code> 的创建行为略有修改。在历史上，该类没有区分未传递数据和传递空字典之间的区别。这与框架的其他部分的行为不一致。从1.3版本开始，如果传递空字典，<code class="docutils literal notranslate"><span class="pre">FormSet</span></code> 将引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。</p>
+<p>例如，使用一个 <code class="docutils literal notranslate"><span class="pre">FormSet</span></code>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ArticleForm</span><span class="p">(</span><span class="n">Form</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">title</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">DateField</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ArticleFormSet</span> <span class="o">=</span> <span class="n">formset_factory</span><span class="p">(</span><span class="n">ArticleForm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>以下代码将引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ArticleFormSet</span><span class="p">({})</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValidationError</span>: <span class="n">[u&#39;ManagementForm data is missing or has been tampered with&#39;]</span>
+</pre></div>
+</div>
+<p>如果需要实例化一个空的 <code class="docutils literal notranslate"><span class="pre">FormSet</span></code>，不要传递数据或使用 <code class="docutils literal notranslate"><span class="pre">None</span></code>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">formset</span> <span class="o">=</span> <span class="n">ArticleFormSet</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">formset</span> <span class="o">=</span> <span class="n">ArticleFormSet</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-callables-in-templates">
+<span id="callables-in-templates"></span><h3>模板中的可调用对象<a class="headerlink" href="#callables-in-templates" title="永久链接至标题">¶</a></h3>
+<p>以前，在模板中的可调用对象只有在通过属性查找检索时才会作为变量解析过程的一部分自动调用。这是一个不一致的地方，可能导致令人困惑和无益的行为：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Template</span><span class="p">(</span><span class="s2">&quot;{{ user.get_full_name }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">Context</span><span class="p">({</span><span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="n">user</span><span class="p">}))</span>
+<span class="go">u&#39;Joe Bloggs&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Template</span><span class="p">(</span><span class="s2">&quot;{{ full_name }}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">Context</span><span class="p">({</span><span class="s2">&quot;full_name&quot;</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">get_full_name</span><span class="p">}))</span>
+<span class="go">u&#39;&amp;lt;bound method User.get_full_name of &amp;lt;...</span>
+</pre></div>
+</div>
+<p>这在 Django 1.3 中已经解决了 - 在这两种情况下的结果都将是 <code class="docutils literal notranslate"><span class="pre">u'Joe</span> <span class="pre">Bloggs'</span></code>。尽管先前的行为对于为网页设计师设计的模板语言来说并不实用，也从未有意支持，但有可能一些模板可能会因此更改而中断。</p>
+</div>
+<div class="section" id="s-use-of-custom-sql-to-load-initial-data-in-tests">
+<span id="use-of-custom-sql-to-load-initial-data-in-tests"></span><h3>在测试中使用自定义 SQL 加载初始数据<a class="headerlink" href="#use-of-custom-sql-to-load-initial-data-in-tests" title="永久链接至标题">¶</a></h3>
+<p>Django 提供了自定义 SQL 钩子作为将手工编写的 SQL 注入到数据库同步过程中的一种方式。这个自定义 SQL 的一个可能用途是将数据插入到数据库中。如果您的自定义 SQL 包含 <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> 语句，那么这些插入操作将在每次数据库同步时执行。这包括在运行测试套件时创建的任何测试数据库的同步。</p>
+<p>然而，在测试 Django 1.3 的过程中，发现这个功能从未完全按照宣传的那样工作。当使用不支持事务的数据库后端或使用 TransactionTestCase 时，使用自定义 SQL 插入的数据在测试过程中将不可见。</p>
+<p>不幸的是，要纠正这个问题，没有办法不引入向后不兼容性。与其让通过自定义 SQL 插入的初始数据处于不确定的状态，Django 现在强制执行一个策略，即通过自定义 SQL 插入的数据在测试期间将 <em>不</em> 可见。</p>
+<p>这个更改只影响测试过程。您仍然可以使用自定义 SQL 在 <code class="docutils literal notranslate"><span class="pre">syncdb</span></code> 进程的一部分中将数据加载到生产数据库中。如果您需要在测试条件下存在数据，您应该使用 <a class="reference internal" href="../topics/testing/tools.html#topics-testing-fixtures"><span class="std std-ref">测试固件</span></a> 来插入它，或者使用您的测试用例的 <code class="docutils literal notranslate"><span class="pre">setUp()</span></code> 方法。</p>
+</div>
+<div class="section" id="s-changed-priority-of-translation-loading">
+<span id="changed-priority-of-translation-loading"></span><h3>改变了翻译加载的优先级<a class="headerlink" href="#changed-priority-of-translation-loading" title="永久链接至标题">¶</a></h3>
+<p>已经进行了工作，以简化、合理化并正确记录 Django 在运行时用于从磁盘上找到的不同翻译中构建翻译的算法，即：</p>
+<p>对于在 Python 代码和模板中找到的可翻译字面值（<code class="docutils literal notranslate"><span class="pre">'django'</span></code> gettext 域）：</p>
+<ul class="simple">
+<li>在 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 设置中列出的应用程序包含的翻译的优先级发生了变化。为了与 Django 的其他部分（例如模板等）使用的类似设置行为保持一致，现在在构建将要提供的翻译时，首先列出的应用程序比后面列出的应用程序具有更高的优先级。</li>
+<li>现在可以使用 <a class="reference internal" href="../ref/settings.html#std-setting-LOCALE_PATHS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCALE_PATHS</span></code></a> 设置来覆盖应用程序中附带的翻译，这些翻译的优先级高于 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 应用程序的翻译。此设置中列出的值之间的相对优先级也已经修改，因此首先列出的路径比后面列出的路径具有更高的优先级。</li>
+<li>在这个版本中，包含设置的目录的 <code class="docutils literal notranslate"><span class="pre">locale</span></code> 子目录，通常与项目目录重合并被称为 <em>项目目录</em>，被弃用为翻译的来源。（这些翻译的优先级介于应用程序和 <a class="reference internal" href="../ref/settings.html#std-setting-LOCALE_PATHS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCALE_PATHS</span></code></a> 翻译之间）。请参阅本文档的 <a class="reference internal" href="#loading-of-project-level-translations">相应弃用功能部分</a>。</li>
+</ul>
+<p>对于在 JavaScript 代码中找到的可翻译字面值（<code class="docutils literal notranslate"><span class="pre">'djangojs'</span></code> gettext 域）：</p>
+<ul class="simple">
+<li>与 <code class="docutils literal notranslate"><span class="pre">'django'</span></code> 域的翻译类似：现在也可以使用 <a class="reference internal" href="../ref/settings.html#std-setting-LOCALE_PATHS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCALE_PATHS</span></code></a> 设置来覆盖应用程序中附带的 JavaScript 代码的翻译。这些翻译的优先级高于传递给 <code class="docutils literal notranslate"><span class="pre">javascript_catalog()</span></code> 视图的 Python 包的翻译。首先列出的路径比后面列出的路径具有更高的优先级。</li>
+<li>位于 <em>项目目录</em> 的 <code class="docutils literal notranslate"><span class="pre">locale</span></code> 子目录下的 JavaScript 翻译从未被考虑过，考虑到这个位置的弃用，它们将保持不变。</li>
+</ul>
+</div>
+<div class="section" id="s-transaction-management">
+<span id="transaction-management"></span><h3>事务管理<a class="headerlink" href="#transaction-management" title="永久链接至标题">¶</a></h3>
+<p>在使用托管事务时 -- 也就是说，除了默认的自动提交模式之外的任何情况 -- 当一个事务被标记为“脏”时非常重要。脏事务将由 <code class="docutils literal notranslate"><span class="pre">commit_on_success</span></code> 装饰器或 <code class="docutils literal notranslate"><span class="pre">django.middleware.transaction.TransactionMiddleware</span></code> 提交，并且 <code class="docutils literal notranslate"><span class="pre">commit_manually</span></code> 强制将它们明确关闭；干净的事务“得到允许”，这意味着它们通常在请求结束时在连接关闭时回滚。</p>
+<p>在 Django 1.3 之前，只有在 Django 察觉到在事务中执行了修改操作时，事务才会被标记为脏事务；也就是说，要么保存了某个模型，要么执行了某个批量更新或删除操作，要么用户显式调用了 <code class="docutils literal notranslate"><span class="pre">transaction.set_dirty()</span></code>。在 Django 1.3 中，只要执行了 <em>任何</em> 数据库操作，事务就会被标记为脏事务。</p>
+<p>由于这个改变，当执行原始 SQL 或使用修改数据的 <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> 时，您不再需要显式设置事务为脏事务。然而，您需要显式关闭任何使用 <code class="docutils literal notranslate"><span class="pre">commit_manually()</span></code> 管理的只读事务。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@transaction</span><span class="o">.</span><span class="n">commit_manually</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">MyObject</span><span class="p">,</span> <span class="n">name__iexact</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s2">&quot;template&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;object&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>在 Django 1.3 之前，这将不会出错。然而，在 Django 1.3 下，这将引发一个 <a class="reference internal" href="../ref/exceptions.html#django.db.transaction.TransactionManagementError" title="django.db.transaction.TransactionManagementError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionManagementError</span></code></a>，因为检索 <code class="docutils literal notranslate"><span class="pre">MyObject</span></code> 实例的读操作将事务留在了脏状态。</p>
+</div>
+<div class="section" id="s-no-password-reset-for-inactive-users">
+<span id="no-password-reset-for-inactive-users"></span><h3>不允许非活跃用户重置密码<a class="headerlink" href="#no-password-reset-for-inactive-users" title="永久链接至标题">¶</a></h3>
+<p>在 Django 1.3 之前，非活跃用户可以请求发送密码重置邮件并重置密码。而在 Django 1.3 中，非活跃用户将收到与不存在的帐户相同的消息。</p>
+</div>
+<div class="section" id="s-password-reset-view-now-accepts-from-email">
+<span id="password-reset-view-now-accepts-from-email"></span><h3>密码重置视图现在接受 <code class="docutils literal notranslate"><span class="pre">from_email</span></code> 参数。<a class="headerlink" href="#password-reset-view-now-accepts-from-email" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">django.contrib.auth.views.password_reset()</span></code> 视图现在接受一个 <code class="docutils literal notranslate"><span class="pre">from_email</span></code> 参数，该参数将作为关键字参数传递给 <code class="docutils literal notranslate"><span class="pre">password_reset_form</span></code> 的 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 方法。如果您正在使用自定义密码重置表单与此视图，则需要确保您表单的 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 方法接受这个关键字参数。</p>
+</div>
+</div>
+<div class="section" id="s-features-deprecated-in-1-3">
+<span id="s-deprecated-features-1-3"></span><span id="features-deprecated-in-1-3"></span><span id="deprecated-features-1-3"></span><h2>在 1.3 中被废弃的功能<a class="headerlink" href="#features-deprecated-in-1-3" title="永久链接至标题">¶</a></h2>
+<p>Django 1.3 弃用了一些早期版本的功能。这些功能仍然受支持，但将在接下来的几个发布周期内逐步淘汰。</p>
+<p>使用以下任何特性的代码将在 Django 1.3 中引发 <code class="docutils literal notranslate"><span class="pre">PendingDeprecationWarning</span></code>。默认情况下，此警告是静默的，但可以使用 Python 的 <a class="reference external" href="https://docs.python.org/3/library/warnings.html#module-warnings" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">warnings</span></code></a> 模块打开，或者通过在运行 Python 时使用 <code class="docutils literal notranslate"><span class="pre">-Wd</span></code> 或 <code class="docutils literal notranslate"><span class="pre">-Wall</span></code> 标志来打开。</p>
+<p>在 Django 1.4 中，这些警告将变成 <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>，它是 <em>不</em> 静默的。在 Django 1.5 中，将完全删除对这些特性的支持。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">有关更多详细信息，请参阅文档 <a class="reference internal" href="../internals/release-process.html"><span class="doc">Django 的发布流程</span></a> 和我们的 <a class="reference internal" href="../internals/deprecation.html"><span class="doc">弃用时间表</span></a>。</p>
+</div>
+<div class="section" id="s-mod-python-support">
+<span id="mod-python-support"></span><h3><code class="docutils literal notranslate"><span class="pre">mod_python</span></code> 支持<a class="headerlink" href="#mod-python-support" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">mod_python</span></code> 库自 2007 年以来没有发布过新版本，自 2008 年以来也没有提交。Apache 基金会董事会投票决定将 <code class="docutils literal notranslate"><span class="pre">mod_python</span></code> 从其版本控制存储库的活动项目集中删除，其主要开发人员已将所有工作重心转向了更轻巧、更稳定、更灵活的 <code class="docutils literal notranslate"><span class="pre">mod_wsgi</span></code> 后端。</p>
+<p>如果您当前使用的是 <code class="docutils literal notranslate"><span class="pre">mod_python</span></code> 请求处理程序，您应该重新部署您的 Django 项目，使用其他请求处理程序。Django 项目推荐使用的请求处理程序是 <a class="reference internal" href="../howto/deployment/wsgi/modwsgi.html"><span class="doc">mod_wsgi</span></a>，但也支持 FastCGI。对于 <code class="docutils literal notranslate"><span class="pre">mod_python</span></code> 部署的支持将在 Django 1.5 中被移除。</p>
+</div>
+<div class="section" id="s-function-based-generic-views">
+<span id="function-based-generic-views"></span><h3>基于函数的通用视图<a class="headerlink" href="#function-based-generic-views" title="永久链接至标题">¶</a></h3>
+<p>由于引入了基于类的通用视图，Django 提供的基于函数的通用视图已被弃用。以下模块及其包含的视图已被弃用：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">django.views.generic.create_update</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">django.views.generic.date_based</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">django.views.generic.list_detail</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">django.views.generic.simple</span></code></li>
+</ul>
+</div>
+<div class="section" id="s-test-client-response-template-attribute">
+<span id="test-client-response-template-attribute"></span><h3>测试客户端响应的 <code class="docutils literal notranslate"><span class="pre">template</span></code> 属性<a class="headerlink" href="#test-client-response-template-attribute" title="永久链接至标题">¶</a></h3>
+<p>Django 的 <a class="reference internal" href="../topics/testing/tools.html#test-client"><span class="std std-ref">测试客户端</span></a> 返回带有额外测试信息的 <a class="reference internal" href="../topics/testing/tools.html#django.test.Response" title="django.test.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a> 对象。在 Django 1.3 之前的版本中，这包括一个 <code class="docutils literal notranslate"><span class="pre">template</span></code> 属性，其中包含有关在生成响应时渲染的模板的信息：可以是 None、一个 <a class="reference internal" href="../ref/templates/api.html#django.template.Template" title="django.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a> 对象，或一个 <a class="reference internal" href="../ref/templates/api.html#django.template.Template" title="django.template.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a> 对象的列表。返回值的这种不一致性（有时是列表，有时不是）使得这个属性难以使用。</p>
+<p>在 Django 1.3 中，<code class="docutils literal notranslate"><span class="pre">template</span></code> 属性已被弃用，改为使用新的 <a class="reference internal" href="../topics/testing/tools.html#django.test.Response.templates" title="django.test.Response.templates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">templates</span></code></a> 属性，该属性始终是一个列表，即使它只有一个元素或没有元素。</p>
+</div>
+<div class="section" id="s-djangotestrunner">
+<span id="djangotestrunner"></span><h3><code class="docutils literal notranslate"><span class="pre">DjangoTestRunner</span></code><a class="headerlink" href="#djangotestrunner" title="永久链接至标题">¶</a></h3>
+<p>由于引入了对 <code class="docutils literal notranslate"><span class="pre">unittest2</span></code> 的支持，<code class="docutils literal notranslate"><span class="pre">django.test.simple.DjangoTestRunner</span></code> 的特性（包括快速失败和 Ctrl-C 测试终止）已经变得多余。考虑到这种多余性，<code class="docutils literal notranslate"><span class="pre">DjangoTestRunner</span></code> 已经被转变成一个空的占位符类，并将在 Django 1.5 中完全删除。</p>
+</div>
+<div class="section" id="s-changes-to-url-and-ssi">
+<span id="changes-to-url-and-ssi"></span><h3>关于 <code class="docutils literal notranslate"><span class="pre">url</span></code> 和 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 的更改<a class="headerlink" href="#changes-to-url-and-ssi" title="永久链接至标题">¶</a></h3>
+<p>大多数模板标签允许您将常量或变量作为参数传递，例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">extends</span> <span class="s2">&quot;base.html&quot;</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>允许您将一个基本模板指定为常量，但如果您有一个包含值 <code class="docutils literal notranslate"><span class="pre">base.html</span></code> 的上下文变量 <code class="docutils literal notranslate"><span class="pre">templ</span></code>：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">extends</span> <span class="nv">templ</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>这也是合法的。</p>
+<p>然而，由于历史原因，<code class="docutils literal notranslate"><span class="pre">url</span></code> 和 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 是不同的。这些标签使用第二种无引号的语法，但将参数解释为常量。这意味着无法使用上下文变量作为 <code class="docutils literal notranslate"><span class="pre">url</span></code> 和 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 标签的目标。</p>
+<p>Django 1.3 标志着纠正这个历史意外的过程的开始。Django 1.3 添加了一个新的模板库 -- <code class="docutils literal notranslate"><span class="pre">future</span></code>，提供了 <code class="docutils literal notranslate"><span class="pre">url</span></code> 和 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 模板标签的替代实现。这个 <code class="docutils literal notranslate"><span class="pre">future</span></code> 库实现了使第一个参数的处理与所有其他变量的处理一致的行为。因此，一个包含以下内容的现有模板：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">url</span> <span class="nv">sample</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>应该替换为：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">url</span> <span class="nv">from</span> <span class="nv">future</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">url</span> <span class="s1">&#39;sample&#39;</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>实现旧行为的标签已经被弃用，在 Django 1.5 中，旧行为将被新行为替代。为了确保与未来版本的 Django 兼容，现有模板应该被修改以使用新的 <code class="docutils literal notranslate"><span class="pre">future</span></code> 库和语法。</p>
+</div>
+<div class="section" id="s-changes-to-the-login-methods-of-the-admin">
+<span id="changes-to-the-login-methods-of-the-admin"></span><h3>管理员登录方法的更改<a class="headerlink" href="#changes-to-the-login-methods-of-the-admin" title="永久链接至标题">¶</a></h3>
+<p>在之前的版本中，管理应用在多个位置定义了登录方法，并忽略了已经使用的 auth 应用中几乎相同的实现。这种重复的副作用是没有采用 <a class="reference external" href="https://github.com/django/django/commit/c8015052d935a99a5c8f96434b2d0cd16d8a4e14">r12634</a> 中所做的更改，以支持更广泛的用户名字符集。</p>
+<p>这个版本重构了管理界面的登录机制，使用了 <a class="reference internal" href="../topics/auth/default.html#django.contrib.auth.forms.AuthenticationForm" title="django.contrib.auth.forms.AuthenticationForm"><code class="xref py py-class docutils literal notranslate"><span class="pre">AuthenticationForm</span></code></a> 的子类来代替手动表单验证。以前未记录的方法 <code class="docutils literal notranslate"><span class="pre">'django.contrib.admin.sites.AdminSite.display_login_form'</span></code> 已被移除，改为使用新的 <a class="reference internal" href="../ref/contrib/admin/index.html#django.contrib.admin.AdminSite.login_form" title="django.contrib.admin.AdminSite.login_form"><code class="xref py py-attr docutils literal notranslate"><span class="pre">login_form</span></code></a> 属性。</p>
+</div>
+<div class="section" id="s-reset-and-sqlreset-management-commands">
+<span id="reset-and-sqlreset-management-commands"></span><h3><code class="docutils literal notranslate"><span class="pre">reset</span></code> 和 <code class="docutils literal notranslate"><span class="pre">sqlreset</span></code> 管理命令<a class="headerlink" href="#reset-and-sqlreset-management-commands" title="永久链接至标题">¶</a></h3>
+<p>这些命令已经被弃用。可以使用 <code class="docutils literal notranslate"><span class="pre">flush</span></code> 和 <code class="docutils literal notranslate"><span class="pre">sqlflush</span></code> 命令来删除所有内容。您也可以手动使用 ALTER TABLE 或 DROP TABLE 语句。</p>
+</div>
+<div class="section" id="s-id1">
+<span id="id1"></span><h3>GeoDjango<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>用于执行 GeoDjango 测试套件的函数式 <a class="reference internal" href="../ref/settings.html#std-setting-TEST_RUNNER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST_RUNNER</span></code></a>，以前称为 <code class="docutils literal notranslate"><span class="pre">django.contrib.gis.tests.run_gis_tests</span></code>，已被弃用，取而代之的是基于类的运行器，<code class="docutils literal notranslate"><span class="pre">django.contrib.gis.tests.GeoDjangoTestSuiteRunner</span></code>。</li>
+<li>以前，调用 <a class="reference internal" href="../ref/contrib/gis/geos.html#django.contrib.gis.geos.GEOSGeometry.transform" title="django.contrib.gis.geos.GEOSGeometry.transform"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform()</span></code></a> 在没有安装 GDAL 时会默默地什么也不做。现在，会引发一个 <a class="reference internal" href="../ref/contrib/gis/geos.html#django.contrib.gis.geos.GEOSException" title="django.contrib.gis.geos.GEOSException"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSException</span></code></a> 来指示可能存在问题的应用程序代码。如果在几何对象的 SRID 小于 0 或为 <code class="docutils literal notranslate"><span class="pre">None</span></code> 时调用 <a class="reference internal" href="../ref/contrib/gis/geos.html#django.contrib.gis.geos.GEOSGeometry.transform" title="django.contrib.gis.geos.GEOSGeometry.transform"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform()</span></code></a>，则会引发警告。</li>
+</ul>
+</div>
+<div class="section" id="s-czbirthnumberfield-clean">
+<span id="czbirthnumberfield-clean"></span><h3><code class="docutils literal notranslate"><span class="pre">CZBirthNumberField.clean</span></code><a class="headerlink" href="#czbirthnumberfield-clean" title="永久链接至标题">¶</a></h3>
+<p>以前，这个字段的 <code class="docutils literal notranslate"><span class="pre">clean()</span></code> 方法接受第二个参数 gender，允许进行更强的验证检查，但由于这个参数实际上无法从 Django 表单机制中传递，因此它现在处于待弃用状态。</p>
+</div>
+<div class="section" id="s-compatcookie">
+<span id="compatcookie"></span><h3><code class="docutils literal notranslate"><span class="pre">CompatCookie</span></code><a class="headerlink" href="#compatcookie" title="永久链接至标题">¶</a></h3>
+<p>以前，<code class="docutils literal notranslate"><span class="pre">django.http</span></code> 暴露了一个未记录的 <code class="docutils literal notranslate"><span class="pre">CompatCookie</span></code> 类，它是标准库 <code class="docutils literal notranslate"><span class="pre">SimpleCookie</span></code> 的一个修复包装。由于修复已经被合并到标准库中，这个类现在已被弃用 - 您应该使用 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">django.http</span> <span class="pre">import</span> <span class="pre">SimpleCookie</span></code>。</p>
+</div>
+<div class="section" id="s-loading-of-project-level-translations">
+<span id="s-id2"></span><span id="loading-of-project-level-translations"></span><span id="id2"></span><h3>加载 <em>项目级别</em> 的翻译<a class="headerlink" href="#loading-of-project-level-translations" title="永久链接至标题">¶</a></h3>
+<p>Django 的这个版本开始了对在运行时进行的翻译构建过程中包含位于所谓的 <em>项目路径</em> 下的翻译的弃用过程。可以使用 <a class="reference internal" href="../ref/settings.html#std-setting-LOCALE_PATHS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCALE_PATHS</span></code></a> 设置来执行相同的任务，只需将包含项目级别翻译的 <code class="docutils literal notranslate"><span class="pre">locale</span></code> 目录的文件系统路径添加到该设置的值中。</p>
+<p>这个决定的理由：</p>
+<ul>
+<li><p class="first"><em>项目路径</em> 一直是一个宽泛定义的概念（实际上，用于定位项目级别翻译的目录是包含设置模块的目录），在框架的其他部分也已经有了不再将其作为运行时资源位置的参考的变化。</p>
+</li>
+<li><p class="first">当部署场景比基本情况更复杂时，检测 <code class="docutils literal notranslate"><span class="pre">locale</span></code> 子目录的功能往往会失败，例如，当设置模块是一个目录时（ticket #10765）。</p>
+</li>
+<li><p class="first">存在一些潜在的奇怪的开发和部署时的问题，比如在将项目目录添加到 Python 路径时（<code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">runserver</span></code> 会这样做），<code class="docutils literal notranslate"><span class="pre">project_dir/locale/</span></code> 子目录可能会生成虚假的错误消息，并且会与同名的标准库模块发生冲突，这是一个典型的警告消息：</p>
+<div class="highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="x">/usr/lib/python2.6/gettext.py:49: ImportWarning: Not importing directory &#39;/path/to/project/locale&#39;: missing __init__.py.</span>
+<span class="x">import locale, copy, os, re, struct, sys</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">此位置未包含在 JavaScript 字面量的翻译构建过程中。这种弃用消除了此类不一致性。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-permwrapper-moved-to-django-contrib-auth-context-processors">
+<span id="permwrapper-moved-to-django-contrib-auth-context-processors"></span><h3><code class="docutils literal notranslate"><span class="pre">PermWrapper</span></code> 已移动到 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.context_processors</span></code><a class="headerlink" href="#permwrapper-moved-to-django-contrib-auth-context-processors" title="永久链接至标题">¶</a></h3>
+<p>在 Django 1.2 中，我们开始了将 <code class="docutils literal notranslate"><span class="pre">auth</span></code> 上下文处理器的位置从 <code class="docutils literal notranslate"><span class="pre">django.core.context_processors</span></code> 更改为 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.context_processors</span></code> 的过程。然而，<code class="docutils literal notranslate"><span class="pre">PermWrapper</span></code> 支持类被错误地遗漏在迁移中。在 Django 1.3 中，<code class="docutils literal notranslate"><span class="pre">PermWrapper</span></code> 类也已经移动到 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.context_processors</span></code>，与 <code class="docutils literal notranslate"><span class="pre">PermLookupDict</span></code> 支持类一起。新的类在功能上与旧版本完全相同；只是模块位置发生了变化。</p>
+</div>
+<div class="section" id="s-removal-of-xmlfield">
+<span id="removal-of-xmlfield"></span><h3>移除了 <code class="docutils literal notranslate"><span class="pre">XMLField</span></code><a class="headerlink" href="#removal-of-xmlfield" title="永久链接至标题">¶</a></h3>
+<p>当 Django 首次发布时，Django 包括了一个 <code class="docutils literal notranslate"><span class="pre">XMLField</span></code>，用于对任何字段输入执行自动 XML 验证。然而，自从引入了 <code class="docutils literal notranslate"><span class="pre">newforms</span></code> （在 1.0 版本发布之前）以来，这种验证功能就不再执行。因此，当前实现的 <code class="docutils literal notranslate"><span class="pre">XMLField</span></code> 在功能上与一个简单的 <a class="reference internal" href="../ref/models/fields.html#django.db.models.TextField" title="django.db.models.TextField"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextField</span></code></a> 没有区别。</p>
+<p>因此，Django 1.3 已经加速了对 <code class="docutils literal notranslate"><span class="pre">XMLField</span></code> 的弃用 -- 不再需要两个版本的弃用，<code class="docutils literal notranslate"><span class="pre">XMLField</span></code> 将在 Django 1.4 中被完全删除。</p>
+<p>更新您的代码以适应这个更改非常简单 -- 只需将所有使用的 <code class="docutils literal notranslate"><span class="pre">XMLField</span></code> 替换为 <code class="docutils literal notranslate"><span class="pre">TextField</span></code>，并删除 <code class="docutils literal notranslate"><span class="pre">schema_path</span></code> 关键字参数（如果已指定）。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#overview">概况</a></li>
+<li><a class="reference internal" href="#python-compatibility">Python 兼容性</a></li>
+<li><a class="reference internal" href="#what-s-new-in-django-1-3">Django 1.3 新特性</a><ul>
+<li><a class="reference internal" href="#class-based-views">基于类的视图</a></li>
+<li><a class="reference internal" href="#logging">日志</a></li>
+<li><a class="reference internal" href="#extended-static-files-handling">扩展静态文件处理</a></li>
+<li><a class="reference internal" href="#unittest2-support"><code class="docutils literal notranslate"><span class="pre">unittest2</span></code> 支持</a></li>
+<li><a class="reference internal" href="#transaction-context-managers">事务上下文管理器</a></li>
+<li><a class="reference internal" href="#configurable-delete-cascade">可配置的级联删除</a></li>
+<li><a class="reference internal" href="#contextual-markers-and-comments-for-translatable-strings">可翻译字符串的上下文标记和注释</a></li>
+<li><a class="reference internal" href="#improvements-to-built-in-template-tags">内置模板标签的改进</a></li>
+<li><a class="reference internal" href="#templateresponse">模板响应</a></li>
+<li><a class="reference internal" href="#caching-changes">缓存更改</a></li>
+<li><a class="reference internal" href="#permissions-for-inactive-users">对非活跃用户的权限</a></li>
+<li><a class="reference internal" href="#geodjango">GeoDjango</a></li>
+<li><a class="reference internal" href="#media-url-and-static-url-must-end-in-a-slash"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code> 和 <code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code> 必须以斜杠结尾。</a></li>
+<li><a class="reference internal" href="#everything-else">其他所有内容</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#backwards-incompatible-changes-in-1-3">1.3 中的向后不兼容更改</a><ul>
+<li><a class="reference internal" href="#csrf-validation-now-applies-to-ajax-requests">CSRF 验证现在适用于 AJAX 请求</a></li>
+<li><a class="reference internal" href="#restricted-filters-in-admin-interface">在管理界面中的受限过滤器</a></li>
+<li><a class="reference internal" href="#deleting-a-model-doesn-t-delete-associated-files">删除模型不会删除关联的文件</a></li>
+<li><a class="reference internal" href="#passwordinput-default-rendering-behavior">PasswordInput 默认渲染行为</a></li>
+<li><a class="reference internal" href="#clearable-default-widget-for-filefield">FileField 的可清除默认小部件</a></li>
+<li><a class="reference internal" href="#new-index-on-database-session-table">数据库会话表上的新索引</a></li>
+<li><a class="reference internal" href="#no-more-naughty-words">不再有不雅词汇</a></li>
+<li><a class="reference internal" href="#localflavor-changes">Localflavor 更改</a></li>
+<li><a class="reference internal" href="#formset-updates">FormSet 更新</a></li>
+<li><a class="reference internal" href="#callables-in-templates">模板中的可调用对象</a></li>
+<li><a class="reference internal" href="#use-of-custom-sql-to-load-initial-data-in-tests">在测试中使用自定义 SQL 加载初始数据</a></li>
+<li><a class="reference internal" href="#changed-priority-of-translation-loading">改变了翻译加载的优先级</a></li>
+<li><a class="reference internal" href="#transaction-management">事务管理</a></li>
+<li><a class="reference internal" href="#no-password-reset-for-inactive-users">不允许非活跃用户重置密码</a></li>
+<li><a class="reference internal" href="#password-reset-view-now-accepts-from-email">密码重置视图现在接受 <code class="docutils literal notranslate"><span class="pre">from_email</span></code> 参数。</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#features-deprecated-in-1-3">在 1.3 中被废弃的功能</a><ul>
+<li><a class="reference internal" href="#mod-python-support"><code class="docutils literal notranslate"><span class="pre">mod_python</span></code> 支持</a></li>
+<li><a class="reference internal" href="#function-based-generic-views">基于函数的通用视图</a></li>
+<li><a class="reference internal" href="#test-client-response-template-attribute">测试客户端响应的 <code class="docutils literal notranslate"><span class="pre">template</span></code> 属性</a></li>
+<li><a class="reference internal" href="#djangotestrunner"><code class="docutils literal notranslate"><span class="pre">DjangoTestRunner</span></code></a></li>
+<li><a class="reference internal" href="#changes-to-url-and-ssi">关于 <code class="docutils literal notranslate"><span class="pre">url</span></code> 和 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 的更改</a></li>
+<li><a class="reference internal" href="#changes-to-the-login-methods-of-the-admin">管理员登录方法的更改</a></li>
+<li><a class="reference internal" href="#reset-and-sqlreset-management-commands"><code class="docutils literal notranslate"><span class="pre">reset</span></code> 和 <code class="docutils literal notranslate"><span class="pre">sqlreset</span></code> 管理命令</a></li>
+<li><a class="reference internal" href="#id1">GeoDjango</a></li>
+<li><a class="reference internal" href="#czbirthnumberfield-clean"><code class="docutils literal notranslate"><span class="pre">CZBirthNumberField.clean</span></code></a></li>
+<li><a class="reference internal" href="#compatcookie"><code class="docutils literal notranslate"><span class="pre">CompatCookie</span></code></a></li>
+<li><a class="reference internal" href="#loading-of-project-level-translations">加载 <em>项目级别</em> 的翻译</a></li>
+<li><a class="reference internal" href="#permwrapper-moved-to-django-contrib-auth-context-processors"><code class="docutils literal notranslate"><span class="pre">PermWrapper</span></code> 已移动到 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.context_processors</span></code></a></li>
+<li><a class="reference internal" href="#removal-of-xmlfield">移除了 <code class="docutils literal notranslate"><span class="pre">XMLField</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.3.1.html"
+                          title="上一章">Django 1.3.1 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.2.7.html"
+                          title="下一章">Django 1.2.7 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.3.1.html" title="Django 1.3.1 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.2.7.html" title="Django 1.2.7 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

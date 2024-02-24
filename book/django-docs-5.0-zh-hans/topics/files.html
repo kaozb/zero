@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理文件 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 中的测试" href="testing/index.html" />
+    <link rel="prev" title="迁移" href="migrations.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="migrations.html" title="迁移">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="testing/index.html" title="Django 中的测试">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-files">
+            
+  <div class="section" id="s-managing-files">
+<span id="managing-files"></span><h1>管理文件<a class="headerlink" href="#managing-files" title="永久链接至标题">¶</a></h1>
+<p>这个文档描述 Django 文件访问用于文件的 API，例如用户上传的文件。较底层的API足够通用，你可以为其他目的来使用它们。如果你想处理 &quot;static files&quot; (JS, CSS, etc.)，可以查看 <a class="reference internal" href="../howto/static-files/index.html"><span class="doc">如何管理静态文件（如图片、JavaScript、CSS）</span></a> 。</p>
+<p>默认情况下，Django 使用 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a> 和 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a> 设置本地存储。下面的例子假设你在使用这些默认设置。</p>
+<p>不过，Django 提供编写自定义 <a class="reference internal" href="#file-storage">file storage systems</a> 的方法，允许你完全自定义 Django 存储文件的位置和方式。这篇文档的后半部分描述了存储系统的工作方式。</p>
+<div class="section" id="s-using-files-in-models">
+<span id="using-files-in-models"></span><h2>在模型中使用文件<a class="headerlink" href="#using-files-in-models" title="永久链接至标题">¶</a></h2>
+<p>当你使用 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 或 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ImageField" title="django.db.models.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a> 时，Django 提供了一组处理文件的API。</p>
+<p>考虑下面的模型，使用 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ImageField" title="django.db.models.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a> 来存储照片：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Car</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">price</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">photo</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ImageField</span><span class="p">(</span><span class="n">upload_to</span><span class="o">=</span><span class="s2">&quot;cars&quot;</span><span class="p">)</span>
+    <span class="n">specs</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FileField</span><span class="p">(</span><span class="n">upload_to</span><span class="o">=</span><span class="s2">&quot;specs&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>任何 <code class="docutils literal notranslate"><span class="pre">Car</span></code> 实例都将有一个 <code class="docutils literal notranslate"><span class="pre">photo</span></code> 属性，您可以使用它来获取附加照片的详细信息：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">car</span> <span class="o">=</span> <span class="n">Car</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;57 Chevy&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span>
+<span class="go">&lt;ImageFieldFile: cars/chevy.jpg&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;cars/chevy.jpg&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">path</span>
+<span class="go">&#39;/media/cars/chevy.jpg&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">url</span>
+<span class="go">&#39;http://media.example.com/cars/chevy.jpg&#39;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">car.photo</span></code> 是一个 <code class="docutils literal notranslate"><span class="pre">File</span></code> 对象，这意味着它拥有下面所描述的所有方法和属性。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">文件在数据库中作为保存模型的一部分，因此在模型被保存之前，不能依赖磁盘上使用的实际文件名。</p>
+</div>
+<p>例如，您可以通过将文件的 <a class="reference internal" href="../ref/files/file.html#django.core.files.File.name" title="django.core.files.File.name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> 设置为相对于文件存储位置的路径（如果使用默认的 <a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.FileSystemStorage" title="django.core.files.storage.FileSystemStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileSystemStorage</span></code></a>，则为 <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a>）来更改文件名：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">initial_path</span> <span class="o">=</span> <span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;cars/chevy_ii.jpg&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_path</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">MEDIA_ROOT</span> <span class="o">+</span> <span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Move the file on the filesystem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">initial_path</span><span class="p">,</span> <span class="n">new_path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">path</span>
+<span class="go">&#39;/media/cars/chevy_ii.jpg&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">new_path</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>将磁盘上的现有文件保存到 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.files</span> <span class="kn">import</span> <span class="n">File</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;/some/external/specs.pdf&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span> <span class="o">=</span> <span class="n">Car</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;57 Chevy&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">car</span><span class="o">.</span><span class="n">specs</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">car</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>虽然 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ImageField" title="django.db.models.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a> 的非图像数据属性，如 <code class="docutils literal notranslate"><span class="pre">height</span></code>、<code class="docutils literal notranslate"><span class="pre">width</span></code> 和 <code class="docutils literal notranslate"><span class="pre">size</span></code> 可以在实例上使用，但底层图像数据不能在不重新打开图像的情况下使用。例如：</p>
+<div class="last highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span> <span class="o">=</span> <span class="n">Car</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;57 Chevy&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">width</span>
+<span class="go">191</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">height</span>
+<span class="go">287</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="p">)</span>
+<span class="go"># Raises ValueError: seek of closed file.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+<span class="go">&lt;ImageFieldFile: cars/chevy.jpg&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">car</span><span class="o">.</span><span class="n">photo</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span>
+<span class="go">&lt;PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=191x287 at 0x7F99A94E9048&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-the-file-object">
+<span id="the-file-object"></span><h2><code class="docutils literal notranslate"><span class="pre">File</span></code> 对象<a class="headerlink" href="#the-file-object" title="永久链接至标题">¶</a></h2>
+<p>在内部，Django 在任何需要表示文件的时候使用 <a class="reference internal" href="../ref/files/file.html#django.core.files.File" title="django.core.files.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.files.File</span></code></a> 。</p>
+<p>大部分情况下你只需要使用 Django 提供的 <code class="docutils literal notranslate"><span class="pre">File</span></code> （即附加到上述模型的文件或已经上传的文件）。</p>
+<p>如果需要自己构造一个 <code class="docutils literal notranslate"><span class="pre">File</span></code>，最简单的方法是使用 Python 内置的 <code class="docutils literal notranslate"><span class="pre">file</span></code> 对象创建一个：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.files</span> <span class="kn">import</span> <span class="n">File</span>
+
+<span class="go"># Create a Python file object using open()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/path/to/hello.world&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myfile</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>现在你可以使用 <a class="reference internal" href="../ref/files/file.html#django.core.files.File" title="django.core.files.File"><code class="xref py py-class docutils literal notranslate"><span class="pre">File</span></code></a> 类的任何属性和方法。</p>
+<p>请注意，以这种方式创建的文件不会自动关闭。可以使用以下方法自动关闭文件：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.files</span> <span class="kn">import</span> <span class="n">File</span>
+
+<span class="go"># Create a Python file object using open() and the with statement</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/path/to/hello.world&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">myfile</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">myfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myfile</span><span class="o">.</span><span class="n">closed</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">closed</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>在循环遍历大量对象时访问文件字段时关闭文件尤其重要。如果在访问文件后不手动关闭它们，可能会出现耗尽文件描述符的风险。这可能会导致以下错误：</p>
+<div class="highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="x">OSError: [Errno 24] Too many open files</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-file-storage">
+<span id="file-storage"></span><h2>文件存储<a class="headerlink" href="#file-storage" title="永久链接至标题">¶</a></h2>
+<p>在后台，Django将如何以及在哪里存储文件的决策委托给文件存储系统。这个对象实际上理解文件系统、打开和读取文件等。</p>
+<p>Django 的默认文件存储是 <code class="docutils literal notranslate"><span class="pre">'</span></code><a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.FileSystemStorage" title="django.core.files.storage.FileSystemStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.files.storage.FileSystemStorage</span></code></a><code class="docutils literal notranslate"><span class="pre">'</span></code>。如果您没有在 <a class="reference internal" href="../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 设置的 <code class="docutils literal notranslate"><span class="pre">default</span></code> 键中明确提供一个存储系统，那么将使用这个存储系统。</p>
+<p>参阅下面内置默认文件存储系统的细节，也可以查看 <a class="reference internal" href="../howto/custom-file-storage.html"><span class="doc">如何编写一个自定义的文件存储类</span></a> 来了解编写自己的文件存储系统的信息。</p>
+<div class="section" id="s-storage-objects">
+<span id="storage-objects"></span><h3>存储对象<a class="headerlink" href="#storage-objects" title="永久链接至标题">¶</a></h3>
+<p>虽然大多数情况下，您会希望使用一个 <code class="docutils literal notranslate"><span class="pre">File</span></code> 对象（它会委托给适当的文件存储），但您也可以直接使用文件存储系统。您可以创建某个自定义文件存储类的实例，或者更常见的做法是使用全局默认的存储系统：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.files.base</span> <span class="kn">import</span> <span class="n">ContentFile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.core.files.storage</span> <span class="kn">import</span> <span class="n">default_storage</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">default_storage</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;path/to/file&quot;</span><span class="p">,</span> <span class="n">ContentFile</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;new content&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span>
+<span class="go">&#39;path/to/file&#39;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_storage</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="go">11</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_storage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="go">b&#39;new content&#39;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_storage</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_storage</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>查看 <a class="reference internal" href="../ref/files/storage.html"><span class="doc">文件存储 API</span></a> 来了解文件存储API。</p>
+</div>
+<div class="section" id="s-the-built-in-filesystem-storage-class">
+<span id="s-builtin-fs-storage"></span><span id="the-built-in-filesystem-storage-class"></span><span id="builtin-fs-storage"></span><h3>内置文件存储类<a class="headerlink" href="#the-built-in-filesystem-storage-class" title="永久链接至标题">¶</a></h3>
+<p>Django 附带一个 <a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.FileSystemStorage" title="django.core.files.storage.FileSystemStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.core.files.storage.FileSystemStorage</span></code></a> 类，这个类实现基础的本地文件系统文件存储。</p>
+<p>例如，下面的代码将存储上传文件到 <code class="docutils literal notranslate"><span class="pre">/media/photos</span></code> 而会忽略你在  <a class="reference internal" href="../ref/settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a> 的设置：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.files.storage</span> <span class="kn">import</span> <span class="n">FileSystemStorage</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+<span class="n">fs</span> <span class="o">=</span> <span class="n">FileSystemStorage</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="s2">&quot;/media/photos&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Car</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">photo</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ImageField</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>自定义存储系统（ <a class="reference internal" href="../howto/custom-file-storage.html"><span class="doc">Custom storage systems</span></a> ）的工作方式也一样：将它们作为 <code class="docutils literal notranslate"><span class="pre">storage</span></code> 参数传递给 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 。</p>
+</div>
+<div class="section" id="s-using-a-callable">
+<span id="using-a-callable"></span><h3>使用callable<a class="headerlink" href="#using-a-callable" title="永久链接至标题">¶</a></h3>
+<p>你可以使用callable作为 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 或 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ImageField" title="django.db.models.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a> 的 <a class="reference internal" href="../ref/models/fields.html#django.db.models.FileField.storage" title="django.db.models.FileField.storage"><code class="xref py py-attr docutils literal notranslate"><span class="pre">storage</span></code></a> 参数。它允许你在运行时修改存储参数，不同环境选择不同存储，例如。</p>
+<p>当模型类被加载时，callable将进行判断，并返回 <a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage" title="django.core.files.storage.Storage"><code class="xref py py-class docutils literal notranslate"><span class="pre">Storage</span></code></a> 实例。</p>
+<p>例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">.storages</span> <span class="kn">import</span> <span class="n">MyLocalStorage</span><span class="p">,</span> <span class="n">MyRemoteStorage</span>
+
+
+<span class="k">def</span> <span class="nf">select_storage</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">MyLocalStorage</span><span class="p">()</span> <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">DEBUG</span> <span class="k">else</span> <span class="n">MyRemoteStorage</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">my_file</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FileField</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">select_storage</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>要设置在 <a class="reference internal" href="../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 设置中定义的存储系统，可以使用 <a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.storages" title="django.core.files.storage.storages"><code class="xref py py-data docutils literal notranslate"><span class="pre">storages</span></code></a>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.files.storage</span> <span class="kn">import</span> <span class="n">storages</span>
+
+
+<span class="k">def</span> <span class="nf">select_storage</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">storages</span><span class="p">[</span><span class="s2">&quot;mystorage&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">upload</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FileField</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">select_storage</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>支持 <code class="docutils literal notranslate"><span class="pre">storages</span></code> 已添加。</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">管理文件</a><ul>
+<li><a class="reference internal" href="#using-files-in-models">在模型中使用文件</a></li>
+<li><a class="reference internal" href="#the-file-object"><code class="docutils literal notranslate"><span class="pre">File</span></code> 对象</a></li>
+<li><a class="reference internal" href="#file-storage">文件存储</a><ul>
+<li><a class="reference internal" href="#storage-objects">存储对象</a></li>
+<li><a class="reference internal" href="#the-built-in-filesystem-storage-class">内置文件存储类</a></li>
+<li><a class="reference internal" href="#using-a-callable">使用callable</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="migrations.html"
+                          title="上一章">迁移</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="testing/index.html"
+                          title="下一章">Django 中的测试</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/topics/files.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="migrations.html" title="迁移">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="testing/index.html" title="Django 中的测试">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

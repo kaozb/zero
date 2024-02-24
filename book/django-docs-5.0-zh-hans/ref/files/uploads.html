@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>上传的文件和上传处理程序 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="表单" href="../forms/index.html" />
+    <link rel="prev" title="文件存储 API" href="storage.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="storage.html" title="文件存储 API">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="../forms/index.html" title="表单">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-files-uploads">
+            
+  <div class="section" id="s-module-django.core.files.uploadedfile">
+<span id="s-uploaded-files-and-upload-handlers"></span><span id="module-django.core.files.uploadedfile"></span><span id="uploaded-files-and-upload-handlers"></span><h1>上传的文件和上传处理程序<a class="headerlink" href="#module-django.core.files.uploadedfile" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-uploaded-files">
+<span id="uploaded-files"></span><h2>上传的文件<a class="headerlink" href="#uploaded-files" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">UploadedFile</span></code><a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在文件上传过程中，实际的文件数据存储在 <a class="reference internal" href="../request-response.html#django.http.HttpRequest.FILES" title="django.http.HttpRequest.FILES"><code class="xref py py-attr docutils literal notranslate"><span class="pre">request.FILES</span></code></a> 中。这个字典中的每一个条目都是一个 <code class="docutils literal notranslate"><span class="pre">UploadedFile</span></code> 对象（或一个子类）—— 一个所上传文件的包装器。你通常会使用这些方法之一来访问上传的内容：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.read">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">read</span></code>()<a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.read" title="永久链接至目标">¶</a></dt>
+<dd><p>从文件中读取整个上传的数据。小心使用这个方法：如果上传的文件很大，如果你试图把它读到内存中，它可能会让你的系统不堪重负。你可能会想使用 <code class="docutils literal notranslate"><span class="pre">chunks()</span></code> 来代替；见下文。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.multiple_chunks">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">multiple_chunks</span></code>(<em><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.multiple_chunks" title="永久链接至目标">¶</a></dt>
+<dd><p>如果上传的文件足够大，需要分块读取，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。默认情况下是大于 2.5 兆字节的文件，但这是可以配置的，见下文。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.chunks">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">chunks</span></code>(<em><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.chunks" title="永久链接至目标">¶</a></dt>
+<dd><p>一个生成器，返回文件的块。如果 <code class="docutils literal notranslate"><span class="pre">multiple_chunks()</span></code> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，你应该在循环中使用这个方法而不是 <code class="docutils literal notranslate"><span class="pre">read()</span></code>。</p>
+<p>在实践中，通常最简单的做法是一直使用 <code class="docutils literal notranslate"><span class="pre">chunks()</span></code>。循环使用 <code class="docutils literal notranslate"><span class="pre">chunks()</span></code> 而不是使用 <code class="docutils literal notranslate"><span class="pre">read()</span></code> 可以确保大文件不会过度占用系统的内存。</p>
+</dd></dl>
+
+<p>以下是 <code class="docutils literal notranslate"><span class="pre">UploadedFile</span></code> 的一些有用属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.name">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.name" title="永久链接至目标">¶</a></dt>
+<dd><p>上传的文件名称（如 <code class="docutils literal notranslate"><span class="pre">my_file.txt</span></code>）。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.size">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">size</span></code><a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.size" title="永久链接至目标">¶</a></dt>
+<dd><p>上传文件的大小，以字节为单位。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.content_type">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">content_type</span></code><a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.content_type" title="永久链接至目标">¶</a></dt>
+<dd><p>与文件一起上传的内容类型头（例如 <em class="mimetype">text/plain</em> 或 <em class="mimetype">application/pdf</em>）。就像用户提供的任何数据一样，你不应该相信上传的文件实际上是这种类型。你仍然需要验证该文件是否包含内容类型头所声称的内容 —— “信任但验证”。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.content_type_extra">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">content_type_extra</span></code><a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.content_type_extra" title="永久链接至目标">¶</a></dt>
+<dd><p>包含传递给 <code class="docutils literal notranslate"><span class="pre">content-type</span></code> 头的额外参数的字典。这通常是由服务提供的，比如 Google App Engine，它代表你拦截和处理文件上传。因此，您的处理程序可能不会收到上传的文件内容，而是收到一个 URL 或其他指向文件的指针（参见 <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2388.html#section-5.3"><strong>RFC 2388</strong></a>）。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.UploadedFile.charset">
+<code class="sig-prename descclassname"><span class="pre">UploadedFile.</span></code><code class="sig-name descname"><span class="pre">charset</span></code><a class="headerlink" href="#django.core.files.uploadedfile.UploadedFile.charset" title="永久链接至目标">¶</a></dt>
+<dd><p>对于 <em class="mimetype">text/*</em> 内容类型，浏览器提供的字符集（即 <code class="docutils literal notranslate"><span class="pre">utf8</span></code>）。同样，“信任但验证” 是这里的最佳政策。</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>像普通的 Python 文件一样，你可以通过迭代上传的文件来逐行读取文件：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">uploadedfile</span><span class="p">:</span>
+    <span class="n">do_something_with</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="last">使用 <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0278/"><strong>通用换行符</strong></a> 来分割行。以下是公认的行结束方式：Unix 的行末约定 <code class="docutils literal notranslate"><span class="pre">'\n'</span></code>，Windows 的约定 <code class="docutils literal notranslate"><span class="pre">'\r\n'</span></code>，以及旧的 Macintosh 约定 <code class="docutils literal notranslate"><span class="pre">'\r'</span></code>。</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">UploadedFile</span></code> 的子类包括：</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.TemporaryUploadedFile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">TemporaryUploadedFile</span></code><a class="headerlink" href="#django.core.files.uploadedfile.TemporaryUploadedFile" title="永久链接至目标">¶</a></dt>
+<dd><p>一个文件上传到一个临时位置（即传输到磁盘）。这个类被 <a class="reference internal" href="#django.core.files.uploadhandler.TemporaryFileUploadHandler" title="django.core.files.uploadhandler.TemporaryFileUploadHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemporaryFileUploadHandler</span></code></a> 使用。除了 <a class="reference internal" href="#django.core.files.uploadedfile.UploadedFile" title="django.core.files.uploadedfile.UploadedFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">UploadedFile</span></code></a> 的方法外，它还有一个额外的方法：</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.TemporaryUploadedFile.temporary_file_path">
+<code class="sig-prename descclassname"><span class="pre">TemporaryUploadedFile.</span></code><code class="sig-name descname"><span class="pre">temporary_file_path</span></code>()<a class="headerlink" href="#django.core.files.uploadedfile.TemporaryUploadedFile.temporary_file_path" title="永久链接至目标">¶</a></dt>
+<dd><p>返回临时上传文件的完整路径。</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.files.uploadedfile.InMemoryUploadedFile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">InMemoryUploadedFile</span></code><a class="headerlink" href="#django.core.files.uploadedfile.InMemoryUploadedFile" title="永久链接至目标">¶</a></dt>
+<dd><p>一个上传到内存中的文件（即传输到内存）。这个类被 <a class="reference internal" href="#django.core.files.uploadhandler.MemoryFileUploadHandler" title="django.core.files.uploadhandler.MemoryFileUploadHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemoryFileUploadHandler</span></code></a> 使用。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-module-django.core.files.uploadhandler">
+<span id="s-built-in-upload-handlers"></span><span id="module-django.core.files.uploadhandler"></span><span id="built-in-upload-handlers"></span><h2>内置上传处理程序<a class="headerlink" href="#module-django.core.files.uploadhandler" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="#django.core.files.uploadhandler.MemoryFileUploadHandler" title="django.core.files.uploadhandler.MemoryFileUploadHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">MemoryFileUploadHandler</span></code></a> 和 <a class="reference internal" href="#django.core.files.uploadhandler.TemporaryFileUploadHandler" title="django.core.files.uploadhandler.TemporaryFileUploadHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">TemporaryFileUploadHandler</span></code></a> 共同提供了 Django 默认的文件上传行为，即向内存中读取小文件，向磁盘中读取大文件。它们位于 <code class="docutils literal notranslate"><span class="pre">django.core.files.uploadhandler</span></code> 中。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.MemoryFileUploadHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MemoryFileUploadHandler</span></code><a class="headerlink" href="#django.core.files.uploadhandler.MemoryFileUploadHandler" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>文件上传处理程序，将上传的文件以流式传输到内存中（用于小文件）。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.TemporaryFileUploadHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">TemporaryFileUploadHandler</span></code><a class="headerlink" href="#django.core.files.uploadhandler.TemporaryFileUploadHandler" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用 <code class="xref py py-class docutils literal notranslate"><span class="pre">TemporaryUploadedFile</span></code> 将数据流式传输到临时文件的上传处理程序。</p>
+</div>
+<div class="section" id="s-writing-custom-upload-handlers">
+<span id="s-custom-upload-handlers"></span><span id="writing-custom-upload-handlers"></span><span id="custom-upload-handlers"></span><h2>编写自定义上传处理程序<a class="headerlink" href="#writing-custom-upload-handlers" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">FileUploadHandler</span></code><a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>所有的文件上传处理程序应该是 <code class="docutils literal notranslate"><span class="pre">django.core.files.uploadhandler.FileUploadHandler</span></code> 的子类。你可以在任何地方定义上传处理程序。</p>
+<div class="section" id="s-required-methods">
+<span id="required-methods"></span><h3>必要方法<a class="headerlink" href="#required-methods" title="永久链接至标题">¶</a></h3>
+<p>自定义文件上传处理程序 <strong>必须</strong> 定义以下方法：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.receive_data_chunk">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">receive_data_chunk</span></code>(<em><span class="n"><span class="pre">raw_data</span></span></em>, <em><span class="n"><span class="pre">start</span></span></em>)<a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.receive_data_chunk" title="永久链接至目标">¶</a></dt>
+<dd><p>接收文件上传的 “块” 数据。</p>
+<p><code class="docutils literal notranslate"><span class="pre">raw_data</span></code> 是一个包含上传数据的字节字符串。</p>
+<p><code class="docutils literal notranslate"><span class="pre">start</span></code> 是文件中 <code class="docutils literal notranslate"><span class="pre">raw_data</span></code> 块开始的位置。</p>
+<p>你返回的数据将被输入到后续的上传处理程序的 <code class="docutils literal notranslate"><span class="pre">receive_data_chunk</span></code> 方法中。通过这种方式，一个处理程序可以成为其他处理程序的 “过滤器”。</p>
+<p>从 <code class="docutils literal notranslate"><span class="pre">receive_data_chunk</span></code> 中返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>，以短路剩余的上传处理程序。如果你自己存储上传的数据，并且不希望后续的处理程序存储数据的副本，这很有用。</p>
+<p>如果引发一个 <code class="docutils literal notranslate"><span class="pre">StopUpload</span></code> 或 <code class="docutils literal notranslate"><span class="pre">SkipFile</span></code> 异常，上传将被中止或文件将被完全跳过。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.file_complete">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">file_complete</span></code>(<em><span class="n"><span class="pre">file_size</span></span></em>)<a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.file_complete" title="永久链接至目标">¶</a></dt>
+<dd><p>当文件上传完毕时调用。</p>
+<p>处理程序应返回一个 <code class="docutils literal notranslate"><span class="pre">UploadedFile</span></code> 对象，该对象将存储在 <code class="docutils literal notranslate"><span class="pre">request.FILES</span></code> 中。处理程序也可以返回 <code class="docutils literal notranslate"><span class="pre">None</span></code> 以表明 <code class="docutils literal notranslate"><span class="pre">UploadedFile</span></code> 对象应来自后续的上传处理程序。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-optional-methods">
+<span id="optional-methods"></span><h3>可选方法<a class="headerlink" href="#optional-methods" title="永久链接至标题">¶</a></h3>
+<p>自定义上传处理程序也可以定义以下任何一个可选方法或属性：</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.chunk_size">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">chunk_size</span></code><a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.chunk_size" title="永久链接至目标">¶</a></dt>
+<dd><p>Django 应该存储到内存中并反馈给处理程序的 “块” 的大小，以字节为单位。也就是说，这个属性控制了输入到 <code class="docutils literal notranslate"><span class="pre">FileUploadHandler.receive_data_chunk</span></code> 的数据块的大小。</p>
+<p>为了获得最大的性能，分块大小应该被 <code class="docutils literal notranslate"><span class="pre">4</span></code> 整除，并且大小不能超过 2GB（2<sup>31</sup> 字节）。当有多个处理程序提供的多个分块大小时，Django 将使用任何处理程序定义的最小分块大小。</p>
+<p>默认为 64*2<sup>10</sup> 字节，即 64KB。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.new_file">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">new_file</span></code>(<em><span class="n"><span class="pre">field_name</span></span></em>, <em><span class="n"><span class="pre">file_name</span></span></em>, <em><span class="n"><span class="pre">content_type</span></span></em>, <em><span class="n"><span class="pre">content_length</span></span></em>, <em><span class="n"><span class="pre">charset</span></span></em>, <em><span class="n"><span class="pre">content_type_extra</span></span></em>)<a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.new_file" title="永久链接至目标">¶</a></dt>
+<dd><p>回调信号，表示一个新的文件上传开始。在任何数据被送入任何上传处理程序之前，这个回调被调用。</p>
+<p><code class="docutils literal notranslate"><span class="pre">field_name</span></code> 是文件 <code class="docutils literal notranslate"><span class="pre">&lt;input&gt;</span></code> 字段的字符串名称。</p>
+<p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> 是浏览器提供的文件名。</p>
+<p><code class="docutils literal notranslate"><span class="pre">content_type</span></code> 是浏览器提供的 MIME 类型 —— 例如 <code class="docutils literal notranslate"><span class="pre">'image/jpeg'</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">content_length</span></code> 是浏览器给出的图像长度。有时不会提供，而是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">charset</span></code> 是浏览器提供的字符集（即 <code class="docutils literal notranslate"><span class="pre">utf8</span></code>）。与 <code class="docutils literal notranslate"><span class="pre">content_length</span></code> 一样，有时不会提供。</p>
+<p><code class="docutils literal notranslate"><span class="pre">content_type_extra</span></code> 是关于文件的 <code class="docutils literal notranslate"><span class="pre">content-type</span></code> 头的额外信息。参见 <a class="reference internal" href="#django.core.files.uploadedfile.UploadedFile.content_type_extra" title="django.core.files.uploadedfile.UploadedFile.content_type_extra"><code class="xref py py-attr docutils literal notranslate"><span class="pre">UploadedFile.content_type_extra</span></code></a>。</p>
+<p>这个方法可能会引发一个 <code class="docutils literal notranslate"><span class="pre">StopFutureHandlers</span></code> 异常，以防止后续处理程序处理这个文件。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.upload_complete">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">upload_complete</span></code>()<a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.upload_complete" title="永久链接至目标">¶</a></dt>
+<dd><p>回调信号，表示整个上传（所有文件）已经完成。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.upload_interrupted">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">upload_interrupted</span></code>()<a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.upload_interrupted" title="永久链接至目标">¶</a></dt>
+<dd><p>回调信号，表明上传被中断，例如，当用户在文件上传过程中关闭他们的浏览器。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.uploadhandler.FileUploadHandler.handle_raw_input">
+<code class="sig-prename descclassname"><span class="pre">FileUploadHandler.</span></code><code class="sig-name descname"><span class="pre">handle_raw_input</span></code>(<em><span class="n"><span class="pre">input_data</span></span></em>, <em><span class="n"><span class="pre">META</span></span></em>, <em><span class="n"><span class="pre">content_length</span></span></em>, <em><span class="n"><span class="pre">boundary</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span></em>)<a class="headerlink" href="#django.core.files.uploadhandler.FileUploadHandler.handle_raw_input" title="永久链接至目标">¶</a></dt>
+<dd><p>允许处理程序完全覆盖原始 HTTP 输入的解析。</p>
+<p><code class="docutils literal notranslate"><span class="pre">input_data</span></code> 是一个支持 <code class="docutils literal notranslate"><span class="pre">read()</span></code>-ing 的类文件对象。</p>
+<p><code class="docutils literal notranslate"><span class="pre">META</span></code> 与 <code class="docutils literal notranslate"><span class="pre">request.META</span></code> 是同一个对象。</p>
+<p><code class="docutils literal notranslate"><span class="pre">content_length</span></code> 是 <code class="docutils literal notranslate"><span class="pre">input_data</span></code> 中数据的长度。不要从 <code class="docutils literal notranslate"><span class="pre">input_data</span></code> 中读取超过 <code class="docutils literal notranslate"><span class="pre">content_length</span></code> 的字节。</p>
+<p><code class="docutils literal notranslate"><span class="pre">boundary</span></code> 是本次请求的 MIME 边界。</p>
+<p><code class="docutils literal notranslate"><span class="pre">encoding</span></code> 是请求的编码。</p>
+<p>如果想继续上传处理，则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>，如果想直接返回适合请求的新数据结构，则返回 <code class="docutils literal notranslate"><span class="pre">(POST，FILES)</span></code> 的元组。</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">上传的文件和上传处理程序</a><ul>
+<li><a class="reference internal" href="#uploaded-files">上传的文件</a></li>
+<li><a class="reference internal" href="#module-django.core.files.uploadhandler">内置上传处理程序</a></li>
+<li><a class="reference internal" href="#writing-custom-upload-handlers">编写自定义上传处理程序</a><ul>
+<li><a class="reference internal" href="#required-methods">必要方法</a></li>
+<li><a class="reference internal" href="#optional-methods">可选方法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="storage.html"
+                          title="上一章">文件存储 API</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../forms/index.html"
+                          title="下一章">表单</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/ref/files/uploads.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="storage.html" title="文件存储 API">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="../forms/index.html" title="表单">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PostgreSQL 特有查询表达式 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="PostgreSQL 特有模型字段" href="fields.html" />
+    <link rel="prev" title="PostgreSQL 特有数据库约束" href="constraints.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="constraints.html" title="PostgreSQL 特有数据库约束">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="fields.html" title="PostgreSQL 特有模型字段">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-postgres-expressions">
+            
+  <div class="section" id="s-module-django.contrib.postgres.expressions">
+<span id="s-postgresql-specific-query-expressions"></span><span id="module-django.contrib.postgres.expressions"></span><span id="postgresql-specific-query-expressions"></span><h1>PostgreSQL 特有查询表达式<a class="headerlink" href="#module-django.contrib.postgres.expressions" title="永久链接至标题">¶</a></h1>
+<p>这些表达式可以从 <code class="docutils literal notranslate"><span class="pre">django.contrib.postgres.expressions</span></code> 模块中获得。</p>
+<div class="section" id="s-arraysubquery-expressions">
+<span id="arraysubquery-expressions"></span><h2><code class="docutils literal notranslate"><span class="pre">ArraySubquery()</span></code> 表达式<a class="headerlink" href="#arraysubquery-expressions" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.expressions.ArraySubquery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">ArraySubquery</span></code>(<em><span class="n"><span class="pre">queryset</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.expressions.ArraySubquery" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">ArraySubquery</span></code> 是一个 <a class="reference internal" href="../../models/expressions.html#django.db.models.Subquery" title="django.db.models.Subquery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Subquery</span></code></a>，使用 PostgreSQL 的 <code class="docutils literal notranslate"><span class="pre">ARRAY</span></code> 构造函数，从查询集中建立一个值列表，它必须使用 <a class="reference internal" href="../../models/querysets.html#django.db.models.query.QuerySet.values" title="django.db.models.query.QuerySet.values"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.values()</span></code></a> 来只返回一个列。</p>
+<p>这个类与 <a class="reference internal" href="aggregates.html#django.contrib.postgres.aggregates.ArrayAgg" title="django.contrib.postgres.aggregates.ArrayAgg"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAgg</span></code></a> 不同，它不作为一个聚合函数，也不需要一个 SQL <code class="docutils literal notranslate"><span class="pre">GROUP</span> <span class="pre">BY</span></code> 子句来建立值的列表。</p>
+<p>例如，如果您想要将作者的所有相关书籍注释为 JSON 对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">OuterRef</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models.functions</span> <span class="kn">import</span> <span class="n">JSONObject</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.postgres.expressions</span> <span class="kn">import</span> <span class="n">ArraySubquery</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">books</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="n">OuterRef</span><span class="p">(</span><span class="s2">&quot;pk&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">json</span><span class="o">=</span><span class="n">JSONObject</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="n">pages</span><span class="o">=</span><span class="s2">&quot;pages&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">books</span><span class="o">=</span><span class="n">ArraySubquery</span><span class="p">(</span><span class="n">books</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">author</span><span class="o">.</span><span class="n">books</span>
+<span class="go">[{&#39;title&#39;: &#39;Solaris&#39;, &#39;pages&#39;: 204}, {&#39;title&#39;: &#39;The Cyberiad&#39;, &#39;pages&#39;: 295}]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">PostgreSQL 特有查询表达式</a><ul>
+<li><a class="reference internal" href="#arraysubquery-expressions"><code class="docutils literal notranslate"><span class="pre">ArraySubquery()</span></code> 表达式</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="constraints.html"
+                          title="上一章">PostgreSQL 特有数据库约束</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="fields.html"
+                          title="下一章">PostgreSQL 特有模型字段</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/postgres/expressions.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="constraints.html" title="PostgreSQL 特有数据库约束">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="fields.html" title="PostgreSQL 特有模型字段">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

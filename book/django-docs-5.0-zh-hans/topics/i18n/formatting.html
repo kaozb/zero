@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>本地格式化 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="时区" href="timezones.html" />
+    <link rel="prev" title="翻译" href="translation.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="translation.html" title="翻译">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="timezones.html" title="时区">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-i18n-formatting">
+            
+  <div class="section" id="s-format-localization">
+<span id="format-localization"></span><h1>本地格式化<a class="headerlink" href="#format-localization" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-overview">
+<span id="overview"></span><h2>概况<a class="headerlink" href="#overview" title="永久链接至标题">¶</a></h2>
+<p>Django 的格式化系统可以在模板中使用指定的格式化工具为当前的 <a class="reference internal" href="index.html#term-locale-name"><span class="xref std std-term">locale</span></a> 来显示日期、时间和数字。</p>
+<p>两个用户访问相同的内容可能会根据其当前区域设置的格式，以不同的方式看到日期、时间和数字的格式化方式。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">要启用千位分隔符的数字格式，必须在你的配置文件中设置 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_THOUSAND_SEPARATOR"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_THOUSAND_SEPARATOR</span> <span class="pre">=</span> <span class="pre">True</span></code></a>。另外，你可以使用 <a class="reference internal" href="../../ref/contrib/humanize.html#std-templatefilter-intcomma"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">intcomma</span></code></a> 在你的模板中格式化数字。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">有一个相关的 <a class="reference internal" href="../../ref/settings.html#std-setting-USE_I18N"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USE_I18N</span></code></a> 配置，控制 Django 是否应该激活翻译。更多细节请参见 <a class="reference internal" href="translation.html"><span class="doc">翻译</span></a>。</p>
+</div>
+</div>
+<div class="section" id="s-locale-aware-input-in-forms">
+<span id="locale-aware-input-in-forms"></span><h2>表单中感知本地语言环境输入<a class="headerlink" href="#locale-aware-input-in-forms" title="永久链接至标题">¶</a></h2>
+<p>格式化开启后，当在表单里解析日期、时间和数字时，Django 可以使用本地化格式。这意味着猜测用户在表单上的输入时所使用的格式化时，会对不同语言环境尝试不同的格式化。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">Django 使用与解析数据不同的格式来显示数据。最值得注意的是，解析日期的格式化不能使用 <code class="docutils literal notranslate"><span class="pre">%a</span></code> （缩写的日期），<code class="docutils literal notranslate"><span class="pre">%A</span></code> （完整的日期），<code class="docutils literal notranslate"><span class="pre">%b</span></code> （缩写的月份），<code class="docutils literal notranslate"><span class="pre">%B</span></code> （完整的月份），或者 <code class="docutils literal notranslate"><span class="pre">%p</span></code> (AM/PM)。</p>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">localize</span></code> 参数来使表单字段能本地化输入和输出数据：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CashRegisterForm</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">Form</span><span class="p">):</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">CharField</span><span class="p">()</span>
+    <span class="n">revenue</span> <span class="o">=</span> <span class="n">forms</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">localize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-controlling-localization-in-templates">
+<span id="s-topic-l10n-templates"></span><span id="controlling-localization-in-templates"></span><span id="topic-l10n-templates"></span><h2>在模板中控制本地化<a class="headerlink" href="#controlling-localization-in-templates" title="永久链接至标题">¶</a></h2>
+<p>Django 在模板中输出值时会尽量使用与区域设置相关的格式。</p>
+<p>然而，使用本地化值可能并不总是合适的——比如，如果你正在输出机器可读的 JavaScript 或 XML ，则始终需要非本地化的值。你也可以在已选的模板里使用本地化，而不是在所有地方使用。</p>
+<p>为了更好的控制本地化的使用，Django 提供 <code class="docutils literal notranslate"><span class="pre">l10n</span></code> 模板库，它包含以下的  tags 和 filters。</p>
+<div class="section" id="s-template-tags">
+<span id="template-tags"></span><h3>模板标签<a class="headerlink" href="#template-tags" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-localize">
+<span id="s-std-templatetag-localize"></span><span id="s-std:templatetag-localize"></span><span id="localize"></span><span id="std-templatetag-localize"></span><span id="std:templatetag-localize"></span><h4><code class="docutils literal notranslate"><span class="pre">localize</span></code><a class="headerlink" href="#localize" title="永久链接至标题">¶</a></h4>
+<p>在模板里启用和禁用模板变量本地化。</p>
+<p>要在模板块中启用或禁用本地化，请使用：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">l10n</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">localize</span> <span class="nv">on</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">value</span> <span class="cp">}}</span>
+<span class="cp">{%</span> <span class="k">endlocalize</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">localize</span> <span class="nv">off</span> <span class="cp">%}</span>
+    <span class="cp">{{</span> <span class="nv">value</span> <span class="cp">}}</span>
+<span class="cp">{%</span> <span class="k">endlocalize</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>查看 <a class="reference internal" href="#std-templatefilter-localize"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">localize</span></code></a> 和 <a class="reference internal" href="#std-templatefilter-unlocalize"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">unlocalize</span></code></a> 来获取在每个变量基础上执行相同任务的模板过滤器。</p>
+</div>
+</div>
+<div class="section" id="s-template-filters">
+<span id="template-filters"></span><h3>模板过滤器<a class="headerlink" href="#template-filters" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-std-templatefilter-localize">
+<span id="s-std:templatefilter-localize"></span><span id="s-id1"></span><span id="std-templatefilter-localize"></span><span id="std:templatefilter-localize"></span><span id="id1"></span><h4><code class="docutils literal notranslate"><span class="pre">localize</span></code><a class="headerlink" href="#std-templatefilter-localize" title="永久链接至标题">¶</a></h4>
+<p>对单一值的强制本地化</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">l10n</span> <span class="cp">%}</span>
+
+<span class="cp">{{</span> <span class="nv">value</span><span class="o">|</span><span class="nf">localize</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+<p>对单一值取消本地化，使用 <a class="reference internal" href="#std-templatefilter-unlocalize"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">unlocalize</span></code></a> 。要控制大部分模板的本地化，请使用 <a class="reference internal" href="#std-templatetag-localize"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">localize</span></code></a> 模板标签。</p>
+</div>
+<div class="section" id="s-unlocalize">
+<span id="s-std-templatefilter-unlocalize"></span><span id="s-std:templatefilter-unlocalize"></span><span id="unlocalize"></span><span id="std-templatefilter-unlocalize"></span><span id="std:templatefilter-unlocalize"></span><h4><code class="docutils literal notranslate"><span class="pre">unlocalize</span></code><a class="headerlink" href="#unlocalize" title="永久链接至标题">¶</a></h4>
+<p>强制地让单一值不被本地化。</p>
+<p>例如：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">l10n</span> <span class="cp">%}</span>
+
+<span class="cp">{{</span> <span class="nv">value</span><span class="o">|</span><span class="nf">unlocalize</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+<p>对单一值强制本地化，使用 <a class="reference internal" href="#std-templatefilter-localize"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">localize</span></code></a> 。要控制大部分模板的本地化，请使用 <a class="reference internal" href="#std-templatetag-localize"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">localize</span></code></a> 模板标签。</p>
+<p>返回未本地化数字（<code class="docutils literal notranslate"><span class="pre">int</span></code>、<code class="docutils literal notranslate"><span class="pre">float</span></code> 或 <code class="docutils literal notranslate"><span class="pre">Decimal</span></code>）的字符串表示。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-creating-custom-format-files">
+<span id="s-custom-format-files"></span><span id="creating-custom-format-files"></span><span id="custom-format-files"></span><h2>创建自定义的格式化文件<a class="headerlink" href="#creating-custom-format-files" title="永久链接至标题">¶</a></h2>
+<p>Django 为许多地区提供了格式定义，但有时你可能想创建自己的格式，因为你的地区不存在一个格式文件，或者你想覆盖一些值。</p>
+<p>要使用自定义格式化，你首先要指定格式化文件的路径，需要将 <a class="reference internal" href="../../ref/settings.html#std-setting-FORMAT_MODULE_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">FORMAT_MODULE_PATH</span></code></a> 设置为格式化文件所在的包路径，例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FORMAT_MODULE_PATH</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;mysite.formats&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;some_app.formats&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>文件不能直接放置在这个目录里，而是要放在本地语言环境的目录中，而且必须命名为 <code class="docutils literal notranslate"><span class="pre">formats.py</span></code> 。要注意不要在这些文件里放置敏感信息，因为如果你把字符串传递给 <code class="docutils literal notranslate"><span class="pre">django.utils.formats.get_format()</span></code> （使用 <a class="reference internal" href="../../ref/templates/builtins.html#std-templatefilter-date"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">date</span></code></a> 模板过滤器），那么内部值会被暴露。</p>
+<p>要自定义英文格式，需要类似以下结构：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mysite/
+    formats/
+        __init__.py
+        en/
+            __init__.py
+            formats.py
+</pre></div>
+</div>
+<p><code class="file docutils literal notranslate"><span class="pre">formats.py</span></code> 包含自定义格式化定义。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">THOUSAND_SEPARATOR</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\xa0</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>使用不换行空格（硬空格 Unicode <code class="docutils literal notranslate"><span class="pre">00A0</span></code> ）作为千位分隔符，而不是英语的默认逗号。</p>
+</div>
+<div class="section" id="s-limitations-of-the-provided-locale-formats">
+<span id="limitations-of-the-provided-locale-formats"></span><h2>提供本地语言环境格式化的局限性<a class="headerlink" href="#limitations-of-the-provided-locale-formats" title="永久链接至标题">¶</a></h2>
+<p>一些本地语言环境为数字使用上下文相关的格式化，而 Django 本地化系统不能自动处理。</p>
+<div class="section" id="s-switzerland-german">
+<span id="switzerland-german"></span><h3>Switzerland (German)<a class="headerlink" href="#switzerland-german" title="永久链接至标题">¶</a></h3>
+<p>瑞士数字格式化取决于要格式化的数字类型。对于货币值，用逗号作为千位分隔符，小数点作为小数点分隔符。对于其他数字，逗号用作小数点分隔符，空格用作千分位分隔符。Django 提供的本地语言环境格式化使用通用分隔符，小数点用逗号，千分位分隔符用空格。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">本地格式化</a><ul>
+<li><a class="reference internal" href="#overview">概况</a></li>
+<li><a class="reference internal" href="#locale-aware-input-in-forms">表单中感知本地语言环境输入</a></li>
+<li><a class="reference internal" href="#controlling-localization-in-templates">在模板中控制本地化</a><ul>
+<li><a class="reference internal" href="#template-tags">模板标签</a><ul>
+<li><a class="reference internal" href="#localize"><code class="docutils literal notranslate"><span class="pre">localize</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#template-filters">模板过滤器</a><ul>
+<li><a class="reference internal" href="#std-templatefilter-localize"><code class="docutils literal notranslate"><span class="pre">localize</span></code></a></li>
+<li><a class="reference internal" href="#unlocalize"><code class="docutils literal notranslate"><span class="pre">unlocalize</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#creating-custom-format-files">创建自定义的格式化文件</a></li>
+<li><a class="reference internal" href="#limitations-of-the-provided-locale-formats">提供本地语言环境格式化的局限性</a><ul>
+<li><a class="reference internal" href="#switzerland-german">Switzerland (German)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="translation.html"
+                          title="上一章">翻译</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="timezones.html"
+                          title="下一章">时区</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/i18n/formatting.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="translation.html" title="翻译">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="timezones.html" title="时区">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoDjango 模型 API &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="GeoDjango 数据库 API" href="db-api.html" />
+    <link rel="prev" title="安装 SpatiaLite" href="install/spatialite.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="install/spatialite.html" title="安装 SpatiaLite">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="db-api.html" title="GeoDjango 数据库 API">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-model-api">
+            
+  <div class="section" id="s-module-django.contrib.gis.db.models">
+<span id="s-geodjango-model-api"></span><span id="module-django.contrib.gis.db.models"></span><span id="geodjango-model-api"></span><h1>GeoDjango 模型 API<a class="headerlink" href="#module-django.contrib.gis.db.models" title="永久链接至标题">¶</a></h1>
+<p>本文探讨了 GeoDjango 模型 API 的详细内容。在本节中，我们将使用以下地理模型作为示例，包括一个 <a class="reference external" href="https://en.wikipedia.org/wiki/ZIP_code">ZIP code</a> 和一个 <a class="reference external" href="https://en.wikipedia.org/wiki/Digital_elevation_model">Digital Elevation Model</a>。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.gis.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Zipcode</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">poly</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PolygonField</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Elevation</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">rast</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">RasterField</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="section" id="s-spatial-field-types">
+<span id="spatial-field-types"></span><h2>空间字段类型<a class="headerlink" href="#spatial-field-types" title="永久链接至标题">¶</a></h2>
+<p>空间字段包括一系列几何字段类型和一个栅格字段类型。每种几何字段类型对应于 OpenGIS Simple Features 规范 <a class="footnote-reference" href="#fnogc" id="id3">[1]</a>。对于栅格数据，没有类似的标准。</p>
+<div class="section" id="s-geometryfield">
+<span id="geometryfield"></span><h3><code class="docutils literal notranslate"><span class="pre">GeometryField</span></code><a class="headerlink" href="#geometryfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.GeometryField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GeometryField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.GeometryField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>几何字段的基类。</p>
+</div>
+<div class="section" id="s-pointfield">
+<span id="pointfield"></span><h3><code class="docutils literal notranslate"><span class="pre">PointField</span></code><a class="headerlink" href="#pointfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.PointField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PointField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.PointField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a>。</p>
+</div>
+<div class="section" id="s-linestringfield">
+<span id="linestringfield"></span><h3><code class="docutils literal notranslate"><span class="pre">LineStringField</span></code><a class="headerlink" href="#linestringfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.LineStringField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LineStringField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.LineStringField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a>。</p>
+</div>
+<div class="section" id="s-polygonfield">
+<span id="polygonfield"></span><h3><code class="docutils literal notranslate"><span class="pre">PolygonField</span></code><a class="headerlink" href="#polygonfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.PolygonField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PolygonField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.PolygonField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a>。</p>
+</div>
+<div class="section" id="s-multipointfield">
+<span id="multipointfield"></span><h3><code class="docutils literal notranslate"><span class="pre">MultiPointField</span></code><a class="headerlink" href="#multipointfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.MultiPointField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MultiPointField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.MultiPointField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.MultiPoint" title="django.contrib.gis.geos.MultiPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPoint</span></code></a>。</p>
+</div>
+<div class="section" id="s-multilinestringfield">
+<span id="multilinestringfield"></span><h3><code class="docutils literal notranslate"><span class="pre">MultiLineStringField</span></code><a class="headerlink" href="#multilinestringfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.MultiLineStringField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MultiLineStringField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.MultiLineStringField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.MultiLineString" title="django.contrib.gis.geos.MultiLineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiLineString</span></code></a>。</p>
+</div>
+<div class="section" id="s-multipolygonfield">
+<span id="multipolygonfield"></span><h3><code class="docutils literal notranslate"><span class="pre">MultiPolygonField</span></code><a class="headerlink" href="#multipolygonfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.MultiPolygonField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MultiPolygonField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.MultiPolygonField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.MultiPolygon" title="django.contrib.gis.geos.MultiPolygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPolygon</span></code></a>。</p>
+</div>
+<div class="section" id="s-geometrycollectionfield">
+<span id="geometrycollectionfield"></span><h3><code class="docutils literal notranslate"><span class="pre">GeometryCollectionField</span></code><a class="headerlink" href="#geometrycollectionfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.GeometryCollectionField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GeometryCollectionField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.GeometryCollectionField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.GeometryCollection" title="django.contrib.gis.geos.GeometryCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryCollection</span></code></a>。</p>
+</div>
+<div class="section" id="s-rasterfield">
+<span id="rasterfield"></span><h3><code class="docutils literal notranslate"><span class="pre">RasterField</span></code><a class="headerlink" href="#rasterfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.RasterField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RasterField</span></code><a class="headerlink" href="#django.contrib.gis.db.models.RasterField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储一个 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.GDALRaster" title="django.contrib.gis.gdal.GDALRaster"><code class="xref py py-class docutils literal notranslate"><span class="pre">GDALRaster</span></code></a>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">RasterField</span></code> 目前仅在 PostGIS 后端实现。</p>
+</div>
+</div>
+<div class="section" id="s-spatial-field-options">
+<span id="spatial-field-options"></span><h2>空间字段选项<a class="headerlink" href="#spatial-field-options" title="永久链接至标题">¶</a></h2>
+<p>除了 Django 模型字段可用的常规 <span class="xref std std-ref">常见模型字段选项</span> 外，空间字段还有以下附加选项。所有这些选项都是可选的。</p>
+<div class="section" id="s-srid">
+<span id="srid"></span><h3><code class="docutils literal notranslate"><span class="pre">srid</span></code><a class="headerlink" href="#srid" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.BaseSpatialField.srid">
+<code class="sig-prename descclassname"><span class="pre">BaseSpatialField.</span></code><code class="sig-name descname"><span class="pre">srid</span></code><a class="headerlink" href="#django.contrib.gis.db.models.BaseSpatialField.srid" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将几何字段的 SRID [#fnogcsrid]_（空间参考系统标识）设置为给定值。默认值为 4326（也称为 <a class="reference external" href="https://en.wikipedia.org/wiki/WGS84">WGS84</a>，单位为经度和纬度的度数）。</p>
+<div class="section" id="s-selecting-an-srid">
+<span id="s-id6"></span><span id="selecting-an-srid"></span><span id="id6"></span><h4>选择一个 SRID<a class="headerlink" href="#selecting-an-srid" title="永久链接至标题">¶</a></h4>
+<p>选择适合模型的合适 SRID 是开发人员需要仔细考虑的重要决策。SRID 是一个整数标识符，对应于用于解释空间数据库中的数据的投影系统。<a class="footnote-reference" href="#fnsrid" id="id7">[3]</a> 投影系统为指定位置的坐标提供了上下文。虽然 <a class="reference external" href="https://en.wikipedia.org/wiki/Geodesy">大地测量学</a> 的细节超出了本文档的范围，但一般问题是地球是球形的，而地球的表示（例如，纸质地图、网络地图）不是。</p>
+<p>大多数人都熟悉使用纬度和经度来引用地球表面上的位置。然而，纬度和经度是角度，而不是距离。换句话说，虽然在平坦表面上两点之间的最短路径是一条直线，但在弯曲表面上（例如地球）上两点之间的最短路径是一个 <a class="reference external" href="https://en.wikipedia.org/wiki/Great_circle">大圆</a> 的 <em>弧线</em>。<a class="footnote-reference" href="#fnthematic" id="id8">[4]</a> 因此，需要额外的计算才能获得平面单位（例如，千米和英里）的距离。在以后的开发中，使用地理坐标系统可能会引入复杂性。例如，SpatiaLite 没有能力在使用地理坐标系统的情况下执行几何体之间的距离计算，例如构建一个查询来查找存储为 WGS84 的县边界周围5英里内的所有点。<a class="footnote-reference" href="#fndist" id="id9">[5]</a></p>
+<p>地球表面的部分区域可以投影到二维或笛卡尔平面上。投影坐标系统对于区域特定的应用特别方便，例如，如果您知道您的数据库只涵盖了 <a class="reference external" href="https://spatialreference.org/ref/epsg/2796/">北堪萨斯</a> 的几何体，那么您可以考虑使用针对该地区的投影系统。此外，投影坐标系统是用笛卡尔单位（例如米或英尺）定义的，使距离计算更加方便。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">如果您希望在 PostGIS 中使用 WGS84 中的非点几何体执行任意距离查询，并且希望获得良好的性能，请启用 <a class="reference internal" href="#django.contrib.gis.db.models.GeometryField.geography" title="django.contrib.gis.db.models.GeometryField.geography"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GeometryField.geography</span></code></a> 关键字，以便使用 <a class="reference internal" href="#geography-type"><span class="std std-ref">地理数据库类型</span></a>。</p>
+</div>
+<p>其他资源：</p>
+<ul class="simple">
+<li><a class="reference external" href="https://spatialreference.org/">spatialreference.org</a>：一个由 Django 驱动的空间参考系统数据库。</li>
+<li><a class="reference external" href="https://web.archive.org/web/20080302095452/http://welcome.warnercnr.colostate.edu/class_info/nr502/lg3/datums_coordinates/spcs.html">The State Plane Coordinate System</a>：一个涵盖美国使用的各种投影系统的网站。在美国遇到的大部分空间数据将采用这些坐标系统之一，而不是像 WGS84 这样的地理坐标系统。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-spatial-index">
+<span id="spatial-index"></span><h3><code class="docutils literal notranslate"><span class="pre">spatial_index</span></code><a class="headerlink" href="#spatial-index" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.BaseSpatialField.spatial_index">
+<code class="sig-prename descclassname"><span class="pre">BaseSpatialField.</span></code><code class="sig-name descname"><span class="pre">spatial_index</span></code><a class="headerlink" href="#django.contrib.gis.db.models.BaseSpatialField.spatial_index" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>默认为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。为给定的几何字段创建一个空间索引。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">这与 <code class="docutils literal notranslate"><span class="pre">db_index</span></code> 字段选项不同，因为空间索引是以与常规数据库索引不同的方式创建的。具体而言，空间索引通常是使用 R-Tree 的变种创建的，而常规数据库索引通常使用 B-Tree。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-geometry-field-options">
+<span id="s-id15"></span><span id="geometry-field-options"></span><span id="id15"></span><h2>几何字段选项<a class="headerlink" href="#geometry-field-options" title="永久链接至标题">¶</a></h2>
+<p>几何字段还有其他可用的选项。以下所有选项都是可选的。</p>
+<div class="section" id="s-dim">
+<span id="dim"></span><h3><code class="docutils literal notranslate"><span class="pre">dim</span></code><a class="headerlink" href="#dim" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.GeometryField.dim">
+<code class="sig-prename descclassname"><span class="pre">GeometryField.</span></code><code class="sig-name descname"><span class="pre">dim</span></code><a class="headerlink" href="#django.contrib.gis.db.models.GeometryField.dim" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>此选项可用于自定义几何字段的坐标维度。默认情况下，它设置为 2，用于表示二维几何体。对于支持的空间后端，它可以设置为 3，以支持三维。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">目前，对三维的支持仅限于 PostGIS 和 SpatiaLite 后端。</p>
+</div>
+</div>
+<div class="section" id="s-geography">
+<span id="geography"></span><h3><code class="docutils literal notranslate"><span class="pre">geography</span></code><a class="headerlink" href="#geography" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.db.models.GeometryField.geography">
+<code class="sig-prename descclassname"><span class="pre">GeometryField.</span></code><code class="sig-name descname"><span class="pre">geography</span></code><a class="headerlink" href="#django.contrib.gis.db.models.GeometryField.geography" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，此选项将创建一个数据库列，其类型为 geography，而不是 geometry。有关更多详细信息，请参阅下面的 <a class="reference internal" href="#geography-type"><span class="std std-ref">地理类型</span></a> 部分。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">地理支持仅限于 PostGIS，并且会强制将 SRID 设置为 4326。</p>
+</div>
+<div class="section" id="s-geography-type">
+<span id="s-id16"></span><span id="geography-type"></span><span id="id16"></span><h4>地理类型<a class="headerlink" href="#geography-type" title="永久链接至标题">¶</a></h4>
+<p>地理类型提供对使用地理坐标表示的空间要素的本地支持（例如，WGS84 经度/纬度）。<a class="footnote-reference" href="#fngeography" id="id17">[6]</a> 与几何类型使用的平面不同，地理类型使用其数据的球面表示。对地理列执行的距离和测量操作会自动采用大圆弧计算，并返回线性单位。换句话说，当对两个地理要素调用 <code class="docutils literal notranslate"><span class="pre">ST_Distance</span></code> 时，将返回以米为单位的值（与在 WGS84 中对几何列调用时返回的度数不同）。</p>
+<p>由于地理计算涉及更多的数学运算，因此地理类型仅支持 PostGIS 空间查询的子集。实际上，这意味着除了 <a class="reference internal" href="geoquerysets.html#distance-lookups"><span class="std std-ref">距离查询</span></a> 之外，地理列仅支持以下其他 <a class="reference internal" href="geoquerysets.html#spatial-lookups"><span class="std std-ref">空间查询</span></a>：</p>
+<ul class="simple">
+<li><a class="reference internal" href="geoquerysets.html#std-fieldlookup-bboverlaps"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">bboverlaps</span></code></a></li>
+<li><a class="reference internal" href="geoquerysets.html#std-fieldlookup-coveredby"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">coveredby</span></code></a></li>
+<li><a class="reference internal" href="geoquerysets.html#std-fieldlookup-covers"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">covers</span></code></a></li>
+<li><a class="reference internal" href="geoquerysets.html#std-fieldlookup-intersects"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">intersects</span></code></a></li>
+</ul>
+<p>如果您需要使用不支持地理类型作为输入的空间查询或聚合函数，您可以在查询中使用 <a class="reference internal" href="../../models/database-functions.html#django.db.models.functions.Cast" title="django.db.models.functions.Cast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cast</span></code></a> 数据库函数将地理列转换为几何类型：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.gis.db.models</span> <span class="kn">import</span> <span class="n">PointField</span>
+<span class="kn">from</span> <span class="nn">django.db.models.functions</span> <span class="kn">import</span> <span class="n">Cast</span>
+
+<span class="n">Zipcode</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">geom</span><span class="o">=</span><span class="n">Cast</span><span class="p">(</span><span class="s2">&quot;geography_field&quot;</span><span class="p">,</span> <span class="n">PointField</span><span class="p">()))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="n">geom__within</span><span class="o">=</span><span class="n">poly</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>有关更多信息，请查阅 PostGIS 文档中关于确定 <a class="reference external" href="https://postgis.net/docs/using_postgis_dbmanagement.html#PostGIS_GeographyVSGeometry">何时使用地理数据类型而不是几何数据类型</a> 的有用部分。</p>
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="fnogc" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[1]</a></td><td>OpenGIS Consortium, Inc., <a class="reference external" href="https://www.ogc.org/standards/sfs">Simple Feature Specification For SQL</a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="fnogcsrid" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[2]</a></td><td><em>在第 2.3.8 章，第 39页 查看 id</em> （几何值和空间参考系统）。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="fnsrid" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[3]</a></td><td>通常情况下，SRID 整数对应于 EPSG（<a class="reference external" href="https://epsg.org/">欧洲石油调查集团</a>）标识符。然而，它也可以与空间数据库的空间参考系统表中定义的自定义投影相关联。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="fnthematic" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[4]</a></td><td>Terry A. Slocum, Robert B. McMaster, Fritz C. Kessler 和 Hugh H. Howard，《主题制图和地理可视化》（Prentice Hall，第二版），第 7.1.3 节。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="fndist" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id9">[5]</a></td><td>这个限制不适用于 PostGIS。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="fngeography" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id17">[6]</a></td><td>请参考 <a class="reference external" href="https://postgis.net/docs/using_postgis_dbmanagement.html#PostGIS_Geography">PostGIS Geography Type</a> 文档以获取更多详细信息。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GeoDjango 模型 API</a><ul>
+<li><a class="reference internal" href="#spatial-field-types">空间字段类型</a><ul>
+<li><a class="reference internal" href="#geometryfield"><code class="docutils literal notranslate"><span class="pre">GeometryField</span></code></a></li>
+<li><a class="reference internal" href="#pointfield"><code class="docutils literal notranslate"><span class="pre">PointField</span></code></a></li>
+<li><a class="reference internal" href="#linestringfield"><code class="docutils literal notranslate"><span class="pre">LineStringField</span></code></a></li>
+<li><a class="reference internal" href="#polygonfield"><code class="docutils literal notranslate"><span class="pre">PolygonField</span></code></a></li>
+<li><a class="reference internal" href="#multipointfield"><code class="docutils literal notranslate"><span class="pre">MultiPointField</span></code></a></li>
+<li><a class="reference internal" href="#multilinestringfield"><code class="docutils literal notranslate"><span class="pre">MultiLineStringField</span></code></a></li>
+<li><a class="reference internal" href="#multipolygonfield"><code class="docutils literal notranslate"><span class="pre">MultiPolygonField</span></code></a></li>
+<li><a class="reference internal" href="#geometrycollectionfield"><code class="docutils literal notranslate"><span class="pre">GeometryCollectionField</span></code></a></li>
+<li><a class="reference internal" href="#rasterfield"><code class="docutils literal notranslate"><span class="pre">RasterField</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spatial-field-options">空间字段选项</a><ul>
+<li><a class="reference internal" href="#srid"><code class="docutils literal notranslate"><span class="pre">srid</span></code></a><ul>
+<li><a class="reference internal" href="#selecting-an-srid">选择一个 SRID</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spatial-index"><code class="docutils literal notranslate"><span class="pre">spatial_index</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geometry-field-options">几何字段选项</a><ul>
+<li><a class="reference internal" href="#dim"><code class="docutils literal notranslate"><span class="pre">dim</span></code></a></li>
+<li><a class="reference internal" href="#geography"><code class="docutils literal notranslate"><span class="pre">geography</span></code></a><ul>
+<li><a class="reference internal" href="#geography-type">地理类型</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="install/spatialite.html"
+                          title="上一章">安装 SpatiaLite</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="db-api.html"
+                          title="下一章">GeoDjango 数据库 API</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/gis/model-api.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="install/spatialite.html" title="安装 SpatiaLite">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="db-api.html" title="GeoDjango 数据库 API">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

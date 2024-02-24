@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 4.2.1 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 4.2 版本发行说明" href="4.2.html" />
+    <link rel="prev" title="Django 4.2.2 版本发行说明" href="4.2.2.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="4.2.2.html" title="Django 4.2.2 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="4.2.html" title="Django 4.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-4.2.1">
+            
+  <div class="section" id="s-django-4-2-1-release-notes">
+<span id="django-4-2-1-release-notes"></span><h1>Django 4.2.1 版本发行说明<a class="headerlink" href="#django-4-2-1-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2023 年 5 月 3 日</em></p>
+<p>Django 4.2.1 修复了一个安全问题，安全级别为 &quot;low&quot;，以及若干在 4.2 版本中的错误。</p>
+<div class="section" id="s-cve-2023-31047-potential-bypass-of-validation-when-uploading-multiple-files-using-one-form-field">
+<span id="cve-2023-31047-potential-bypass-of-validation-when-uploading-multiple-files-using-one-form-field"></span><h2>CVE-2023-31047 ：通过使用一个表单字段上传多个文件时，存在绕过验证的潜在漏洞。<a class="headerlink" href="#cve-2023-31047-potential-bypass-of-validation-when-uploading-multiple-files-using-one-form-field" title="永久链接至标题">¶</a></h2>
+<p>使用一个表单字段上传多个文件从未得到 <a class="reference internal" href="../ref/forms/fields.html#django.forms.FileField" title="django.forms.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">forms.FileField</span></code></a> 或 <a class="reference internal" href="../ref/forms/fields.html#django.forms.ImageField" title="django.forms.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">forms.ImageField</span></code></a> 的支持，因为只有最后上传的文件会被验证。不幸的是，<a class="reference internal" href="../topics/http/file-uploads.html#uploading-multiple-files"><span class="std std-ref">上传多个文件</span></a> 主题提到了相反的情况。</p>
+<p>为了避免这个漏洞，现在当在 <a class="reference internal" href="../ref/forms/widgets.html#django.forms.ClearableFileInput" title="django.forms.ClearableFileInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClearableFileInput</span></code></a> 和 <a class="reference internal" href="../ref/forms/widgets.html#django.forms.FileInput" title="django.forms.FileInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileInput</span></code></a> 表单小部件上设置了 <code class="docutils literal notranslate"><span class="pre">multiple</span></code> HTML 属性时，它们会引发 <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>。为了防止异常并保持旧的行为，将 <code class="docutils literal notranslate"><span class="pre">allow_multiple_selected</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>有关使用新属性以及通过单个字段处理多个文件的更多详细信息，请参阅 <a class="reference internal" href="../topics/http/file-uploads.html#uploading-multiple-files"><span class="std std-ref">上传多个文件</span></a>。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>在 Django 4.2 中修复了一个回归问题，该问题导致在使用属性名称来延迟字段时，<code class="docutils literal notranslate"><span class="pre">QuerySet.defer()</span></code> 发生崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/34458">#34458</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，该问题导致在使用带有 <code class="docutils literal notranslate"><span class="pre">%</span></code> 字符的 <a class="reference internal" href="../ref/contrib/postgres/search.html#django.contrib.postgres.search.SearchVector" title="django.contrib.postgres.search.SearchVector"><code class="xref py py-class docutils literal notranslate"><span class="pre">SearchVector</span></code></a> 函数时发生崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/34459">#34459</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，该问题导致在使用显式分组的查询进行聚合时，聚合作用于错误的列 (<a class="reference external" href="https://code.djangoproject.com/ticket/34464">#34464</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，现在可以重新设置 PostgreSQL 上的 <a class="reference internal" href="../ref/settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> 中的 <code class="docutils literal notranslate"><span class="pre">&quot;cursor_factory&quot;</span></code> 选项 (<a class="reference external" href="https://code.djangoproject.com/ticket/34466">#34466</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，现在在 PostgreSQL 上强制使用 UTF-8 客户端编码 (<a class="reference external" href="https://code.djangoproject.com/ticket/34470">#34470</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，<code class="docutils literal notranslate"><span class="pre">i18n_patterns()</span></code> 在使用默认语言的回退语言时不再忽略 <code class="docutils literal notranslate"><span class="pre">prefix_default_language</span></code> 参数 (<a class="reference external" href="https://code.djangoproject.com/ticket/34455">#34455</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，当从 <code class="docutils literal notranslate"><span class="pre">i18n_patterns()</span></code> 使用 <code class="docutils literal notranslate"><span class="pre">prefix_default_language</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 时，默认语言的翻译 URL 不再为不同语言的请求引发 404 错误 (<a class="reference external" href="https://code.djangoproject.com/ticket/34515">#34515</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，创建 <code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code>、<code class="docutils literal notranslate"><span class="pre">HttpResponse</span></code> 及其子类的拷贝和深拷贝并不总是正确工作的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/34482">#34482</a>, <a class="reference external" href="https://code.djangoproject.com/ticket/34484">#34484</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，当时间差小于 1 天且日期时间带有非 UTC 时区时，<code class="docutils literal notranslate"><span class="pre">timesince</span></code> 和 <code class="docutils literal notranslate"><span class="pre">timeuntil</span></code> 模板过滤器返回不正确的结果 (<a class="reference external" href="https://code.djangoproject.com/ticket/34483">#34483</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，该问题导致使用 <code class="docutils literal notranslate"><span class="pre">psycopg</span></code> 3 时 <a class="reference internal" href="../ref/contrib/postgres/search.html#django.contrib.postgres.search.SearchHeadline" title="django.contrib.postgres.search.SearchHeadline"><code class="xref py py-class docutils literal notranslate"><span class="pre">SearchHeadline</span></code></a> 函数崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/34486">#34486</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，该问题导致管理员界面中的 <code class="docutils literal notranslate"><span class="pre">ClearableFileInput</span></code> 边距不正确 (<a class="reference external" href="https://code.djangoproject.com/ticket/34506">#34506</a>)。</li>
+<li>在 Django 4.2 中修复了一个回归问题，该问题导致管理员站点应用程序索引视图上不显示面包屑导航 (<a class="reference external" href="https://code.djangoproject.com/ticket/34512">#34512</a>)。</li>
+<li>在 Django 中进行合并迁移操作时，现在会减少 <code class="docutils literal notranslate"><span class="pre">AddIndex</span></code>、<code class="docutils literal notranslate"><span class="pre">RemoveIndex</span></code>、<code class="docutils literal notranslate"><span class="pre">RenameIndex</span></code> 和 <code class="docutils literal notranslate"><span class="pre">CreateModel</span></code> 操作，这允许从历史迁移中移除已弃用的 <code class="docutils literal notranslate"><span class="pre">Meta.index_together</span></code> 选项，而改为使用 <code class="docutils literal notranslate"><span class="pre">Meta.indexes</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/34525">#34525</a>)。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 4.2.1 版本发行说明</a><ul>
+<li><a class="reference internal" href="#cve-2023-31047-potential-bypass-of-validation-when-uploading-multiple-files-using-one-form-field">CVE-2023-31047 ：通过使用一个表单字段上传多个文件时，存在绕过验证的潜在漏洞。</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="4.2.2.html"
+                          title="上一章">Django 4.2.2 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="4.2.html"
+                          title="下一章">Django 4.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/4.2.1.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="4.2.2.html" title="Django 4.2.2 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="4.2.html" title="Django 4.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

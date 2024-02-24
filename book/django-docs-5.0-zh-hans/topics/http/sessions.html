@@ -1,0 +1,761 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何使用会话 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="使用表单" href="../forms/index.html" />
+    <link rel="prev" title="中间件" href="middleware.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="middleware.html" title="中间件">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="../forms/index.html" title="使用表单">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-http-sessions">
+            
+  <div class="section" id="s-module-django.contrib.sessions">
+<span id="s-how-to-use-sessions"></span><span id="module-django.contrib.sessions"></span><span id="how-to-use-sessions"></span><h1>如何使用会话<a class="headerlink" href="#module-django.contrib.sessions" title="永久链接至标题">¶</a></h1>
+<p>Django 提供了对匿名会话的全面支持。会话框架允许你在每个站点访问者的基础上存储和检索任意数据。它将数据存储在服务器端并抽象了 cookie 的发送和接收。Cookies 包含会话 ID - 而不是数据本身（除非你使用 <a class="reference internal" href="#cookie-session-backend"><span class="std std-ref">基于 cookie 的后端</span></a>）。</p>
+<div class="section" id="s-enabling-sessions">
+<span id="enabling-sessions"></span><h2>启用会话<a class="headerlink" href="#enabling-sessions" title="永久链接至标题">¶</a></h2>
+<p>会话是通过一段 <a class="reference internal" href="../../ref/middleware.html"><span class="doc">中间件</span></a> 实现的。</p>
+<p>要启用会话功能，请执行以下操作：</p>
+<ul class="simple">
+<li>编辑 <a class="reference internal" href="../../ref/settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 设置，并确保其中包含 <code class="docutils literal notranslate"><span class="pre">'django.contrib.sessions.middleware.SessionMiddleware'</span></code>。由 <code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">startproject</span></code> 创建的默认 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 已经激活了 <code class="docutils literal notranslate"><span class="pre">SessionMiddleware</span></code>。</li>
+</ul>
+<p>如果你不想使用会话，你也可以从 <a class="reference internal" href="../../ref/settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 中删除 <code class="docutils literal notranslate"><span class="pre">SessionMiddleware</span></code> 行，并从 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中删除 <code class="docutils literal notranslate"><span class="pre">'django.contrib.sessions'</span></code>。这将节省一些小额开销。</p>
+</div>
+<div class="section" id="s-configuring-the-session-engine">
+<span id="s-configuring-sessions"></span><span id="configuring-the-session-engine"></span><span id="configuring-sessions"></span><h2>配置会话引擎<a class="headerlink" href="#configuring-the-session-engine" title="永久链接至标题">¶</a></h2>
+<p>默认情况下，Django 将会话存储在数据库中（使用模型 <code class="docutils literal notranslate"><span class="pre">django.contrib.sessions.models.Session</span></code>）。尽管这很方便，但在某些设置中，将会话数据存储在其他地方可能更快，因此可以配置 Django 将会话数据存储在文件系统或缓存中。</p>
+<div class="section" id="s-using-database-backed-sessions">
+<span id="using-database-backed-sessions"></span><h3>使用基于数据库的会话<a class="headerlink" href="#using-database-backed-sessions" title="永久链接至标题">¶</a></h3>
+<p>如果要使用基于数据库的会话，需要将 <code class="docutils literal notranslate"><span class="pre">'django.contrib.sessions'</span></code> 添加到你的 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 设置中。</p>
+<p>一旦配置完成，运行 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> 来安装存储会话数据的单个数据库表。</p>
+</div>
+<div class="section" id="s-using-cached-sessions">
+<span id="s-cached-sessions-backend"></span><span id="using-cached-sessions"></span><span id="cached-sessions-backend"></span><h3>使用缓存会话<a class="headerlink" href="#using-cached-sessions" title="永久链接至标题">¶</a></h3>
+<p>为了获得更好的性能，你可能想要使用基于缓存的会话后端。</p>
+<p>要使用 Django 的缓存系统存储会话数据，首先需要确保你已经配置了缓存；请查看 <a class="reference internal" href="../cache.html"><span class="doc">缓存文档</span></a> 获取详细信息。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">只有当你使用 Memcached 或 Redis 缓存后端时，才应该使用基于缓存的会话。本地内存缓存后端不会保留数据足够长的时间，因此不是一个好选择，直接使用文件或数据库会话可能会更快，而不是通过文件或数据库缓存后端发送所有数据。此外，本地内存缓存后端不是多进程安全的，因此在生产环境中可能不是一个好选择。</p>
+</div>
+<p>如果在 <a class="reference internal" href="../../ref/settings.html#std-setting-CACHES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CACHES</span></code></a> 中定义了多个缓存，Django 将使用默认缓存。要使用另一个缓存，将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_CACHE_ALIAS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_CACHE_ALIAS</span></code></a> 设置为该缓存的名称。</p>
+<p>一旦配置了缓存，你需要在数据库支持的缓存和非持久性缓存之间进行选择。</p>
+<p>缓存的数据库后端（<code class="docutils literal notranslate"><span class="pre">cached_db</span></code>）使用写透缓存 - 会话写入同时应用于缓存和数据库。会话读取使用缓存，或者如果数据已从缓存中逐出，则使用数据库。要使用此后端，请将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;django.contrib.sessions.backends.cached_db&quot;</span></code>，并按照 <a class="reference internal" href="#using-database-backed-sessions">使用基于数据库的会话</a> 的配置说明进行配置。</p>
+<p>缓存后端（<code class="docutils literal notranslate"><span class="pre">cache</span></code>）只在缓存中存储会话数据。这更快，因为它避免了数据库持久性，但你需要考虑当缓存数据被逐出时会发生什么情况。逐出可能发生在缓存填满或缓存服务器重新启动时，这将意味着会话数据丢失，包括用户的注销状态。要使用此后端，请将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;django.contrib.sessions.backends.cache&quot;</span></code>。</p>
+<p>缓存后端可以通过使用具有适当配置的持久缓存（例如 Redis）来变成持久性的。但除非你的缓存明确配置为具有足够的持久性，否则选择缓存数据库后端是更安全的选择。这可以避免由于生产中不可靠的数据存储引起的边缘情况。</p>
+</div>
+<div class="section" id="s-using-file-based-sessions">
+<span id="using-file-based-sessions"></span><h3>使用基于文件的会话<a class="headerlink" href="#using-file-based-sessions" title="永久链接至标题">¶</a></h3>
+<p>要使用基于文件的会话，请将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;django.contrib.sessions.backends.file&quot;</span></code>。</p>
+<p>你可能还想设置 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_FILE_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_FILE_PATH</span></code></a> 配置（默认为 <code class="docutils literal notranslate"><span class="pre">tempfile.gettempdir()</span></code> 的输出，很可能是 <code class="docutils literal notranslate"><span class="pre">/tmp</span></code>）来控制 Django 存储会话文件的位置。请确保你的 Web 服务器具有读写此位置的权限。</p>
+</div>
+<div class="section" id="s-using-cookie-based-sessions">
+<span id="s-cookie-session-backend"></span><span id="using-cookie-based-sessions"></span><span id="cookie-session-backend"></span><h3>使用基于 cookie 的会话<a class="headerlink" href="#using-cookie-based-sessions" title="永久链接至标题">¶</a></h3>
+<p>要使用基于 cookie 的会话，请将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;django.contrib.sessions.backends.signed_cookies&quot;</span></code>。会话数据将使用 Django 的 <a class="reference internal" href="../signing.html"><span class="doc">加密签名</span></a> 工具和 <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> 设置存储。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">建议将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_HTTPONLY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_HTTPONLY</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，以防止 JavaScript 访问存储的数据。</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p><strong>会话数据被签名但未加密</strong></p>
+<p>在使用基于 cookie 的后端时，会话数据可以被客户端读取。</p>
+<p>使用 MAC（消息认证码）用于保护数据免受客户端的更改，以便在被篡改时会话数据将被作废。如果存储 cookie 的客户端（例如你用户的浏览器）无法存储全部会话 cookie 并丢弃数据，会发生相同的作废。尽管 Django 对数据进行了压缩，但仍然完全有可能超过每个 cookie 的 <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2965.html#section-5.3"><strong>常见限制 4096 字节</strong></a>。</p>
+<p><strong>不保证新鲜度</strong></p>
+<p>还要注意，虽然 MAC 可以保证数据的真实性（即它是由你的站点生成的，而不是其他人生成的），以及数据的完整性（即它都在那里且正确），但它不能保证新鲜度，也就是不能保证你被发送回客户端的是最后发送给客户端的内容。这意味着对于一些使用会话数据的情况，基于 cookie 的后端可能会使你容易受到 <a class="reference external" href="https://en.wikipedia.org/wiki/Replay_attack">重放攻击</a> 的威胁。与其他会话后端不同，这些后端会保留每个会话的服务器端记录，并在用户注销时使其失效，基于 cookie 的会话在用户注销时不会失效。因此，如果攻击者窃取了用户的 cookie，即使用户注销，他们仍然可以使用该 cookie 以该用户的身份登录。只有当 cookie 的寿命超过 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a> 时，它们才会被检测为 '过时'。</p>
+<p><strong>性能</strong></p>
+<p class="last">最后，cookie 的大小可能会影响你的网站的速度。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-using-sessions-in-views">
+<span id="using-sessions-in-views"></span><h2>在视图中使用会话<a class="headerlink" href="#using-sessions-in-views" title="永久链接至标题">¶</a></h2>
+<p>当激活了 <code class="docutils literal notranslate"><span class="pre">SessionMiddleware</span></code> 时，每个 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpRequest" title="django.http.HttpRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpRequest</span></code></a> 对象 -- 作为任何 Django 视图函数的第一个参数 -- 都将具有一个 <code class="docutils literal notranslate"><span class="pre">session</span></code> 属性，它是一个类似于字典的对象。</p>
+<p>你可以在视图的任何时候读取并写入 <code class="docutils literal notranslate"><span class="pre">request.session</span></code>。你可以多次编辑它。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">backends.base.</span></code><code class="sig-name descname"><span class="pre">SessionBase</span></code><a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase" title="永久链接至目标">¶</a></dt>
+<dd><p>这是所有会话对象的基类。它具有以下标准的字典方法：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.__getitem__">
+<code class="sig-name descname"><span class="pre">__getitem__</span></code>(<em><span class="n"><span class="pre">key</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.__getitem__" title="永久链接至目标">¶</a></dt>
+<dd><p>比如：<code class="docutils literal notranslate"><span class="pre">fav_color</span> <span class="pre">=</span> <span class="pre">request.session['fav_color']</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.__setitem__">
+<code class="sig-name descname"><span class="pre">__setitem__</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.__setitem__" title="永久链接至目标">¶</a></dt>
+<dd><p>比如：<code class="docutils literal notranslate"><span class="pre">request.session['fav_color']</span> <span class="pre">=</span> <span class="pre">'blue'</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.__delitem__">
+<code class="sig-name descname"><span class="pre">__delitem__</span></code>(<em><span class="n"><span class="pre">key</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.__delitem__" title="永久链接至目标">¶</a></dt>
+<dd><p>比如：<code class="docutils literal notranslate"><span class="pre">del</span> <span class="pre">request.session['fav_color']</span></code> 。如果给定的 <code class="docutils literal notranslate"><span class="pre">key</span></code> 不在会话里，会引发 <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> 。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.__contains__">
+<code class="sig-name descname"><span class="pre">__contains__</span></code>(<em><span class="n"><span class="pre">key</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.__contains__" title="永久链接至目标">¶</a></dt>
+<dd><p>比如：<code class="docutils literal notranslate"><span class="pre">'fav_color'</span> <span class="pre">in</span> <span class="pre">request.session</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.get">
+<code class="sig-name descname"><span class="pre">get</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.get" title="永久链接至目标">¶</a></dt>
+<dd><p>比如：<code class="docutils literal notranslate"><span class="pre">fav_color</span> <span class="pre">=</span> <span class="pre">request.session.get('fav_color',</span> <span class="pre">'red')</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.pop">
+<code class="sig-name descname"><span class="pre">pop</span></code>(<em><span class="n"><span class="pre">key</span></span></em>, <em><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">__not_given</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.pop" title="永久链接至目标">¶</a></dt>
+<dd><p>比如：<code class="docutils literal notranslate"><span class="pre">fav_color</span> <span class="pre">=</span> <span class="pre">request.session.pop('fav_color',</span> <span class="pre">'blue')</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.keys">
+<code class="sig-name descname"><span class="pre">keys</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.keys" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.items">
+<code class="sig-name descname"><span class="pre">items</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.items" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.setdefault">
+<code class="sig-name descname"><span class="pre">setdefault</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.setdefault" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.clear">
+<code class="sig-name descname"><span class="pre">clear</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.clear" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>它也有以下方法：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.flush">
+<code class="sig-name descname"><span class="pre">flush</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.flush" title="永久链接至目标">¶</a></dt>
+<dd><p>从会话中删除当前会话数据并删除会话 cookie。如果你想确保用户的浏览器无法再次访问以前的会话数据（例如， <a class="reference internal" href="../auth/default.html#django.contrib.auth.logout" title="django.contrib.auth.logout"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.contrib.auth.logout()</span></code></a> 函数会调用它）。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.set_test_cookie">
+<code class="sig-name descname"><span class="pre">set_test_cookie</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.set_test_cookie" title="永久链接至目标">¶</a></dt>
+<dd><p>设置一个测试 cookie 来确定用户的浏览器是否支持 cookie。由于 cookie 的工作方式，你将无法在用户的下一个页面请求之前进行测试。有关更多信息，请参阅下面的 <a class="reference internal" href="#setting-test-cookies">设置测试 cookie</a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.test_cookie_worked">
+<code class="sig-name descname"><span class="pre">test_cookie_worked</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.test_cookie_worked" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code>，取决于用户的浏览器是否接受了测试 cookie。由于 cookie 的工作方式，你必须在前一个独立的页面请求上调用 <code class="docutils literal notranslate"><span class="pre">set_test_cookie()</span></code>。有关更多信息，请参阅下面的 <a class="reference internal" href="#setting-test-cookies">设置测试 cookie</a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.delete_test_cookie">
+<code class="sig-name descname"><span class="pre">delete_test_cookie</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.delete_test_cookie" title="永久链接至目标">¶</a></dt>
+<dd><p>删除测试 cookie。使用它来清理。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.get_session_cookie_age">
+<code class="sig-name descname"><span class="pre">get_session_cookie_age</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.get_session_cookie_age" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a> 设置的值。这可以在自定义会话后端中进行覆盖。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.set_expiry">
+<code class="sig-name descname"><span class="pre">set_expiry</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.set_expiry" title="永久链接至目标">¶</a></dt>
+<dd><p>设置会话的过期时间。你可以传递多种不同的值：</p>
+<ul class="simple">
+<li>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个整数，会话将在多少秒的不活动后过期。例如，调用 <code class="docutils literal notranslate"><span class="pre">request.session.set_expiry(300)</span></code> 会使会话在5分钟后过期。</li>
+<li>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个 <code class="docutils literal notranslate"><span class="pre">datetime</span></code> 或 <code class="docutils literal notranslate"><span class="pre">timedelta</span></code> 对象，会话将在特定的日期/时间过期。</li>
+<li>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是 <code class="docutils literal notranslate"><span class="pre">0</span></code>，用户的会话 cookie 将在用户关闭 Web 浏览器时过期。</li>
+<li>如果 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，会话将恢复使用全局会话过期策略。</li>
+</ul>
+<p>读取会话不被视为用于过期目的的活动。会话过期是根据会话上次被 <em>修改</em> 的时间计算的。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.get_expiry_age">
+<code class="sig-name descname"><span class="pre">get_expiry_age</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.get_expiry_age" title="永久链接至目标">¶</a></dt>
+<dd><p>返回会话过期前剩余的秒数。对于没有自定义过期时间的会话（或设置为在关闭浏览器时过期的会话），这将等于 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a>。</p>
+<p>此函数接受两个可选的关键字参数：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">modification</span></code>：会话的最后修改时间，作为一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 对象。默认为当前时间。</li>
+<li><code class="docutils literal notranslate"><span class="pre">expiry</span></code>：会话的过期信息，作为一个 <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a> 对象、一个 <code class="xref py py-class docutils literal notranslate"><span class="pre">int`（以秒为单位）或</span> <span class="pre">``None`</span></code>。默认为由 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.set_expiry" title="django.contrib.sessions.backends.base.SessionBase.set_expiry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_expiry()</span></code></a> 存储在会话中的值（如果存在），否则为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>这个方法用于会话后端在保存会话时确定会话过期时间的秒数。它实际上并不打算在那种上下文之外使用。</p>
+<p>特别是，尽管在你拥有正确的 <code class="docutils literal notranslate"><span class="pre">modification</span></code> 值 <strong>且</strong> <code class="docutils literal notranslate"><span class="pre">expiry</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">datetime</span></code> 对象的情况下可以 <strong>可能</strong> 确定会话的剩余寿命，但在你有 <code class="docutils literal notranslate"><span class="pre">modification</span></code> 值的情况下，手动计算到期时间更加直接：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">expires_at</span> <span class="o">=</span> <span class="n">modification</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">SESSION_COOKIE_AGE</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.get_expiry_date">
+<code class="sig-name descname"><span class="pre">get_expiry_date</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.get_expiry_date" title="永久链接至目标">¶</a></dt>
+<dd><p>返回会话将过期的日期。对于没有自定义过期时间的会话（或设置为在关闭浏览器时过期的会话），这将等于从现在开始 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a> 秒后的日期。</p>
+<p>此函数接受与 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.get_expiry_age" title="django.contrib.sessions.backends.base.SessionBase.get_expiry_age"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_expiry_age()</span></code></a> 相同的关键字参数，并适用类似的用法注意事项。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.get_expire_at_browser_close">
+<code class="sig-name descname"><span class="pre">get_expire_at_browser_close</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.get_expire_at_browser_close" title="永久链接至目标">¶</a></dt>
+<dd><p>根据用户的会话 cookie 是否在用户关闭 Web 浏览器时过期，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.clear_expired">
+<code class="sig-name descname"><span class="pre">clear_expired</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.clear_expired" title="永久链接至目标">¶</a></dt>
+<dd><p>从会话存储中删除已过期的会话。这个类方法由 <a class="reference internal" href="../../ref/django-admin.html#django-admin-clearsessions"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">clearsessions</span></code></a> 调用。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.base.SessionBase.cycle_key">
+<code class="sig-name descname"><span class="pre">cycle_key</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.base.SessionBase.cycle_key" title="永久链接至目标">¶</a></dt>
+<dd><p>在保留当前会话数据的同时创建一个新的会话密钥。 <a class="reference internal" href="../auth/default.html#django.contrib.auth.login" title="django.contrib.auth.login"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.contrib.auth.login()</span></code></a> 调用这个方法以减轻会话固定攻击。</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="s-session-serialization">
+<span id="s-id1"></span><span id="session-serialization"></span><span id="id1"></span><h3>会话序列化<a class="headerlink" href="#session-serialization" title="永久链接至标题">¶</a></h3>
+<p>默认情况下，Django使用 JSON 对会话数据进行序列化。你可以使用 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_SERIALIZER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_SERIALIZER</span></code></a> 设置来自定义会话序列化格式。尽管在 <a class="reference internal" href="#custom-serializers"><span class="std std-ref">编写你自己的序列化器</span></a> 中描述了一些注意事项，但我们强烈建议 <em>特别是如果你使用的是基于 cookie 的后端</em>，坚持使用 JSON 序列化。</p>
+<p>例如，如果你使用 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 来序列化会话数据，以下是一个攻击场景。如果你使用的是 <a class="reference internal" href="#cookie-session-backend"><span class="std std-ref">签名 cookie 会话后端</span></a> 并且 <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> （或 <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY_FALLBACKS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY_FALLBACKS</span></code></a> 的任何密钥）被攻击者知道（Django 本身没有内在的漏洞会导致其泄露），攻击者可以在他们的会话中插入一个字符串，当反序列化时，它在服务器上执行任意代码。这种技巧很简单，而且在互联网上很容易找到。尽管 cookie 会话存储对 cookie 中存储的数据进行了签名以防止篡改，但 <a class="reference internal" href="../../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> 泄漏会立即升级为远程代码执行漏洞。</p>
+<div class="section" id="s-bundled-serializers">
+<span id="bundled-serializers"></span><h4>捆绑的序列化器<a class="headerlink" href="#bundled-serializers" title="永久链接至标题">¶</a></h4>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.sessions.serializers.JSONSerializer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">serializers.</span></code><code class="sig-name descname"><span class="pre">JSONSerializer</span></code><a class="headerlink" href="#django.contrib.sessions.serializers.JSONSerializer" title="永久链接至目标">¶</a></dt>
+<dd><p>一个包装了 <a class="reference internal" href="../signing.html#module-django.core.signing" title="django.core.signing: Django's signing framework."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.core.signing</span></code></a> 中的 JSON 序列化器的包装器。只能序列化基本数据类型。</p>
+<p>此外，由于 JSON 只支持字符串键，因此请注意在 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 中使用非字符串键不会按预期工作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># initial assignment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># subsequent requests following serialization &amp; deserialization</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># of session data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># KeyError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">]</span>
+<span class="go">&#39;bar&#39;</span>
+</pre></div>
+</div>
+<p>类似地，不能编码为 JSON 的数据，例如不能编码为 UTF-8 的字节，如 <code class="docutils literal notranslate"><span class="pre">'\xd9'</span></code> （会引发 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#UnicodeDecodeError" title="(在 Python v3.12)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnicodeDecodeError</span></code></a>），也无法存储。</p>
+<p>请参阅 <a class="reference internal" href="#custom-serializers"><span class="std std-ref">编写你自己的序列化器</span></a> 部分以获取关于 JSON 序列化的限制的更多详细信息。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-write-your-own-serializer">
+<span id="s-custom-serializers"></span><span id="write-your-own-serializer"></span><span id="custom-serializers"></span><h4>编写你自己的序列化器<a class="headerlink" href="#write-your-own-serializer" title="永久链接至标题">¶</a></h4>
+<p>请注意， <a class="reference internal" href="#django.contrib.sessions.serializers.JSONSerializer" title="django.contrib.sessions.serializers.JSONSerializer"><code class="xref py py-class docutils literal notranslate"><span class="pre">JSONSerializer</span></code></a> 不能处理任意的 Python 数据类型。通常情况下，方便和安全之间存在权衡。如果你希望在 JSON 支持的会话中存储更高级的数据类型，包括 <code class="docutils literal notranslate"><span class="pre">datetime</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Decimal</span></code>，你需要编写一个自定义的序列化器（或在存储到 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 之前将这些值转换为可 JSON 序列化的对象）。尽管序列化这些值通常很简单（<a class="reference internal" href="../serialization.html#django.core.serializers.json.DjangoJSONEncoder" title="django.core.serializers.json.DjangoJSONEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">DjangoJSONEncoder</span></code></a> 可能会有所帮助），但编写一个可以可靠地获取与放入相同的东西的解码器更加脆弱。例如，你可能会冒险返回一个实际上是一个字符串的 <code class="docutils literal notranslate"><span class="pre">datetime</span></code>，只是碰巧与为 <code class="docutils literal notranslate"><span class="pre">datetime</span></code> 选择的相同格式。</p>
+<p>你的序列化器类必须实现两个方法，<code class="docutils literal notranslate"><span class="pre">dumps(self,</span> <span class="pre">obj)</span></code> 和 <code class="docutils literal notranslate"><span class="pre">loads(self,</span> <span class="pre">data)</span></code>，分别用于序列化和反序列化会话数据的字典。</p>
+</div>
+</div>
+<div class="section" id="s-session-object-guidelines">
+<span id="session-object-guidelines"></span><h3>会话对象指南<a class="headerlink" href="#session-object-guidelines" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>在 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 上使用普通的 Python 字符串作为字典键。这更像是一种约定而不是硬性规则。</li>
+<li>以下划线开头的会话字典键被保留供 Django 内部使用。</li>
+<li>不要用新对象覆盖 <code class="docutils literal notranslate"><span class="pre">request.session</span></code>，也不要访问或设置它的属性。像使用 Python 字典一样使用它。</li>
+</ul>
+</div>
+<div class="section" id="s-examples">
+<span id="examples"></span><h3>示例<a class="headerlink" href="#examples" title="永久链接至标题">¶</a></h3>
+<p>这个简单的视图在用户发布评论后将一个变量 <code class="docutils literal notranslate"><span class="pre">has_commented</span></code> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。它不允许用户发布多次评论：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">post_comment</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">new_comment</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;has_commented&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;You&#39;ve already commented.&quot;</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">comments</span><span class="o">.</span><span class="n">Comment</span><span class="p">(</span><span class="n">comment</span><span class="o">=</span><span class="n">new_comment</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;has_commented&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;Thanks for your comment!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这个简单的视图登录了站点的一个“成员”：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">Member</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">check_password</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]):</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;member_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;You&#39;re logged in.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;Your username and password didn&#39;t match.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>...而这一个则根据上面的 <code class="docutils literal notranslate"><span class="pre">login()</span></code> 方法将成员注销：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">logout</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;member_id&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;You&#39;re logged out.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>标准的 <a class="reference internal" href="../auth/default.html#django.contrib.auth.logout" title="django.contrib.auth.logout"><code class="xref py py-meth docutils literal notranslate"><span class="pre">django.contrib.auth.logout()</span></code></a> 函数实际上做了更多的工作，以防止意外的数据泄露。它调用 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 的 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.flush" title="django.contrib.sessions.backends.base.SessionBase.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a> 方法。我们在这个示例中只是演示如何使用会话对象，而不是完整的 <code class="docutils literal notranslate"><span class="pre">logout()</span></code> 实现。</p>
+</div>
+</div>
+<div class="section" id="s-setting-test-cookies">
+<span id="setting-test-cookies"></span><h2>设置测试 cookie<a class="headerlink" href="#setting-test-cookies" title="永久链接至标题">¶</a></h2>
+<p>作为一种便利，Django 提供了一种测试用户浏览器是否接受 cookie 的方法。在视图中调用 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 的 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.set_test_cookie" title="django.contrib.sessions.backends.base.SessionBase.set_test_cookie"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_test_cookie()</span></code></a> 方法，并在后续的视图中调用 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.test_cookie_worked" title="django.contrib.sessions.backends.base.SessionBase.test_cookie_worked"><code class="xref py py-meth docutils literal notranslate"><span class="pre">test_cookie_worked()</span></code></a> -- 不要在同一个视图调用中执行。</p>
+<p>这种 <code class="docutils literal notranslate"><span class="pre">set_test_cookie()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">test_cookie_worked()</span></code> 之间的分离方式是由于 cookie 的工作方式所必需的。当你设置一个 cookie 时，你实际上无法知道浏览器是否接受了它，直到浏览器的下一个请求。</p>
+<p>使用 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.delete_test_cookie" title="django.contrib.sessions.backends.base.SessionBase.delete_test_cookie"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_test_cookie()</span></code></a> 来清理。在验证了测试 cookie 有效后执行这个操作。</p>
+<p>这里是一个典型的用法示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponse</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+
+
+<span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">test_cookie_worked</span><span class="p">():</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete_test_cookie</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;You&#39;re logged in.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="s2">&quot;Please enable cookies and try again.&quot;</span><span class="p">)</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">set_test_cookie</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;foo/login_form.html&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-using-sessions-out-of-views">
+<span id="using-sessions-out-of-views"></span><h2>在视图外使用会话<a class="headerlink" href="#using-sessions-out-of-views" title="永久链接至标题">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>本节中的示例直接从 <code class="docutils literal notranslate"><span class="pre">django.contrib.sessions.backends.db</span></code> 后端导入 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 对象。在你自己的代码中，你应该考虑从由 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a> 指定的会话引擎中导入 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code>，如下所示：</p>
+<div class="last highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">import_module</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SessionStore</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">SESSION_ENGINE</span><span class="p">)</span><span class="o">.</span><span class="n">SessionStore</span>
+</pre></div>
+</div>
+</div>
+<p>在视图之外，有一个 API 可用于操作会话数据：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.sessions.backends.db</span> <span class="kn">import</span> <span class="n">SessionStore</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">SessionStore</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># stored as seconds since epoch since datetimes are not serializable in JSON.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;last_login&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1376587691</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">session_key</span>
+<span class="go">&#39;2b1189a188b44ad18c35e113ac6ceead&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">SessionStore</span><span class="p">(</span><span class="n">session_key</span><span class="o">=</span><span class="s2">&quot;2b1189a188b44ad18c35e113ac6ceead&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">[</span><span class="s2">&quot;last_login&quot;</span><span class="p">]</span>
+<span class="go">1376587691</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SessionStore.create()</span></code> 用于创建一个新的会话（即，一个未从会话存储加载并且 <code class="docutils literal notranslate"><span class="pre">session_key=None</span></code> 的会话）。<code class="docutils literal notranslate"><span class="pre">save()</span></code> 用于保存一个已存在的会话（即，从会话存储加载的会话）。在新会话上调用 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 也可能有效，但有小概率生成与现有会话冲突的 <code class="docutils literal notranslate"><span class="pre">session_key</span></code>。<code class="docutils literal notranslate"><span class="pre">create()</span></code> 调用 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 并循环直到生成一个未使用的 <code class="docutils literal notranslate"><span class="pre">session_key</span></code>。</p>
+<p>如果你使用的是 <code class="docutils literal notranslate"><span class="pre">django.contrib.sessions.backends.db</span></code> 后端，每个会话都是一个普通的 Django 模型。<code class="docutils literal notranslate"><span class="pre">Session</span></code> 模型在 <a class="reference external" href="https://github.com/django/django/blob/main/django/contrib/sessions/models.py">django/contrib/sessions/models.py</a> 中定义。因为它是一个普通的模型，所以你可以使用普通的 Django 数据库 API 访问会话：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.sessions.models</span> <span class="kn">import</span> <span class="n">Session</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="s2">&quot;2b1189a188b44ad18c35e113ac6ceead&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">expire_date</span>
+<span class="go">datetime.datetime(2005, 8, 20, 13, 35, 12)</span>
+</pre></div>
+</div>
+<p>请注意，你需要调用 <a class="reference internal" href="#django.contrib.sessions.base_session.AbstractBaseSession.get_decoded" title="django.contrib.sessions.base_session.AbstractBaseSession.get_decoded"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_decoded()</span></code></a> 来获取会话字典。这是必要的，因为字典是以编码格式存储的：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">session_data</span>
+<span class="go">&#39;KGRwMQpTJ19hdXRoX3VzZXJfaWQnCnAyCkkxCnMuMTExY2ZjODI2Yj...&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">get_decoded</span><span class="p">()</span>
+<span class="go">{&#39;user_id&#39;: 42}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-when-sessions-are-saved">
+<span id="when-sessions-are-saved"></span><h2>当会话被保存时<a class="headerlink" href="#when-sessions-are-saved" title="永久链接至标题">¶</a></h2>
+<p>默认情况下，只有当会话被修改时，Django 才会保存到会话数据库，也就是说，如果它的字典值中有任何一个被赋值或删除：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Session is modified.</span>
+<span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span>
+
+<span class="c1"># Session is modified.</span>
+<span class="k">del</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;foo&quot;</span><span class="p">]</span>
+
+<span class="c1"># Session is modified.</span>
+<span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;foo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># Gotcha: Session is NOT modified, because this alters</span>
+<span class="c1"># request.session[&#39;foo&#39;] instead of request.session.</span>
+<span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;foo&quot;</span><span class="p">][</span><span class="s2">&quot;bar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;baz&quot;</span>
+</pre></div>
+</div>
+<p>在上面的示例的最后一种情况中，我们可以通过在会话对象上设置 <code class="docutils literal notranslate"><span class="pre">modified</span></code> 属性来明确告诉会话对象它已被修改：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">modified</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>要更改这个默认行为，将 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_SAVE_EVERY_REQUEST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_SAVE_EVERY_REQUEST</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。当设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，Django 将在每个请求上将会话保存到数据库中。</p>
+<p>请注意，只有在创建或修改会话时才会发送会话 cookie。如果 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_SAVE_EVERY_REQUEST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_SAVE_EVERY_REQUEST</span></code></a> 是 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则会在每个请求上发送会话 cookie。</p>
+<p>类似地，会话 cookie 的 <code class="docutils literal notranslate"><span class="pre">expires</span></code> 部分在每次发送会话 cookie 时都会更新。</p>
+<p>如果响应状态代码为 500，会话不会被保存。</p>
+</div>
+<div class="section" id="s-browser-length-sessions-vs-persistent-sessions">
+<span id="s-browser-length-vs-persistent-sessions"></span><span id="browser-length-sessions-vs-persistent-sessions"></span><span id="browser-length-vs-persistent-sessions"></span><h2>浏览器长度会话与持久会话<a class="headerlink" href="#browser-length-sessions-vs-persistent-sessions" title="永久链接至标题">¶</a></h2>
+<p>你可以使用 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_EXPIRE_AT_BROWSER_CLOSE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_EXPIRE_AT_BROWSER_CLOSE</span></code></a> 设置来控制会话框架是否使用浏览器长度会话还是持久会话。</p>
+<p>默认情况下， <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_EXPIRE_AT_BROWSER_CLOSE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_EXPIRE_AT_BROWSER_CLOSE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，这意味着会话 cookie 将在用户的浏览器中存储，时间为 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a> 的值。如果你不希望用户每次打开浏览器时都要登录，可以使用这个设置。</p>
+<p>如果 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_EXPIRE_AT_BROWSER_CLOSE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_EXPIRE_AT_BROWSER_CLOSE</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，Django 将使用浏览器长度的 cookie -- 即当用户关闭浏览器时立即过期的 cookie。如果你希望用户每次打开浏览器时都需要登录，可以使用这个设置。</p>
+<p>这个设置是全局默认设置，可以通过在每个会话级别上显式调用 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 的 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.set_expiry" title="django.contrib.sessions.backends.base.SessionBase.set_expiry"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_expiry()</span></code></a> 方法来覆盖，如上面在 <a class="reference internal" href="#using-sessions-in-views">在视图中使用会话</a> 部分所述。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">一些浏览器（例如Chrome）提供了允许用户在关闭并重新打开浏览器后继续浏览会话的设置。在某些情况下，这可能会影响到 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_EXPIRE_AT_BROWSER_CLOSE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_EXPIRE_AT_BROWSER_CLOSE</span></code></a> 设置，并阻止会话在关闭浏览器时过期。在测试启用了 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_EXPIRE_AT_BROWSER_CLOSE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_EXPIRE_AT_BROWSER_CLOSE</span></code></a> 设置的 Django 应用程序时，请注意这一点。</p>
+</div>
+</div>
+<div class="section" id="s-clearing-the-session-store">
+<span id="s-id2"></span><span id="clearing-the-session-store"></span><span id="id2"></span><h2>清除会话存储<a class="headerlink" href="#clearing-the-session-store" title="永久链接至标题">¶</a></h2>
+<p>随着用户在你的网站上创建新的会话，会话数据可能会在你的会话存储中累积。如果你使用的是数据库后端，<code class="docutils literal notranslate"><span class="pre">django_session</span></code> 数据库表会增长。如果你使用的是文件后端，你的临时目录会包含越来越多的文件。</p>
+<p>要理解这个问题，考虑一下数据库后端的情况。当用户登录时，Django 会向 <code class="docutils literal notranslate"><span class="pre">django_session</span></code> 数据库表添加一行记录。每当会话数据发生更改时，Django 会更新此行记录。如果用户手动注销，Django 会删除这行记录。但如果用户没有注销，这行记录永远不会被删除。文件后端也有类似的过程。</p>
+<p>Django <em>不会</em> 自动清除过期的会话。因此，你需要定期清除过期的会话。Django 为此提供了一个清理管理命令：<a class="reference internal" href="../../ref/django-admin.html#django-admin-clearsessions"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">clearsessions</span></code></a>。建议定期调用这个命令，例如作为每日的 cron 作业。</p>
+<p>请注意，缓存后端不会受到这个问题的影响，因为缓存会自动删除过时的数据。同样，cookie 后端也不会受到影响，因为会话数据是由用户的浏览器存储的。</p>
+</div>
+<div class="section" id="s-settings">
+<span id="settings"></span><h2>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h2>
+<p>一些 <a class="reference internal" href="../../ref/settings.html#settings-sessions"><span class="std std-ref">Django 设置</span></a> 允许你控制会话的行为：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_CACHE_ALIAS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_CACHE_ALIAS</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_AGE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_DOMAIN"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_DOMAIN</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_HTTPONLY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_HTTPONLY</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_NAME</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_PATH</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_SAMESITE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_SAMESITE</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_SECURE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_SECURE</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_EXPIRE_AT_BROWSER_CLOSE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_EXPIRE_AT_BROWSER_CLOSE</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_FILE_PATH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_FILE_PATH</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_SAVE_EVERY_REQUEST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_SAVE_EVERY_REQUEST</span></code></a></li>
+<li><a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_SERIALIZER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_SERIALIZER</span></code></a></li>
+</ul>
+</div>
+<div class="section" id="s-session-security">
+<span id="s-topics-session-security"></span><span id="session-security"></span><span id="topics-session-security"></span><h2>会话安全<a class="headerlink" href="#session-security" title="永久链接至标题">¶</a></h2>
+<p>站点内的子域名可以在整个域上为客户端设置 cookie。如果允许来自不受信任用户控制的子域的 cookie，这将可能导致会话固定。</p>
+<p>例如，攻击者可以登录到 <code class="docutils literal notranslate"><span class="pre">good.example.com</span></code> 并获得他们账户的有效会话。如果攻击者控制 <code class="docutils literal notranslate"><span class="pre">bad.example.com</span></code>，他们可以使用它来将他们的会话密钥发送给你，因为子域名被允许在 <code class="docutils literal notranslate"><span class="pre">*.example.com</span></code> 上设置 cookie。当你访问 <code class="docutils literal notranslate"><span class="pre">good.example.com</span></code> 时，你将以攻击者的身份登录，并可能不小心将你的敏感个人数据（如信用卡信息）输入到攻击者的帐户中。</p>
+<p>另一个可能的攻击是，如果 <code class="docutils literal notranslate"><span class="pre">good.example.com</span></code> 将其 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_COOKIE_DOMAIN"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_COOKIE_DOMAIN</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">&quot;example.com&quot;</span></code>，这将导致该站点的会话 cookie 被发送到 <code class="docutils literal notranslate"><span class="pre">bad.example.com</span></code>。</p>
+</div>
+<div class="section" id="s-technical-details">
+<span id="technical-details"></span><h2>技术细节<a class="headerlink" href="#technical-details" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>当使用 <a class="reference internal" href="#django.contrib.sessions.serializers.JSONSerializer" title="django.contrib.sessions.serializers.JSONSerializer"><code class="xref py py-class docutils literal notranslate"><span class="pre">JSONSerializer</span></code></a> 时，会话字典接受任何可以进行 <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">json</span></code></a> 序列化的值。</li>
+<li>会话数据保存在名为 <code class="docutils literal notranslate"><span class="pre">django_session</span></code> 的数据库表中。</li>
+<li>Django 只有它需要的时候才会发送 cookie 。如果你不想设置任何会话数据，它将不会发送会话 cookie 。</li>
+</ul>
+<div class="section" id="s-the-sessionstore-object">
+<span id="the-sessionstore-object"></span><h3><code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 对象<a class="headerlink" href="#the-sessionstore-object" title="永久链接至标题">¶</a></h3>
+<p>在内部处理会话时，Django 使用相应会话引擎的会话存储对象。按照约定，会话存储对象类的名称为 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code>，并位于由 <a class="reference internal" href="../../ref/settings.html#std-setting-SESSION_ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_ENGINE</span></code></a> 指定的模块中。</p>
+<p>Django 中的所有 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 类都继承自 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase" title="django.contrib.sessions.backends.base.SessionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SessionBase</span></code></a> 并实现了数据操作方法，具体如下：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">exists()</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">create()</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">save()</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">delete()</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">load()</span></code></li>
+<li><a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase.clear_expired" title="django.contrib.sessions.backends.base.SessionBase.clear_expired"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clear_expired()</span></code></a></li>
+</ul>
+<p>为了构建自定义的会话引擎或自定义现有的引擎，你可以创建一个继承自 <a class="reference internal" href="#django.contrib.sessions.backends.base.SessionBase" title="django.contrib.sessions.backends.base.SessionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SessionBase</span></code></a> 或任何其他现有的 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 类的新类。</p>
+<p>你可以扩展会话引擎，但通常在使用数据库后端的会话引擎时需要额外的努力（详见下一节的详细信息）。</p>
+</div>
+</div>
+<div class="section" id="s-extending-database-backed-session-engines">
+<span id="s-id3"></span><span id="extending-database-backed-session-engines"></span><span id="id3"></span><h2>扩展数据库后端的会话引擎<a class="headerlink" href="#extending-database-backed-session-engines" title="永久链接至标题">¶</a></h2>
+<p>可以通过继承 <a class="reference internal" href="#django.contrib.sessions.base_session.AbstractBaseSession" title="django.contrib.sessions.base_session.AbstractBaseSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractBaseSession</span></code></a> 和任何 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 类来创建一个基于 Django 中包含的数据库后端会话引擎（即 <code class="docutils literal notranslate"><span class="pre">db</span></code> 和 <code class="docutils literal notranslate"><span class="pre">cached_db</span></code> ）的自定义会话引擎。</p>
+<p><code class="docutils literal notranslate"><span class="pre">AbstractBaseSession</span></code> 和 <code class="docutils literal notranslate"><span class="pre">BaseSessionManager</span></code> 可以从 <code class="docutils literal notranslate"><span class="pre">django.contrib.sessions.base_session</span></code> 中导入，这样可以在 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中不包括 <code class="docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code> 的情况下导入它们。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.AbstractBaseSession">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">base_session.</span></code><code class="sig-name descname"><span class="pre">AbstractBaseSession</span></code><a class="headerlink" href="#django.contrib.sessions.base_session.AbstractBaseSession" title="永久链接至目标">¶</a></dt>
+<dd><p>抽象的基础会话模型。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.AbstractBaseSession.session_key">
+<code class="sig-name descname"><span class="pre">session_key</span></code><a class="headerlink" href="#django.contrib.sessions.base_session.AbstractBaseSession.session_key" title="永久链接至目标">¶</a></dt>
+<dd><p>主键。该字段本身最多可包含 40 个字符。当前的实现生成一个 32 个字符的字符串（由数字和小写 ASCII 字母的随机序列组成）。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.AbstractBaseSession.session_data">
+<code class="sig-name descname"><span class="pre">session_data</span></code><a class="headerlink" href="#django.contrib.sessions.base_session.AbstractBaseSession.session_data" title="永久链接至目标">¶</a></dt>
+<dd><p>一个包含编码和序列化的会话字典的字符串。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.AbstractBaseSession.expire_date">
+<code class="sig-name descname"><span class="pre">expire_date</span></code><a class="headerlink" href="#django.contrib.sessions.base_session.AbstractBaseSession.expire_date" title="永久链接至目标">¶</a></dt>
+<dd><p>一个指示会话过期时间的日期时间。</p>
+<p>已过期的会话对用户不可用，但它们仍然可能存储在数据库中，直到运行 <a class="reference internal" href="../../ref/django-admin.html#django-admin-clearsessions"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">clearsessions</span></code></a> 管理命令。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.AbstractBaseSession.get_session_store_class">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">get_session_store_class</span></code>()<a class="headerlink" href="#django.contrib.sessions.base_session.AbstractBaseSession.get_session_store_class" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个与此会话模型一起使用的会话存储类。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.AbstractBaseSession.get_decoded">
+<code class="sig-name descname"><span class="pre">get_decoded</span></code>()<a class="headerlink" href="#django.contrib.sessions.base_session.AbstractBaseSession.get_decoded" title="永久链接至目标">¶</a></dt>
+<dd><p>返回解码后的会话数据。</p>
+<p>解码由会话存储类执行。</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>你还可以通过继承 <a class="reference internal" href="#django.contrib.sessions.base_session.BaseSessionManager" title="django.contrib.sessions.base_session.BaseSessionManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSessionManager</span></code></a> 来自定义模型管理器：</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.BaseSessionManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">base_session.</span></code><code class="sig-name descname"><span class="pre">BaseSessionManager</span></code><a class="headerlink" href="#django.contrib.sessions.base_session.BaseSessionManager" title="永久链接至目标">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.BaseSessionManager.encode">
+<code class="sig-name descname"><span class="pre">encode</span></code>(<em><span class="n"><span class="pre">session_dict</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.base_session.BaseSessionManager.encode" title="永久链接至目标">¶</a></dt>
+<dd><p>将给定的会话字典序列化并编码为字符串后返回。</p>
+<p>编码由与模型类相关联的会话存储类执行。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.base_session.BaseSessionManager.save">
+<code class="sig-name descname"><span class="pre">save</span></code>(<em><span class="n"><span class="pre">session_key</span></span></em>, <em><span class="n"><span class="pre">session_dict</span></span></em>, <em><span class="n"><span class="pre">expire_date</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.base_session.BaseSessionManager.save" title="永久链接至目标">¶</a></dt>
+<dd><p>保存提供的会话键的会话数据，如果数据为空，则删除该会话。</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>通过覆盖下面描述的方法和属性来实现对 <code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 类的定制：</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.db.SessionStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">backends.db.</span></code><code class="sig-name descname"><span class="pre">SessionStore</span></code><a class="headerlink" href="#django.contrib.sessions.backends.db.SessionStore" title="永久链接至目标">¶</a></dt>
+<dd><p>实现基于数据库的会话存储。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.db.SessionStore.get_model_class">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">get_model_class</span></code>()<a class="headerlink" href="#django.contrib.sessions.backends.db.SessionStore.get_model_class" title="永久链接至目标">¶</a></dt>
+<dd><p>如果需要，覆盖此方法以返回自定义的会话模型。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.db.SessionStore.create_model_instance">
+<code class="sig-name descname"><span class="pre">create_model_instance</span></code>(<em><span class="n"><span class="pre">data</span></span></em>)<a class="headerlink" href="#django.contrib.sessions.backends.db.SessionStore.create_model_instance" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个新的会话模型对象实例，该对象表示当前会话状态。</p>
+<p>覆盖此方法可以在数据保存到数据库之前修改会话模型数据。</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.cached_db.SessionStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">backends.cached_db.</span></code><code class="sig-name descname"><span class="pre">SessionStore</span></code><a class="headerlink" href="#django.contrib.sessions.backends.cached_db.SessionStore" title="永久链接至目标">¶</a></dt>
+<dd><p>实现了基于缓存的数据库后端的会话存储。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.sessions.backends.cached_db.SessionStore.cache_key_prefix">
+<code class="sig-name descname"><span class="pre">cache_key_prefix</span></code><a class="headerlink" href="#django.contrib.sessions.backends.cached_db.SessionStore.cache_key_prefix" title="永久链接至目标">¶</a></dt>
+<dd><p>用于构建缓存键字符串的会话键前缀。</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="s-example">
+<span id="example"></span><h3>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h3>
+<p>下面的示例展示了一个自定义的基于数据库的会话引擎，其中包括一个额外的数据库列来存储账户 ID（从而提供了查询账户的所有活动会话的选项）：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.sessions.backends.db</span> <span class="kn">import</span> <span class="n">SessionStore</span> <span class="k">as</span> <span class="n">DBStore</span>
+<span class="kn">from</span> <span class="nn">django.contrib.sessions.base_session</span> <span class="kn">import</span> <span class="n">AbstractBaseSession</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">CustomSession</span><span class="p">(</span><span class="n">AbstractBaseSession</span><span class="p">):</span>
+    <span class="n">account_id</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">db_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_session_store_class</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SessionStore</span>
+
+
+<span class="k">class</span> <span class="nc">SessionStore</span><span class="p">(</span><span class="n">DBStore</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_model_class</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CustomSession</span>
+
+    <span class="k">def</span> <span class="nf">create_model_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">create_model_instance</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">account_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_auth_user_id&quot;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="n">account_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">account_id</span> <span class="o">=</span> <span class="n">account_id</span>
+        <span class="k">return</span> <span class="n">obj</span>
+</pre></div>
+</div>
+<p>如果你正在从 Django 内置的 <code class="docutils literal notranslate"><span class="pre">cached_db</span></code> 会话存储迁移到一个基于 <code class="docutils literal notranslate"><span class="pre">cached_db</span></code> 的自定义存储，你应该覆盖缓存键前缀以防止命名空间冲突：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SessionStore</span><span class="p">(</span><span class="n">CachedDBStore</span><span class="p">):</span>
+    <span class="n">cache_key_prefix</span> <span class="o">=</span> <span class="s2">&quot;mysessions.custom_cached_db_backend&quot;</span>
+
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-session-ids-in-urls">
+<span id="session-ids-in-urls"></span><h2>URL 中的会话 ID<a class="headerlink" href="#session-ids-in-urls" title="永久链接至标题">¶</a></h2>
+<p>Django 会话框架完全且仅基于 cookie。与 PHP 不同，它不会作为最后的手段将会话 ID 放在 URL 中。这是一个有意的设计决策。这种行为不仅会使 URL 变得难看，还会使你的网站容易受到通过&quot;Referer&quot;头部进行会话 ID 窃取的攻击。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何使用会话</a><ul>
+<li><a class="reference internal" href="#enabling-sessions">启用会话</a></li>
+<li><a class="reference internal" href="#configuring-the-session-engine">配置会话引擎</a><ul>
+<li><a class="reference internal" href="#using-database-backed-sessions">使用基于数据库的会话</a></li>
+<li><a class="reference internal" href="#using-cached-sessions">使用缓存会话</a></li>
+<li><a class="reference internal" href="#using-file-based-sessions">使用基于文件的会话</a></li>
+<li><a class="reference internal" href="#using-cookie-based-sessions">使用基于 cookie 的会话</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-sessions-in-views">在视图中使用会话</a><ul>
+<li><a class="reference internal" href="#session-serialization">会话序列化</a><ul>
+<li><a class="reference internal" href="#bundled-serializers">捆绑的序列化器</a></li>
+<li><a class="reference internal" href="#write-your-own-serializer">编写你自己的序列化器</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#session-object-guidelines">会话对象指南</a></li>
+<li><a class="reference internal" href="#examples">示例</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#setting-test-cookies">设置测试 cookie</a></li>
+<li><a class="reference internal" href="#using-sessions-out-of-views">在视图外使用会话</a></li>
+<li><a class="reference internal" href="#when-sessions-are-saved">当会话被保存时</a></li>
+<li><a class="reference internal" href="#browser-length-sessions-vs-persistent-sessions">浏览器长度会话与持久会话</a></li>
+<li><a class="reference internal" href="#clearing-the-session-store">清除会话存储</a></li>
+<li><a class="reference internal" href="#settings">配置</a></li>
+<li><a class="reference internal" href="#session-security">会话安全</a></li>
+<li><a class="reference internal" href="#technical-details">技术细节</a><ul>
+<li><a class="reference internal" href="#the-sessionstore-object"><code class="docutils literal notranslate"><span class="pre">SessionStore</span></code> 对象</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#extending-database-backed-session-engines">扩展数据库后端的会话引擎</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#session-ids-in-urls">URL 中的会话 ID</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="middleware.html"
+                          title="上一章">中间件</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../forms/index.html"
+                          title="下一章">使用表单</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/http/sessions.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="middleware.html" title="中间件">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="../forms/index.html" title="使用表单">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

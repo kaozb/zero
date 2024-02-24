@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>提交代码 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="邮件列表和论坛" href="../mailing-lists.html" />
+    <link rel="prev" title="使 Django 本地化" href="localizing.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="localizing.html" title="使 Django 本地化">previous</a>
+     |
+    <a href="../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="../mailing-lists.html" title="邮件列表和论坛">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-contributing-committing-code">
+            
+  <div class="section" id="s-committing-code">
+<span id="committing-code"></span><h1>提交代码<a class="headerlink" href="#committing-code" title="永久链接至标题">¶</a></h1>
+<p>本部分针对提交者以及任何有兴趣了解如何为Django贡献代码的人员。 如果您是想向Django贡献代码的社区成员，请查看doc：&quot;writing-code/working-with-git&quot;</p>
+<div class="section" id="s-handling-pull-requests">
+<span id="s-id1"></span><span id="handling-pull-requests"></span><span id="id1"></span><h2>处理 pull 请求<a class="headerlink" href="#handling-pull-requests" title="永久链接至标题">¶</a></h2>
+<p>因为Django现在是托管在GitHub上的，所以大多数补丁都是以 pull requests 的形式提供的。</p>
+<p>提交拉取请求时，请确保每个单独的提交符合下面描述的提交准则。我们期望贡献者提供最好的拉取请求。在实践中，合并者（很可能更熟悉提交准则）可能会决定自行将提交符合标准。</p>
+<p>你可能希望使用 Jenkins 或 GitHub actions 来测试拉取请求，其中之一是不会自动运行的拉取请求构建器，比如 Oracle 或 Selenium。请查看 <a class="reference external" href="https://code.djangoproject.com/wiki/CI">CI wiki 页面</a> 获取说明。</p>
+<p>如果您发现自己经常在本地检出拉取请求，这个 Git 别名将会很有帮助：</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[alias]</span><span class="w"></span>
+<span class="w">    </span><span class="na">pr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">!sh -c \&quot;git fetch upstream pull/${1}/head:pr/${1} &amp;&amp; git checkout pr/${1}\&quot;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>将它添加到你的 <code class="docutils literal notranslate"><span class="pre">~/.gitconfig</span></code> 文件中，并且把 <code class="docutils literal notranslate"><span class="pre">upstream</span></code> 改为 <code class="docutils literal notranslate"><span class="pre">django/django</span></code> 。然后你就可以通过运行 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pr</span> <span class="pre">####</span></code> 来检出对应的 pull request 了。</p>
+<p>到了这个阶段,你可以着手于代码.使用&quot;git rebase -i&quot;和&quot;git commit --ammend&quot; 来确保你的提交准确无误. 一旦你准备好了:</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="c1"># Pull in the latest changes from main.</span>
+<span class="gp">$ </span>git checkout main
+<span class="gp">$ </span>git pull upstream main
+<span class="gp">$ </span><span class="c1"># Rebase the pull request on main.</span>
+<span class="gp">$ </span>git checkout pr/####
+<span class="gp">$ </span>git rebase main
+<span class="gp">$ </span>git checkout main
+<span class="gp">$ </span><span class="c1"># Merge the work as &quot;fast-forward&quot; to main to avoid a merge commit.</span>
+<span class="gp">$ </span><span class="c1"># (in practice, you can omit &quot;--ff-only&quot; since you just rebased)</span>
+<span class="gp">$ </span>git merge --ff-only pr/XXXX
+<span class="gp">$ </span><span class="c1"># If you&#39;re not sure if you did things correctly, check that only the</span>
+<span class="gp">$ </span><span class="c1"># changes you expect will be pushed to upstream.</span>
+<span class="gp">$ </span>git push --dry-run upstream main
+<span class="gp">$ </span><span class="c1"># Push!</span>
+<span class="gp">$ </span>git push upstream main
+<span class="gp">$ </span><span class="c1"># Delete the pull request branch.</span>
+<span class="gp">$ </span>git branch -d pr/xxxx
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> <span class="c1">REM Pull in the latest changes from main.</span>
+<span class="gp">...\&gt;</span> git checkout main
+<span class="gp">...\&gt;</span> git pull upstream main
+<span class="gp">...\&gt;</span> <span class="c1">REM Rebase the pull request on main.</span>
+<span class="gp">...\&gt;</span> git checkout pr/####
+<span class="gp">...\&gt;</span> git rebase main
+<span class="gp">...\&gt;</span> git checkout main
+<span class="gp">...\&gt;</span> <span class="c1">REM Merge the work as &quot;fast-forward&quot; to main to avoid a merge commit.</span>
+<span class="gp">...\&gt;</span> <span class="c1">REM (in practice, you can omit &quot;--ff-only&quot; since you just rebased)</span>
+<span class="gp">...\&gt;</span> git merge --ff-only pr/XXXX
+<span class="gp">...\&gt;</span> <span class="c1">REM If you&#39;re not sure if you did things correctly, check that only the</span>
+<span class="gp">...\&gt;</span> <span class="c1">REM changes you expect will be pushed to upstream.</span>
+<span class="gp">...\&gt;</span> git push --dry-run upstream main
+<span class="gp">...\&gt;</span> <span class="c1">REM Push!</span>
+<span class="gp">...\&gt;</span> git push upstream main
+<span class="gp">...\&gt;</span> <span class="c1">REM Delete the pull request branch.</span>
+<span class="gp">...\&gt;</span> git branch -d pr/xxxx
+</pre></div>
+</section>
+</div>
+<p>在将主分支重新基于重置后、合并并推送到上游之前，强制推送到分支。这样可以使主分支和分支上的提交哈希匹配，自动关闭拉取请求。</p>
+<p>如果拉请求不需要合并为多个提交，则可以在网页上使用Github的“挤压和合并”按钮。根据需要编辑提交消息以符合：ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>The guidelines&lt;committing-guidelines&gt;`并删除自动附加到消息第一行的请求编号。</p>
+<p>当重写pull请求的提交历史时，目标是使Django的提交历史尽可能可用：</p>
+<ul class="simple">
+<li>如果补丁包含来回提交，则将其重写为一个。例如，如果提交添加了一些代码，第二个提交修复了第一次提交中引入的样式问题，那么这些提交应该在合并之前被压缩。</li>
+<li>通过逻辑分组对不同提交进行单独更改：如果在对文件进行其他更改的同时进行样式清理，则将更改分成两个不同的提交将使查看历史记录变得更容易。</li>
+<li>注意拉取请求中上游分支的合并。</li>
+<li>测试应该通过，文档应该在每次提交后构建。测试和文档都不应该发出警告。</li>
+<li>随意和小型的补丁通常最好在一次提交中完成。如果有意义，可以将中型到大型工作分成多个提交。</li>
+</ul>
+<p>实用性胜过纯粹性，因此由每个合并者决定拉取请求的历史重塑程度。主要目标是与社区互动、完成工作并拥有可用的提交历史。</p>
+</div>
+<div class="section" id="s-committing-guidelines">
+<span id="s-id2"></span><span id="committing-guidelines"></span><span id="id2"></span><h2>提交指南<a class="headerlink" href="#committing-guidelines" title="永久链接至标题">¶</a></h2>
+<p>此外，在将代码提交到Django的Git存储库时，请遵循以下准则：</p>
+<ul>
+<li><p class="first">永远不要通过强制推动来改变“django / django``分支的已发布历史。如果您绝对必须（出于安全原因），请先与团队讨论情况。</p>
+</li>
+<li><p class="first">对于任何中等到大规模的更改，其中 &quot;中等到大规模&quot; 根据你的判断，都请在进行更改之前在 <a class="reference external" href="https://forum.djangoproject.com/">Django 论坛</a> 或 <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> 邮件列表上提出讨论。</p>
+<p>如果你提出了某个问题，而没有人回应，请不要误以为你的想法很好，并且应该立即实施，因为没有人反对它。并不是每个人都有足够的时间立即阅读邮件列表中的讨论，所以你可能需要等待几天才能得到回应。</p>
+</li>
+<li><p class="first">以过去时态写出详细的提交消息，而不是现在时。</p>
+<ul class="simple">
+<li>正确：&quot;Fixed Unicode bug in RSS API.&quot;</li>
+<li>错误：&quot;Fixes Unicode bug in RSS API.&quot;</li>
+<li>错误：&quot;Fixing Unicode bug in RSS API.&quot;</li>
+</ul>
+<p>提交消息最多应为72个字符。 应该有一个主题行，用空白行分隔，然后是72个字符行的段落。 限制很软。 对于主题行，越短越好。 在提交消息的主体中，更多细节优于更少：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Fixed #18307 -- Added git workflow guidelines.
+
+Refactored the Django&#39;s documentation to remove mentions of SVN
+specific tasks. Added guidelines of how to use Git, GitHub, and
+how to use pull request together with Trac instead.
+</pre></div>
+</div>
+<p>可以在提交消息中添加对贡献者的感谢：“感谢A提供报告，B提供补丁，C提供审查。” 也推荐使用 git 的 Co-Authored-By _ 功能。</p>
+</li>
+<li><p class="first">对于提交到分支，请在提交消息前面加上分支名称。例如：“[1.4.x]Fixed XXXX——增加了对思维阅读的支持。”</p>
+</li>
+<li><p class="first">限制承诺最细微的变化是有意义的。这意味着，使用频繁的小额承诺，而不是很少的大额承诺。例如，如果实现功能X需要对库Y做一个小的更改，那么首先将更改提交到库Y，然后在单独的提交中提交功能X。这对帮助每个人跟踪你的变化有很大的帮助。</p>
+</li>
+<li><p class="first">将错误修复与功能更改分开。根据：ref:supported versions policy，可能需要将错误修复返回到稳定分支。</p>
+</li>
+<li><p class="first">如果你的提交解决了 Django <a class="reference external" href="https://code.djangoproject.com/">ticket tracker</a> 中的一个 ticket，请在提交信息的开头添加 &quot;Fixed #xxxxx&quot;，其中 ”xxxxx&quot; 是你提交所解决的 ticket 的编号。示例：&quot;Fixed #123 -- Added whizbang feature.&quot; 。当系统检测到这种提交信息格式时，系统会自动关闭所指向的 ticket 并将完整的提交信息作为评论发出。</p>
+<p>如果你好奇的话，我们使用 <a class="reference external" href="https://github.com/trac-hacks/trac-github">Trac plugin</a> 来实现这种机制。</p>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">请注意，Trac 集成对拉取请求一无所知。因此，如果你在提交信息中使用了 &quot; closes #400 &quot; 这样的短语来关闭拉取请求，GitHub 将关闭该拉取请求，但 Trac 插件将不会关闭 Trac 中相同编号的工单。</p>
+</div>
+<ul>
+<li><p class="first">如果你只想要在提交信息中引用 Django <a class="reference external" href="https://code.djangoproject.com/">ticket tracker</a> 中的某个 ticket ，但并*不*想要关闭它时，可以使用 “Ref #xxxxx&quot;，其中 &quot;xxxxx&quot; 是你的提交想引用的 ticket 的编号。这会触发系统自动的在被引用的 ticket 下发送一条评论。</p>
+</li>
+<li><p class="first">使用此模式为后端端口编写提交消息：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[&lt;Django version&gt;] Fixed &lt;ticket&gt; -- &lt;description&gt;
+
+Backport of &lt;revision&gt; from &lt;branch&gt;.
+</pre></div>
+</div>
+<p>例如：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[1.3.x] Fixed #17028 -- Changed diveintopython.org -&gt; diveintopython.net.
+
+Backport of 80c0cbf1c97047daed2c5b41b296bbc56fe1d7e3 from main.
+</pre></div>
+</div>
+<p>有一个 <a class="reference external" href="https://code.djangoproject.com/wiki/MergerTips#AutomatingBackports">维基上的脚本</a> 可以自动化这个过程。</p>
+<p>如果提交修复了回归，请将其包含在提交消息中：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Regression in 6ecccad711b52f9273b1acb07a57d3f806e93928.
+</pre></div>
+</div>
+<p>（使用引入回归的提交哈希）。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-reverting-commits">
+<span id="reverting-commits"></span><h2>恢复提交<a class="headerlink" href="#reverting-commits" title="永久链接至标题">¶</a></h2>
+<p>没有人是完美的；一些错误可能会被提交</p>
+<p>但要尽力确保不出现错误。仅仅因为我们有一个回退政策并不意味着你的责任就可以放松，你仍然需要追求最高的质量。真的：在首次提交之前，仔细检查你的工作，或者让另一个合并者在你提交之前检查它！</p>
+<p>当你发现了一个错误的提交，请遵循如下步骤：</p>
+<ul class="simple">
+<li>可能的话，让原始作者撤回他们的提交。</li>
+<li>不要在未获得原始作者同意的情况下还原其他作者的更改。</li>
+<li>使用 git revert -- 会回退提交，但原提交依然会留在提交历史中。</li>
+<li>如果无法联系到原作者（在合理的时间内，大约一天左右），而问题很严重，比如严重的错误、重大的测试失败等等，那么请在 <a class="reference external" href="https://forum.djangoproject.com/">Django 论坛</a> 或 <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> 邮件列表上征求意见，如果没有反对意见，那么就回退更改。</li>
+<li>如果问题不大（比如说冻结后的提交），就等着吧。</li>
+<li>如果在合并者和即将回退更改的人之间存在分歧，那么请尝试在 <a class="reference external" href="https://forum.djangoproject.com/">Django 论坛</a> 或 <a class="reference internal" href="../mailing-lists.html#django-developers-mailing-list"><span class="std std-ref">django-developers</span></a> 邮件列表上解决。如果无法达成一致意见，那么应该进行投票。</li>
+<li>如果该提交引入了一个已确认或已披露的安全漏洞，那么该提交可能会在未经任何允许的情况下被立即还原。</li>
+<li>如果提交的内容破坏了发布分支，发布分支的维护者可以在不经许可的情况下将该提交回退。</li>
+<li>如果错误地将主题分支推送到 &quot;django/django&quot;，请将其删除。例如，如果你做了：<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">upstream</span> <span class="pre">feature_antigravity`</span></code>，那么做一个反向推送：<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">upstream:feature_antigravity</span></code>。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">提交代码</a><ul>
+<li><a class="reference internal" href="#handling-pull-requests">处理 pull 请求</a></li>
+<li><a class="reference internal" href="#committing-guidelines">提交指南</a></li>
+<li><a class="reference internal" href="#reverting-commits">恢复提交</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="localizing.html"
+                          title="上一章">使 Django 本地化</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../mailing-lists.html"
+                          title="下一章">邮件列表和论坛</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/internals/contributing/committing-code.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="localizing.html" title="使 Django 本地化">previous</a>
+     |
+    <a href="../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="../mailing-lists.html" title="邮件列表和论坛">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

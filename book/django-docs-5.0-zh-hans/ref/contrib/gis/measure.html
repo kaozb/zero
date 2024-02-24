@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>测量对象 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="GEOS API" href="geos.html" />
+    <link rel="prev" title="地理数据库函数" href="functions.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="functions.html" title="地理数据库函数">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="geos.html" title="GEOS API">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-measure">
+            
+  <div class="section" id="s-module-django.contrib.gis.measure">
+<span id="s-measurement-objects"></span><span id="module-django.contrib.gis.measure"></span><span id="measurement-objects"></span><h1>测量对象<a class="headerlink" href="#module-django.contrib.gis.measure" title="永久链接至标题">¶</a></h1>
+<p><a class="reference internal" href="#module-django.contrib.gis.measure" title="django.contrib.gis.measure: GeoDjango's distance and area measurement objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.gis.measure</span></code></a> 模块包含了方便表示距离和面积单位的对象。具体来说，它实现了两个对象，<a class="reference internal" href="#django.contrib.gis.measure.Distance" title="django.contrib.gis.measure.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.measure.Area" title="django.contrib.gis.measure.Area"><code class="xref py py-class docutils literal notranslate"><span class="pre">Area</span></code></a> —— 这两个对象都可以通过分别使用 <a class="reference internal" href="#django.contrib.gis.measure.D" title="django.contrib.gis.measure.D"><code class="xref py py-class docutils literal notranslate"><span class="pre">D</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.measure.A" title="django.contrib.gis.measure.A"><code class="xref py py-class docutils literal notranslate"><span class="pre">A</span></code></a> 的便捷别名来访问。</p>
+<div class="section" id="s-example">
+<span id="example"></span><h2>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h2>
+<p>可以使用指示单位上下文的关键字参数来实例化 <a class="reference internal" href="#django.contrib.gis.measure.Distance" title="django.contrib.gis.measure.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> 对象。在下面的示例中，使用单位为千米（<code class="docutils literal notranslate"><span class="pre">km</span></code>）和英里（<code class="docutils literal notranslate"><span class="pre">mi</span></code>）来实例化两个不同的距离对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.measure</span> <span class="kn">import</span> <span class="n">D</span><span class="p">,</span> <span class="n">Distance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d1</span> <span class="o">=</span> <span class="n">Distance</span><span class="p">(</span><span class="n">km</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>
+<span class="go">5.0 km</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d2</span> <span class="o">=</span> <span class="n">D</span><span class="p">(</span><span class="n">mi</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># `D` is an alias for `Distance`</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+<span class="go">5.0 mi</span>
+</pre></div>
+</div>
+<p>要进行转换，访问首选单位属性以获取转换后的距离数量：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">mi</span><span class="p">)</span>  <span class="c1"># Converting 5 kilometers to miles</span>
+<span class="go">3.10685596119</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d2</span><span class="o">.</span><span class="n">km</span><span class="p">)</span>  <span class="c1"># Converting 5 miles to kilometers</span>
+<span class="go">8.04672</span>
+</pre></div>
+</div>
+<p>此外，可以在距离对象之间执行算术操作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d1</span> <span class="o">+</span> <span class="n">d2</span><span class="p">)</span>  <span class="c1"># Adding 5 miles to 5 kilometers</span>
+<span class="go">13.04672 km</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d2</span> <span class="o">-</span> <span class="n">d1</span><span class="p">)</span>  <span class="c1"># Subtracting 5 kilometers from 5 miles</span>
+<span class="go">1.89314403881 mi</span>
+</pre></div>
+</div>
+<p>两个 <a class="reference internal" href="#django.contrib.gis.measure.Distance" title="django.contrib.gis.measure.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> 对象相乘将产生一个 <a class="reference internal" href="#django.contrib.gis.measure.Area" title="django.contrib.gis.measure.Area"><code class="xref py py-class docutils literal notranslate"><span class="pre">Area</span></code></a> 对象，它使用单位的平方：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">d1</span> <span class="o">*</span> <span class="n">d2</span>  <span class="c1"># Returns an Area object.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">40.2336 sq_km</span>
+</pre></div>
+</div>
+<p>要确定单位的属性缩写是什么，可以使用 <code class="docutils literal notranslate"><span class="pre">unit_attname</span></code> 类方法：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Distance</span><span class="o">.</span><span class="n">unit_attname</span><span class="p">(</span><span class="s2">&quot;US Survey Foot&quot;</span><span class="p">))</span>
+<span class="go">survey_ft</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Distance</span><span class="o">.</span><span class="n">unit_attname</span><span class="p">(</span><span class="s2">&quot;centimeter&quot;</span><span class="p">))</span>
+<span class="go">cm</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-supported-units">
+<span id="s-id2"></span><span id="supported-units"></span><span id="id2"></span><h2>支持的单位<a class="headerlink" href="#supported-units" title="永久链接至标题">¶</a></h2>
+<table class="docutils">
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">单位属性</th>
+<th class="head">全名或别名</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">km</span></code></td>
+<td>Kilometre, Kilometer</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">mi</span></code></td>
+<td>Mile</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">m</span></code></td>
+<td>Meter, Metre</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">yd</span></code></td>
+<td>Yard</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">ft</span></code></td>
+<td>Foot, Foot (International)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">survey_ft</span></code></td>
+<td>U.S. Foot, US survey foot</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">inch</span></code></td>
+<td>Inches</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">cm</span></code></td>
+<td>Centimeter</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mm</span></code></td>
+<td>Millimetre, Millimeter</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">um</span></code></td>
+<td>Micrometer, Micrometre</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">british_ft</span></code></td>
+<td>British foot (Sears 1922)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">british_yd</span></code></td>
+<td>British yard (Sears 1922)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">british_chain_sears</span></code></td>
+<td>British chain (Sears 1922)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">indian_yd</span></code></td>
+<td>Indian yard, Yard (Indian)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">sears_yd</span></code></td>
+<td>Yard (Sears)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">clarke_ft</span></code></td>
+<td>Clarke's Foot</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">chain</span></code></td>
+<td>Chain</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">chain_benoit</span></code></td>
+<td>Chain (Benoit)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">chain_sears</span></code></td>
+<td>Chain (Sears)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">british_chain_benoit</span></code></td>
+<td>British chain (Benoit 1895 B)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">british_chain_sears_truncated</span></code></td>
+<td>British chain (Sears 1922 truncated)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">gold_coast_ft</span></code></td>
+<td>Gold Coast foot</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">link</span></code></td>
+<td>链接</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">link_benoit</span></code></td>
+<td>Link (Benoit)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">link_sears</span></code></td>
+<td>Link (Sears)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">clarke_link</span></code></td>
+<td>Clarke's link</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">fathom</span></code></td>
+<td>Fathom</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">rod</span></code></td>
+<td>Rod</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">furlong</span></code></td>
+<td>Furlong, Furrow Long</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">nm</span></code></td>
+<td>Nautical Mile</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">nm_uk</span></code></td>
+<td>Nautical Mile (UK)</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">german_m</span></code></td>
+<td>German legal metre</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last"><a class="reference internal" href="#django.contrib.gis.measure.Area" title="django.contrib.gis.measure.Area"><code class="xref py py-class docutils literal notranslate"><span class="pre">Area</span></code></a> 的属性与 <a class="reference internal" href="#django.contrib.gis.measure.Distance" title="django.contrib.gis.measure.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> 的属性相同，只是它们以 <code class="docutils literal notranslate"><span class="pre">sq_</span></code> 为前缀（面积单位是平方单位）。例如，<code class="docutils literal notranslate"><span class="pre">Area(sq_m=2)</span></code> 创建一个表示两平方米的 <a class="reference internal" href="#django.contrib.gis.measure.Area" title="django.contrib.gis.measure.Area"><code class="xref py py-class docutils literal notranslate"><span class="pre">Area</span></code></a> 对象。</p>
+</div>
+</div>
+<div class="section" id="s-measurement-api">
+<span id="measurement-api"></span><h2>测量 API<a class="headerlink" href="#measurement-api" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-distance">
+<span id="distance"></span><h3><code class="docutils literal notranslate"><span class="pre">Distance</span></code><a class="headerlink" href="#distance" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.Distance">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Distance</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../../../_modules/django/contrib/gis/measure.html#Distance"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.contrib.gis.measure.Distance" title="永久链接至目标">¶</a></dt>
+<dd><p>要初始化一个距离对象，请传递一个关键字，该关键字对应于所需的 <a class="reference internal" href="#supported-units"><span class="std std-ref">单位属性名称</span></a> 并设置所需的值。例如，以下代码创建一个表示 5 英里的距离对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">Distance</span><span class="p">(</span><span class="n">mi</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.Distance.__getattr__">
+<code class="sig-name descname"><span class="pre">__getattr__</span></code>(<em><span class="n"><span class="pre">unit_att</span></span></em>)<a class="headerlink" href="#django.contrib.gis.measure.Distance.__getattr__" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回与给定单位属性对应的距离值。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">km</span><span class="p">)</span>
+<span class="go">8.04672</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.Distance.unit_attname">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">unit_attname</span></code>(<em><span class="n"><span class="pre">unit_name</span></span></em>)<a class="headerlink" href="#django.contrib.gis.measure.Distance.unit_attname" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回给定完整单位名称的距离单位属性名称。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Distance</span><span class="o">.</span><span class="n">unit_attname</span><span class="p">(</span><span class="s2">&quot;Mile&quot;</span><span class="p">)</span>
+<span class="go">&#39;mi&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">D</span></code><a class="headerlink" href="#django.contrib.gis.measure.D" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.contrib.gis.measure.Distance" title="django.contrib.gis.measure.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> 类的别名。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-area">
+<span id="area"></span><h3><code class="docutils literal notranslate"><span class="pre">Area</span></code><a class="headerlink" href="#area" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.Area">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Area</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="reference internal" href="../../../_modules/django/contrib/gis/measure.html#Area"><span class="viewcode-link"><span class="pre">[源代码]</span></span></a><a class="headerlink" href="#django.contrib.gis.measure.Area" title="永久链接至目标">¶</a></dt>
+<dd><p>要初始化一个面积对象，请传入一个与所需的 <a class="reference internal" href="#supported-units"><span class="std std-ref">单位属性名称</span></a> 对应的关键字，并设置所需的值。例如，以下代码创建了一个表示 5 平方英里的面积对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Area</span><span class="p">(</span><span class="n">sq_mi</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.Area.__getattr__">
+<code class="sig-name descname"><span class="pre">__getattr__</span></code>(<em><span class="n"><span class="pre">unit_att</span></span></em>)<a class="headerlink" href="#django.contrib.gis.measure.Area.__getattr__" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回与给定单位属性对应的面积值。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">sq_km</span><span class="p">)</span>
+<span class="go">12.949940551680001</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.Area.unit_attname">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">unit_attname</span></code>(<em><span class="n"><span class="pre">unit_name</span></span></em>)<a class="headerlink" href="#django.contrib.gis.measure.Area.unit_attname" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回给定完整单位名称的面积单位属性名称。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Area</span><span class="o">.</span><span class="n">unit_attname</span><span class="p">(</span><span class="s2">&quot;Kilometer&quot;</span><span class="p">)</span>
+<span class="go">&#39;sq_km&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.measure.A">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">A</span></code><a class="headerlink" href="#django.contrib.gis.measure.A" title="永久链接至目标">¶</a></dt>
+<dd><p><a class="reference internal" href="#django.contrib.gis.measure.Area" title="django.contrib.gis.measure.Area"><code class="xref py py-class docutils literal notranslate"><span class="pre">Area</span></code></a> 类的别名。</p>
+</dd></dl>
+
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://koordinates.com/">Robert Coup</a> 是度量对象的初始作者，受到了 <a class="reference external" href="https://github.com/geopy/geopy/">geopy</a> 中 Brian Beck 的工作以及 Geoff Biggs 在机器人领域的维度单位方面的博士研究的启发。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">测量对象</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+<li><a class="reference internal" href="#supported-units">支持的单位</a></li>
+<li><a class="reference internal" href="#measurement-api">测量 API</a><ul>
+<li><a class="reference internal" href="#distance"><code class="docutils literal notranslate"><span class="pre">Distance</span></code></a></li>
+<li><a class="reference internal" href="#area"><code class="docutils literal notranslate"><span class="pre">Area</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="functions.html"
+                          title="上一章">地理数据库函数</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="geos.html"
+                          title="下一章">GEOS API</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/gis/measure.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="functions.html" title="地理数据库函数">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="geos.html" title="GEOS API">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

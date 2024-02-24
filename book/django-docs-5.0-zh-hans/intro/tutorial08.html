@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>编写你的第一个 Django 应用程序，第 8 部分 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="进阶指南：如何编写可重用程序" href="reusable-apps.html" />
+    <link rel="prev" title="编写你的第一个 Django 应用，第 7 部分" href="tutorial07.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="tutorial07.html" title="编写你的第一个 Django 应用，第 7 部分">previous</a>
+     |
+    <a href="index.html" title="开始" accesskey="U">up</a>
+   |
+    <a href="reusable-apps.html" title="进阶指南：如何编写可重用程序">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="intro-tutorial08">
+            
+  <div class="section" id="s-writing-your-first-django-app-part-8">
+<span id="writing-your-first-django-app-part-8"></span><h1>编写你的第一个 Django 应用程序，第 8 部分<a class="headerlink" href="#writing-your-first-django-app-part-8" title="永久链接至标题">¶</a></h1>
+<p>这个教程从 <a class="reference internal" href="tutorial07.html"><span class="doc">教程 7</span></a> 结束的地方开始。我们已经构建了我们的 Web 投票应用程序，现在将看看第三方包。Django 的一个优势就是丰富的第三方包生态系统。这些是由社区开发的包，可以用来快速扩展应用程序的功能集。</p>
+<p>本教程将展示如何添加 <a class="reference external" href="https://django-debug-toolbar.readthedocs.io">Django Debug Toolbar</a>，这是一个常用的第三方包。近年来，Django Debug Toolbar 在 Django 开发者调查中一直名列前三最常使用的第三方包之一。</p>
+<div class="admonition-where-to-get-help admonition">
+<p class="first admonition-title">从哪里获得帮助：</p>
+<p class="last">如果你在阅读本教程的过程中有任何疑问，可以前往 FAQ 的 <a class="reference internal" href="../faq/help.html"><span class="doc">获取帮助</span></a> 的版块。</p>
+</div>
+<div class="section" id="s-installing-django-debug-toolbar">
+<span id="installing-django-debug-toolbar"></span><h2>安装 Django Debug Toolbar<a class="headerlink" href="#installing-django-debug-toolbar" title="永久链接至标题">¶</a></h2>
+<p>Django Debug Toolbar 是一个用于调试 Django Web 应用程序的有用工具。它是由 <a class="reference external" href="https://jazzband.co">Jazzband</a> 组织维护的第三方包。该工具栏帮助你了解你的应用程序的运行方式，并识别问题。它通过提供面板来提供有关当前请求和响应的调试信息。</p>
+<p>要安装类似工具栏的第三方应用程序，你需要在已激活的虚拟环境中运行以下命令来安装包。这与我们之前安装 Django 的步骤类似：<a class="reference internal" href="../topics/install.html#installing-official-release"><span class="std std-ref">安装官方版本</span></a>。</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip install django-debug-toolbar
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py -m pip install django-debug-toolbar
+</pre></div>
+</section>
+</div>
+<p>与 Django 集成的第三方包需要一些安装后的设置，以将它们与你的项目整合在一起。通常，你需要将包的 Django 应用程序添加到你的 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 设置中。有些包需要其他更改，比如添加到你的 URL 配置（<code class="docutils literal notranslate"><span class="pre">urls.py</span></code>）中。</p>
+<p>Django Debug Toolbar 需要进行几个设置步骤。请按照 <a class="reference external" href="https://django-debug-toolbar.readthedocs.io/en/latest/installation.html">它的安装指南</a> 中的步骤进行操作。这些步骤不会在本教程中重复，因为作为一个第三方包，它可能会单独更改而不按照 Django 的计划进行更新。</p>
+<p>安装完成后，当你刷新投票应用程序时，你应该能够在浏览器窗口的右侧看到 DjDT 的 &quot;handle&quot;。点击它以打开调试工具栏，并使用每个面板中的工具。有关面板显示的详细信息，请参阅 <a class="reference external" href="https://django-debug-toolbar.readthedocs.io/en/latest/panels.html">面板文档页面</a>。</p>
+</div>
+<div class="section" id="s-getting-help-from-others">
+<span id="getting-help-from-others"></span><h2>寻求他人的帮助<a class="headerlink" href="#getting-help-from-others" title="永久链接至标题">¶</a></h2>
+<p>在某些情况下，你可能会遇到问题，例如工具栏可能无法渲染。当发生这种情况并且你无法自行解决问题时，有一些可供你选择的选项。</p>
+<ol class="arabic simple">
+<li>如果问题与特定的包有关，请检查该包的文档中是否有故障排除或常见问题解答（FAQ）部分。例如，Django Debug Toolbar 有一个 <a class="reference external" href="https://django-debug-toolbar.readthedocs.io/en/latest/tips.html">提示部分</a>，其中列出了故障排除选项。</li>
+<li>在包的问题跟踪器上搜索类似的问题。Django Debug Toolbar 的问题跟踪器位于 <a class="reference external" href="https://github.com/jazzband/django-debug-toolbar/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">GitHub 上</a>。</li>
+<li>请参阅 Django 论坛 &lt;https://forum.djangoproject.com/&gt;。</li>
+<li>加入 <a class="reference external" href="https://discord.gg/xcRH6mN4fa">Django Discord 服务器</a>。</li>
+<li>加入 Libera.chat 上的 #Django IRC 频道 &lt;https://libera.chat/&gt;。</li>
+</ol>
+</div>
+<div class="section" id="s-installing-other-third-party-packages">
+<span id="installing-other-third-party-packages"></span><h2>安装其他第三方包<a class="headerlink" href="#installing-other-third-party-packages" title="永久链接至标题">¶</a></h2>
+<p>你可以使用出色的 Django 资源 <a class="reference external" href="https://djangopackages.org/">Django Packages</a> 来查找更多的第三方包。</p>
+<p>很难知道你应该使用哪些第三方包。这取决于你的需求和目标。有时使用处于 alpha 状态的包是可以的，而其他时候，你需要知道它已经准备好用于生产环境。<a class="reference external" href="https://adamj.eu/tech/2021/11/04/the-well-maintained-test/">Adam Johnson 写了一篇博文</a>，概述了一组将包标记为 &quot;维护良好&quot; 的特征。Django Packages 显示了一些这些特征的数据，例如包的最后更新时间。</p>
+<p>正如 Adam 在他的文章中指出的那样，当某个问题的答案是 &quot;否&quot; 时，这就是一个贡献的机会。</p>
+</div>
+<div class="section" id="s-what-s-next">
+<span id="what-s-next"></span><h2>接下来要做什么？<a class="headerlink" href="#what-s-next" title="永久链接至标题">¶</a></h2>
+<p>初学者教程到这就结束了。随后，你可能想阅读 <a class="reference internal" href="whatsnext.html"><span class="doc">下一步看什么</span></a>，看看下一步能做什么。</p>
+<p>如果你很熟悉 Python 打包，且对学习如何把投票应用改成“可复用应用”感兴趣，查看 <a class="reference internal" href="reusable-apps.html"><span class="doc">进阶教程：如何创建可复用应用</span></a>。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">编写你的第一个 Django 应用程序，第 8 部分</a><ul>
+<li><a class="reference internal" href="#installing-django-debug-toolbar">安装 Django Debug Toolbar</a></li>
+<li><a class="reference internal" href="#getting-help-from-others">寻求他人的帮助</a></li>
+<li><a class="reference internal" href="#installing-other-third-party-packages">安装其他第三方包</a></li>
+<li><a class="reference internal" href="#what-s-next">接下来要做什么？</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="tutorial07.html"
+                          title="上一章">编写你的第一个 Django 应用，第 7 部分</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="reusable-apps.html"
+                          title="下一章">进阶指南：如何编写可重用程序</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/intro/tutorial08.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="tutorial07.html" title="编写你的第一个 Django 应用，第 7 部分">previous</a>
+     |
+    <a href="index.html" title="开始" accesskey="U">up</a>
+   |
+    <a href="reusable-apps.html" title="进阶指南：如何编写可重用程序">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LayerMapping 是一个数据导入实用程序 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="OGR 检查" href="ogrinspect.html" />
+    <link rel="prev" title="GeoDjango 实用程序" href="utils.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="utils.html" title="GeoDjango 实用程序">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="ogrinspect.html" title="OGR 检查">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-layermapping">
+            
+  <div class="section" id="s-module-django.contrib.gis.utils.layermapping">
+<span id="s-layermapping-data-import-utility"></span><span id="module-django.contrib.gis.utils.layermapping"></span><span id="layermapping-data-import-utility"></span><h1><code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 是一个数据导入实用程序<a class="headerlink" href="#module-django.contrib.gis.utils.layermapping" title="永久链接至标题">¶</a></h1>
+<p><a class="reference internal" href="#django.contrib.gis.utils.LayerMapping" title="django.contrib.gis.utils.LayerMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerMapping</span></code></a> 类提供了一种将矢量空间数据文件（例如 shapefile）的内容映射到 GeoDjango 模型的方法。</p>
+<p>这个实用程序是为了消除重复的代码，用于从矢量图层中提取几何和字段，将其转换为另一个坐标系统（例如 WGS84），然后插入到 GeoDjango 模型中而产生的。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">使用 <a class="reference internal" href="#django.contrib.gis.utils.LayerMapping" title="django.contrib.gis.utils.LayerMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerMapping</span></code></a> 需要 GDAL。</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">GIS 数据源，如 shapefile，可能非常大。如果发现 <a class="reference internal" href="#django.contrib.gis.utils.LayerMapping" title="django.contrib.gis.utils.LayerMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerMapping</span></code></a> 使用了过多的内存，请在您的设置中将 <a class="reference internal" href="../../settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>。当 <a class="reference internal" href="../../settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时，Django 会自动记录 <em>每个</em> SQL 查询 -- 当 SQL 语句包含几何信息时，这可能会消耗比通常更多的内存。</p>
+</div>
+<div class="section" id="s-example">
+<span id="example"></span><h2>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h2>
+<ol class="arabic simple">
+<li>您需要一个受 GDAL 支持的数据源，比如一个 shapefile（这里我们使用一个简单的多边形 shapefile，名为 <code class="docutils literal notranslate"><span class="pre">test_poly.shp</span></code>，包含三个要素）：</li>
+</ol>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.gdal</span> <span class="kn">import</span> <span class="n">DataSource</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="s2">&quot;test_poly.shp&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">layer</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>  <span class="c1"># Exploring the fields in the layer, we only want the &#39;str&#39; field.</span>
+<span class="go">[&#39;float&#39;, &#39;int&#39;, &#39;str&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">layer</span><span class="p">))</span>  <span class="c1"># getting the number of features in the layer (should be 3)</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">geom_type</span><span class="p">)</span>  <span class="c1"># Should be &#39;Polygon&#39;</span>
+<span class="go">Polygon</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">srs</span><span class="p">)</span>  <span class="c1"># WGS84 in WKT</span>
+<span class="go">GEOGCS[&quot;GCS_WGS_1984&quot;,</span>
+<span class="go">    DATUM[&quot;WGS_1984&quot;,</span>
+<span class="go">        SPHEROID[&quot;WGS_1984&quot;,6378137,298.257223563]],</span>
+<span class="go">    PRIMEM[&quot;Greenwich&quot;,0],</span>
+<span class="go">    UNIT[&quot;Degree&quot;,0.017453292519943295]]</span>
+</pre></div>
+</div>
+<ol class="arabic">
+<li><p class="first">现在我们定义相应的 Django 模型（确保使用 <a class="reference internal" href="../../django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a>）：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.gis.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">TestGeo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>  <span class="c1"># corresponds to the &#39;str&#39; field</span>
+    <span class="n">poly</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PolygonField</span><span class="p">(</span><span class="n">srid</span><span class="o">=</span><span class="mi">4269</span><span class="p">)</span>  <span class="c1"># we want our model in a different SRID</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Name: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">使用 <a class="reference internal" href="#django.contrib.gis.utils.LayerMapping" title="django.contrib.gis.utils.LayerMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerMapping</span></code></a> 提取所有要素并将它们放入数据库中：</p>
+</li>
+</ol>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.utils</span> <span class="kn">import</span> <span class="n">LayerMapping</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">geoapp.models</span> <span class="kn">import</span> <span class="n">TestGeo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;str&quot;</span><span class="p">,</span>  <span class="c1"># The &#39;name&#39; model field maps to the &#39;str&#39; layer field.</span>
+<span class="gp">... </span>    <span class="s2">&quot;poly&quot;</span><span class="p">:</span> <span class="s2">&quot;POLYGON&quot;</span><span class="p">,</span>  <span class="c1"># For geometry fields use OGC name.</span>
+<span class="gp">... </span><span class="p">}</span>  <span class="c1"># The mapping is a dictionary</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lm</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">TestGeo</span><span class="p">,</span> <span class="s2">&quot;test_poly.shp&quot;</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lm</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Save the layermap, imports the data.</span>
+<span class="go">Saved: Name: 1</span>
+<span class="go">Saved: Name: 2</span>
+<span class="go">Saved: Name: 3</span>
+</pre></div>
+</div>
+<p>在这里，<a class="reference internal" href="#django.contrib.gis.utils.LayerMapping" title="django.contrib.gis.utils.LayerMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerMapping</span></code></a> 将来自 shapefile 的三个几何图形从其原始空间参考系统（WGS84）转换为 GeoDjango 模型的空间参考系统（NAD83）。如果未为图层定义空间参考系统，请使用 <code class="docutils literal notranslate"><span class="pre">source_srs</span></code> 关键字并提供一个 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.SpatialReference" title="django.contrib.gis.gdal.SpatialReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpatialReference</span></code></a> 对象来指定一个。</p>
+</div>
+<div class="section" id="s-layermapping-api">
+<span id="layermapping-api"></span><h2><code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> API<a class="headerlink" href="#layermapping-api" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.utils.LayerMapping">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LayerMapping</span></code>(<em><span class="n"><span class="pre">model</span></span></em>, <em><span class="n"><span class="pre">data_source</span></span></em>, <em><span class="n"><span class="pre">mapping</span></span></em>, <em><span class="n"><span class="pre">layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">source_srs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">transaction_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'commit_on_success'</span></span></em>, <em><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">unique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>)<a class="headerlink" href="#django.contrib.gis.utils.LayerMapping" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>以下是在实例化 <code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 对象期间可以使用的参数和关键字：</p>
+<table class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">参数</th>
+<th class="head">描述</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">model</span></code></td>
+<td>地理模型，<em>不是</em> 实例</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">data_source</span></code></td>
+<td>OGR 支持的数据源文件的路径（例如，shapefile）。也接受 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.DataSource" title="django.contrib.gis.gdal.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.contrib.gis.gdal.DataSource</span></code></a> 实例。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">mapping</span></code></td>
+<td>一个字典：键是与模型字段对应的字符串，值对应于 OGR 要素的字符串字段名称，或者如果模型字段是地理字段，则应该对应于 OGR 几何类型，例如 <code class="docutils literal notranslate"><span class="pre">'POINT'</span></code>、<code class="docutils literal notranslate"><span class="pre">'LINESTRING'</span></code>、<code class="docutils literal notranslate"><span class="pre">'POLYGON'</span></code>。</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">关键字参数</th>
+<th class="head">&#160;</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">layer</span></code></td>
+<td>要使用的数据源中的图层的索引（默认为0）。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">source_srs</span></code></td>
+<td>使用这个参数可以手动指定源空间参考系统（例如，一些 shapefile 文件不包含 <code class="docutils literal notranslate"><span class="pre">'.prj'</span></code> 文件）。可以接受整数 SRID、WKT 或 PROJ 字符串以及 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.SpatialReference" title="django.contrib.gis.gdal.SpatialReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.contrib.gis.gdal.SpatialReference</span></code></a> 对象。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">encoding</span></code></td>
+<td>指定 OGR 数据源中字符串的字符集编码。例如，<code class="docutils literal notranslate"><span class="pre">'latin-1'</span></code>、<code class="docutils literal notranslate"><span class="pre">'utf-8'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'cp437'</span></code> 都是有效的编码参数。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">transaction_mode</span></code></td>
+<td>可以是 <code class="docutils literal notranslate"><span class="pre">'commit_on_success'</span></code> （默认）或 <code class="docutils literal notranslate"><span class="pre">'autocommit'</span></code>。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">transform</span></code></td>
+<td>将其设置为 False 将禁用坐标转换。换句话说，几何图形将以其在数据源中的原始状态未经修改地插入到数据库中。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">unique</span></code></td>
+<td>将其设置为给定模型的名称或名称元组将创建仅与给定名称唯一的模型。每个要素的几何图形将添加到与唯一模型关联的集合中。强制事务模式为 <code class="docutils literal notranslate"><span class="pre">'autocommit'</span></code>。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">using</span></code></td>
+<td>在导入空间数据时设置要使用的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">'default'</span></code>。</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="s-save-keyword-arguments">
+<span id="save-keyword-arguments"></span><h3><code class="docutils literal notranslate"><span class="pre">save()</span></code> 关键字参数<a class="headerlink" href="#save-keyword-arguments" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.utils.LayerMapping.save">
+<code class="sig-prename descclassname"><span class="pre">LayerMapping.</span></code><code class="sig-name descname"><span class="pre">save</span></code>(<em><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">fid_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">sys.stdout</span></span></em>, <em><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.gis.utils.LayerMapping.save" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">save()</span></code> 方法还接受关键字。这些关键字用于控制输出日志、错误处理和导入特定要素范围。</p>
+<table class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">保存关键字参数</th>
+<th class="head">描述</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">fid_range</span></code></td>
+<td>可以设置为要从数据源中映射的（begin, end）要素 ID 的切片或元组。换句话说，这个关键字允许用户有选择地导入地理数据源中的子集范围内的要素。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">progress</span></code></td>
+<td>当设置了这个关键字时，将打印状态信息，显示已处理和成功保存的要素数量。默认情况下，将在处理每 1000 个要素时打印进度信息，但可以通过将这个关键字设置为所需间隔的整数来覆盖默认值。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">silent</span></code></td>
+<td>默认情况下，非致命错误通知将打印到 <code class="docutils literal notranslate"><span class="pre">sys.stdout</span></code>，但可以通过设置这个关键字来禁用这些通知。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">step</span></code></td>
+<td>如果设置为整数，事务将在每个步骤间隔之后发生。例如，如果 <code class="docutils literal notranslate"><span class="pre">step=1000</span></code>，则在第 1000 个要素、第 2000 个要素等之后会发生提交。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">stream</span></code></td>
+<td>状态信息将被写入到这个文件句柄。默认使用 <code class="docutils literal notranslate"><span class="pre">sys.stdout</span></code>，但支持任何具有 <code class="docutils literal notranslate"><span class="pre">write</span></code> 方法的对象。</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">strict</span></code></td>
+<td>在遇到第一个错误时，模型映射的执行将停止。默认值（<code class="docutils literal notranslate"><span class="pre">False</span></code>）的行为是尝试继续进行。</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">verbose</span></code></td>
+<td>如果设置，将在执行数据库上的每个模型保存后打印信息。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="s-troubleshooting">
+<span id="troubleshooting"></span><h2>错误调试<a class="headerlink" href="#troubleshooting" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-running-out-of-memory">
+<span id="running-out-of-memory"></span><h3>内存耗尽<a class="headerlink" href="#running-out-of-memory" title="永久链接至标题">¶</a></h3>
+<p>如本节顶部的警告所述，当 <code class="docutils literal notranslate"><span class="pre">DEBUG=True</span></code> 时，Django 会存储所有的 SQL 查询。在您的设置中设置 <code class="docutils literal notranslate"><span class="pre">DEBUG=False</span></code>，这应该可以阻止运行 <code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 脚本时过多的内存使用。</p>
+</div>
+<div class="section" id="s-mysql-max-allowed-packet-error">
+<span id="mysql-max-allowed-packet-error"></span><h3>MySQL: <code class="docutils literal notranslate"><span class="pre">max_allowed_packet</span></code> 错误<a class="headerlink" href="#mysql-max-allowed-packet-error" title="永久链接至标题">¶</a></h3>
+<p>如果在使用 <code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 和 MySQL 时遇到以下错误：</p>
+<div class="highlight-pytb notranslate"><div class="highlight"><pre><span></span><span class="x">OperationalError: (1153, &quot;Got a packet bigger than &#39;max_allowed_packet&#39; bytes&quot;)</span>
+</pre></div>
+</div>
+<p>解决方法是增加 MySQL 配置中的 <code class="docutils literal notranslate"><span class="pre">max_allowed_packet</span></code> 设置的值。例如，默认值可能很低，比如一兆字节 —— 可以在 MySQL 的配置文件（<code class="docutils literal notranslate"><span class="pre">my.cnf</span></code>）中的 <code class="docutils literal notranslate"><span class="pre">[mysqld]</span></code> 部分修改该设置：</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">max_allowed_packet</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10M</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 是一个数据导入实用程序</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+<li><a class="reference internal" href="#layermapping-api"><code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> API</a><ul>
+<li><a class="reference internal" href="#save-keyword-arguments"><code class="docutils literal notranslate"><span class="pre">save()</span></code> 关键字参数</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">错误调试</a><ul>
+<li><a class="reference internal" href="#running-out-of-memory">内存耗尽</a></li>
+<li><a class="reference internal" href="#mysql-max-allowed-packet-error">MySQL: <code class="docutils literal notranslate"><span class="pre">max_allowed_packet</span></code> 错误</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="utils.html"
+                          title="上一章">GeoDjango 实用程序</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="ogrinspect.html"
+                          title="下一章">OGR 检查</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/gis/layermapping.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="utils.html" title="GeoDjango 实用程序">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="ogrinspect.html" title="OGR 检查">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

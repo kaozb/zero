@@ -1,0 +1,745 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>迁移 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="管理文件" href="files.html" />
+    <link rel="prev" title="在基于类的视图中使用混入" href="class-based-views/mixins.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="class-based-views/mixins.html" title="在基于类的视图中使用混入">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="files.html" title="管理文件">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-migrations">
+            
+  <div class="section" id="s-module-django.db.migrations">
+<span id="s-migrations"></span><span id="module-django.db.migrations"></span><span id="migrations"></span><h1>迁移<a class="headerlink" href="#module-django.db.migrations" title="永久链接至标题">¶</a></h1>
+<p>迁移是 Django 将你对模型的修改（例如增加一个字段，删除一个模型）应用至数据库架构中的方式。它们被设计的尽可能自动化，但你仍需要知道何时构建和运行迁移，你还需要了解一些常见问题。</p>
+<div class="section" id="s-the-commands">
+<span id="the-commands"></span><h2>命令<a class="headerlink" href="#the-commands" title="永久链接至标题">¶</a></h2>
+<p>以下是几个常用的与迁移交互的命令，即 Django 处理数据库架构的方式：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a>，负责应用和撤销迁移。</li>
+<li><a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a>，基于模型的修改创建迁移。</li>
+<li><a class="reference internal" href="../ref/django-admin.html#django-admin-sqlmigrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">sqlmigrate</span></code></a>，展示迁移使用的 SQL 语句。</li>
+<li><a class="reference internal" href="../ref/django-admin.html#django-admin-showmigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">showmigrations</span></code></a>，列出项目的迁移和迁移的状态。</li>
+</ul>
+<p>你应该将迁移看作是数据库架构的版本控制系统。 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 负责将模型修改打包进独立的迁移文件中——类似提交修改，而 <code class="docutils literal notranslate"><span class="pre">migrate</span></code> 负责将其应用至数据库。</p>
+<p>每个应用的迁移文件位于该应用的 &quot;migrations&quot; 目录中，他们被设计成应用代码的一部分，与应用代码一起被提交，被发布。你只需在开发机上构建一次，就可以在同事的电脑或测试机上运行同样的迁移而保证结果一致。最后在生产环境运行同样的迁移。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">通过修改配置 <a class="reference internal" href="../ref/settings.html#std-setting-MIGRATION_MODULES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIGRATION_MODULES</span></code></a> 可以重写包含迁移的应用的包名。</p>
+</div>
+<p>从同样的数据集合运行迁移在开发、测试和生产环境都会生成同样的结果。</p>
+<p>Django 会在修改模型或字段时生成迁移——即便修改的是不会影响数据库的配置——因为唯一能确保结果正确性的方法时完整记录修改历史，而且这些东西你以后可能在某些数据迁移中用的到（例如，已设置了自定义验证器的时候）。</p>
+</div>
+<div class="section" id="s-backend-support">
+<span id="backend-support"></span><h2>后端支持<a class="headerlink" href="#backend-support" title="永久链接至标题">¶</a></h2>
+<p>所有 Django 支持的数据库后端都支持迁移，还有些支持表修改（通过 <a class="reference internal" href="../ref/schema-editor.html"><span class="doc">SchemaEditor</span></a> 类实现）的第三方后端也支持。</p>
+<p>然而，有些数据库在表结构变更方面比其它数据库更强；下面介绍一些注意事项。</p>
+<div class="section" id="s-postgresql">
+<span id="postgresql"></span><h3>PostgreSQL<a class="headerlink" href="#postgresql" title="永久链接至标题">¶</a></h3>
+<p>PostgreSQL 在架构支持方面是所有数据库中是最强的。</p>
+</div>
+<div class="section" id="s-mysql">
+<span id="mysql"></span><h3>MySQL<a class="headerlink" href="#mysql" title="永久链接至标题">¶</a></h3>
+<p>MySQL 缺乏对架构变更操作相关事务的支持，这意味着如果迁移失败，你将必须手动取消更改才能重试（无法回滚到较早的时间）。</p>
+<p>MySQL 8.0 introduced significant performance enhancements for
+<a class="reference external" href="https://dev.mysql.com/doc/refman/en/innodb-online-ddl-operations.html">DDL operations</a>, making them more efficient and reducing the need for full
+table rebuilds. However, it cannot guarantee a complete absence of locks or
+interruptions. In situations where locks are still necessary, the duration of
+these operations will be proportionate to the number of rows involved.</p>
+<p>Finally, MySQL has a relatively small limit on the combined size of all columns
+an index covers. This means that indexes that are possible on other backends
+will fail to be created under MySQL.</p>
+</div>
+<div class="section" id="s-sqlite">
+<span id="sqlite"></span><h3>SQLite<a class="headerlink" href="#sqlite" title="永久链接至标题">¶</a></h3>
+<p>SQLite 几乎没有内置的架构更改支持，因此 Django 尝试通过以下方式对其进行模拟：</p>
+<ul class="simple">
+<li>使用新架构创建新表</li>
+<li>复制数据</li>
+<li>删除旧表</li>
+<li>重新命名新表，使之与原表名相匹配。</li>
+</ul>
+<p>此过程一般工作的很好，但它可能很慢，偶尔也会出现问题。除非你非常清楚风险和它的局限性，否则不建议你在生产环境中运行和迁移 SQLite；Django 自带的支持是为了让开发人员在本地计算机上使用 SQLite 来开发较不复杂的 Django 项目，而无需完整的数据库。</p>
+</div>
+</div>
+<div class="section" id="s-workflow">
+<span id="workflow"></span><h2>工作流程<a class="headerlink" href="#workflow" title="永久链接至标题">¶</a></h2>
+<p>Django 可以为您创建迁移。对您的模型进行更改，比如添加一个字段或删除一个模型，然后运行 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a>：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py makemigrations
+Migrations <span class="k">for</span> <span class="s1">&#39;books&#39;</span>:
+  books/migrations/0003_auto.py:
+    - Alter field author on book
+</pre></div>
+</div>
+<p>你的模型将被扫描并与当前包含在你的迁移文件中的版本进行比较，然后将写出一组新的迁移。请务必阅读输出，看看 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 认为你已更改的内容——它并不完美，对于复杂的更改，可能无法检测到你所期望的。</p>
+<p>一旦您有了新的迁移文件，您应该将它们应用到您的数据库，以确保它们按预期工作：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py migrate
+Operations to perform:
+  Apply all migrations: books
+Running migrations:
+  Rendering model states... DONE
+  Applying books.0003_auto... OK
+</pre></div>
+</div>
+<p>一旦应用了迁移，将迁移和模型更改作为一个单一的提交来提交到您的版本控制系统——这样，当其他开发人员（或你的生产服务器）检查代码时，他们将同时获得对你的模型的更改和伴随的迁移。</p>
+<p>如果您想要为迁移指定一个有意义的名称而不是生成的名称，您可以使用 <a class="reference internal" href="../ref/django-admin.html#cmdoption-makemigrations-name"><code class="xref std std-option docutils literal notranslate"><span class="pre">makemigrations</span> <span class="pre">--name</span></code></a> 选项：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py makemigrations --name changed_my_model your_app_label
+</pre></div>
+</div>
+<div class="section" id="s-version-control">
+<span id="version-control"></span><h3>版本控制<a class="headerlink" href="#version-control" title="永久链接至标题">¶</a></h3>
+<p>由于迁移存储在版本控制中，因此你有时会遇到这样的情况：你和另一个开发人员都同时向同一应用提交了迁移，从而导致两次迁移的编号相同。</p>
+<p>别担心——这些数字只是给开发者参考的，Django 只在乎每个迁移都有不同的名称。 迁移在文件中指定了它们所依赖的其他哪些迁移——包括同一应用中的早期迁移，所以可以检测到同一应用有两个新的迁移没有排序。</p>
+<p>当这种情况发生时，Django 会提示你，并给你一些选项。如果它认为足够安全，它将为你自动线性化两个迁移。如果不安全，你就得自己去修改迁移——别担心，这并不难，有关更多信息，请参见下面的 <a class="reference internal" href="#migration-files"><span class="std std-ref">迁移文件</span></a>。</p>
+</div>
+</div>
+<div class="section" id="s-transactions">
+<span id="transactions"></span><h2>事务<a class="headerlink" href="#transactions" title="永久链接至标题">¶</a></h2>
+<p>在支持 DDL 事务的数据库上（SQLite 和 PostgreSQL），所有的迁移操作默认都会在一个事务中运行。相反，如果一个数据库不支持 DDL 事务（如 MySQL、Oracle），那么所有的操作将在没有事务的情况下运行。</p>
+<p>你可以通过将 <code class="docutils literal notranslate"><span class="pre">atomic</span></code> 属性设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code> 来防止迁移在事务中运行。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">migrations</span>
+
+
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+    <span class="n">atomic</span> <span class="o">=</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<p>也可以使用 <a class="reference internal" href="db/transactions.html#django.db.transaction.atomic" title="django.db.transaction.atomic"><code class="xref py py-func docutils literal notranslate"><span class="pre">atomic()</span></code></a> 或者通过传递 <code class="docutils literal notranslate"><span class="pre">atomic=True</span></code> 到 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 来在事务中执行部分迁移。更多细节请参见 <a class="reference internal" href="../howto/writing-migrations.html#non-atomic-migrations"><span class="std std-ref">非原子性迁移</span></a>。</p>
+</div>
+<div class="section" id="s-dependencies">
+<span id="dependencies"></span><h2>依赖<a class="headerlink" href="#dependencies" title="永久链接至标题">¶</a></h2>
+<p>虽然迁移是按应用进行的，但你的模型所隐含的表和关系太复杂，不可能同时为一个应用创建。当你进行迁移时，需要运行其他的东西——例如，你在你的 <code class="docutils literal notranslate"><span class="pre">books</span></code> 应用中添加了一个指向 <code class="docutils literal notranslate"><span class="pre">authors</span></code> 应用的 <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code>——最终的迁移将包含对 <code class="docutils literal notranslate"><span class="pre">authors</span></code> 中迁移的依赖。</p>
+<p>这意味着当您运行迁移时，<code class="docutils literal notranslate"><span class="pre">authors</span></code> 迁移首先运行并创建了 <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> 引用的表，然后创建 <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> 列的迁移在其后运行并创建约束。如果没有这样的顺序，迁移将尝试在引用的表不存在的情况下创建 <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> 列，这将导致数据库出错。</p>
+<p>这种依赖性行为会影响大多数只限于单个应用的迁移操作。仅限于单个应用（无论是 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 还是 <code class="docutils literal notranslate"><span class="pre">migrate</span></code>）是尽最大努力的承诺，而不是保证；任何其他需要用来正确获取依赖关系的应用程序都将是。</p>
+<p>没有迁移的应用不得与有迁移的应用有关系（<code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code>，<code class="docutils literal notranslate"><span class="pre">ManyToManyField</span></code> 等）。有时可能可行，但不受支持。</p>
+<div class="section" id="s-swappable-dependencies">
+<span id="swappable-dependencies"></span><h3>可交换的依赖关系<a class="headerlink" href="#swappable-dependencies" title="永久链接至标题">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.db.migrations.django.db.migrations.swappable_dependency">
+<code class="sig-prename descclassname"><span class="pre">django.db.migrations.</span></code><code class="sig-name descname"><span class="pre">swappable_dependency</span></code>(<em><span class="n"><span class="pre">value</span></span></em>)<a class="headerlink" href="#django.db.migrations.django.db.migrations.swappable_dependency" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">swappable_dependency()</span></code> 函数在迁移中用于声明对被交换模型的应用中的迁移的 &quot;可交换&quot; 依赖关系，当前是对该应用的第一个迁移的依赖。因此，被交换模型应该在初始迁移中创建。参数 <code class="docutils literal notranslate"><span class="pre">value</span></code> 是一个描述应用标签和模型名称的字符串 <code class="docutils literal notranslate"><span class="pre">&quot;&lt;app</span> <span class="pre">label&gt;.&lt;model&gt;&quot;</span></code>，例如 <code class="docutils literal notranslate"><span class="pre">&quot;myapp.MyModel&quot;</span></code>。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">swappable_dependency()</span></code>，您通知迁移框架迁移依赖于另一个设置可交换模型的迁移，从而允许将来可能替换模型的不同实现。通常用于引用可能需要自定义或替换的模型，例如 Django 认证系统中的自定义用户模型（<code class="docutils literal notranslate"><span class="pre">settings.AUTH_USER_MODEL</span></code>，默认为 <code class="docutils literal notranslate"><span class="pre">&quot;auth.User&quot;</span></code>）。</p>
+</div>
+</div>
+<div class="section" id="s-migration-files">
+<span id="s-id1"></span><span id="migration-files"></span><span id="id1"></span><h2>迁移文件<a class="headerlink" href="#migration-files" title="永久链接至标题">¶</a></h2>
+<p>迁移以磁盘格式存储，这里称为“迁移文件”。这些文件实际上是普通的 Python 文件，具有约定的对象布局，以声明式风格编写。</p>
+<p>基本的迁移文件如下所示：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">migrations</span><span class="p">,</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;migrations&quot;</span><span class="p">,</span> <span class="s2">&quot;0001_initial&quot;</span><span class="p">)]</span>
+
+    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">DeleteModel</span><span class="p">(</span><span class="s2">&quot;Tribble&quot;</span><span class="p">),</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">AddField</span><span class="p">(</span><span class="s2">&quot;Author&quot;</span><span class="p">,</span> <span class="s2">&quot;rating&quot;</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>Django 在加载迁移文件（作为 Python 模块）时寻找的是 <code class="docutils literal notranslate"><span class="pre">django.db.migrations.Migration</span></code> 的子类，称为 <code class="docutils literal notranslate"><span class="pre">Migration</span></code>。然后，它将检查此对象的四个属性，大多数情况下仅使用其中两个：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dependencies</span></code>，所依赖的迁移列表。</li>
+<li><code class="docutils literal notranslate"><span class="pre">operations</span></code>，定义了此次迁移操作的 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 类的列表。</li>
+</ul>
+<p>操作是关键；它们是一组声明性指令，它们告诉 Django 需要对哪些架构变更。Django 扫描它们并构建所有应用的所有架构变更的内存表示形式，然后使用它生成进行架构变更的 SQL。</p>
+<p>该内存结构还用于确定模型与迁移当前状态之间的差异；Django 按顺序在内存中的模型集上运行所有的变更，得出你上次运行 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 时模型的状态。然后，它使用这些模型与你的 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件中的模型进行比较，以计算出你改变了什么。</p>
+<p>你应该很少需要手动编辑迁移文件，但如果需要，完全可以手动编写。有些更复杂的操作是无法自动检测的，只能通过手写的迁移来实现，所以如果必须手写它们，也不要害怕。</p>
+<div class="section" id="s-custom-fields">
+<span id="custom-fields"></span><h3>自定义字段<a class="headerlink" href="#custom-fields" title="永久链接至标题">¶</a></h3>
+<p>你不能修改一个已经迁移的自定义字段中的位置参数的数量，否则会引发 <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>。旧的迁移会用旧的签名调用修改后的 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 方法。所以如果你需要一个新的参数，请创建一个关键字参数，并在构造函数中添加类似 <code class="docutils literal notranslate"><span class="pre">assert</span> <span class="pre">'argument_name'</span> <span class="pre">in</span> <span class="pre">kwargs</span></code> 的内容。</p>
+</div>
+<div class="section" id="s-model-managers">
+<span id="s-using-managers-in-migrations"></span><span id="model-managers"></span><span id="using-managers-in-migrations"></span><h3>模型管理器<a class="headerlink" href="#model-managers" title="永久链接至标题">¶</a></h3>
+<p>你可以选择将管理器序列化为迁移，并在 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 操作中使用它们。这是通过在 manager 类上定义一个 <code class="docutils literal notranslate"><span class="pre">use_in_migrations</span></code> 属性来实现的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyManager</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Manager</span><span class="p">):</span>
+    <span class="n">use_in_migrations</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">MyManager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>如果你使用 <a class="reference internal" href="db/managers.html#django.db.models.from_queryset" title="django.db.models.from_queryset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_queryset()</span></code></a> 函数动态生成管理器类，则需要从生成的类继承以使其可导入：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyManager</span><span class="p">(</span><span class="n">MyBaseManager</span><span class="o">.</span><span class="n">from_queryset</span><span class="p">(</span><span class="n">CustomQuerySet</span><span class="p">)):</span>
+    <span class="n">use_in_migrations</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">MyManager</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>请参考关于 <a class="reference internal" href="#historical-models"><span class="std std-ref">历史模型</span></a> 在迁移中的说明，以了解随之而来的影响。</p>
+</div>
+<div class="section" id="s-initial-migrations">
+<span id="initial-migrations"></span><h3>初始迁移<a class="headerlink" href="#initial-migrations" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.migrations.Migration.initial">
+<code class="sig-prename descclassname"><span class="pre">Migration.</span></code><code class="sig-name descname"><span class="pre">initial</span></code><a class="headerlink" href="#django.db.migrations.Migration.initial" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>应用的“初始迁移”是创建该应用首版表的迁移。 通常，一个应用有一个初始迁移，但是在某些情况下，复杂的模型依赖可能会导致两个或更多。</p>
+<p>初始迁移在迁移类上标有 <code class="docutils literal notranslate"><span class="pre">initial</span> <span class="pre">=</span> <span class="pre">True</span></code> 类属性。如果未找到 <code class="docutils literal notranslate"><span class="pre">initial</span></code> 类属性，则如果迁移是应用程序中的第一个迁移（即，如果它不依赖于同一应用程序中的任何其他迁移）则将被视为“初始”。</p>
+<p>当使用 <a class="reference internal" href="../ref/django-admin.html#cmdoption-migrate-fake-initial"><code class="xref std std-option docutils literal notranslate"><span class="pre">migrate</span> <span class="pre">--fake-initial</span></code></a> 选项时，将对这些初始迁移进行特殊处理。对于创建一个或多个表（<code class="docutils literal notranslate"><span class="pre">CreateModel</span></code> 操作）的初始迁移，Django 会检查所有这些表是否已经存在于数据库中，如果是，则对迁移进行假应用。 类似地，对于添加了一个或多个字段（<code class="docutils literal notranslate"><span class="pre">AddField</span></code> 操作）的初始迁移，Django 检查数据库中是否已存在所有相应的列，如果存在，则对迁移进行假应用。如果没有 <code class="docutils literal notranslate"><span class="pre">--fake-initial</span></code>，初始迁移的处理方式和其他迁移没有区别。</p>
+</div>
+<div class="section" id="s-history-consistency">
+<span id="s-migration-history-consistency"></span><span id="history-consistency"></span><span id="migration-history-consistency"></span><h3>历史一致性<a class="headerlink" href="#history-consistency" title="永久链接至标题">¶</a></h3>
+<p>历史一致性前面已经讨论过，当两个开发分支加入时，你可能需要手动线性化迁移。在编辑迁移依赖关系时，你可能会无意中创建一个不一致的历史状态，即一个迁移已经被应用，但它的一些依赖关系还没有应用。这强烈地表明依赖关系不正确，所以 Django 会拒绝运行迁移或进行新的迁移，直到它被修复。当使用多个数据库时，可以使用 <a class="reference internal" href="db/multi-db.html#topics-db-multi-db-routing"><span class="std std-ref">database routers</span></a> 的 <a class="reference internal" href="db/multi-db.html#allow_migrate" title="allow_migrate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">allow_migrate()</span></code></a> 方法来控制 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 检查哪些数据库的历史一致。</p>
+</div>
+</div>
+<div class="section" id="s-adding-migrations-to-apps">
+<span id="adding-migrations-to-apps"></span><h2>向应用添加迁移<a class="headerlink" href="#adding-migrations-to-apps" title="永久链接至标题">¶</a></h2>
+<p>新的应用已预先配置为接受迁移，因此你可以在进行一些更改后通过运行 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 添加迁移。</p>
+<p>如果您的应用程序已经拥有模型和数据库表，但尚未进行迁移（例如，您是在以前的 Django 版本中创建的），您需要通过运行以下命令将其转换为使用迁移：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python manage.py makemigrations your_app_label
+</pre></div>
+</div>
+<p>这将为你的应用程序进行新的初始迁移。现在，运行 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">migrate</span> <span class="pre">--fake-initial</span></code>，Django 将检测到你有一个初始迁移 <em>并且</em> 它要创建的表已经存在，而将迁移标记为已应用。（如果没有 <a class="reference internal" href="../ref/django-admin.html#cmdoption-migrate-fake-initial"><code class="xref std std-option docutils literal notranslate"><span class="pre">migrate</span> <span class="pre">--fake-initial</span></code></a> 标志，该命令将出错，因为它要创建的表已经存在。）</p>
+<p>请注意，这只适用于以下两种情况：</p>
+<ul class="simple">
+<li>自从你建立了表之后，你就没有改变过你的模型。要使迁移生效，你必须 <em>首先</em> 进行初始迁移，然后再进行更改，因为 Django 将变更与迁移文件（而不是数据库）进行比较。</li>
+<li>你尚未手动编辑数据库——Django 无法检测到你的数据库与你的模型不匹配，当迁移尝试修改这些表时，你只会得到错误。</li>
+</ul>
+</div>
+<div class="section" id="s-reversing-migrations">
+<span id="s-id2"></span><span id="reversing-migrations"></span><span id="id2"></span><h2>撤销迁移<a class="headerlink" href="#reversing-migrations" title="永久链接至标题">¶</a></h2>
+<p>可以通过 <a class="reference internal" href="../ref/django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> 传递上一次迁移的编号来撤销迁移。例如，要撤销迁移 <code class="docutils literal notranslate"><span class="pre">books.0003</span></code>：</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py migrate books <span class="m">0002</span>
+<span class="go">Operations to perform:</span>
+<span class="go">  Target specific migration: 0002_auto, from books</span>
+<span class="go">Running migrations:</span>
+<span class="go">  Rendering model states... DONE</span>
+<span class="go">  Unapplying books.0003_auto... OK</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py migrate books 0002
+<span class="go">Operations to perform:</span>
+<span class="go">  Target specific migration: 0002_auto, from books</span>
+<span class="go">Running migrations:</span>
+<span class="go">  Rendering model states... DONE</span>
+<span class="go">  Unapplying books.0003_auto... OK</span>
+</pre></div>
+</section>
+</div>
+<p>如果要撤消应用于一个应用的所有迁移，请使用名称 <code class="docutils literal notranslate"><span class="pre">zero</span></code>：</p>
+<div class="console-block" id="console-block-1">
+<input class="c-tab-unix" id="c-tab-1-unix" type="radio" name="console-1" checked>
+<label for="c-tab-1-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-1-win" type="radio" name="console-1">
+<label for="c-tab-1-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-1-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py migrate books zero
+<span class="go">Operations to perform:</span>
+<span class="go">  Unapply all migrations: books</span>
+<span class="go">Running migrations:</span>
+<span class="go">  Rendering model states... DONE</span>
+<span class="go">  Unapplying books.0002_auto... OK</span>
+<span class="go">  Unapplying books.0001_initial... OK</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-1-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py migrate books zero
+<span class="go">Operations to perform:</span>
+<span class="go">  Unapply all migrations: books</span>
+<span class="go">Running migrations:</span>
+<span class="go">  Rendering model states... DONE</span>
+<span class="go">  Unapplying books.0002_auto... OK</span>
+<span class="go">  Unapplying books.0001_initial... OK</span>
+</pre></div>
+</section>
+</div>
+<p>如果迁移包含任何不可逆的操作，则该迁移是不可逆的。 试图撤销这种迁移将引发 <code class="docutils literal notranslate"><span class="pre">IrreversibleError</span></code>：</p>
+<div class="console-block" id="console-block-2">
+<input class="c-tab-unix" id="c-tab-2-unix" type="radio" name="console-2" checked>
+<label for="c-tab-2-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-2-win" type="radio" name="console-2">
+<label for="c-tab-2-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-2-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py migrate books <span class="m">0002</span>
+<span class="go">Operations to perform:</span>
+<span class="go">  Target specific migration: 0002_auto, from books</span>
+<span class="go">Running migrations:</span>
+<span class="go">  Rendering model states... DONE</span>
+<span class="go">  Unapplying books.0003_auto...Traceback (most recent call last):</span>
+<span class="go">django.db.migrations.exceptions.IrreversibleError: Operation &lt;RunSQL  sql=&#39;DROP TABLE demo_books&#39;&gt; in books.0003_auto is not reversible</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-2-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py migrate books 0002
+<span class="go">Operations to perform:</span>
+<span class="go">  Target specific migration: 0002_auto, from books</span>
+<span class="go">Running migrations:</span>
+<span class="go">  Rendering model states... DONE</span>
+<span class="go">  Unapplying books.0003_auto...Traceback (most recent call last):</span>
+<span class="gp">django.db.migrations.exceptions.IrreversibleError: Operation &lt;RunSQL  sql=&#39;DROP TABLE demo_books&#39;&gt;</span> in books.0003_auto is not reversible
+</pre></div>
+</section>
+</div>
+</div>
+<div class="section" id="s-historical-models">
+<span id="s-id3"></span><span id="historical-models"></span><span id="id3"></span><h2>历史模型<a class="headerlink" href="#historical-models" title="永久链接至标题">¶</a></h2>
+<p>当你运行迁移时，Django 正在使用存储在迁移文件中的模型的历史版本。如果你使用 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 操作编写 Python 代码，或者你的数据库路由上有 <code class="docutils literal notranslate"><span class="pre">allow_migrate</span></code> 方法，则你 <strong>需要使用</strong> 这些模型的历史版本而不是直接导入它们。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>如果您直接导入模型而不是使用历史模型，您的迁移 <em>可能在初始阶段工作</em>，但在将来尝试重新运行旧迁移时将失败（通常是在设置新安装并运行所有迁移以设置数据库时）。</p>
+<p class="last">这意味着历史模型的问题可能不会立即显现。如果遇到这种故障，可以编辑迁移以使用历史模型，而不是直接导入并提交这些更改。</p>
+</div>
+<p>因为不可能序列化任意的 Python 代码，这些历史模型不会有你定义的任何自定义方法。然而，它们将具有相同的字段、关系、管理器（仅限于那些具有 <code class="docutils literal notranslate"><span class="pre">use_in_migrations</span> <span class="pre">=</span> <span class="pre">True</span></code>）和 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 选项（也有版本控制，因此它们可能与当前的不同）。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">这意味着在迁移中访问对象时，将不会对对象调用自定义的 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 方法，也不会有任何自定义构造函数或实例方法。适当的计划一下吧！</p>
+</div>
+<p>字段选项中对函数的引用，例如 <code class="docutils literal notranslate"><span class="pre">upload_to</span></code> 和 <code class="docutils literal notranslate"><span class="pre">limit_choices_to</span></code> 以及具有 <code class="docutils literal notranslate"><span class="pre">use_in_migrations</span> <span class="pre">=</span> <span class="pre">True</span></code> 的模型管理器声明，都会在迁移中序列化，因此只要有迁移引用它们，这些函数和类就需要保留。任何 <a class="reference internal" href="../howto/custom-model-fields.html"><span class="doc">自定义模型字段</span></a> 也需要保留，因为这些都是直接由迁移导入的。</p>
+<p>此外，模型的具体基类是以指针的形式存储的，所以只要有一个包含对它们的引用的迁移，你就必须始终将基类保留在身边。从好的方面来说，这些基类的方法和管理器都是正常继承的，所以如果你一定需要访问这些，你可以选择将它们移到一个父类中。</p>
+<p>要删除旧的引用，你可以 <a class="reference internal" href="#migration-squashing"><span class="std std-ref">压缩迁移</span></a> 或者，如果引用不多，把它们复制到迁移文件中。</p>
+</div>
+<div class="section" id="s-considerations-when-removing-model-fields">
+<span id="s-migrations-removing-model-fields"></span><span id="considerations-when-removing-model-fields"></span><span id="migrations-removing-model-fields"></span><h2>删除模型字段时的注意事项<a class="headerlink" href="#considerations-when-removing-model-fields" title="永久链接至标题">¶</a></h2>
+<p>与上一节中描述的“引用历史函数”注意事项类似，如果在旧迁移中引用了自定义模型字段，则从项目或第三方应用中删除这些字段将导致问题。</p>
+<p>为了解决这种情况，Django 提供了一些模型字段属性，使用 <a class="reference internal" href="checks.html"><span class="doc">系统检查框架</span></a> 来协助弃用模型字段。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">system_check_deprecated_details</span></code> 属性添加到你的模型字段中，类似于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">IPAddressField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">system_check_deprecated_details</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;IPAddressField has been deprecated. Support for it (except &quot;</span>
+            <span class="s2">&quot;in historical migrations) will be removed in Django 1.9.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;hint&quot;</span><span class="p">:</span> <span class="s2">&quot;Use GenericIPAddressField instead.&quot;</span><span class="p">,</span>  <span class="c1"># optional</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;fields.W900&quot;</span><span class="p">,</span>  <span class="c1"># pick a unique ID for your field.</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>在你选择的弃用期（Django 本身的字段有两个或三个功能版本）之后，将 <code class="docutils literal notranslate"><span class="pre">system_check_deprecated_details</span></code> 属性改为 <code class="docutils literal notranslate"><span class="pre">system_check_removed_details</span></code> 并更新类似于以下内容的字典：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">IPAddressField</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">system_check_removed_details</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;IPAddressField has been removed except for support in &quot;</span>
+            <span class="s2">&quot;historical migrations.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;hint&quot;</span><span class="p">:</span> <span class="s2">&quot;Use GenericIPAddressField instead.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;fields.E900&quot;</span><span class="p">,</span>  <span class="c1"># pick a unique ID for your field.</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>你应该保留该字段在数据库迁移中操作所需的方法，如 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code>，<code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code>，和 <code class="docutils literal notranslate"><span class="pre">get_internal_type()</span></code>。只要任何引用该字段的迁移存在，就保留这个存根字段。例如，在压缩迁移并删除旧的迁移后，你应该可以完全删除该字段。</p>
+</div>
+<div class="section" id="s-data-migrations">
+<span id="s-id4"></span><span id="data-migrations"></span><span id="id4"></span><h2>数据迁移<a class="headerlink" href="#data-migrations" title="永久链接至标题">¶</a></h2>
+<p>除了改变数据库架构外，你还可以使用迁移来改变数据库本身的数据，如果你想的话，还可以结合架构来改变。</p>
+<p>更改数据的迁移通常称为“数据迁移”；最好将它们写成单独的迁移，与架构迁移放在一起。</p>
+<p>Django 无法像架构迁移那样自动为您生成数据迁移，但是编写它们并不难。Django 中的迁移文件是由 <a class="reference internal" href="../ref/migration-operations.html"><span class="doc">Operations</span></a> 组成的，你用于数据迁移的主要操作是 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a>。</p>
+<p>要开始，请创建一个空的迁移文件，您可以从中开始工作（Django 将会将文件放在正确的位置，为您建议一个名称，并添加依赖项）：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python manage.py makemigrations --empty yourappname
+</pre></div>
+</div>
+<p>然后，打开文件；它应该是这样的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generated by Django A.B on YYYY-MM-DD HH:MM</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">migrations</span>
+
+
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;yourappname&quot;</span><span class="p">,</span> <span class="s2">&quot;0001_initial&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">operations</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+</div>
+<p>现在，你需要做的就是创建一个新的函数，让 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 使用它。<a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 需要一个可调用对象作为它的参数，这个可调用对象需要两个参数——第一个是 <a class="reference internal" href="../ref/applications.html"><span class="doc">应用注册表</span></a> ，其中加载了所有模型的历史版本，以匹配迁移所在的位置，第二个是 <a class="reference internal" href="../ref/schema-editor.html"><span class="doc">SchemaEditor</span></a>，你可以用它来手动实现数据库架构的变更（但要注意，这样做会混淆迁移自动检测器！）</p>
+<p>让我们编写一个迁移，使用 <code class="docutils literal notranslate"><span class="pre">first_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">last_name</span></code> 的组合值填充新的 <code class="docutils literal notranslate"><span class="pre">name</span></code> 字段（我们已经意识到，并不是每个人都有名字和姓氏）。 我们需要做的就是使用历史模型并对行进行迭代：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">migrations</span>
+
+
+<span class="k">def</span> <span class="nf">combine_names</span><span class="p">(</span><span class="n">apps</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">):</span>
+    <span class="c1"># We can&#39;t import the Person model directly as it may be a newer</span>
+    <span class="c1"># version than this migration expects. We use the historical version.</span>
+    <span class="n">Person</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s2">&quot;yourappname&quot;</span><span class="p">,</span> <span class="s2">&quot;Person&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">person</span> <span class="ow">in</span> <span class="n">Person</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">person</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">person</span><span class="o">.</span><span class="n">first_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">person</span><span class="o">.</span><span class="n">last_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">person</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;yourappname&quot;</span><span class="p">,</span> <span class="s2">&quot;0001_initial&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">RunPython</span><span class="p">(</span><span class="n">combine_names</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>完成后，我们可以像往常一样运行 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">migrate</span></code>，数据迁移将与其他迁移一起运行。</p>
+<p>您可以将第二个可调用对象传递给 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 以运行撤销迁移时要执行的任何逻辑。 如果忽略此可调用对象，则撤销迁移将引发异常。</p>
+<div class="section" id="s-accessing-models-from-other-apps">
+<span id="accessing-models-from-other-apps"></span><h3>从其他应用访问模型<a class="headerlink" href="#accessing-models-from-other-apps" title="永久链接至标题">¶</a></h3>
+<p>在编写使用来自迁移所在应用以外的其他应用模型的 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 函数时，迁移的 <code class="docutils literal notranslate"><span class="pre">dependencies</span></code> 属性应包括所涉及的每个应用程序的最新迁移，否则当你尝试使用 <code class="docutils literal notranslate"><span class="pre">apps.get_model()</span></code> 在 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 函数中获取模型时，你可能会得到 <code class="docutils literal notranslate"><span class="pre">LookupError:</span> <span class="pre">No</span> <span class="pre">installed</span> <span class="pre">app</span> <span class="pre">with</span> <span class="pre">label</span> <span class="pre">'myappname'</span></code>。</p>
+<p>在下面的例子中，我们在 <code class="docutils literal notranslate"><span class="pre">app1</span></code> 中进行迁移，需要使用 <code class="docutils literal notranslate"><span class="pre">app2</span></code> 中的模型。我们不关心 <code class="docutils literal notranslate"><span class="pre">move_m1</span></code> 的细节，只关心它需要访问两个应用程序的模型。因此，我们添加了一个依赖关系，指定 <code class="docutils literal notranslate"><span class="pre">app2</span></code> 最后一次迁移：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;app1&quot;</span><span class="p">,</span> <span class="s2">&quot;0001_initial&quot;</span><span class="p">),</span>
+        <span class="c1"># added dependency to enable using models from app2 in move_m1</span>
+        <span class="p">(</span><span class="s2">&quot;app2&quot;</span><span class="p">,</span> <span class="s2">&quot;0004_foobar&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">RunPython</span><span class="p">(</span><span class="n">move_m1</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-more-advanced-migrations">
+<span id="more-advanced-migrations"></span><h3>更高级的迁移<a class="headerlink" href="#more-advanced-migrations" title="永久链接至标题">¶</a></h3>
+<p>如果你对更高级的迁移操作感兴趣，或者希望能够编写自己的迁移操作，请参阅 <a class="reference internal" href="../ref/migration-operations.html"><span class="doc">迁移操作参考</span></a> 和“如何” <a class="reference internal" href="../howto/writing-migrations.html"><span class="doc">编写操作</span></a>。</p>
+</div>
+</div>
+<div class="section" id="s-squashing-migrations">
+<span id="s-migration-squashing"></span><span id="squashing-migrations"></span><span id="migration-squashing"></span><h2>压缩迁移<a class="headerlink" href="#squashing-migrations" title="永久链接至标题">¶</a></h2>
+<p>我们鼓励你自由地进行迁移，而不要担心你有多少迁移；迁移代码经过优化，可以一次处理几百个迁移，而不会有太多的减速。然而，最终你会希望从几百个迁移回归到只有几个，这就是压缩的作用。</p>
+<p>压缩是将一组现有的多个迁移减少到一个（有时是几个）迁移，这些迁移仍然代表相同的更改。</p>
+<p>Django通过获取所有现有迁移，提取它们的 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 并将它们按顺序排列，然后对它们运行一个优化器，以尝试减少列表的长度——例如，它知道 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.CreateModel" title="django.db.migrations.operations.CreateModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateModel</span></code></a> 和 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.DeleteModel" title="django.db.migrations.operations.DeleteModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteModel</span></code></a> 相互抵消，它还知道 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.AddField" title="django.db.migrations.operations.AddField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AddField</span></code></a> 可以卷入 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.CreateModel" title="django.db.migrations.operations.CreateModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateModel</span></code></a>。</p>
+<p>一旦操作序列被尽可能地减少——可能的数量取决于你的模型有多紧密交织，如果你有任何 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunSQL" title="django.db.migrations.operations.RunSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunSQL</span></code></a> 或 <a class="reference internal" href="../ref/migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 操作（除非它们被标记为 <code class="docutils literal notranslate"><span class="pre">elidable</span></code>，否则无法被优化），Django就会把它写回一组新的迁移文件中。</p>
+<p>这些文件被标记为替换了先前压缩的迁移，因此它们可以与旧迁移文件共存，Django 将根据你在历史记录中的位置智能地在它们之间切换。如果你仍处于压缩过程中，则它将继续使用它们直到结束，然后切换到压缩历史记录，而新安装将使用新压缩后的迁移并跳过所有旧迁移。</p>
+<p>这样你就可以压缩而不至于把目前还没有完全更新的生产系统搞乱。推荐的流程是压缩，保留旧文件，提交并发布，等到所有系统都升级到新版本（或者如果你是第三方项目，确保你的用户按顺序升级版本，不跳过任何一个版本），然后删除旧文件，提交并进行第二次发布。</p>
+<p>支持所有这些操作的命令是 <a class="reference internal" href="../ref/django-admin.html#django-admin-squashmigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">squashmigrations</span></code></a> - 传递给它您想要合并的应用程序标签和迁移名称，它将开始工作：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./manage.py squashmigrations myapp <span class="m">0004</span>
+Will squash the following migrations:
+ - 0001_initial
+ - 0002_some_change
+ - 0003_another_change
+ - 0004_undo_something
+Do you wish to proceed? <span class="o">[</span>yN<span class="o">]</span> y
+Optimizing...
+  Optimized from <span class="m">12</span> operations to <span class="m">7</span> operations.
+Created new squashed migration /home/andrew/Programs/DjangoTest/test/migrations/0001_squashed_0004_undo_something.py
+  You should commit this migration but leave the old ones <span class="k">in</span> place<span class="p">;</span>
+  the new migration will be used <span class="k">for</span> new installs. Once you are sure
+  all instances of the codebase have applied the migrations you squashed,
+  you can delete them.
+</pre></div>
+</div>
+<p>如果要设置压缩迁移的名称而不是使用自动生成的迁移名称，请使用 <a class="reference internal" href="../ref/django-admin.html#cmdoption-squashmigrations-squashed-name"><code class="xref std std-option docutils literal notranslate"><span class="pre">squashmigrations</span> <span class="pre">--squashed-name</span></code></a> 选项。</p>
+<p>请注意，Django 中的模型相互依赖可能会变得非常复杂，压缩可能会导致迁移无法运行；要么是优化错误（在这种情况下，你可以用 <code class="docutils literal notranslate"><span class="pre">--no-optimize</span></code> 再试一次，不过你也应该报告这个问题），要么是 <code class="docutils literal notranslate"><span class="pre">CircularDependencyError</span></code>，在这种情况下，你可以手动解决它。</p>
+<p>要手动解决 <code class="docutils literal notranslate"><span class="pre">CircularDependencyError</span></code> 问题，请将循环依赖中的外键分离到单独的迁移中，并将依赖项移到另一个应用上。如果你不确定，请参见 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 在被要求从模型创建全新的迁移时如何处理问题。在未来的 Django 版本中，<a class="reference internal" href="../ref/django-admin.html#django-admin-squashmigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">squashmigrations</span></code></a> 将被更新以尝试自己解决这些错误。</p>
+<p>一旦你压缩了你的迁移，你应该把它和它所替代的迁移一起提交，并把这个更改分发到你的应用程序的所有运行中的实例，确保它们运行 <code class="docutils literal notranslate"><span class="pre">migrate</span></code> 来将更改存储在它们的数据库中。</p>
+<p>然后，你必须通过以下方法将压缩的迁移过渡到正常迁移：</p>
+<ul class="simple">
+<li>删除它替换的所有迁移文件。</li>
+<li>将所有依赖被删除迁移的迁移更新为依赖被压缩的迁移。</li>
+<li>删除压缩迁移的 <code class="docutils literal notranslate"><span class="pre">Migration</span></code> 类的 <code class="docutils literal notranslate"><span class="pre">replaces</span></code> 属性（这就是 Django 告诉它是压缩迁移的方式）。</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">压缩迁移后，在完全将其转换为正常迁移之前，你不应该再重新压缩该压缩的迁移。</p>
+</div>
+<div class="admonition-pruning-references-to-deleted-migrations admonition">
+<p class="first admonition-title">修剪已删除的迁移的引用</p>
+<p class="last">如果可能会在将来重复使用已删除的迁移的名称，您应该使用 <a class="reference internal" href="../ref/django-admin.html#cmdoption-migrate-prune"><code class="xref std std-option docutils literal notranslate"><span class="pre">migrate</span> <span class="pre">--prune</span></code></a> 选项从 Django 的迁移表中删除对它的引用。</p>
+</div>
+</div>
+<div class="section" id="s-serializing-values">
+<span id="s-migration-serializing"></span><span id="serializing-values"></span><span id="migration-serializing"></span><h2>序列化值<a class="headerlink" href="#serializing-values" title="永久链接至标题">¶</a></h2>
+<p>迁移是包含模型旧定义的 Python 文件，因此，要编写它们，Django 必须获取模型的当前状态并将它们序列化到一个文件中。</p>
+<p>虽然 Django 可以序列化大多数内容，但有些内容我们无法序列化为有效的 Python 表示形式——对于如何将值转换回代码，没有 Python 标准（<code class="docutils literal notranslate"><span class="pre">repr()</span></code> 只适用于基本的值，而且没有指定导入路径）。</p>
+<p>Django 可以序列化以下内容：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">int</span></code>，<code class="docutils literal notranslate"><span class="pre">float</span></code>，<code class="docutils literal notranslate"><span class="pre">bool</span></code>，<code class="docutils literal notranslate"><span class="pre">str</span></code>，<code class="docutils literal notranslate"><span class="pre">bytes</span></code>，<code class="docutils literal notranslate"><span class="pre">None</span></code>，<code class="docutils literal notranslate"><span class="pre">NoneType</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">list</span></code>，<code class="docutils literal notranslate"><span class="pre">set</span></code>，<code class="docutils literal notranslate"><span class="pre">tuple</span></code>，<code class="docutils literal notranslate"><span class="pre">dict</span></code>，<code class="docutils literal notranslate"><span class="pre">range</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">datetime.date</span></code>，<code class="docutils literal notranslate"><span class="pre">datetime.time</span></code> 和 <code class="docutils literal notranslate"><span class="pre">datetime.datetime</span></code> 实例（包括可识别时区的实例）</li>
+<li><code class="docutils literal notranslate"><span class="pre">decimal.Decimal</span></code> 实例</li>
+<li><code class="docutils literal notranslate"><span class="pre">enum.Enum</span></code> 和 <code class="docutils literal notranslate"><span class="pre">enum.Flag</span></code> 实例</li>
+<li><code class="docutils literal notranslate"><span class="pre">uuid.UUID</span></code> 实例</li>
+<li><a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.partial" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.partial()</span></code></a>  和具有可序列化 <code class="docutils literal notranslate"><span class="pre">func</span></code>、<code class="docutils literal notranslate"><span class="pre">args</span></code> 和 <code class="docutils literal notranslate"><span class="pre">keywords</span></code> 值的 <a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.partialmethod" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">functools.partialmethod</span></code></a> 实例。</li>
+<li>来自 <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#module-pathlib" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pathlib</span></code></a> 的纯路径和具体路径对象。具体路径将被转换为其纯路径等效项，例如 <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.PosixPath" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.PosixPath</span></code></a> 到 <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.PurePosixPath" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.PurePosixPath</span></code></a>。</li>
+<li><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">os.PathLike</span></code></a> 实例，例如 <a class="reference external" href="https://docs.python.org/3/library/os.html#os.DirEntry" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">os.DirEntry</span></code></a>，可以使用 <a class="reference external" href="https://docs.python.org/3/library/os.html#os.fspath" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fspath()</span></code></a> 转换为 <code class="docutils literal notranslate"><span class="pre">str</span></code> 或 <code class="docutils literal notranslate"><span class="pre">bytes</span></code>。</li>
+<li>包含可序列化值的 <code class="docutils literal notranslate"><span class="pre">LazyObject</span></code> 实例。</li>
+<li>枚举类型（例如 <code class="docutils literal notranslate"><span class="pre">TextChoices</span></code> 或 <code class="docutils literal notranslate"><span class="pre">IntegerChoices</span></code>）实例。</li>
+<li>任何 Django 字段</li>
+<li>任何函数或方法引用（如 <code class="docutils literal notranslate"><span class="pre">datetime.datetime.today</span></code>）（必须在模块的顶层范围内）<ul>
+<li>如果正确包装，函数可以进行装饰，即使用 <a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.wraps" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.wraps()</span></code></a></li>
+<li>明确支持 <a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.cache" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.cache()</span></code></a> 和 <a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.lru_cache" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.lru_cache()</span></code></a> 装饰器</li>
+</ul>
+</li>
+<li>在类主体内部使用的未绑定方法</li>
+<li>任何类引用（必须在模块的顶层范围内）</li>
+<li>具有自定义 <code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code> 方法的任何东西（<a class="reference internal" href="#custom-deconstruct-method"><span class="std std-ref">见下文</span></a>）</li>
+</ul>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>添加了对 <code class="docutils literal notranslate"><span class="pre">enum.Flag</span></code> 的序列化支持。</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对使用 <a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.cache" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.cache()</span></code></a> 或 <a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.lru_cache" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.lru_cache()</span></code></a> 装饰的函数的序列化支持。</p>
+</div>
+<p>Django 不能序列化：</p>
+<ul class="simple">
+<li>嵌套类</li>
+<li>任何类实例（例如 <code class="docutils literal notranslate"><span class="pre">MyClass(4.3,</span> <span class="pre">5.7)</span></code>）</li>
+<li>匿名函数</li>
+</ul>
+<div class="section" id="s-custom-serializers">
+<span id="s-custom-migration-serializers"></span><span id="custom-serializers"></span><span id="custom-migration-serializers"></span><h3>自定义序列化<a class="headerlink" href="#custom-serializers" title="永久链接至标题">¶</a></h3>
+<p>你可以通过编写一个自定义的序列化器来序列化其他类型。例如，如果 Django 默认没有序列化 <a class="reference external" href="https://docs.python.org/3/library/decimal.html#decimal.Decimal" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decimal</span></code></a> 你可以这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+
+<span class="kn">from</span> <span class="nn">django.db.migrations.serializer</span> <span class="kn">import</span> <span class="n">BaseSerializer</span>
+<span class="kn">from</span> <span class="nn">django.db.migrations.writer</span> <span class="kn">import</span> <span class="n">MigrationWriter</span>
+
+
+<span class="k">class</span> <span class="nc">DecimalSerializer</span><span class="p">(</span><span class="n">BaseSerializer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="p">{</span><span class="s2">&quot;from decimal import Decimal&quot;</span><span class="p">}</span>
+
+
+<span class="n">MigrationWriter</span><span class="o">.</span><span class="n">register_serializer</span><span class="p">(</span><span class="n">Decimal</span><span class="p">,</span> <span class="n">DecimalSerializer</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">MigrationWriter.register_serializer()</span></code> 的第一个参数想要使用序列化器的程序类型或类型的可迭代对象。</p>
+<p>序列化器的 <code class="docutils literal notranslate"><span class="pre">serialize()</span></code> 方法必须返回一个字符串，说明该值在迁移中应如何显示以及迁移中需要的一组导入。</p>
+</div>
+<div class="section" id="s-adding-a-deconstruct-method">
+<span id="s-custom-deconstruct-method"></span><span id="adding-a-deconstruct-method"></span><span id="custom-deconstruct-method"></span><h3>添加 <code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code> 方法<a class="headerlink" href="#adding-a-deconstruct-method" title="永久链接至标题">¶</a></h3>
+<p>你可以通过给类一个 <code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code> 方法来让Django序列化你的自定义类实例。它不带任何参数，应该返回一个三个项目组成的元组 <code class="docutils literal notranslate"><span class="pre">(path,</span> <span class="pre">args,</span> <span class="pre">kwargs)</span></code>：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">path</span></code> 应该是该类的 Python 路径，并且类名作为最后一部分包括在内（例如，<code class="docutils literal notranslate"><span class="pre">myapp.custom_things.MyClass</span></code>）。如果你的类在模块的顶层不可用，那么它就不能被序列化。</li>
+<li><code class="docutils literal notranslate"><span class="pre">args</span></code> 应该是一个位置参数的列表，用来传递给你的类的 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 方法。这个列表中的所有内容本身应该是可序列化的。</li>
+<li><code class="docutils literal notranslate"><span class="pre">kwargs</span></code> 应该是一个关键字参数的字典，用来传递给你的类的 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 方法。每个值本身应该是可序列化的。</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">此返回值与 <a class="reference internal" href="../howto/custom-model-fields.html#custom-field-deconstruct-method"><span class="std std-ref">自定义字段</span></a> 的 <code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code> 方法不同，后者返回四个项组成的元组。</p>
+</div>
+<p>Django 会用给定的参数将值作为你的类的实例化写出来，类似于它写出对 Django 字段的引用的方式。</p>
+<p>为了防止每次运行 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 时都会创建一个新的迁移，你还应该在装饰类中添加一个 <code class="docutils literal notranslate"><span class="pre">__eq__()</span></code> 方法。这个函数将被 Django 的迁移框架调用，以检测状态之间的变化。</p>
+<p>只要类构造函数的所有参数本身都是可序列化的，就可以使用 <code class="docutils literal notranslate"><span class="pre">django.utils.deconstruct</span></code> 的 <code class="docutils literal notranslate"><span class="pre">&#64;deconstructible</span></code> 类装饰器添加 <code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code> 方法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.deconstruct</span> <span class="kn">import</span> <span class="n">deconstructible</span>
+
+
+<span class="nd">@deconstructible</span>
+<span class="k">class</span> <span class="nc">MyCustomClass</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">foo</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">foo</span> <span class="o">=</span> <span class="n">foo</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">foo</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">foo</span>
+</pre></div>
+</div>
+<p>装饰器添加逻辑以捕获并保留进入构造函数的参数，然后在调用 deconstruct() 时准确返回这些参数。</p>
+</div>
+</div>
+<div class="section" id="s-supporting-multiple-django-versions">
+<span id="supporting-multiple-django-versions"></span><h2>支持多个 Django 版本<a class="headerlink" href="#supporting-multiple-django-versions" title="永久链接至标题">¶</a></h2>
+<p>如果你是具有模型的第三方应用的维护者，你可能需要发布支持多个 Django 版本的迁移。在这种情况下，你应该始终 <strong>使用你希望支持的最低Django版本</strong> 运行 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a>。</p>
+<p>迁移系统会按照与 Django 其他部分相同的策略保持向后兼容，所以在 Django X.Y 上生成的迁移文件在 Django X.Y+1 上运行时应该没有变化。但是，迁移系统并不保证向前兼容。新的功能可能会被添加，而且用新版本的 Django 生成的迁移文件可能无法在旧版本上运行。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="../ref/migration-operations.html"><span class="doc">迁移操作参考</span></a></dt><dd>涵盖架构操作 API，特殊操作以及编写自己的操作。</dd>
+<dt><a class="reference internal" href="../howto/writing-migrations.html"><span class="doc">编写迁移的“方法”</span></a></dt><dd>介绍如何为你可能遇到的不同情况构建和编写数据库迁移。</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">迁移</a><ul>
+<li><a class="reference internal" href="#the-commands">命令</a></li>
+<li><a class="reference internal" href="#backend-support">后端支持</a><ul>
+<li><a class="reference internal" href="#postgresql">PostgreSQL</a></li>
+<li><a class="reference internal" href="#mysql">MySQL</a></li>
+<li><a class="reference internal" href="#sqlite">SQLite</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#workflow">工作流程</a><ul>
+<li><a class="reference internal" href="#version-control">版本控制</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#transactions">事务</a></li>
+<li><a class="reference internal" href="#dependencies">依赖</a><ul>
+<li><a class="reference internal" href="#swappable-dependencies">可交换的依赖关系</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#migration-files">迁移文件</a><ul>
+<li><a class="reference internal" href="#custom-fields">自定义字段</a></li>
+<li><a class="reference internal" href="#model-managers">模型管理器</a></li>
+<li><a class="reference internal" href="#initial-migrations">初始迁移</a></li>
+<li><a class="reference internal" href="#history-consistency">历史一致性</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#adding-migrations-to-apps">向应用添加迁移</a></li>
+<li><a class="reference internal" href="#reversing-migrations">撤销迁移</a></li>
+<li><a class="reference internal" href="#historical-models">历史模型</a></li>
+<li><a class="reference internal" href="#considerations-when-removing-model-fields">删除模型字段时的注意事项</a></li>
+<li><a class="reference internal" href="#data-migrations">数据迁移</a><ul>
+<li><a class="reference internal" href="#accessing-models-from-other-apps">从其他应用访问模型</a></li>
+<li><a class="reference internal" href="#more-advanced-migrations">更高级的迁移</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#squashing-migrations">压缩迁移</a></li>
+<li><a class="reference internal" href="#serializing-values">序列化值</a><ul>
+<li><a class="reference internal" href="#custom-serializers">自定义序列化</a></li>
+<li><a class="reference internal" href="#adding-a-deconstruct-method">添加 <code class="docutils literal notranslate"><span class="pre">deconstruct()</span></code> 方法</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supporting-multiple-django-versions">支持多个 Django 版本</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="class-based-views/mixins.html"
+                          title="上一章">在基于类的视图中使用混入</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="files.html"
+                          title="下一章">管理文件</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/topics/migrations.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="class-based-views/mixins.html" title="在基于类的视图中使用混入">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="files.html" title="管理文件">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>编写并运行测试 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="测试工具" href="tools.html" />
+    <link rel="prev" title="Django 中的测试" href="index.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="index.html" title="Django 中的测试">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="tools.html" title="测试工具">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-testing-overview">
+            
+  <div class="section" id="s-module-django.test">
+<span id="s-writing-and-running-tests"></span><span id="module-django.test"></span><span id="writing-and-running-tests"></span><h1>编写并运行测试<a class="headerlink" href="#module-django.test" title="永久链接至标题">¶</a></h1>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last"><a class="reference internal" href="../../intro/tutorial05.html"><span class="doc">测试教程</span></a>， <a class="reference internal" href="tools.html"><span class="doc">测试工具参考</span></a> 和 <a class="reference internal" href="advanced.html"><span class="doc">进阶测试主题</span></a>。</p>
+</div>
+<p>本文档主要分为两部分。首先，我们介绍如何利用 Django 编写测试。接着，我们介绍如何运行它们。</p>
+<div class="section" id="s-writing-tests">
+<span id="writing-tests"></span><h2>编写测试<a class="headerlink" href="#writing-tests" title="永久链接至标题">¶</a></h2>
+<p>Django 的单元测试采用 Python 的标准模块： <a class="reference external" href="https://docs.python.org/3/library/unittest.html#module-unittest" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a>。该模块以类的形式定义测试。</p>
+<p>下面是一个例子，它是 <a class="reference internal" href="tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.test.TestCase</span></code></a> 的子类，同时父类也是 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a> 的子类，在事务内部运行每个测试以提供隔离：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">myapp.models</span> <span class="kn">import</span> <span class="n">Animal</span>
+
+
+<span class="k">class</span> <span class="nc">AnimalTestCase</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Animal</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;lion&quot;</span><span class="p">,</span> <span class="n">sound</span><span class="o">=</span><span class="s2">&quot;roar&quot;</span><span class="p">)</span>
+        <span class="n">Animal</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="n">sound</span><span class="o">=</span><span class="s2">&quot;meow&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">test_animals_can_speak</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Animals that can speak are correctly identified&quot;&quot;&quot;</span>
+        <span class="n">lion</span> <span class="o">=</span> <span class="n">Animal</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;lion&quot;</span><span class="p">)</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">Animal</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cat&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">lion</span><span class="o">.</span><span class="n">speak</span><span class="p">(),</span> <span class="s1">&#39;The lion says &quot;roar&quot;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">speak</span><span class="p">(),</span> <span class="s1">&#39;The cat says &quot;meow&quot;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>当你 <a class="reference internal" href="#running-tests"><span class="std std-ref">运行你的测试</span></a> 时，测试工具的默认行为是查找所有的测试用例类（即，<a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a> 的子类）在任何文件中，其名称以 <code class="docutils literal notranslate"><span class="pre">test</span></code> 开头，自动构建一个测试套件，并运行该套件。</p>
+<p>更多关于 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#module-unittest" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a> 的细节，参考 Python 文档。</p>
+<div class="admonition-where-should-the-tests-live admonition">
+<p class="first admonition-title">测试代码应该放在哪？</p>
+<p>默认的 <a class="reference internal" href="../../ref/django-admin.html#django-admin-startapp"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startapp</span></code></a> 会在新的应用程序中创建一个 <code class="docutils literal notranslate"><span class="pre">tests.py</span></code> 文件。如果你只有几个测试，这可能是好的，但随着你的测试套件的增长，你可能会想把它重组为一个测试包，这样你就可以把你的测试分成不同的子模块，如 <code class="docutils literal notranslate"><span class="pre">test_models.py</span></code>、<code class="docutils literal notranslate"><span class="pre">test_views.py</span></code>、<code class="docutils literal notranslate"><span class="pre">test_forms.py</span></code> 等。你可以自由选择任何你喜欢的组织方案。</p>
+<p class="last">另请参阅 <a class="reference internal" href="advanced.html#testing-reusable-applications"><span class="std std-ref">使用 Django 测试运行器测试可重用的应用程序</span></a>。</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>如果你的测试依赖数据库连接，比如创建或查询模型，请确保继承 <a class="reference internal" href="tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.test.TestCase</span></code></a> 实现你的测试类，而不是 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a>。</p>
+<p class="last">使用 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a> 避免了在事务中运行每个测试并刷新数据库的成本，但如果你的测试与数据库交互，它们的行为将根据测试运行器执行它们的顺序而变化。这可能导致单元测试在单独运行时通过，但在套件中运行时失败。</p>
+</div>
+</div>
+<div class="section" id="s-running-tests">
+<span id="s-id1"></span><span id="running-tests"></span><span id="id1"></span><h2>运行测试<a class="headerlink" href="#running-tests" title="永久链接至标题">¶</a></h2>
+<p>一旦你编写了测试，就可以使用项目的 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 工具的 <a class="reference internal" href="../../ref/django-admin.html#django-admin-test"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">test</span></code></a> 命令来运行它们：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./manage.py <span class="nb">test</span>
+</pre></div>
+</div>
+<p>测试发现基于 unittest 模块的 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest-test-discovery" title="(在 Python v3.12)"><span class="xref std std-ref">内置测试发现</span></a>。默认情况下，它将在当前工作目录下的任何文件中发现名称为 <code class="docutils literal notranslate"><span class="pre">test*.py</span></code> 的测试。</p>
+<p>你可以通过向 <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">test</span></code> 提供任意数量的 &quot;测试标签&quot; 来指定要运行的特定测试。每个测试标签可以是指向包、模块、<code class="docutils literal notranslate"><span class="pre">TestCase</span></code> 子类或测试方法的完整 Python 路径。例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run all the tests in the animals.tests module</span>
+$ ./manage.py <span class="nb">test</span> animals.tests
+
+<span class="c1"># Run all the tests found within the &#39;animals&#39; package</span>
+$ ./manage.py <span class="nb">test</span> animals
+
+<span class="c1"># Run just one test case class</span>
+$ ./manage.py <span class="nb">test</span> animals.tests.AnimalTestCase
+
+<span class="c1"># Run just one test method</span>
+$ ./manage.py <span class="nb">test</span> animals.tests.AnimalTestCase.test_animals_can_speak
+</pre></div>
+</div>
+<p>你还可以提供一个目录路径来发现该目录下的测试：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./manage.py <span class="nb">test</span> animals/
+</pre></div>
+</div>
+<p>如果你的测试文件的命名方式不同于 <code class="docutils literal notranslate"><span class="pre">test*.py</span></code> 模式，你可以使用 <code class="docutils literal notranslate"><span class="pre">-p</span></code> （或 <code class="docutils literal notranslate"><span class="pre">--pattern</span></code>）选项来指定自定义的文件名模式匹配：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./manage.py <span class="nb">test</span> --pattern<span class="o">=</span><span class="s2">&quot;tests_*.py&quot;</span>
+</pre></div>
+</div>
+<p>如果你在测试运行时按 <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code>，测试运行器将等待当前运行的测试完成，然后优雅地退出。在优雅退出过程中，测试运行器将输出任何测试失败的细节，报告运行了多少次测试，遇到了多少次错误和失败，并像往常一样销毁任何测试数据库。因此，如果你忘记了传入 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-failfast"><code class="xref std std-option docutils literal notranslate"><span class="pre">--failfast</span></code></a> 选项，注意到一些测试意外地失败了，并且想在不等待整个测试运行完成的情况下获得失败的细节，那么按下 <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code> 就会非常有用。</p>
+<p>如果你不想等待当前正在进行的测试结束，你可以按两次 <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code>，测试运行将立即停止，但不会优雅地停止。不会报告中断前运行的测试细节，也不会销毁运行中创建的任何测试数据库。</p>
+<div class="admonition-test-with-warnings-enabled admonition">
+<p class="first admonition-title">在启用警告的情况下进行测试</p>
+<p class="last">启用 Python 警告来运行测试是个好主意：<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-Wa</span> <span class="pre">manage.py</span> <span class="pre">test</span></code>。<code class="docutils literal notranslate"><span class="pre">-Wa</span></code> 标志告诉 Python 显示弃用警告。Django 和其他 Python 库一样，使用这些警告标志着功能的消失。它也可以标记你的代码中严格来说没有错误的但可以从更好的实现中受益的地方。</p>
+</div>
+<div class="section" id="s-the-test-database">
+<span id="s-id2"></span><span id="the-test-database"></span><span id="id2"></span><h3>测试数据库<a class="headerlink" href="#the-test-database" title="永久链接至标题">¶</a></h3>
+<p>需要数据库的测试（即模型测试）将不会使用“实际”（生产）数据库。 将为测试创建单独的空白数据库。</p>
+<p>无论测试是通过还是失败，当所有测试执行完毕后，测试数据库都会被销毁。</p>
+<p>你可以通过使用 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-keepdb"><code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--keepdb</span></code></a> 选项来防止测试数据库被破坏。 这将在两次运行之间保留测试数据库。 如果数据库不存在，将首先创建它。 任何迁移都将被应用，以使其保持最新状态。</p>
+<p>如上一节所述，如果测试运行被强行中断，测试数据库可能不会被销毁。在下一次运行时，你会被问到是要重新使用还是销毁数据库。使用 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-noinput"><code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--noinput</span></code></a> 选项禁止显示该提示并自动销毁数据库。 例如，在持续集成服务器上运行测试时这很有用，该测试可能会因超时而中断。</p>
+<p>默认的测试数据库名称是通过在 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中每个 <a class="reference internal" href="../../ref/settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a> 的值前加上 <code class="docutils literal notranslate"><span class="pre">test_</span></code> 来创建的。当使用 SQLite时，默认情况下测试将使用内存数据库（即数据库将在内存中创建，完全绕开文件系统！）。<a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中的 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-TEST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST</span></code></a> 字典提供了许多设置来配置你的测试数据库。例如，如果你想使用不同的数据库名称，给 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中的每个数据库在 <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-TEST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST</span></code></a> 字典中指定 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a>。</p>
+<p>在 PostgreSQL 上，<a class="reference internal" href="../../ref/settings.html#std-setting-USER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USER</span></code></a> 也需要对内置的 <code class="docutils literal notranslate"><span class="pre">postgres</span></code> 数据库进行读取访问。</p>
+<p>除了使用单独的数据库外，测试运行器还将使用你在配置文件中的所有相同的数据库设置： <a class="reference internal" href="../../ref/settings.html#std-setting-DATABASE-ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ENGINE</span></code></a>、<a class="reference internal" href="../../ref/settings.html#std-setting-USER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USER</span></code></a>、<a class="reference internal" href="../../ref/settings.html#std-setting-HOST"><code class="xref std std-setting docutils literal notranslate"><span class="pre">HOST</span></code></a> 等。测试数据库是由 <a class="reference internal" href="../../ref/settings.html#std-setting-USER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USER</span></code></a> 指定的用户创建的，所以你需要确保给定的用户账户有足够的权限在系统上创建一个新的数据库。</p>
+<p>为了对测试数据库的字符编码进行精细控制，请使用 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_CHARSET"><code class="xref std std-setting docutils literal notranslate"><span class="pre">CHARSET</span></code></a> TEST 选项。如果你使用的是 MySQL，你也可以使用 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_COLLATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">COLLATION</span></code></a> 选项来控制测试数据库使用的特定字符序。请参阅 <a class="reference internal" href="../../ref/settings.html"><span class="doc">配置文档</span></a> 了解这些和其他高级设置的细节。</p>
+<p>如果使用 SQLite 内存数据库，启用了 <a class="reference external" href="https://www.sqlite.org/sharedcache.html">共享缓存</a>，你就可以编写线程之间共享数据库的测试。</p>
+<div class="admonition-finding-data-from-your-production-database-when-running-tests admonition">
+<p class="first admonition-title">运行测试时从生产数据库中查找数据？</p>
+<p>如果你的代码在编译模块时试图访问数据库，这将在测试数据库建立 <em>之前</em> 发生，可能会产生意想不到的结果。例如，如果你在模块级代码中进行数据库查询，并且存在真实的数据库，则生产数据可能会污染你的测试。 无论如何，<em>在代码中都包含这样的导入时数据库查询是一个坏主意</em>——重写代码，使其不会执行此操作。</p>
+<p class="last">这也适用于 <a class="reference internal" href="../../ref/applications.html#django.apps.AppConfig.ready" title="django.apps.AppConfig.ready"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready()</span></code></a> 的自定义实现。</p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last"><a class="reference internal" href="advanced.html#topics-testing-advanced-multidb"><span class="std std-ref">进阶多数据库测试主题</span></a>。</p>
+</div>
+</div>
+<div class="section" id="s-order-in-which-tests-are-executed">
+<span id="s-order-of-tests"></span><span id="order-in-which-tests-are-executed"></span><span id="order-of-tests"></span><h3>执行测试的顺序<a class="headerlink" href="#order-in-which-tests-are-executed" title="永久链接至标题">¶</a></h3>
+<p>为了保证所有的 <code class="docutils literal notranslate"><span class="pre">TestCase</span></code> 代码都从干净的数据库开始，Django 测试运行器以如下方式重新排序测试：</p>
+<ul class="simple">
+<li>所有 <a class="reference internal" href="tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a> 的子类首先运行。</li>
+<li>然后，所有其他基于 Django 的测试（基于 <a class="reference internal" href="tools.html#django.test.SimpleTestCase" title="django.test.SimpleTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleTestCase</span></code></a> 的测试用例类，包括 <a class="reference internal" href="tools.html#django.test.TransactionTestCase" title="django.test.TransactionTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionTestCase</span></code></a>）会按照没有特定顺序保证或强制执行的方式运行。</li>
+<li>然后运行任何其他的 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a> 测试（包括 doctests），这些测试可能会改变数据库而不将其恢复到原始状态。</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">新的测试顺序可能会意外的揭示出测试用例对顺序的依赖性。在 doctests 依赖于数据库中给定的 <a class="reference internal" href="tools.html#django.test.TransactionTestCase" title="django.test.TransactionTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionTestCase</span></code></a> 测试的情况下，必须更新它们才能独立运行。</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在加载测试时检测到的失败会排在上述所有测试之前，以便更快地获得反馈。这包括找不到的测试模块或由于语法错误而无法加载的模块等问题。</p>
+</div>
+<p>你可以使用 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-shuffle"><code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--shuffle</span></code></a> 和 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-reverse"><code class="xref std std-option docutils literal notranslate"><span class="pre">--reverse</span></code></a> 选项对组内的执行顺序进行随机化和/或反转。这有助于确保你的测试彼此独立。</p>
+</div>
+<div class="section" id="s-rollback-emulation">
+<span id="s-test-case-serialized-rollback"></span><span id="rollback-emulation"></span><span id="test-case-serialized-rollback"></span><h3>回滚模拟<a class="headerlink" href="#rollback-emulation" title="永久链接至标题">¶</a></h3>
+<p>任何在迁移中加载的初始数据将只能在 <code class="docutils literal notranslate"><span class="pre">TestCase</span></code> 测试中使用，而不能在 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 测试中使用，此外，只有在支持事务的后端（最重要的例外是 MyISAM）上才能使用。对于依赖 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 的测试也是如此，比如 <a class="reference internal" href="tools.html#django.test.LiveServerTestCase" title="django.test.LiveServerTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">LiveServerTestCase</span></code></a> 和 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django.contrib.staticfiles.testing.StaticLiveServerTestCase" title="django.contrib.staticfiles.testing.StaticLiveServerTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">StaticLiveServerTestCase</span></code></a>。</p>
+<p>Django 可以通过在 <code class="docutils literal notranslate"><span class="pre">TestCase</span></code> 或 <code class="docutils literal notranslate"><span class="pre">TransactionTestCase</span></code> 中设置 <code class="docutils literal notranslate"><span class="pre">serialized_rollback</span></code> 选项为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 来为你重新加载每个测试用例的数据，但请注意，这将使测试套件的速度降低约 3 倍。</p>
+<p>第三方应用程序或那些针对 MyISAM 开发的应用程序将需要设置这个功能；但是，一般来说，你应该针对事务性数据库开发你自己的项目，并在大多数测试中使用 <code class="docutils literal notranslate"><span class="pre">TestCase</span></code>，因此不需要这个设置。</p>
+<p>初始序列化通常是非常快的，但如果你希望从这个过程中排除一些应用程序（并稍微加快测试运行速度），你可以将这些应用程序添加到 <a class="reference internal" href="../../ref/settings.html#std-setting-TEST_NON_SERIALIZED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST_NON_SERIALIZED_APPS</span></code></a>。</p>
+<p>为了防止序列化数据被加载两次，设置 <code class="docutils literal notranslate"><span class="pre">serialized_rollback=True</span></code> 在刷新测试数据库时禁用 <a class="reference internal" href="../../ref/signals.html#django.db.models.signals.post_migrate" title="django.db.models.signals.post_migrate"><code class="xref py py-data docutils literal notranslate"><span class="pre">post_migrate</span></code></a> 信号。</p>
+</div>
+<div class="section" id="s-other-test-conditions">
+<span id="other-test-conditions"></span><h3>其他测试条件<a class="headerlink" href="#other-test-conditions" title="永久链接至标题">¶</a></h3>
+<p>无论配置文件中的 <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 设置值是多少，所有的 Django 测试都以  <a class="reference internal" href="../../ref/settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a>=False 运行。这是为了确保你的代码观察到的输出与生产环境下的输出一致。</p>
+<p>在每个测试之后，缓存不会被清除，如果在生产环境中运行测试，运行 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">test</span> <span class="pre">fooapp</span></code> 可能会将测试中的数据插入到实际系统的缓存中，因为与数据库不同，没有使用单独的 &quot;测试缓存&quot;。这种行为 <a class="reference external" href="https://code.djangoproject.com/ticket/11505">可能会在将来发生变化</a>。</p>
+</div>
+<div class="section" id="s-understanding-the-test-output">
+<span id="understanding-the-test-output"></span><h3>了解测试输出<a class="headerlink" href="#understanding-the-test-output" title="永久链接至标题">¶</a></h3>
+<p>当你运行测试时，你会看到一些消息，测试运行程序正在准备自身。你可以使用命令行上的 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 选项来控制这些消息的详细程度：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Creating <span class="nb">test</span> database...
+Creating table myapp_animal
+Creating table myapp_mineral
+</pre></div>
+</div>
+<p>这告诉你测试运行程序正在创建测试数据库，如上一节所述。</p>
+<p>一旦测试数据库创建完成，Django 将运行你的测试。如果一切正常，你会看到类似于以下内容的输出：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>----------------------------------------------------------------------
+Ran <span class="m">22</span> tests <span class="k">in</span> <span class="m">0</span>.221s
+
+OK
+</pre></div>
+</div>
+<p>然而，如果有测试失败，你将看到关于哪些测试失败的详细信息：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">======================================================================</span>
+FAIL: test_was_published_recently_with_future_poll <span class="o">(</span>polls.tests.PollMethodTests<span class="o">)</span>
+----------------------------------------------------------------------
+Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
+  File <span class="s2">&quot;/dev/mysite/polls/tests.py&quot;</span>, line <span class="m">16</span>, <span class="k">in</span> test_was_published_recently_with_future_poll
+    self.assertIs<span class="o">(</span>future_poll.was_published_recently<span class="o">()</span>, False<span class="o">)</span>
+AssertionError: True is not False
+
+----------------------------------------------------------------------
+Ran <span class="m">1</span> <span class="nb">test</span> <span class="k">in</span> <span class="m">0</span>.003s
+
+FAILED <span class="o">(</span><span class="nv">failures</span><span class="o">=</span><span class="m">1</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>对这个错误输出的完整解释超出了本文的范围，但它非常直观。你可以参考 Python 的 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#module-unittest" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a> 库的文档以了解详细信息。</p>
+<p>注意，测试运行程序脚本的返回代码对于任何数量的失败测试都是 1（无论是由于错误、失败的断言还是意外的成功引起的）。如果所有测试都通过，返回代码为 0。如果你在一个 shell 脚本中使用测试运行程序脚本并需要在该级别测试成功或失败，这个特性非常有用。</p>
+</div>
+<div class="section" id="s-speeding-up-the-tests">
+<span id="s-speeding-up-tests-auth-hashers"></span><span id="speeding-up-the-tests"></span><span id="speeding-up-tests-auth-hashers"></span><h3>加快测试<a class="headerlink" href="#speeding-up-the-tests" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-running-tests-in-parallel">
+<span id="running-tests-in-parallel"></span><h4>并行运行测试<a class="headerlink" href="#running-tests-in-parallel" title="永久链接至标题">¶</a></h4>
+<p>只要测试正确隔离，你就可以并行运行它们以加快多核硬件的运行速度。 参见 <a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-parallel"><code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--parallel</span></code></a>.</p>
+</div>
+<div class="section" id="s-password-hashing">
+<span id="password-hashing"></span><h4>密码哈希<a class="headerlink" href="#password-hashing" title="永久链接至标题">¶</a></h4>
+<p>默认密码哈希器在设计上相当慢。 如果要在测试中对许多用户进行身份验证，则可能需要使用自定义设置文件，并将 <a class="reference internal" href="../../ref/settings.html#std-setting-PASSWORD_HASHERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PASSWORD_HASHERS</span></code></a> 设置为更快的哈希算法：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PASSWORD_HASHERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;django.contrib.auth.hashers.MD5PasswordHasher&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>不要忘记在 <a class="reference internal" href="../../ref/settings.html#std-setting-PASSWORD_HASHERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PASSWORD_HASHERS</span></code></a> 中包含在辅助工具中使用的任何哈希算法，如果有的话。</p>
+</div>
+<div class="section" id="s-preserving-the-test-database">
+<span id="preserving-the-test-database"></span><h4>保留测试数据库<a class="headerlink" href="#preserving-the-test-database" title="永久链接至标题">¶</a></h4>
+<p><a class="reference internal" href="../../ref/django-admin.html#cmdoption-test-keepdb"><code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--keepdb</span></code></a> 选项在两次测试运行之间保留测试数据库。 它跳过了创建和销毁操作，这可以大大减少运行测试的时间。</p>
+</div>
+<div class="section" id="s-avoiding-disk-access-for-media-files">
+<span id="avoiding-disk-access-for-media-files"></span><h4>避免磁盘访问的媒体文件处理<a class="headerlink" href="#avoiding-disk-access-for-media-files" title="永久链接至标题">¶</a></h4>
+<div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p><a class="reference internal" href="../../ref/files/storage.html#django.core.files.storage.InMemoryStorage" title="django.core.files.storage.InMemoryStorage"><code class="xref py py-class docutils literal notranslate"><span class="pre">InMemoryStorage</span></code></a> 是一种方便的方法，用于防止对媒体文件进行磁盘访问。所有数据都保存在内存中，然后在测试运行后被丢弃。</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">编写并运行测试</a><ul>
+<li><a class="reference internal" href="#writing-tests">编写测试</a></li>
+<li><a class="reference internal" href="#running-tests">运行测试</a><ul>
+<li><a class="reference internal" href="#the-test-database">测试数据库</a></li>
+<li><a class="reference internal" href="#order-in-which-tests-are-executed">执行测试的顺序</a></li>
+<li><a class="reference internal" href="#rollback-emulation">回滚模拟</a></li>
+<li><a class="reference internal" href="#other-test-conditions">其他测试条件</a></li>
+<li><a class="reference internal" href="#understanding-the-test-output">了解测试输出</a></li>
+<li><a class="reference internal" href="#speeding-up-the-tests">加快测试</a><ul>
+<li><a class="reference internal" href="#running-tests-in-parallel">并行运行测试</a></li>
+<li><a class="reference internal" href="#password-hashing">密码哈希</a></li>
+<li><a class="reference internal" href="#preserving-the-test-database">保留测试数据库</a></li>
+<li><a class="reference internal" href="#avoiding-disk-access-for-media-files">避免磁盘访问的媒体文件处理</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="index.html"
+                          title="上一章">Django 中的测试</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="tools.html"
+                          title="下一章">测试工具</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/testing/overview.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="index.html" title="Django 中的测试">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="tools.html" title="测试工具">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

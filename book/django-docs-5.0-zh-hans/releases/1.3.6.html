@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.3.6 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.3.5 版本发行说明" href="1.3.5.html" />
+    <link rel="prev" title="Django 1.3.7 版本发行说明" href="1.3.7.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.3.7.html" title="Django 1.3.7 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.3.5.html" title="Django 1.3.5 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.3.6">
+            
+  <div class="section" id="s-django-1-3-6-release-notes">
+<span id="django-1-3-6-release-notes"></span><h1>Django 1.3.6 版本发行说明<a class="headerlink" href="#django-1-3-6-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2013 年 2 月 19 日</em></p>
+<p>Django 1.3.6 修复了 1.3 系列中之前 Django 版本存在的四个安全问题。</p>
+<p>这是 Django 1.3 系列中的第六个修复错误/安全性发布。</p>
+<div class="section" id="s-host-header-poisoning">
+<span id="host-header-poisoning"></span><h2>Host 头部中毒<a class="headerlink" href="#host-header-poisoning" title="永久链接至标题">¶</a></h2>
+<p>Django 的某些部分（与最终用户编写的应用程序无关）使用包含域名的完整 URL，这些 URL 是根据 HTTP Host 头生成的。 Django 的文档已经包含了一些关于如何配置 Web 服务器以确保只有有效的 Host 头才能到达 Django 应用程序的建议。然而，有人向我们报告称，即使采用了建议的 Web 服务器配置，仍然有一些方法可以欺骗许多常见的 Web 服务器，使它们向应用程序提供错误且可能恶意的 Host 头。</p>
+<p>因此，Django 1.3.6 添加了一个新的设置，<code class="docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code>，它应包含站点的有效主机/域名的显式列表。如果调用 <code class="docutils literal notranslate"><span class="pre">request.get_host()</span></code> 的请求的 Host 标头与此列表中的条目不匹配，将引发 <code class="docutils literal notranslate"><span class="pre">SuspiciousOperation</span></code>。有关 <a class="reference internal" href="../ref/settings.html#std-setting-ALLOWED_HOSTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code></a> 设置的详细信息，请参阅文档。</p>
+<p>在 Django 1.3.6 中，这个设置的默认值是 <code class="docutils literal notranslate"><span class="pre">['*']</span></code> （匹配任何主机），出于向后兼容性考虑，但我们强烈建议所有站点设置一个更加限制的值。</p>
+<p>当 <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> 为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 时或在运行测试时，主机验证会被禁用。</p>
+</div>
+<div class="section" id="s-xml-deserialization">
+<span id="xml-deserialization"></span><h2>XML 反序列化<a class="headerlink" href="#xml-deserialization" title="永久链接至标题">¶</a></h2>
+<p>Python 标准库中的 XML 解析器容易受到外部实体和实体扩展攻击。 Django 使用此解析器对 XML 格式的数据库固件进行反序列化。固件反序列化器并非用于处理不受信任的数据，但为了在 Django 1.3.6 中确保安全，XML 反序列化器拒绝解析带有 DTD（DOCTYPE 定义）的 XML 文档，从而关闭了这些攻击途径。</p>
+<p>Python 标准库中的这些问题是 CVE-2013-1664 和 CVE-2013-1665。可以从 <a class="reference external" href="https://blog.python.org/2013/02/announcing-defusedxml-fixes-for-xml.html">Python 安全团队</a> 获取更多信息。</p>
+<p>Django 的 XML 序列化器不会创建带有 DTD 的文档，因此这不应该导致从 <code class="docutils literal notranslate"><span class="pre">dumpdata</span></code> 到 <code class="docutils literal notranslate"><span class="pre">loaddata</span></code> 的典型往返出现任何问题。但是，如果您向 <code class="docutils literal notranslate"><span class="pre">loaddata</span></code> 管理命令提供自己的 XML 文档，您需要确保它们不包含 DTD。</p>
+</div>
+<div class="section" id="s-formset-memory-exhaustion">
+<span id="formset-memory-exhaustion"></span><h2>表单集内存耗尽<a class="headerlink" href="#formset-memory-exhaustion" title="永久链接至标题">¶</a></h2>
+<p>以前的 Django 版本没有验证或限制表单集管理表单中由客户端提供的表单计数数据，这使得通过强制创建大量表单来耗尽服务器可用内存成为可能。</p>
+<p>在 Django 1.3.6 中，所有的表单集都有一个严格执行的最大表单数量限制（默认为 1000，但可以通过表单集工厂参数 <code class="docutils literal notranslate"><span class="pre">max_num</span></code> 设置得更高）。</p>
+</div>
+<div class="section" id="s-admin-history-view-information-leakage">
+<span id="admin-history-view-information-leakage"></span><h2>管理员历史视图信息泄露<a class="headerlink" href="#admin-history-view-information-leakage" title="永久链接至标题">¶</a></h2>
+<p>在以前的 Django 版本中，一个没有模型更改权限的管理员用户仍然可以通过其管理员历史日志查看实例的 Unicode 表示。 Django 1.3.6 现在将对象的管理员历史日志视图限制为具有该模型更改权限的用户。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.3.6 版本发行说明</a><ul>
+<li><a class="reference internal" href="#host-header-poisoning">Host 头部中毒</a></li>
+<li><a class="reference internal" href="#xml-deserialization">XML 反序列化</a></li>
+<li><a class="reference internal" href="#formset-memory-exhaustion">表单集内存耗尽</a></li>
+<li><a class="reference internal" href="#admin-history-view-information-leakage">管理员历史视图信息泄露</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.3.7.html"
+                          title="上一章">Django 1.3.7 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.3.5.html"
+                          title="下一章">Django 1.3.5 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.3.6.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.3.7.html" title="Django 1.3.7 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.3.5.html" title="Django 1.3.5 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

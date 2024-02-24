@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 2.2.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 2.2.2 版本发行说明" href="2.2.2.html" />
+    <link rel="prev" title="Django 2.2.4 版本发行说明" href="2.2.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="2.2.4.html" title="Django 2.2.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="2.2.2.html" title="Django 2.2.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-2.2.3">
+            
+  <div class="section" id="s-django-2-2-3-release-notes">
+<span id="django-2-2-3-release-notes"></span><h1>Django 2.2.3 版本发行说明<a class="headerlink" href="#django-2-2-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2019 年 7 月 1 日</em></p>
+<p>Django 2.2.3 修复了 Django 2.2.2 中的一个安全问题和若干个错误。此外，还整合了来自 Transifex 的最新字符串翻译。</p>
+<div class="section" id="s-cve-2019-12781-incorrect-http-detection-with-reverse-proxy-connecting-via-https">
+<span id="cve-2019-12781-incorrect-http-detection-with-reverse-proxy-connecting-via-https"></span><h2>CVE-2019-12781 ：通过 HTTPS 连接的反向代理中，HTTP 检测不正确。<a class="headerlink" href="#cve-2019-12781-incorrect-http-detection-with-reverse-proxy-connecting-via-https" title="永久链接至标题">¶</a></h2>
+<p>当部署在反向代理后面，通过 HTTPS 连接到 Django 时，<a class="reference internal" href="../ref/request-response.html#django.http.HttpRequest.scheme" title="django.http.HttpRequest.scheme"><code class="xref py py-attr docutils literal notranslate"><span class="pre">django.http.HttpRequest.scheme</span></code></a> 会错误地将客户端通过 HTTP 发送的请求检测为使用 HTTPS。这导致了 <a class="reference internal" href="../ref/request-response.html#django.http.HttpRequest.is_secure" title="django.http.HttpRequest.is_secure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_secure()</span></code></a> 和 <a class="reference internal" href="../ref/request-response.html#django.http.HttpRequest.build_absolute_uri" title="django.http.HttpRequest.build_absolute_uri"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_absolute_uri()</span></code></a> 的不正确结果，以及 HTTP 请求不会根据 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_SSL_REDIRECT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_SSL_REDIRECT</span></code></a> 进行重定向到 HTTPS。</p>
+<p>现在，<code class="docutils literal notranslate"><span class="pre">HttpRequest.scheme</span></code> 会根据配置的 <a class="reference internal" href="../ref/settings.html#std-setting-SECURE_PROXY_SSL_HEADER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECURE_PROXY_SSL_HEADER</span></code></a>，如果已配置，并且请求上设置了适当的标头，对于 HTTP 和 HTTPS 请求都会进行相应的处理。</p>
+<p>如果您在反向代理后面部署 Django，该代理转发 HTTP 请求并通过 HTTPS 连接到 Django，请确保验证您的应用程序正确处理依赖于 <code class="docutils literal notranslate"><span class="pre">scheme</span></code>、<code class="docutils literal notranslate"><span class="pre">is_secure()</span></code>、<code class="docutils literal notranslate"><span class="pre">build_absolute_uri()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">SECURE_SSL_REDIRECT</span></code> 的代码路径。</p>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h3>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>修复了 Django 2.2 中的一个回归问题，其中 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.Avg" title="django.db.models.Avg"><code class="xref py py-class docutils literal notranslate"><span class="pre">Avg</span></code></a>、<a class="reference internal" href="../ref/models/querysets.html#django.db.models.StdDev" title="django.db.models.StdDev"><code class="xref py py-class docutils literal notranslate"><span class="pre">StdDev</span></code></a> 和 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.Variance" title="django.db.models.Variance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variance</span></code></a> 在使用 <code class="docutils literal notranslate"><span class="pre">filter</span></code> 参数时崩溃 (<a class="reference external" href="https://code.djangoproject.com/ticket/30542">#30542</a>)。</li>
+<li>修复了 Django 2.2.2 中的一个回归问题，其中自动重新加载器在出现 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> 时崩溃，例如在使用 <code class="docutils literal notranslate"><span class="pre">ipdb</span></code> 时 (<a class="reference external" href="https://code.djangoproject.com/ticket/30588">#30588</a>)。</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 2.2.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#cve-2019-12781-incorrect-http-detection-with-reverse-proxy-connecting-via-https">CVE-2019-12781 ：通过 HTTPS 连接的反向代理中，HTTP 检测不正确。</a><ul>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="2.2.4.html"
+                          title="上一章">Django 2.2.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="2.2.2.html"
+                          title="下一章">Django 2.2.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/2.2.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="2.2.4.html" title="Django 2.2.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="2.2.2.html" title="Django 2.2.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

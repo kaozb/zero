@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.9.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.9.2 版本发行说明" href="1.9.2.html" />
+    <link rel="prev" title="Django 1.9.4 版本发行说明" href="1.9.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.9.4.html" title="Django 1.9.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.9.2.html" title="Django 1.9.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.9.3">
+            
+  <div class="section" id="s-django-1-9-3-release-notes">
+<span id="django-1-9-3-release-notes"></span><h1>Django 1.9.3 版本发行说明<a class="headerlink" href="#django-1-9-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2016 年 3 月 1 日</em></p>
+<p>Django 1.9.3 修复了 1.9.2 版本中的两个安全问题和一些错误。</p>
+<div class="section" id="s-cve-2016-2512-malicious-redirect-and-possible-xss-attack-via-user-supplied-redirect-urls-containing-basic-auth">
+<span id="cve-2016-2512-malicious-redirect-and-possible-xss-attack-via-user-supplied-redirect-urls-containing-basic-auth"></span><h2>CVE-2016-2512 ：通过包含基本身份验证的用户提供的重定向 URL，可能存在恶意重定向和 XSS 攻击。<a class="headerlink" href="#cve-2016-2512-malicious-redirect-and-possible-xss-attack-via-user-supplied-redirect-urls-containing-basic-auth" title="永久链接至标题">¶</a></h2>
+<p>Django 在某些情况下（例如 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth.views.login()</span></code> 和 <span class="xref std std-doc">i18n &lt;/topics/i18n/index&gt;`</span>）依赖用户输入来将用户重定向到“成功” URL。用于这些重定向的安全检查（即 <code class="docutils literal notranslate"><span class="pre">django.utils.http.is_safe_url()</span></code>）在考虑到某些具有基本身份验证凭据的 URL 时将其视为“安全”，但它们实际上不应该被视为安全。</p>
+<p>例如，如果请求的主机是 <code class="docutils literal notranslate"><span class="pre">http://mysite.example.com</span></code>，那么类似 <code class="docutils literal notranslate"><span class="pre">http://mysite.example.com\&#64;attacker.com</span></code> 的 URL 将被视为安全，但重定向到此 URL 会将用户发送到 <code class="docutils literal notranslate"><span class="pre">attacker.com</span></code>。这是一个潜在的安全风险。</p>
+<p>此外，如果开发人员依赖于 <code class="docutils literal notranslate"><span class="pre">is_safe_url()</span></code> 来提供安全的重定向目标，并将这样的 URL 放入链接中，他们可能会受到 XSS 攻击的影响。</p>
+</div>
+<div class="section" id="s-cve-2016-2513-user-enumeration-through-timing-difference-on-password-hasher-work-factor-upgrade">
+<span id="cve-2016-2513-user-enumeration-through-timing-difference-on-password-hasher-work-factor-upgrade"></span><h2>CVE-2016-2513 ：通过密码哈希器工作因子升级的时间差异进行用户枚举。<a class="headerlink" href="#cve-2016-2513-user-enumeration-through-timing-difference-on-password-hasher-work-factor-upgrade" title="永久链接至标题">¶</a></h2>
+<p>自从 Django 1.6 版本以来，<code class="docutils literal notranslate"><span class="pre">PBKDF2PasswordHasher</span></code> 及其子类的默认迭代次数已经增加。这提高了密码的安全性，因为硬件的速度增加，但它也在登录请求中创建了一个时序差异，对于使用旧迭代次数编码的密码的用户和不存在用户的登录请求（从 Django 1.6 开始运行默认哈希的默认迭代次数）之间存在时序差异。这可能会对安全性产生一定的影响。</p>
+<p>这只影响那些自增加迭代次数以来尚未登录的用户。当用户在迭代次数增加后首次登录时，他们的密码将使用新的迭代次数进行更新，因此不再存在时间差异。</p>
+<p>新的 <code class="docutils literal notranslate"><span class="pre">BasePasswordHasher.harden_runtime()</span></code> 方法允许哈希算法在现有编码密码中提供的工作因素（例如迭代次数）和哈希算法的默认工作因素之间弥合运行时差距。这个方法已经在 <code class="docutils literal notranslate"><span class="pre">PBKDF2PasswordHasher</span></code> 和 <code class="docutils literal notranslate"><span class="pre">BCryptPasswordHasher</span></code> 中实现。后者的哈希算法自从 Django 1.4 以来并没有改变，但某些项目可能会对其进行子类化，并根据需要增加工作因素。</p>
+<p>对于任何未实现 <code class="docutils literal notranslate"><span class="pre">harden_runtime()</span></code> 方法的 <a class="reference internal" href="../topics/auth/passwords.html#write-your-own-password-hasher"><span class="std std-ref">第三方密码哈希算法</span></a>，将发出警告。</p>
+<p>如果在数据库中有不同的密码哈希值（例如，自从 Django 1.4 开始默认哈希算法切换到 PBKDF2 后从未登录过的用户的 SHA1 哈希值），则这些用户的登录请求中的时序差异可能会更大，而此修复不会解决这种差异（或在更改哈希算法时的任何差异）。您可以尝试 <a class="reference internal" href="../topics/auth/passwords.html#wrapping-password-hashers"><span class="std std-ref">升级这些哈希值</span></a>，以防止这种情况下的时序攻击。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>如果未定义 <code class="docutils literal notranslate"><span class="pre">ROOT_URLCONF</span></code> 设置，则跳过 URL 检查（在 1.9 中新增）（<a class="reference external" href="https://code.djangoproject.com/ticket/26155">#26155</a>）。</li>
+<li>修复了在 PostgreSQL 上的崩溃问题，该问题阻止了使用 <code class="docutils literal notranslate"><span class="pre">TIME_ZONE=None</span></code> 和 <code class="docutils literal notranslate"><span class="pre">USE_TZ=False</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/26177">#26177</a>)。</li>
+<li>添加了系统检查来检查隐藏关系的查询名称冲突 (<a class="reference external" href="https://code.djangoproject.com/ticket/26162">#26162</a>)。</li>
+<li>修复了在 <code class="docutils literal notranslate"><span class="pre">ForeignObject.get_extra_descriptor_filter()</span></code> 返回 <code class="docutils literal notranslate"><span class="pre">Q</span></code> 对象的情况下导致的回归问题（<a class="reference external" href="https://code.djangoproject.com/ticket/26153">#26153</a>）。</li>
+<li>修复了在为设置了 <code class="docutils literal notranslate"><span class="pre">to_field</span></code> 的 <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> 使用 <code class="docutils literal notranslate"><span class="pre">__in=qs</span></code> 查找时导致的回归问题（<a class="reference external" href="https://code.djangoproject.com/ticket/26196">#26196</a>）。</li>
+<li>使 <code class="docutils literal notranslate"><span class="pre">forms.FileField</span></code> 和 <code class="docutils literal notranslate"><span class="pre">utils.translation.lazy_number()</span></code> 可以被序列化 (<a class="reference external" href="https://code.djangoproject.com/ticket/26212">#26212</a>)。</li>
+<li>修复了在使用 <code class="docutils literal notranslate"><span class="pre">None</span></code> 值时的 <a class="reference internal" href="../ref/contrib/postgres/fields.html#django.contrib.postgres.fields.RangeField" title="django.contrib.postgres.fields.RangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangeField</span></code></a> 和 <a class="reference internal" href="../ref/contrib/postgres/fields.html#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 序列化问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/26215">#26215</a>)。</li>
+<li>修复了在 <code class="docutils literal notranslate"><span class="pre">RawQuery</span></code> 中使用 <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> 进行过滤时导致崩溃的问题（<a class="reference external" href="https://code.djangoproject.com/ticket/26219">#26219</a>）。</li>
+<li>允许了 <code class="docutils literal notranslate"><span class="pre">URLValidator</span></code> 检查的 URL 顶级域名中的连字符，以修复 Django 1.8 中的一个回归问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/26204">#26204</a>)。</li>
+<li>修复了在 Django 1.9 中回归的 <code class="docutils literal notranslate"><span class="pre">SimpleTemplateResponse</span></code> 中一些导致崩溃的废弃 shims（<a class="reference external" href="https://code.djangoproject.com/ticket/26253">#26253</a>）。</li>
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">BoundField</span></code> 以重新允许对子部件进行切片 (<a class="reference external" href="https://code.djangoproject.com/ticket/26267">#26267</a>)。</li>
+<li>更改了管理界面登录模板中的“权限被拒绝”的消息，使用 <code class="docutils literal notranslate"><span class="pre">get_username</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">username</span></code>，以支持自定义用户模型（<a class="reference external" href="https://code.djangoproject.com/ticket/26231">#26231</a>）。</li>
+<li>修复了在将不存在的模板名称传递给缓存模板加载器的 <code class="docutils literal notranslate"><span class="pre">load_template()</span></code> 方法时导致崩溃的问题（<a class="reference external" href="https://code.djangoproject.com/ticket/26280">#26280</a>）。</li>
+<li>防止了 <code class="docutils literal notranslate"><span class="pre">ContentTypeManager</span></code> 实例共享其缓存 (<a class="reference external" href="https://code.djangoproject.com/ticket/26286">#26286</a>)。</li>
+<li>回滚了 Django 1.9.2 中的一个更改（<a class="reference external" href="https://code.djangoproject.com/ticket/25858">#25858</a>），该更改阻止了在抽象模型上定义的相对延迟关系根据其具体模型的 <code class="docutils literal notranslate"><span class="pre">app_label</span></code> 解析的更改（<a class="reference external" href="https://code.djangoproject.com/ticket/26186">#26186</a>）。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.9.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#cve-2016-2512-malicious-redirect-and-possible-xss-attack-via-user-supplied-redirect-urls-containing-basic-auth">CVE-2016-2512 ：通过包含基本身份验证的用户提供的重定向 URL，可能存在恶意重定向和 XSS 攻击。</a></li>
+<li><a class="reference internal" href="#cve-2016-2513-user-enumeration-through-timing-difference-on-password-hasher-work-factor-upgrade">CVE-2016-2513 ：通过密码哈希器工作因子升级的时间差异进行用户枚举。</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.9.4.html"
+                          title="上一章">Django 1.9.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.9.2.html"
+                          title="下一章">Django 1.9.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.9.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.9.4.html" title="Django 1.9.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.9.2.html" title="Django 1.9.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

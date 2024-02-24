@@ -1,0 +1,322 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>使用 Git 和 GitHub 工作 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="JavaScript" href="javascript.html" />
+    <link rel="prev" title="提交补丁" href="submitting-patches.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="submitting-patches.html" title="提交补丁">previous</a>
+     |
+    <a href="../../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="javascript.html" title="JavaScript">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-contributing-writing-code-working-with-git">
+            
+  <div class="section" id="s-working-with-git-and-github">
+<span id="working-with-git-and-github"></span><h1>使用 Git 和 GitHub 工作<a class="headerlink" href="#working-with-git-and-github" title="永久链接至标题">¶</a></h1>
+<p>这一部分解释了社区如何通过拉取请求向 Django 贡献代码。如果你对 <a class="reference internal" href="../../organization.html#mergers-team"><span class="std std-ref">mergers</span></a> 如何处理它们感兴趣，请参阅 <a class="reference internal" href="../committing-code.html"><span class="doc">提交代码</span></a>。</p>
+<p>接下来，我们将展示如何创建一个包含 Trac 问题 #xxxxx 的更改的 GitHub 拉取请求。通过创建一个完全准备好的拉取请求，你将会让审阅者的工作更容易，这意味着你的工作更有可能被合并到 Django 中。</p>
+<p>您也可以将传统的补丁程序上传到 Trac ，但对于评论来说不太实用。</p>
+<div class="section" id="s-installing-git">
+<span id="installing-git"></span><h2>安装 Git<a class="headerlink" href="#installing-git" title="永久链接至标题">¶</a></h2>
+<p>Django 使用 <a class="reference external" href="https://git-scm.com/">Git</a> 进行源代码控制。你可以从 <a class="reference external" href="https://git-scm.com/download">这里下载</a> Git，但通常更容易使用你的操作系统的包管理器进行安装。</p>
+<p>Django的 <a class="reference external" href="https://github.com/django/django/">Git 仓库</a>  托管在  <a class="reference external" href="https://github.com/">GitHub</a> 上，建议您也使用GitHub。</p>
+<p>在安装 Git 后，你首先要做的事情是设置你的姓名和电子邮件地址：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git config --global user.name <span class="s2">&quot;Your Real Name&quot;</span>
+$ git config --global user.email <span class="s2">&quot;you@email.com&quot;</span>
+</pre></div>
+</div>
+<p>请注意， <code class="docutils literal notranslate"><span class="pre">user.name</span></code> 应该是您的真实姓名，而不是您的GitHub昵称。 GitHub应该知道您在 <code class="docutils literal notranslate"><span class="pre">user.email</span></code> 字段中使用的电子邮件，因为这将用于将提交与GitHub账户相关联。</p>
+</div>
+<div class="section" id="s-setting-up-local-repository">
+<span id="setting-up-local-repository"></span><h2>设置本地仓库<a class="headerlink" href="#setting-up-local-repository" title="永久链接至标题">¶</a></h2>
+<p>当你创建了你的 GitHub 帐户，使用昵称 &quot;GitHub_nick&quot;，并且 <a class="reference external" href="https://github.com/django/django/fork">fork 了 Django 的存储库</a>，创建你的 fork 的本地副本：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/GitHub_nick/django.git
+</pre></div>
+</div>
+<p>这将创建一个新的目录 &quot;django&quot;，其中包含你 GitHub 存储库的克隆。此页面上的其余 Git 命令都需要在克隆的目录中运行，所以现在切换到该目录：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> django
+</pre></div>
+</div>
+<p>在 Git 中，你的 Github 仓库会被称做“origin”。</p>
+<p>你还应该将 <code class="docutils literal notranslate"><span class="pre">django/django</span></code> 设置为一个 &quot;upstream&quot; 远程仓库（也就是告诉 Git 参照 Django 的存储库作为你 fork 的源头）：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git remote add upstream https://github.com/django/django.git
+git fetch upstream
+</pre></div>
+</div>
+<p>你可以以类似的方式添加其他远程仓库，例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git remote add akaariai https://github.com/akaariai/django.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-working-on-a-ticket">
+<span id="working-on-a-ticket"></span><h2>在工单上工作<a class="headerlink" href="#working-on-a-ticket" title="永久链接至标题">¶</a></h2>
+<p>在处理一个问题时，为这项工作创建一个新的分支，并以 <code class="docutils literal notranslate"><span class="pre">upstream/main</span></code> 为基础进行工作：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git checkout -b ticket_xxxxx upstream/main
+</pre></div>
+</div>
+<p>-b 参数在本地为您创建一个新分支。 即使是最小的事情，也不要犹豫创建新分支——这就是它们的用途。</p>
+<p>如果你正在为 1.4 分支上的修复工作，你会执行如下操作：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git checkout -b ticket_xxxxx_1_4 upstream/stable/1.4.x
+</pre></div>
+</div>
+<p>假设工作是在 ticket_xxxxx 分支上进行的。进行一些更改并提交它们：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git commit
+</pre></div>
+</div>
+<p>在编写提交消息时，遵循 <a class="reference internal" href="../committing-code.html#committing-guidelines"><span class="std std-ref">提交消息指南</span></a> 以便让合并者的工作更容易。如果你不太擅长英语，至少尽量准确描述提交的操作。</p>
+<p>如果需要在你的分支上进行额外的工作，根据需要进行多次提交：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git commit -m <span class="s1">&#39;Added two more tests for edge cases&#39;</span>
+</pre></div>
+</div>
+<div class="section" id="s-publishing-work">
+<span id="publishing-work"></span><h3>发布工作成果<a class="headerlink" href="#publishing-work" title="永久链接至标题">¶</a></h3>
+<p>你可以通过运行以下命令将你的工作发布到 GitHub：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git push origin ticket_xxxxx
+</pre></div>
+</div>
+<p>当你访问你的 GitHub 页面时，你会注意到已经创建了一个新的分支。</p>
+<p>如果你正在处理一个 Trac 问题，你应该在问题中提到你的工作可以在你的 GitHub 存储库的 ticket_xxxxx 分支中找到。包括一个指向你的分支的链接。</p>
+<p>请注意，在Git中，上述分支称为“主题分支”。 您可以自由地重写该分支的历史记录，例如，使用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span></code> 变更基本。 其他人不应在这样的分支上进行工作，因为当您编辑提交时，他们的副本会损坏。</p>
+<p>还有&quot;公共分支&quot;。其他人应该 fork 这些分支，因此这些分支的历史永远不应该更改。<code class="docutils literal notranslate"><span class="pre">django/django</span></code> 存储库中的 &quot;main&quot; 和 &quot;stable/A.B.x&quot; 分支就是很好的公共分支的示例。</p>
+<p>当您准备将工作成果并入Django时，应在GitHub上创建一个pull请求。好的拉取请求要求：</p>
+<ul class="simple">
+<li>按照:doc:coding style &lt;coding-style&gt; ，每个提交都进行一次逻辑更改，</li>
+<li>每次提交的格式正确的消息：摘要行，其后以72个字符包装的段落——有关详细信息，请参见 <a class="reference internal" href="../committing-code.html#committing-guidelines"><span class="std std-ref">committing guidelines</span></a> 。</li>
+<li>如果需要，带有文档和测试——实际上一直需要测试，除了文档更改外。</li>
+</ul>
+<p>测试套件必须通过，并且文档的构建必须没有警告。</p>
+<p>一旦你创建了拉取请求，你应该在相关的 Trac 问题中添加一个评论，解释你所做的事情。特别是，你应该注明你运行测试的环境，例如：&quot;在 SQLite 和 MySQL 下都通过了所有测试&quot;。</p>
+<p>GitHub 上的拉取请求只有两种状态：打开和关闭。将处理你的拉取请求的合并者只有两个选项：合并它或关闭它。因此，在代码准备好合并或足够接近以便合并者可以自己完成之前，创建拉取请求并没有太大的用处。</p>
+</div>
+<div class="section" id="s-rebasing-branches">
+<span id="rebasing-branches"></span><h3>分支变基<a class="headerlink" href="#rebasing-branches" title="永久链接至标题">¶</a></h3>
+<p>在上面的示例中，你创建了两个提交，一个是 &quot;Fixed ticket_xxxxx&quot; 提交，另一个是 &quot;Added two more tests&quot; 提交。</p>
+<p>我们不想在您的代码库中拥有您工作过程的全部历史记录。您的提交“添加了两个以上的测试”将毫无助益。相反，我们只希望一次提交包含您的所有工作。</p>
+<p>要重塑你的分支历史，你可以使用交互式变基将多个提交合并成一个：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git rebase -i HEAD~2
+</pre></div>
+</div>
+<p>上面的 HEAD~2 是最近两次提交的简写。 上面的命令将打开一个编辑器，显示两个提交，前缀为 &quot;pick&quot; 。</p>
+<p>将第二行的 &quot;pick&quot; 更改为 &quot;squash&quot;。这将保留第一个提交，并将第二个提交合并到第一个提交中。保存并退出编辑器。然后会打开第二个编辑器窗口，以便你可以修改包含两个步骤的提交消息。</p>
+<p>你也可以在变基中使用 &quot;edit&quot; 选项。这样你可以修改单个提交，例如修复文档字符串中的拼写错误：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git rebase -i HEAD~3
+<span class="c1"># Choose edit, pick, pick for the commits</span>
+<span class="c1"># Now you are able to rework the commit (use git add normally to add changes)</span>
+<span class="c1"># When finished, commit work with &quot;--amend&quot; and continue</span>
+git commit --amend
+<span class="c1"># Reword the commit message if needed</span>
+git rebase --continue
+<span class="c1"># The second and third commits should be applied.</span>
+</pre></div>
+</div>
+<p>如果你的主题分支已经在 GitHub 上发布，例如，如果你正在进行小的更改以考虑审查意见，你将需要强制推送这些更改：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git push -f origin ticket_xxxxx
+</pre></div>
+</div>
+<p>请注意，这将重写 ticket_xxxxx 的历史 - 如果你在 GitHub 上操作之前和之后检查提交哈希值，你会注意到提交哈希值不再匹配。这是可以接受的，因为这个分支是一个主题分支，没有人应该以它为基础进行工作。</p>
+</div>
+<div class="section" id="s-after-upstream-has-changed">
+<span id="after-upstream-has-changed"></span><h3>在上游发生变化之后<a class="headerlink" href="#after-upstream-has-changed" title="永久链接至标题">¶</a></h3>
+<p>当上游（<code class="docutils literal notranslate"><span class="pre">django/django</span></code>）发生变化时，你应该重新基于你的工作。要做到这一点，使用以下命令：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git fetch upstream
+git rebase upstream/main
+</pre></div>
+</div>
+<p>工作会自动使用你 fork 的分支进行重新基于，在示例中使用的是 <code class="docutils literal notranslate"><span class="pre">upstream/main</span></code>。</p>
+<p>rebase命令暂时删除所有本地提交，应用上游提交，然后在工作上再次应用本地提交。</p>
+<p>如果出现合并冲突，你需要解决它们，然后使用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span> <span class="pre">--continue</span></code>。在任何时候，你都可以使用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span> <span class="pre">--abort</span></code> 返回到原始状态。</p>
+<p>请注意，您想在上游 <em>变基</em> ，而不是 <em>合并</em> 上游。</p>
+<p>这样做的原因是，通过重新定基，您的提交将始终在上游工作的*基础*上，而不是与上游所做的更改*混合在一起*。这样，您的分支将只包含与其主题相关的提交，这使得压缩更加容易。</p>
+</div>
+<div class="section" id="s-after-review">
+<span id="after-review"></span><h3>审阅之后<a class="headerlink" href="#after-review" title="永久链接至标题">¶</a></h3>
+<p>在审核者未要求更改的情况下，将任何不重要的代码放入内核是很不正常的。 在这种情况下，通常最好将更改添加为对工作的一次增量提交。 这使审阅者可以轻松地检查您所做的更改。</p>
+<p>在这种情况下，按照审阅者要求进行更改。根据需要进行多次提交。在发布更改之前，重新基于你的工作。如果你添加了两个提交，你可以运行以下命令：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git rebase -i HEAD~2
+</pre></div>
+</div>
+<p>将第二个提交合并到第一个提交中。编写一个类似以下的提交消息：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Made changes asked in review by &lt;reviewer&gt;
+
+- Fixed whitespace errors in foobar
+- Reworded the docstring of bar()
+</pre></div>
+</div>
+<p>最后，将你的工作推送回你的 GitHub 存储库。由于在重新基于过程中没有触及公共提交，你应该不需要强制推送：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git push origin ticket_xxxxx
+</pre></div>
+</div>
+<p>您的拉取请求现在也应该包含新的提交。</p>
+<p>请注意，合并者在提交代码时很可能会将审阅提交合并到之前的提交中。</p>
+</div>
+</div>
+<div class="section" id="s-working-on-a-patch">
+<span id="working-on-a-patch"></span><h2>工作在一个补丁上<a class="headerlink" href="#working-on-a-patch" title="永久链接至标题">¶</a></h2>
+<p>开发者可以通过审查补丁的方式之一来为 Django 做出贡献。这些补丁通常会作为 GitHub 上的拉取请求存在，可以轻松地集成到你的本地存储库中：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git checkout -b pull_xxxxx upstream/main
+curl -L https://github.com/django/django/pull/xxxxx.patch <span class="p">|</span> git am
+</pre></div>
+</div>
+<p>这将创建一个新的分支，然后将拉取请求中的更改应用到该分支上。在这一点上，你可以运行测试或进行其他必要的操作来调查补丁的质量。</p>
+<p>有关与拉取请求一起工作的更多详细信息，请参阅 <a class="reference internal" href="../committing-code.html#handling-pull-requests"><span class="std std-ref">合并者指南</span></a>。</p>
+</div>
+<div class="section" id="s-summary">
+<span id="summary"></span><h2>概览<a class="headerlink" href="#summary" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>如果可以，请在GitHub上工作。</li>
+<li>通过链接到您的GitHub分支来宣布您在Trac工单上的工作。</li>
+<li>准备就绪后，请提出拉取请求。</li>
+<li>使您的拉取请求尽可能地好。</li>
+<li>在对您的工作进行修复时，请使用 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span> <span class="pre">-i</span></code> 压缩提交。</li>
+<li>当上游发生变化时，请执行 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">fetch</span> <span class="pre">upstream;</span> <span class="pre">git</span> <span class="pre">rebase</span></code>。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">使用 Git 和 GitHub 工作</a><ul>
+<li><a class="reference internal" href="#installing-git">安装 Git</a></li>
+<li><a class="reference internal" href="#setting-up-local-repository">设置本地仓库</a></li>
+<li><a class="reference internal" href="#working-on-a-ticket">在工单上工作</a><ul>
+<li><a class="reference internal" href="#publishing-work">发布工作成果</a></li>
+<li><a class="reference internal" href="#rebasing-branches">分支变基</a></li>
+<li><a class="reference internal" href="#after-upstream-has-changed">在上游发生变化之后</a></li>
+<li><a class="reference internal" href="#after-review">审阅之后</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-on-a-patch">工作在一个补丁上</a></li>
+<li><a class="reference internal" href="#summary">概览</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="submitting-patches.html"
+                          title="上一章">提交补丁</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="javascript.html"
+                          title="下一章">JavaScript</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/internals/contributing/writing-code/working-with-git.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="submitting-patches.html" title="提交补丁">previous</a>
+     |
+    <a href="../../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="javascript.html" title="JavaScript">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

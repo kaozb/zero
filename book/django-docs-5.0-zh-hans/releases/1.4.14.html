@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.4.14 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.4.13 版本发行说明" href="1.4.13.html" />
+    <link rel="prev" title="Django 1.4.15 版本发行说明" href="1.4.15.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.4.15.html" title="Django 1.4.15 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.4.13.html" title="Django 1.4.13 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.4.14">
+            
+  <div class="section" id="s-django-1-4-14-release-notes">
+<span id="django-1-4-14-release-notes"></span><h1>Django 1.4.14 版本发行说明<a class="headerlink" href="#django-1-4-14-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2014 年 8 月 20 日</em></p>
+<p>Django 1.4.14 修复了 1.4.13 中的多个安全问题。</p>
+<div class="section" id="s-reverse-could-generate-urls-pointing-to-other-hosts">
+<span id="reverse-could-generate-urls-pointing-to-other-hosts"></span><h2><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 可能生成指向其他主机的 URL<a class="headerlink" href="#reverse-could-generate-urls-pointing-to-other-hosts" title="永久链接至标题">¶</a></h2>
+<p>在某些情况下，URL 反转可能生成方案相对的 URL（以两个斜杠开头的 URL），这可能会使用户意外地被重定向到另一个主机。攻击者可以利用这一点，例如，通过将用户重定向到一个专门设计用来索取用户密码的钓鱼网站。</p>
+<p>为了解决这个问题，URL 反查现在确保没有 URL 以两个斜杠（//）开头，用其 URL 编码的对应项（ %2F ）替换第二个斜杠。这种方法确保语义保持不变，同时使 URL 相对于域而不是协议。</p>
+</div>
+<div class="section" id="s-file-upload-denial-of-service">
+<span id="file-upload-denial-of-service"></span><h2>文件上传拒绝服务攻击<a class="headerlink" href="#file-upload-denial-of-service" title="永久链接至标题">¶</a></h2>
+<p>在此版本之前，在其默认配置下，Django 的文件上传处理在上传重复文件名时可能会退化为产生大量的 <code class="docutils literal notranslate"><span class="pre">os.stat()</span></code> 系统调用。由于 <code class="docutils literal notranslate"><span class="pre">stat()</span></code> 可能会引发 IO 操作，这可能会导致数据相关的巨大性能下降，随着时间的推移逐渐恶化。最终结果是，给定足够的时间，具有上传文件权限的用户可以通过上传 0 字节文件来导致上传处理程序性能下降，最终导致它变得非常慢。在这一点上，即使是较慢的网络连接和少量的 HTTP 请求也足以使站点不可用。</p>
+<p>我们通过更改生成文件名的算法来解决了这个问题，如果已经存在具有上传名称的文件，那么 <a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage.get_available_name" title="django.core.files.storage.Storage.get_available_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Storage.get_available_name()</span></code></a> 现在会附加一个下划线和一个随机的 7 位字母数字字符串（例如 <code class="docutils literal notranslate"><span class="pre">&quot;_x3a1gho&quot;</span></code>），而不是通过迭代下划线后面跟着一个数字（例如 <code class="docutils literal notranslate"><span class="pre">&quot;_1&quot;</span></code>，<code class="docutils literal notranslate"><span class="pre">&quot;_2&quot;</span></code> 等）。</p>
+</div>
+<div class="section" id="s-remoteusermiddleware-session-hijacking">
+<span id="remoteusermiddleware-session-hijacking"></span><h2><code class="docutils literal notranslate"><span class="pre">RemoteUserMiddleware</span></code> 会话劫持<a class="headerlink" href="#remoteusermiddleware-session-hijacking" title="永久链接至标题">¶</a></h2>
+<p>在使用 <a class="reference internal" href="../ref/middleware.html#django.contrib.auth.middleware.RemoteUserMiddleware" title="django.contrib.auth.middleware.RemoteUserMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">RemoteUserMiddleware</span></code></a> 和 <code class="docutils literal notranslate"><span class="pre">RemoteUserBackend</span></code> 时，在没有中断注销的情况下，在请求之间更改 <code class="docutils literal notranslate"><span class="pre">REMOTE_USER</span></code> 标头可能会导致后续用户接管之前用户的会话。现在，在登录尝试失败时，中间件会注销用户。</p>
+</div>
+<div class="section" id="s-data-leakage-via-query-string-manipulation-in-contrib-admin">
+<span id="data-leakage-via-query-string-manipulation-in-contrib-admin"></span><h2>通过查询字符串操纵在 <code class="docutils literal notranslate"><span class="pre">contrib.admin</span></code> 中的数据泄露<a class="headerlink" href="#data-leakage-via-query-string-manipulation-in-contrib-admin" title="永久链接至标题">¶</a></h2>
+<p>在旧版本的 Django 中，通过修改查询字符串上的 &quot;popup&quot; 和 &quot;to_field&quot; 参数，可以揭示任何字段的数据。例如，请求像 <code class="docutils literal notranslate"><span class="pre">/admin/auth/user/?pop=1&amp;t=password</span></code> 这样的 URL 并查看页面的 HTML 允许查看每个用户的密码哈希。尽管管理员要求用户首先具有查看更改表单页面的权限，但如果你依赖于用户只能访问模型上的特定字段，这可能会泄漏数据。</p>
+<p>为了解决这个问题，现在如果指定了一个不是与已在管理员中注册的模型相关的字段的 <code class="docutils literal notranslate"><span class="pre">to_field</span></code> 值，将引发异常。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.4.14 版本发行说明</a><ul>
+<li><a class="reference internal" href="#reverse-could-generate-urls-pointing-to-other-hosts"><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 可能生成指向其他主机的 URL</a></li>
+<li><a class="reference internal" href="#file-upload-denial-of-service">文件上传拒绝服务攻击</a></li>
+<li><a class="reference internal" href="#remoteusermiddleware-session-hijacking"><code class="docutils literal notranslate"><span class="pre">RemoteUserMiddleware</span></code> 会话劫持</a></li>
+<li><a class="reference internal" href="#data-leakage-via-query-string-manipulation-in-contrib-admin">通过查询字符串操纵在 <code class="docutils literal notranslate"><span class="pre">contrib.admin</span></code> 中的数据泄露</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.4.15.html"
+                          title="上一章">Django 1.4.15 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.4.13.html"
+                          title="下一章">Django 1.4.13 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.4.14.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.4.15.html" title="Django 1.4.15 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.4.13.html" title="Django 1.4.13 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

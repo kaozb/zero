@@ -1,0 +1,577 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>聚合 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="搜索" href="search.html" />
+    <link rel="prev" title="执行查询" href="queries.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="queries.html" title="执行查询">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="search.html" title="搜索">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-aggregation">
+            
+  <div class="section" id="s-aggregation">
+<span id="aggregation"></span><h1>聚合<a class="headerlink" href="#aggregation" title="永久链接至标题">¶</a></h1>
+<p><span class="xref std std-doc">Django 数据库抽象 API</span> 描述了使用 Django queries 来增删查改单个对象的方法。 然而，有时候你要获取的值需要根据一组对象聚合后才能得到。这个主题指南描述了如何使用 Django queries 来生成和返回聚合值的方法。</p>
+<p>整篇指南我们将引用以下模型。这些模型用来记录多个网上书店的库存。</p>
+<div class="highlight-python notranslate" id="queryset-model-example"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Publisher</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Book</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">price</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">rating</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Author</span><span class="p">)</span>
+    <span class="n">publisher</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Publisher</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">pubdate</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Store</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+    <span class="n">books</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Book</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="s-cheat-sheet">
+<span id="cheat-sheet"></span><h2>速查表<a class="headerlink" href="#cheat-sheet" title="永久链接至标题">¶</a></h2>
+<p>下面是根据以上模型执行常见的聚合查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="go"># Total number of books.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="go">2452</span>
+
+<span class="go"># Total number of books with publisher=BaloneyPress</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">publisher__name</span><span class="o">=</span><span class="s2">&quot;BaloneyPress&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="go">73</span>
+
+<span class="go"># Average price across all books, provide default to be returned instead</span>
+<span class="go"># of None if no books exist.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Avg</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">{&#39;price__avg&#39;: 34.35}</span>
+
+<span class="go"># Max price across all books, provide default to be returned instead of</span>
+<span class="go"># None if no books exist.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Max</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Max</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">{&#39;price__max&#39;: Decimal(&#39;81.20&#39;)}</span>
+
+<span class="go"># Difference between the highest priced book and the average price of all books.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">FloatField</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">price_diff</span><span class="o">=</span><span class="n">Max</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="n">output_field</span><span class="o">=</span><span class="n">FloatField</span><span class="p">())</span> <span class="o">-</span> <span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">{&#39;price_diff&#39;: 46.85}</span>
+
+<span class="go"># All the following queries involve traversing the Book&lt;-&gt;Publisher</span>
+<span class="go"># foreign key relationship backwards.</span>
+
+<span class="go"># Each publisher, each with a count of books as a &quot;num_books&quot; attribute.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_books</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span>
+<span class="go">&lt;QuerySet [&lt;Publisher: BaloneyPress&gt;, &lt;Publisher: SalamiPress&gt;, ...]&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_books</span>
+<span class="go">73</span>
+
+<span class="go"># Each publisher, with a separate count of books with a rating above and below 5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Q</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">above_5</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="n">Q</span><span class="p">(</span><span class="n">book__rating__gt</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">below_5</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="n">Q</span><span class="p">(</span><span class="n">book__rating__lte</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">below_5</span><span class="o">=</span><span class="n">below_5</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">above_5</span><span class="o">=</span><span class="n">above_5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">above_5</span>
+<span class="go">23</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">below_5</span>
+<span class="go">12</span>
+
+<span class="go"># The top 5 publishers, in order by number of books.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_books</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;-num_books&quot;</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pubs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_books</span>
+<span class="go">1323</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-generating-aggregates-over-a-queryset">
+<span id="generating-aggregates-over-a-queryset"></span><h2>在 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 上生成聚合<a class="headerlink" href="#generating-aggregates-over-a-queryset" title="永久链接至标题">¶</a></h2>
+<p>Django 提供两种生成聚合值的方法。第一种方法是在整个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 上生成摘要值。例如，假设您想计算所有可售书籍的平均价格。Django 的查询语法提供了一种描述所有书籍集合的方法：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>我们需要的是一种方法来计算属于这个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的对象的摘要值。这可以通过在 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 上附加一个 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 子句来实现：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Avg</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">))</span>
+<span class="go">{&#39;price__avg&#39;: 34.35}</span>
+</pre></div>
+</div>
+<p>在这个示例中，<code class="docutils literal notranslate"><span class="pre">all()</span></code> 是多余的，所以可以简化为：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">))</span>
+<span class="go">{&#39;price__avg&#39;: 34.35}</span>
+</pre></div>
+</div>
+<p>传递给 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 的参数描述了我们想要计算的聚合值。在这个例子里，要计算的就是 <code class="docutils literal notranslate"><span class="pre">Book</span></code> 模型上的 <code class="docutils literal notranslate"><span class="pre">price</span></code> 字段的平均值。可用的聚合函数列表可以在 <a class="reference internal" href="../../ref/models/querysets.html#aggregation-functions"><span class="std std-ref">QuerySet reference</span></a> 中找到。</p>
+<p><code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 是一个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的终端子句，当调用时，它返回一个名值对的字典。名称是聚合值的标识符；值是计算得到的聚合值。名称是从字段名称和聚合函数自动生成的。如果您想手动指定聚合值的名称，可以在指定聚合子句时提供该名称：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">average_price</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">))</span>
+<span class="go">{&#39;average_price&#39;: 34.35}</span>
+</pre></div>
+</div>
+<p>如果您想生成多个聚合值，可以向 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 子句添加另一个参数。因此，如果我们还想知道所有书的最高价和最低价，可以发出以下查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Avg</span><span class="p">,</span> <span class="n">Max</span><span class="p">,</span> <span class="n">Min</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">),</span> <span class="n">Max</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">),</span> <span class="n">Min</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">))</span>
+<span class="go">{&#39;price__avg&#39;: 34.35, &#39;price__max&#39;: Decimal(&#39;81.20&#39;), &#39;price__min&#39;: Decimal(&#39;12.99&#39;)}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-generating-aggregates-for-each-item-in-a-queryset">
+<span id="generating-aggregates-for-each-item-in-a-queryset"></span><h2>为 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中的每一个条目生成聚合<a class="headerlink" href="#generating-aggregates-for-each-item-in-a-queryset" title="永久链接至标题">¶</a></h2>
+<p>生成值的汇总的另一个办法是为 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet" title="django.db.models.query.QuerySet"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuerySet</span></code></a> 的每一个对象生成独立汇总。比如，如果你想检索书籍列表，你可能想知道每一本书有多少作者。每一本书与作者有多对多的关系；我们想在 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中为每一本书总结这个关系。</p>
+<p>使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.annotate" title="django.db.models.query.QuerySet.annotate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">annotate()</span></code></a> 子句可以生成每一个对象的汇总。当指定  <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句，<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中的每一个对象将对指定值进行汇总。</p>
+<p>这些汇总语法规则与 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.aggregate" title="django.db.models.query.QuerySet.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> 子句的规则相同。<code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 的每一个参数描述了一个要计算的聚合。比如，注解（annotate）所有书的所有作者：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="go"># Build an annotated queryset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">))</span>
+<span class="go"># Interrogate the first object in the queryset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;Book: The Definitive Guide to Django&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">authors__count</span>
+<span class="go">2</span>
+<span class="go"># Interrogate the second object in the queryset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">&lt;Book: Practical Django Projects&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">authors__count</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>与 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 一样，注释的名称是从聚合函数的名称和被聚合字段的名称自动派生的。您可以通过在指定注释时提供别名来覆盖这个默认名称：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_authors</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_authors</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">num_authors</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>与 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 不同的是，<code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 不是终端子句。<code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句的输出就是 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>；这个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 被其他 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 操作进行修改，包括 filter()`, <code class="docutils literal notranslate"><span class="pre">order_by()</span></code> ，甚至可以对 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 进行额外调用。</p>
+<div class="section" id="s-combining-multiple-aggregations">
+<span id="s-id1"></span><span id="combining-multiple-aggregations"></span><span id="id1"></span><h3>组合多个聚合<a class="headerlink" href="#combining-multiple-aggregations" title="永久链接至标题">¶</a></h3>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 组合多个聚合将产生错误的结果( <a class="reference external" href="https://code.djangoproject.com/ticket/10060">yield the wrong results</a> )，因为它使用连接(joins)而不是子查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">book</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">book</span><span class="o">.</span><span class="n">authors</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">book</span><span class="o">.</span><span class="n">store_set</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">),</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;store&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">authors__count</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">store__count</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>对大部分聚合来说，没办法避免这个问题，但是，<a class="reference internal" href="../../ref/models/querysets.html#django.db.models.Count" title="django.db.models.Count"><code class="xref py py-class docutils literal notranslate"><span class="pre">Count</span></code></a> 聚合可以使用 <code class="docutils literal notranslate"><span class="pre">distinct</span></code> 参数来避免：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">distinct</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">distinct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">authors__count</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">store__count</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<div class="admonition-if-in-doubt-inspect-the-sql-query admonition">
+<p class="first admonition-title">如有疑问，请检查 SQL 查询！</p>
+<p class="last">为了搞清楚你的查询发生了什么问题，你得在 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中检查一下``query`` 属性。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-joins-and-aggregates">
+<span id="joins-and-aggregates"></span><h2>连接(Joins)和聚合<a class="headerlink" href="#joins-and-aggregates" title="永久链接至标题">¶</a></h2>
+<p>到目前为止，我们已经处理了被查询模型字段的聚合。然而，有时候想聚合的值属于你正在查询模型的关联模型。</p>
+<p>在聚合函数里面指定聚合的字段时，Django 允许你在过滤相关字段的时候使用相同的双下划线表示法。Django 将处理任何需要检索和聚合的关联值的表连接(table joins)。</p>
+<p>例如，要找出每家商店提供的书籍价格范围，您可以使用以下注释：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Max</span><span class="p">,</span> <span class="n">Min</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Store</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">min_price</span><span class="o">=</span><span class="n">Min</span><span class="p">(</span><span class="s2">&quot;books__price&quot;</span><span class="p">),</span> <span class="n">max_price</span><span class="o">=</span><span class="n">Max</span><span class="p">(</span><span class="s2">&quot;books__price&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>这告诉 Django 去检索 <code class="docutils literal notranslate"><span class="pre">Store</span></code> 模型，连接（通过多对多关系） <code class="docutils literal notranslate"><span class="pre">Book</span></code> 模型，并且聚合书籍模型的价格字段来获取最大最小值。</p>
+<p>相同的规则也适用于 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 子句。如果您想知道在任何商店都有销售的任何书的最低价和最高价，可以使用聚合操作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Store</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">min_price</span><span class="o">=</span><span class="n">Min</span><span class="p">(</span><span class="s2">&quot;books__price&quot;</span><span class="p">),</span> <span class="n">max_price</span><span class="o">=</span><span class="n">Max</span><span class="p">(</span><span class="s2">&quot;books__price&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>连接链可以根据需要深入。例如，要提取任何可售书籍中最年轻作者的年龄，可以发出以下查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Store</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">youngest_age</span><span class="o">=</span><span class="n">Min</span><span class="p">(</span><span class="s2">&quot;books__authors__age&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="section" id="s-following-relationships-backwards">
+<span id="following-relationships-backwards"></span><h3>反向关系<a class="headerlink" href="#following-relationships-backwards" title="永久链接至标题">¶</a></h3>
+<p>类似于 <a class="reference internal" href="queries.html#lookups-that-span-relationships"><span class="std std-ref">跨关系查询</span></a> ，你正在查询的在模型和模型字段上的聚合和注解(annotations)可以包含反向关系。关系模型的小写名和双下划线也可以用在这里。</p>
+<p>例如，我们可以请求所有出版商，附带它们各自的总书库存计数器（请注意如何使用 <code class="docutils literal notranslate"><span class="pre">'book'</span></code> 来指定 <code class="docutils literal notranslate"><span class="pre">Publisher</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Book</span></code> 的反向外键跳跃）：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Avg</span><span class="p">,</span> <span class="n">Count</span><span class="p">,</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>(查询结果里的每一个 <code class="docutils literal notranslate"><span class="pre">Publisher</span></code> 会有多余的属性—— <code class="docutils literal notranslate"><span class="pre">book__count</span></code> 。)</p>
+<p>我们还可以要求每个出版商管理的书籍中最老的一本书：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">oldest_pubdate</span><span class="o">=</span><span class="n">Min</span><span class="p">(</span><span class="s2">&quot;book__pubdate&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>(结果字典中会有一个叫 <code class="docutils literal notranslate"><span class="pre">'oldest_pubdate'</span></code> 的键。如果没有指定这样的别名，它将会是一个很长的名字 <code class="docutils literal notranslate"><span class="pre">'book__pubdate__min'</span></code> 。)</p>
+<p>这不仅适用于外键，还适用于多对多关系。例如，我们可以要求每个作者，附带考虑作者（共同）合著的所有书籍的总页数的注释（请注意如何使用 <code class="docutils literal notranslate"><span class="pre">'book'</span></code> 来指定 <code class="docutils literal notranslate"><span class="pre">Author</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Book</span></code> 的反向多对多跳跃）：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">total_pages</span><span class="o">=</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;book__pages&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>（结果集里的每一个 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 会有一个额外的属性——<code class="docutils literal notranslate"><span class="pre">total_pages</span></code>）如果没有指定这样的别名，它将会是一个很长的名字 <code class="docutils literal notranslate"><span class="pre">book__pages__sum</span></code>）</p>
+<p>或者要求计算我们记录的所有作者所著书籍的平均评分：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">average_rating</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;book__rating&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>（结果字典会有一个叫 <code class="docutils literal notranslate"><span class="pre">'average_rating'</span></code> 的键。如果没有指定这样的别名，它将会是一个很长的名字 <code class="docutils literal notranslate"><span class="pre">'book__rating__avg'</span></code>。）</p>
+</div>
+</div>
+<div class="section" id="s-aggregations-and-other-queryset-clauses">
+<span id="aggregations-and-other-queryset-clauses"></span><h2>聚合和其他 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>&nbsp;子句<a class="headerlink" href="#aggregations-and-other-queryset-clauses" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-filter-and-exclude">
+<span id="filter-and-exclude"></span><h3><code class="docutils literal notranslate"><span class="pre">filter()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">exclude()</span></code><a class="headerlink" href="#filter-and-exclude" title="永久链接至标题">¶</a></h3>
+<p>聚合也可以参与过滤。任何应用于普通模型字段的 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> （或 <code class="docutils literal notranslate"><span class="pre">exclude()</span></code>）会具有约束被认为是聚合的对象的效果。</p>
+<p>当与 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句一起使用时，过滤器的效果是限制计算注释的对象。例如，您可以使用以下查询生成所有标题以 &quot;Django&quot; 开头的书籍的带注释列表：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Avg</span><span class="p">,</span> <span class="n">Count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__startswith</span><span class="o">=</span><span class="s2">&quot;Django&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_authors</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>当与 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 子句一起使用时，过滤器的效果是限制计算聚合的对象。例如，您可以使用以下查询生成所有标题以 &quot;Django&quot; 开头的书籍的平均价格：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__startswith</span><span class="o">=</span><span class="s2">&quot;Django&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="section" id="s-filtering-on-annotations">
+<span id="s-id2"></span><span id="filtering-on-annotations"></span><span id="id2"></span><h4>过滤注解<a class="headerlink" href="#filtering-on-annotations" title="永久链接至标题">¶</a></h4>
+<p>注解过的值也可以使用过滤器。注解的别名可以和任何其他模型字段一样使用 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">exclude()</span></code> 子句。</p>
+<p>例如，要生成一个具有多位作者的书籍列表，您可以发出以下查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_authors</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">num_authors__gt</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这个查询生成一个注解结果集，然后生成一个基于注解的过滤器。</p>
+<p>如果您需要两个具有两个单独过滤器的注释，可以在任何聚合操作中使用 <code class="docutils literal notranslate"><span class="pre">filter</span></code> 参数。例如，要生成具有高评分书籍计数的作者列表：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">highly_rated</span> <span class="o">=</span> <span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="n">Q</span><span class="p">(</span><span class="n">book__rating__gte</span><span class="o">=</span><span class="mi">7</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_books</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">),</span> <span class="n">highly_rated_books</span><span class="o">=</span><span class="n">highly_rated</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>结果集中的每个 <code class="docutils literal notranslate"><span class="pre">Author</span></code> 都有 <code class="docutils literal notranslate"><span class="pre">num_books</span></code> 和 <code class="docutils literal notranslate"><span class="pre">highly_rated_books</span></code> 属性。参见 <a class="reference internal" href="../../ref/models/conditional-expressions.html#conditional-aggregation"><span class="std std-ref">条件聚合</span></a>。</p>
+<div class="admonition-choosing-between-filter-and-queryset-filter admonition">
+<p class="first admonition-title">在 <code class="docutils literal notranslate"><span class="pre">filter</span></code> 和 <code class="docutils literal notranslate"><span class="pre">QuerySet.filter()</span></code> 中做选择</p>
+<p class="last">避免在单个注解和聚合中使用 <code class="docutils literal notranslate"><span class="pre">filter</span></code> 语句。使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.filter()</span></code> 来排除列会很高效。聚合 <code class="docutils literal notranslate"><span class="pre">filter</span></code> 语句只在使用具有不同条件的相同关系的两个或以上的聚合时有用。</p>
+</div>
+</div>
+<div class="section" id="s-order-of-annotate-and-filter-clauses">
+<span id="order-of-annotate-and-filter-clauses"></span><h4><code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> 子句的顺序<a class="headerlink" href="#order-of-annotate-and-filter-clauses" title="永久链接至标题">¶</a></h4>
+<p>当开发一个涉及 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> 子句的复杂查询时，要特别注意应用于  <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的子句的顺序。</p>
+<p>当一个 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句应用于查询，会根据查询状态来计算注解，直到请求的注解为止。这实际上意味着 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 不是可交换的操作。</p>
+<p>比如：</p>
+<ul class="simple">
+<li>出版者A有两本评分4和5的书。</li>
+<li>出版者B有两本评分1和4的书。</li>
+<li>出版者C有一本评分1的书。</li>
+</ul>
+<p>以下是一个使用 <code class="docutils literal notranslate"><span class="pre">Count</span></code> 聚合的示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_books</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">,</span> <span class="n">distinct</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">book__rating__gt</span><span class="o">=</span><span class="mf">3.0</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">num_books</span>
+<span class="go">(&lt;Publisher: A&gt;, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">num_books</span>
+<span class="go">(&lt;Publisher: B&gt;, 2)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">book__rating__gt</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_books</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;book&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">num_books</span>
+<span class="go">(&lt;Publisher: A&gt;, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">num_books</span>
+<span class="go">(&lt;Publisher: B&gt;, 1)</span>
+</pre></div>
+</div>
+<p>两个查询返回出版者列表，这些出版者至少有一本评分3的书，因此排除了C。</p>
+<p>在第一个查询里，注解优先于过滤器，因此过滤器没有影响注解。<code class="docutils literal notranslate"><span class="pre">distinct=True</span></code> 用来避免 a <a class="reference internal" href="#combining-multiple-aggregations"><span class="std std-ref">query bug</span></a>。</p>
+<p>第二个查询每个发布者评分3以上的书籍数量。过滤器优先于注解，因此过滤器约束计算注解时考虑的对象。</p>
+<p>以下是另一个使用 <code class="docutils literal notranslate"><span class="pre">Avg</span></code> 聚合的示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">avg_rating</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;book__rating&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">book__rating__gt</span><span class="o">=</span><span class="mf">3.0</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">avg_rating</span>
+<span class="go">(&lt;Publisher: A&gt;, 4.5)  # (5+4)/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">avg_rating</span>
+<span class="go">(&lt;Publisher: B&gt;, 2.5)  # (1+4)/2</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">Publisher</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">book__rating__gt</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">avg_rating</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;book__rating&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">avg_rating</span>
+<span class="go">(&lt;Publisher: A&gt;, 4.5)  # (5+4)/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">avg_rating</span>
+<span class="go">(&lt;Publisher: B&gt;, 4.0)  # 4/1 (book with rating 1 excluded)</span>
+</pre></div>
+</div>
+<p>第一个查询请求至少有一本评分3以上的书籍的出版者的书籍平均分。第二个查询只请求评分3以上的作者书籍的平均评分。</p>
+<p>很难凭直觉了解ORM如何将复杂的查询集转化为SQL查询，因此当有疑问时，请使用 str(queryset.query)` 检查SQL，并写大量的测试。</p>
+</div>
+</div>
+<div class="section" id="s-order-by">
+<span id="order-by"></span><h3><code class="docutils literal notranslate"><span class="pre">order_by()</span></code><a class="headerlink" href="#order-by" title="永久链接至标题">¶</a></h3>
+<p>注解可以当做基本排序来使用。当你定义了一个 <code class="docutils literal notranslate"><span class="pre">order_by()</span></code> 子句，你提供的聚合可以引用任何定义为查询中 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句的一部分的别名。</p>
+<p>例如，要按参与书籍创作的作者数量对书籍的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 进行排序，您可以使用以下查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_authors</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;num_authors&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-values">
+<span id="values"></span><h3><code class="docutils literal notranslate"><span class="pre">values()</span></code><a class="headerlink" href="#values" title="永久链接至标题">¶</a></h3>
+<p>通常，注解值会添加到每个对象上，即一个被注解的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 将会为初始 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的每个对象返回一个结果集。然而，当使用 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句来对结果集进行约束时，生成注解值的方法会稍有不同。不是在原始 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中对每个对象添加注解并返回，而是根据定义在 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句中的字段组合先对结果进行分组，再对每个单独的分组进行注解，这个注解值是根据分组中所有的对象计算得到的。</p>
+<p>下面是一个关于作者的查询例子，查询每个作者所著书的平均评分：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">average_rating</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;book__rating&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>这段代码返回的是数据库中的所有作者及其所著书的平均评分。</p>
+<p>然而，如果您使用 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句，结果会略有不同：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">average_rating</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;book__rating&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>在这个例子中，作者会按名字分组，所以你只能得到不重名的作者分组的注解值。这意味着如果你有两个作者同名，那么他们原本各自的查询结果将被合并到同一个结果中；两个作者的所有评分都将被计算为一个平均分。</p>
+<div class="section" id="s-order-of-annotate-and-values-clauses">
+<span id="order-of-annotate-and-values-clauses"></span><h4><code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 的顺序<a class="headerlink" href="#order-of-annotate-and-values-clauses" title="永久链接至标题">¶</a></h4>
+<p>和使用 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> 一样，作用于某个查询的 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句的顺序非常重要。如果 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句在 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 之前，就会根据 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句产生的分组来计算注解。</p>
+<p>然而如果 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句在 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 之前，就会根据整个查询集生成注解。这种情况下，<code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句只能限制输出的字段。</p>
+<p>例如，如果我们反转先前示例中的 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句的顺序：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">average_rating</span><span class="o">=</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;book__rating&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;average_rating&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这段代码将为每个作者添加一个唯一注解，但只有作者姓名和 <code class="docutils literal notranslate"><span class="pre">average_rating</span></code> 注解会返回在输出结果中。</p>
+<p>你应该也会注意 <code class="docutils literal notranslate"><span class="pre">average_rating</span></code> 已经明确包含在返回的值列表中。这是必需的，因为 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句的顺序。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句在 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句之前，任何注解将自动添加在结果集中。然而，如果 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 子句应用在 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句之后，则需要显式包含聚合列。</p>
+</div>
+<div class="section" id="s-interaction-with-order-by">
+<span id="s-aggregation-ordering-interaction"></span><span id="interaction-with-order-by"></span><span id="aggregation-ordering-interaction"></span><h4>Interaction with <code class="docutils literal notranslate"><span class="pre">order_by()</span></code><a class="headerlink" href="#interaction-with-order-by" title="永久链接至标题">¶</a></h4>
+<p>在查询集的 <code class="docutils literal notranslate"><span class="pre">order_by()</span></code> 部分提到的字段会在选择输出数据时使用，即使它们在 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 调用中没有被明确指定。这些额外的字段用于将类似的结果分组在一起，它们可以使否则相同的结果行看起来是分开的。这在计算数量时特别明显。</p>
+<p>举个例子，假设你有这样的模型：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Item</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>如果您想计算在有序查询集中每个不同的 <code class="docutils literal notranslate"><span class="pre">data</span></code> 值出现的次数，您可以尝试这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">items</span> <span class="o">=</span> <span class="n">Item</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1"># Warning: not quite correct!</span>
+<span class="n">items</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>...这将根据它们共同的 <code class="docutils literal notranslate"><span class="pre">data</span></code> 值将 <code class="docutils literal notranslate"><span class="pre">Item</span></code> 对象分组，然后计算每个组中 <code class="docutils literal notranslate"><span class="pre">id</span></code> 值的数量。但实际上，它不会完全起作用。按照 <code class="docutils literal notranslate"><span class="pre">name</span></code> 进行排序也会影响分组，所以这个查询将根据不同的 <code class="docutils literal notranslate"><span class="pre">(data,</span> <span class="pre">name)</span></code> 对进行分组，这不是您想要的。相反，您应该构建这个查询集：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">items</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">order_by</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>清除任何查询中的排序。你也可以通过 <code class="docutils literal notranslate"><span class="pre">data</span></code> 排序，没有任何有害影响，因为它已经在查询中发挥了作用。</p>
+<p>这个行为与 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.distinct" title="django.db.models.query.QuerySet.distinct"><code class="xref py py-meth docutils literal notranslate"><span class="pre">distinct()</span></code></a> 的查询文档指出的行为相同，一般规则是一样的：通常情况下，你不希望额外的列在结果中发挥作用，因此要清除排序，或者至少确保它只限于您在 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 调用中选择的那些字段。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">你可以会问为什么 Django 没有移除无关的列。主要原因就是与 <code class="docutils literal notranslate"><span class="pre">distinct()</span></code> 和其他地方的一致性:Django从不删除你指定的排序约束（我们不能改变其他方法的行为，因为这会违反我们的应用编程接口的稳定性政策）。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-aggregating-annotations">
+<span id="aggregating-annotations"></span><h3>聚合注解<a class="headerlink" href="#aggregating-annotations" title="永久链接至标题">¶</a></h3>
+<p>你也可以在注解结果上生成聚合。当你定义 <code class="docutils literal notranslate"><span class="pre">aggregate()</span></code> 子句时，你提供的聚合可以引用任何定义在查询中 <code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 子句的别名。</p>
+<p>例如，如果您想计算每本书的平均作者数量，您首先要用作者数量对书籍集进行注释，然后对该作者数量进行聚合，引用注释字段：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Avg</span><span class="p">,</span> <span class="n">Count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">num_authors</span><span class="o">=</span><span class="n">Count</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Avg</span><span class="p">(</span><span class="s2">&quot;num_authors&quot;</span><span class="p">))</span>
+<span class="go">{&#39;num_authors__avg&#39;: 1.66}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-aggregating-on-empty-querysets-or-groups">
+<span id="aggregating-on-empty-querysets-or-groups"></span><h3>在空查询集或组上进行聚合操作时，需要格外小心，因为这可能会导致未定义的行为或错误。在执行聚合操作之前，通常应确保查询集或组中包含足够的数据以执行所需的聚合计算。如果查询集或组为空，可以使用条件语句来避免聚合错误或不必要的操作。<a class="headerlink" href="#aggregating-on-empty-querysets-or-groups" title="永久链接至标题">¶</a></h3>
+<p>当对空的查询集或分组应用聚合操作时，结果通常默认为其 <a class="reference internal" href="../../ref/models/querysets.html#aggregate-default"><span class="std std-ref">default</span></a> 参数，通常是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。这种行为发生是因为当执行的查询不返回任何行时，聚合函数会返回 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。</p>
+<p>您可以为大多数聚合操作提供 <a class="reference internal" href="../../ref/models/querysets.html#aggregate-default"><span class="std std-ref">default</span></a> 参数来指定返回值。但是，由于 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.Count" title="django.db.models.Count"><code class="xref py py-class docutils literal notranslate"><span class="pre">Count</span></code></a> 不支持 <a class="reference internal" href="../../ref/models/querysets.html#aggregate-default"><span class="std std-ref">default</span></a> 参数，它在空的查询集或分组上始终返回 <code class="docutils literal notranslate"><span class="pre">0</span></code>。</p>
+<p>例如，假设没有一本书的名称中包含 <em>web</em>，那么计算这本书集合的总价格会返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>，因为没有匹配的行来进行 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.Sum" title="django.db.models.Sum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a> 聚合计算：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__contains</span><span class="o">=</span><span class="s2">&quot;web&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">))</span>
+<span class="go">{&quot;price__sum&quot;: None}</span>
+</pre></div>
+</div>
+<p>然而，可以在调用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.Sum" title="django.db.models.Sum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sum</span></code></a> 时设置 <a class="reference internal" href="../../ref/models/querysets.html#aggregate-default"><span class="std std-ref">default</span></a> 参数，以返回不同的默认值，如果找不到书籍：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Book</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__contains</span><span class="o">=</span><span class="s2">&quot;web&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">{&quot;price__sum&quot;: Decimal(&quot;0&quot;)}</span>
+</pre></div>
+</div>
+<p>在内部，通过使用 <a class="reference internal" href="../../ref/models/database-functions.html#django.db.models.functions.Coalesce" title="django.db.models.functions.Coalesce"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coalesce</span></code></a> 包装聚合函数来实现 <a class="reference internal" href="../../ref/models/querysets.html#aggregate-default"><span class="std std-ref">default</span></a> 参数。这样可以在计算聚合时处理默认值。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">聚合</a><ul>
+<li><a class="reference internal" href="#cheat-sheet">速查表</a></li>
+<li><a class="reference internal" href="#generating-aggregates-over-a-queryset">在 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 上生成聚合</a></li>
+<li><a class="reference internal" href="#generating-aggregates-for-each-item-in-a-queryset">为 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 中的每一个条目生成聚合</a><ul>
+<li><a class="reference internal" href="#combining-multiple-aggregations">组合多个聚合</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#joins-and-aggregates">连接(Joins)和聚合</a><ul>
+<li><a class="reference internal" href="#following-relationships-backwards">反向关系</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#aggregations-and-other-queryset-clauses">聚合和其他 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code>&nbsp;子句</a><ul>
+<li><a class="reference internal" href="#filter-and-exclude"><code class="docutils literal notranslate"><span class="pre">filter()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">exclude()</span></code></a><ul>
+<li><a class="reference internal" href="#filtering-on-annotations">过滤注解</a></li>
+<li><a class="reference internal" href="#order-of-annotate-and-filter-clauses"><code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">filter()</span></code> 子句的顺序</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#order-by"><code class="docutils literal notranslate"><span class="pre">order_by()</span></code></a></li>
+<li><a class="reference internal" href="#values"><code class="docutils literal notranslate"><span class="pre">values()</span></code></a><ul>
+<li><a class="reference internal" href="#order-of-annotate-and-values-clauses"><code class="docutils literal notranslate"><span class="pre">annotate()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">values()</span></code> 的顺序</a></li>
+<li><a class="reference internal" href="#interaction-with-order-by">Interaction with <code class="docutils literal notranslate"><span class="pre">order_by()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#aggregating-annotations">聚合注解</a></li>
+<li><a class="reference internal" href="#aggregating-on-empty-querysets-or-groups">在空查询集或组上进行聚合操作时，需要格外小心，因为这可能会导致未定义的行为或错误。在执行聚合操作之前，通常应确保查询集或组中包含足够的数据以执行所需的聚合计算。如果查询集或组为空，可以使用条件语句来避免聚合错误或不必要的操作。</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="queries.html"
+                          title="上一章">执行查询</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="search.html"
+                          title="下一章">搜索</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/db/aggregation.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="queries.html" title="执行查询">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="search.html" title="搜索">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

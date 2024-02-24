@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>测试 GeoDjango 应用程序 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="部署 GeoDjango" href="deployment.html" />
+    <link rel="prev" title="地理站点地图" href="sitemaps.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="sitemaps.html" title="地理站点地图">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="deployment.html" title="部署 GeoDjango">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-testing">
+            
+  <div class="section" id="s-testing-geodjango-apps">
+<span id="testing-geodjango-apps"></span><h1>测试 GeoDjango 应用程序<a class="headerlink" href="#testing-geodjango-apps" title="永久链接至标题">¶</a></h1>
+<p>本文档中还包括一些供 <a class="reference internal" href="#testing-postgis"><span class="std std-ref">PostGIS</span></a> 用户使用的附加注释和设置。</p>
+<div class="section" id="s-postgis">
+<span id="s-testing-postgis"></span><span id="postgis"></span><span id="testing-postgis"></span><h2>PostGIS<a class="headerlink" href="#postgis" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-settings">
+<span id="settings"></span><h3>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">下面的设置具有合理的默认值，不应需要手动设置。</p>
+</div>
+<div class="section" id="s-postgis-version">
+<span id="s-std-setting-POSTGIS_VERSION"></span><span id="s-std:setting-POSTGIS_VERSION"></span><span id="postgis-version"></span><span id="std-setting-POSTGIS_VERSION"></span><span id="std:setting-POSTGIS_VERSION"></span><h4><code class="docutils literal notranslate"><span class="pre">POSTGIS_VERSION</span></code><a class="headerlink" href="#postgis-version" title="永久链接至标题">¶</a></h4>
+<p>当 GeoDjango 的空间后端在 PostGIS 上初始化时，必须执行一个 SQL 查询来确定版本，以便了解可用的功能。希望防止这个额外查询的高级用户可以手动设置版本，使用一个由整数三元组指定的 PostGIS 的主要、次要和微版本号。例如，要配置为 PostGIS X.Y.Z，您可以使用以下方式：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POSTGIS_VERSION</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-obtaining-sufficient-privileges">
+<span id="obtaining-sufficient-privileges"></span><h3>获得足够的权限<a class="headerlink" href="#obtaining-sufficient-privileges" title="永久链接至标题">¶</a></h3>
+<p>根据您的配置，本节描述了配置具有足够权限以在 PostgreSQL 上运行 GeoDjango 应用程序测试的数据库用户的几种方法。如果您的 <a class="reference internal" href="install/postgis.html#spatialdb-template"><span class="std std-ref">空间数据库模板</span></a> 是按照说明创建的，那么您的测试数据库用户只需要具有创建数据库的能力。在其他配置中，您可能需要使用数据库超级用户。</p>
+<div class="section" id="s-create-database-user">
+<span id="create-database-user"></span><h4>创建数据库普通用户<a class="headerlink" href="#create-database-user" title="永久链接至标题">¶</a></h4>
+<p>要创建一个具有创建数据库能力的数据库用户，请使用以下命令：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ createuser --createdb -R -S &lt;user_name&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">-R</span> <span class="pre">-S</span></code> 标志表示我们不希望用户具有创建其他用户（角色）或成为超级用户的能力。</p>
+<p>或者，您可以从 SQL shell 更改现有用户的角色（假设这是从现有超级用户帐户执行的）：</p>
+<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="n">postgres</span><span class="o">#</span><span class="w"> </span><span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="o">&lt;</span><span class="n">user_name</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CREATEDB</span><span class="w"> </span><span class="n">NOSUPERUSER</span><span class="w"> </span><span class="n">NOCREATEROLE</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-create-database-superuser">
+<span id="create-database-superuser"></span><h4>创建数据库超级用户<a class="headerlink" href="#create-database-superuser" title="永久链接至标题">¶</a></h4>
+<p>这可以在创建用户的同时完成，例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ createuser --superuser &lt;user_name&gt;
+</pre></div>
+</div>
+<p>或者，您可以从 SQL shell 更改用户的角色（假设这是从现有超级用户帐户执行的）：</p>
+<div class="highlight-psql notranslate"><div class="highlight"><pre><span></span><span class="n">postgres</span><span class="o">#</span><span class="w"> </span><span class="k">ALTER</span><span class="w"> </span><span class="k">ROLE</span><span class="w"> </span><span class="o">&lt;</span><span class="n">user_name</span><span class="o">&gt;</span><span class="w"> </span><span class="n">SUPERUSER</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-windows">
+<span id="windows"></span><h3>Windows<a class="headerlink" href="#windows" title="永久链接至标题">¶</a></h3>
+<p>在 Windows 平台上，您可以使用 pgAdmin III 实用程序将超级用户权限添加到您的数据库用户。</p>
+<p>默认情况下，在 Windows 上的 PostGIS 安装程序中包含一个名为 <code class="docutils literal notranslate"><span class="pre">template_postgis</span></code> 的空间数据库模板。</p>
+</div>
+</div>
+<div class="section" id="s-geodjango-tests">
+<span id="s-id1"></span><span id="geodjango-tests"></span><span id="id1"></span><h2>GeoDjango 测试<a class="headerlink" href="#geodjango-tests" title="永久链接至标题">¶</a></h2>
+<p>要在使用 <code class="docutils literal notranslate"><span class="pre">runtests.py</span></code> 运行 Django 测试套件时执行 GeoDjango 测试，设置文件中的所有数据库必须使用其中一个 <a class="reference internal" href="db-api.html#spatial-backends"><span class="std std-ref">空间数据库后端</span></a>。</p>
+<div class="section" id="s-example">
+<span id="example"></span><h3>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h3>
+<p>以下是一个示例的简单设置文件，其中包含可以用来运行整个 Django 测试套件的空间后端，包括 <a class="reference internal" href="index.html#module-django.contrib.gis" title="django.contrib.gis: Geographic Information System (GIS) extensions for Django"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.gis</span></code></a> 中的测试：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.contrib.gis.db.backends.postgis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;geodjango&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;USER&quot;</span><span class="p">:</span> <span class="s2">&quot;geodjango&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.contrib.gis.db.backends.postgis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;other&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;USER&quot;</span><span class="p">:</span> <span class="s2">&quot;geodjango&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">SECRET_KEY</span> <span class="o">=</span> <span class="s2">&quot;django_tests_secret_key&quot;</span>
+</pre></div>
+</div>
+<p>假设上述设置位于与 <code class="docutils literal notranslate"><span class="pre">runtests.py</span></code> 相同目录中的 <code class="docutils literal notranslate"><span class="pre">postgis.py</span></code> 文件中，那么在执行以下命令时，将执行所有 Django 和 GeoDjango 测试：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./runtests.py --settings<span class="o">=</span>postgis
+</pre></div>
+</div>
+<p>要仅运行 GeoDjango 测试套件，请指定 <code class="docutils literal notranslate"><span class="pre">gis_tests</span></code>：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ ./runtests.py --settings<span class="o">=</span>postgis gis_tests
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">测试 GeoDjango 应用程序</a><ul>
+<li><a class="reference internal" href="#postgis">PostGIS</a><ul>
+<li><a class="reference internal" href="#settings">配置</a><ul>
+<li><a class="reference internal" href="#postgis-version"><code class="docutils literal notranslate"><span class="pre">POSTGIS_VERSION</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#obtaining-sufficient-privileges">获得足够的权限</a><ul>
+<li><a class="reference internal" href="#create-database-user">创建数据库普通用户</a></li>
+<li><a class="reference internal" href="#create-database-superuser">创建数据库超级用户</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geodjango-tests">GeoDjango 测试</a><ul>
+<li><a class="reference internal" href="#example">例如</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="sitemaps.html"
+                          title="上一章">地理站点地图</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="deployment.html"
+                          title="下一章">部署 GeoDjango</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/gis/testing.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="sitemaps.html" title="地理站点地图">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="deployment.html" title="部署 GeoDjango">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

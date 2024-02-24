@@ -1,0 +1,469 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>编码风格 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="单元测试集" href="unit-tests.html" />
+    <link rel="prev" title="编写代码" href="index.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../../../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="index.html" title="编写代码">previous</a>
+     |
+    <a href="../../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="unit-tests.html" title="单元测试集">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-contributing-writing-code-coding-style">
+            
+  <div class="section" id="s-coding-style">
+<span id="coding-style"></span><h1>编码风格<a class="headerlink" href="#coding-style" title="永久链接至标题">¶</a></h1>
+<p>当编写Django代码时，请遵从这些编码标准。</p>
+<div class="section" id="s-pre-commit-checks">
+<span id="s-coding-style-pre-commit"></span><span id="pre-commit-checks"></span><span id="coding-style-pre-commit"></span><h2>预提交检查<a class="headerlink" href="#pre-commit-checks" title="永久链接至标题">¶</a></h2>
+<p><a class="reference external" href="https://pre-commit.com">pre-commit</a> 是一个用于管理预提交钩子的框架。这些钩子有助于在提交代码进行审查之前识别简单的问题。通过在代码审查之前检查这些问题，它可以让审查人员集中精力在更改本身上，还可以帮助减少 CI 运行的次数。</p>
+<p>要使用这个工具，首先安装 <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>，然后安装 Git 钩子：</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip install pre-commit
+<span class="gp">$ </span>pre-commit install
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py -m pip install pre-commit
+<span class="gp">...\&gt;</span> pre-commit install
+</pre></div>
+</section>
+</div>
+<p>在第一次提交时，<code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> 将安装钩子，这些钩子会安装在它们自己的环境中，并且在第一次运行时需要一点时间来安装。后续的检查将会快得多。如果发现错误，将显示相应的错误消息。如果错误与 <code class="docutils literal notranslate"><span class="pre">black</span></code> 或 <code class="docutils literal notranslate"><span class="pre">isort</span></code> 有关，那么工具会为你修复它们。请查看更改并在满意后重新暂存以进行提交。</p>
+</div>
+<div class="section" id="s-python-style">
+<span id="s-coding-style-python"></span><span id="python-style"></span><span id="coding-style-python"></span><h2>Python 编码风格<a class="headerlink" href="#python-style" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p class="first">所有文件应该使用 <a class="reference external" href="https://black.readthedocs.io/en/stable/">black</a> 自动格式化工具进行格式化。如果已配置，这将由 <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> 运行。</p>
+</li>
+<li><p class="first">项目仓库包括一个 <code class="docutils literal notranslate"><span class="pre">.editorconfig</span></code> 文件。我们建议使用支持 <a class="reference external" href="https://editorconfig.org/">EditorConfig</a> 的文本编辑器，以避免缩进和空白字符问题。Python 文件使用 4 个空格缩进，而 HTML 文件使用2个空格。</p>
+</li>
+<li><p class="first">除非另有约定的情况下，否则遵从 PEP8 编码规范。</p>
+<p>使用 <a class="reference external" href="https://pypi.org/project/flake8/">flake8</a> 来检查这个方面的问题。请注意，我们的 <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code> 文件包含一些被排除的文件（我们不关心清理的已弃用模块和一些 Django 供应的第三方代码），以及一些被排除的错误，我们不认为它们是严重的违规。请记住，<span class="target" id="index-10"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a> 只是一个指南，所以尊重周围代码的风格是主要目标。</p>
+<p>对于 <span class="target" id="index-11"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a> 的一个例外是我们对行长度的规定。如果限制代码行的长度为 79 个字符会使代码看起来显著难看或难以阅读，那么不要这样做。我们允许最多 88 个字符，因为这是 <code class="docutils literal notranslate"><span class="pre">black</span></code> 使用的行长度。当你运行 <code class="docutils literal notranslate"><span class="pre">flake8</span></code> 时，这个检查会包含在内。然而，文档、注释和文档字符串应该在 79 个字符处换行，即使 <span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a> 建议是 72 个字符。</p>
+</li>
+<li><p class="first">字符串变量插值可以使用 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#old-string-formatting" title="(在 Python v3.12)"><span class="xref std std-ref">%-formatting</span></a>、<a class="reference external" href="https://docs.python.org/3/reference/lexical_analysis.html#f-strings" title="(在 Python v3.12)"><span class="xref std std-ref">f-strings</span></a> 或 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str.format" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a>，以提高代码的可读性为目标。</p>
+<p>关于可读性的最终判断留给合并者自行决定。作为指南，f-strings 应仅使用普通的变量和属性访问，在更复杂的情况下，应先进行本地变量赋值。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Allowed</span>
+<span class="sa">f</span><span class="s2">&quot;hello </span><span class="si">{</span><span class="n">user</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="sa">f</span><span class="s2">&quot;hello </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="sa">f</span><span class="s2">&quot;hello </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="c1"># Disallowed</span>
+<span class="sa">f</span><span class="s2">&quot;hello </span><span class="si">{</span><span class="n">get_user</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="sa">f</span><span class="s2">&quot;you are </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">age</span> <span class="o">*</span> <span class="mf">365.25</span><span class="si">}</span><span class="s2"> days old&quot;</span>
+
+<span class="c1"># Allowed with local variable assignment</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">get_user</span><span class="p">()</span>
+<span class="sa">f</span><span class="s2">&quot;hello </span><span class="si">{</span><span class="n">user</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">user_days_old</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">age</span> <span class="o">*</span> <span class="mf">365.25</span>
+<span class="sa">f</span><span class="s2">&quot;you are </span><span class="si">{</span><span class="n">user_days_old</span><span class="si">}</span><span class="s2"> days old&quot;</span>
+</pre></div>
+</div>
+<p>不应该在可能需要翻译的任何字符串，包括错误和日志消息中使用 f-strings。一般来说，<code class="docutils literal notranslate"><span class="pre">format()</span></code> 更加冗长，因此更倾向于使用其他格式化方法。</p>
+<p>不要浪费时间对现有代码进行无关的重构来调整格式化方法。</p>
+</li>
+<li><p class="first">在注释中避免使用 &quot; we &quot;，例如使用 &quot; Loop over &quot; 而不是 &quot; We loop over &quot;。</p>
+</li>
+<li><p class="first">在给变量，函数和方法命名时候使用下划线而不是小驼峰 (例如：  poll.get_unique_voters(), not poll.getUniqueVoters() )。</p>
+</li>
+<li><p class="first">类名使用“大驼峰命名法”（或者是用在能返回类的工厂函数上面）。</p>
+</li>
+<li><p class="first">对于文档字符串，遵从现有文档字符串风格和 PEP257 规范。</p>
+</li>
+<li><p class="first">在测试中，使用 <a class="reference internal" href="../../../topics/testing/tools.html#django.test.SimpleTestCase.assertRaisesMessage" title="django.test.SimpleTestCase.assertRaisesMessage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertRaisesMessage()</span></code></a> 和 <a class="reference internal" href="../../../topics/testing/tools.html#django.test.SimpleTestCase.assertWarnsMessage" title="django.test.SimpleTestCase.assertWarnsMessage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertWarnsMessage()</span></code></a>，而不是 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertRaises" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertRaises()</span></code></a> 和 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertWarns" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertWarns()</span></code></a>，这样可以检查异常或警告消息。只有在需要正则表达式匹配时才使用 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertRaisesRegex" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertRaisesRegex()</span></code></a> 和 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertWarnsRegex" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertWarnsRegex()</span></code></a>。</p>
+<p>在测试布尔值时，使用 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertIs" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertIs(…,</span> <span class="pre">True/False)</span></code></a>，而不是 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertTrue" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertTrue()</span></code></a> 和 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertFalse" title="(在 Python v3.12)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertFalse()</span></code></a>，这样可以检查实际的布尔值，而不是表达式的真值。</p>
+</li>
+<li><p class="first">在测试文档字符串中，说明每个测试展示的预期行为。不要包含像 &quot; Tests that &quot; 或 &quot; Ensures that &quot; 这样的前言。</p>
+<p>保留工单引用用于描述复杂问题，其中工单包含无法轻易在文档字符串或注释中描述的额外细节。在句子末尾包含工单号，如下所示：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_foo</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A test docstring looks like this (#123456).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="s-imports">
+<span id="s-coding-style-imports"></span><span id="imports"></span><span id="coding-style-imports"></span><h2>导入<a class="headerlink" href="#imports" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p class="first">使用 <a class="reference external" href="https://github.com/PyCQA/isort#readme">isort</a> 来自动按照以下指南进行导入排序。</p>
+<p>快速入门：</p>
+<div class="console-block" id="console-block-1">
+<input class="c-tab-unix" id="c-tab-1-unix" type="radio" name="console-1" checked>
+<label for="c-tab-1-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-1-win" type="radio" name="console-1">
+<label for="c-tab-1-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-1-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip install <span class="s2">&quot;isort &gt;= 5.1.0&quot;</span>
+<span class="gp">$ </span>isort .
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-1-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py -m pip install <span class="s2">&quot;isort &gt;= 5.1.0&quot;</span>
+<span class="gp">...\&gt;</span> isort .
+</pre></div>
+</section>
+</div>
+<p>这将从你的当前目录递归运行 <code class="docutils literal notranslate"><span class="pre">isort</span></code> ，修改所有不符合指引的文件，如果你不需要排序（例如：避免循环导入）请在你的导入里面像这样加上注释：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">module</span>  <span class="c1"># isort:skip</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">把导入这样进行分组：future库，python标准库，第三方库， 其他的Django组件，本地Django组件，try/excepts块。按照字母顺序对每个分组进行排序，按照完整的模块名称。在每个分组里面把import module句子放在 from module importobjects句子前面。对于其他Django组件使用绝对导入，对本地Django组件使用相对导入。</p>
+</li>
+<li><p class="first">在每一行上，按字母顺序排列项目，将大写字母的项目放在小写字母的项目之前分组。</p>
+</li>
+<li><p class="first">使用括号和4个连续空格构成的缩进去打破长行，在最后一个导入之后写一个逗号，把右括号放在单独一行。</p>
+<p>在最后一个导入和任何代码块之间留出一个空行，在第一个函数或类前面留出两个空行。</p>
+<p>例如（注释仅作为解释用途）：</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">django/contrib/admin/example.py</span></code></span><a class="headerlink" href="#id1" title="永久链接至代码">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># future</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">unicode_literals</span>
+
+<span class="c1"># standard library</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+
+<span class="c1"># third-party</span>
+<span class="kn">import</span> <span class="nn">bcrypt</span>
+
+<span class="c1"># Django</span>
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">Http404</span>
+<span class="kn">from</span> <span class="nn">django.http.response</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Http404</span><span class="p">,</span>
+    <span class="n">HttpResponse</span><span class="p">,</span>
+    <span class="n">HttpResponseNotAllowed</span><span class="p">,</span>
+    <span class="n">StreamingHttpResponse</span><span class="p">,</span>
+    <span class="n">cookie</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># local Django</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">LogEntry</span>
+
+<span class="c1"># try/except</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">yaml</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">yaml</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">CONSTANT</span> <span class="o">=</span> <span class="s2">&quot;foo&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">Example</span><span class="p">:</span> <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+</li>
+<li><p class="first">在可用时，请使用方便的导入方式。例如，这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views</span> <span class="kn">import</span> <span class="n">View</span>
+</pre></div>
+</div>
+<p>替换成：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.generic.base</span> <span class="kn">import</span> <span class="n">View</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="s-template-style">
+<span id="template-style"></span><h2>模版风格<a class="headerlink" href="#template-style" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p class="first">在Django模板代码中，在大括号和标签内容之间放置一个（只有一个）空格。</p>
+<p>这样做：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span> <span class="nv">foo</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+<p>不要这样做：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span><span class="nv">foo</span><span class="cp">}}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="s-view-style">
+<span id="view-style"></span><h2>视图风格<a class="headerlink" href="#view-style" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p class="first">在Django的视图中，第一个参数应该总是 <code class="docutils literal notranslate"><span class="pre">request</span></code> 。</p>
+<p>这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">foo</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>别这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">foo</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="s-model-style">
+<span id="model-style"></span><h2>模型风格<a class="headerlink" href="#model-style" title="永久链接至标题">¶</a></h2>
+<ul>
+<li><p class="first">字段名称应当全部使用小写，使用下划线替代驼峰命名。</p>
+<p>这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>别这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">FirstName</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">Last_Name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">&nbsp;<code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Meta</span></code> 类应该位于定义字段之后，用一个空行分割字段定义和类定义。</p>
+<p>这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="s2">&quot;people&quot;</span>
+</pre></div>
+</div>
+<p>别这样做：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">verbose_name_plural</span> <span class="o">=</span> <span class="s2">&quot;people&quot;</span>
+
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">模型内的类核方法的定义应该遵循以下顺序（不是所有项都是必须的）：</p>
+<ul class="simple">
+<li>所有数据库字段</li>
+<li>自定义管理器属性</li>
+<li><code class="docutils literal notranslate"><span class="pre">Meta</span> <span class="pre">类</span></code></li>
+<li>`` __str__() 方法``</li>
+<li><code class="docutils literal notranslate"><span class="pre">save()</span> <span class="pre">方法</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">get_absolute_url()</span> <span class="pre">方法</span></code></li>
+<li>其他自定义方法</li>
+</ul>
+</li>
+<li><p class="first">如果为给定的模型字段定义了 <code class="docutils literal notranslate"><span class="pre">choices</span></code>，请将每个选择定义为一个映射，使用全大写名称作为模型上的类属性。示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">DIRECTION_UP</span> <span class="o">=</span> <span class="s2">&quot;U&quot;</span>
+    <span class="n">DIRECTION_DOWN</span> <span class="o">=</span> <span class="s2">&quot;D&quot;</span>
+    <span class="n">DIRECTION_CHOICES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">DIRECTION_UP</span><span class="p">:</span> <span class="s2">&quot;Up&quot;</span><span class="p">,</span>
+        <span class="n">DIRECTION_DOWN</span><span class="p">:</span> <span class="s2">&quot;Down&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>或者，考虑使用 <a class="reference internal" href="../../../ref/models/fields.html#field-choices-enum-types"><span class="std std-ref">枚举类型</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Direction</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">TextChoices</span><span class="p">):</span>
+        <span class="n">UP</span> <span class="o">=</span> <span class="s2">&quot;U&quot;</span><span class="p">,</span> <span class="s2">&quot;Up&quot;</span>
+        <span class="n">DOWN</span> <span class="o">=</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="s2">&quot;Down&quot;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="s-use-of-django-conf-settings">
+<span id="use-of-django-conf-settings"></span><h2><code class="docutils literal notranslate"><span class="pre">django.conf.settings</span></code> 配置的使用<a class="headerlink" href="#use-of-django-conf-settings" title="永久链接至标题">¶</a></h2>
+<p>通常，模块不应使用存储在顶层的配置 <code class="docutils literal notranslate"><span class="pre">django.conf.settings</span></code> 配置（即在导入模块时进行评估）。 对此的解释如下：</p>
+<p>手动配置设置（即不依赖于 <span class="target" id="index-13"></span><a class="reference internal" href="../../../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 环境变量）是允许的，并且可以按以下方式进行：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+
+<span class="n">settings</span><span class="o">.</span><span class="n">configure</span><span class="p">({},</span> <span class="n">SOME_SETTING</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>但是，如果在配置 <code class="docutils literal notranslate"><span class="pre">settings.configure</span></code> 行配置之前访问了任何设置，则此操作将无效。（在内部，<code class="docutils literal notranslate"><span class="pre">settings</span></code> 配置是一个 <code class="docutils literal notranslate"><span class="pre">LazyObject</span></code> ，当尚未访问设置时，它会自动配置自己）。</p>
+<p>因此，如果有一个包含一些代码的模块，如下所示：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">get_callable</span>
+
+<span class="n">default_foo_view</span> <span class="o">=</span> <span class="n">get_callable</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">FOO_VIEW</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>…然后导入此模块将导致设置对象被配置。 这意味着第三方在顶层导入模块的能力与手动配置设置对象的能力不兼容，或者在某些情况下使其变得非常困难。</p>
+<p>为了替换上面的代码，必须使用惰性级别或间接级别，例如 <code class="docutils literal notranslate"><span class="pre">django.utils.functional.LazyObject</span></code> ， <code class="docutils literal notranslate"><span class="pre">django.utils.functional.lazy()</span></code> 或者 <code class="docutils literal notranslate"><span class="pre">lambda</span></code> 。</p>
+</div>
+<div class="section" id="s-miscellaneous">
+<span id="miscellaneous"></span><h2>杂项<a class="headerlink" href="#miscellaneous" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>为国际化标记所有的字符串；更多细节请参见 <a class="reference internal" href="../../../topics/i18n/index.html"><span class="doc">i18n documentation</span></a>。</li>
+<li>在更改代码时，删除不再使用的 <code class="docutils literal notranslate"><span class="pre">import</span></code> 语句。<a class="reference external" href="https://pypi.org/project/flake8/">flake8</a> 将为你识别这些未使用的导入。如果需要保留一个未使用的导入以保持向后兼容性，请在末尾标记为 <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">NOQA</span></code> 以消除 flake8 的警告。</li>
+<li>按部就班的删除代码结尾那些增加不必要字节的空格，增加了显示混乱还可能导致偶尔的合并冲突。一些IDE可以通过配置自动删除它们，大多数版本控制工具可以在差异比较时高亮显示它们。</li>
+<li>请不要在你贡献的代码里面放入你的名字，我们的政策是把贡献者名字保存到随Django分发的AUTHORS文件里--—而不是分散在代码库里。如果你进行的不只是一次简单修改，请随意更改在你补丁中的AUTHORS文件。</li>
+</ul>
+</div>
+<div class="section" id="s-javascript-style">
+<span id="javascript-style"></span><h2>JavaScript 样式<a class="headerlink" href="#javascript-style" title="永久链接至标题">¶</a></h2>
+<p>关于 Django 所使用 JavaScript 代码样式的更多内容，请参见 <a class="reference internal" href="javascript.html"><span class="doc">JavaScript</span></a>。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">编码风格</a><ul>
+<li><a class="reference internal" href="#pre-commit-checks">预提交检查</a></li>
+<li><a class="reference internal" href="#python-style">Python 编码风格</a></li>
+<li><a class="reference internal" href="#imports">导入</a></li>
+<li><a class="reference internal" href="#template-style">模版风格</a></li>
+<li><a class="reference internal" href="#view-style">视图风格</a></li>
+<li><a class="reference internal" href="#model-style">模型风格</a></li>
+<li><a class="reference internal" href="#use-of-django-conf-settings"><code class="docutils literal notranslate"><span class="pre">django.conf.settings</span></code> 配置的使用</a></li>
+<li><a class="reference internal" href="#miscellaneous">杂项</a></li>
+<li><a class="reference internal" href="#javascript-style">JavaScript 样式</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="index.html"
+                          title="上一章">编写代码</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="unit-tests.html"
+                          title="下一章">单元测试集</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/internals/contributing/writing-code/coding-style.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="index.html" title="编写代码">previous</a>
+     |
+    <a href="../../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="unit-tests.html" title="单元测试集">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

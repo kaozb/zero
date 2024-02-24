@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 的安全策略 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 的发行流程" href="release-process.html" />
+    <link rel="prev" title="Django 项目的组织" href="organization.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="organization.html" title="Django 项目的组织">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="release-process.html" title="Django 的发行流程">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-security">
+            
+  <div class="section" id="s-django-s-security-policies">
+<span id="django-s-security-policies"></span><h1>Django 的安全策略<a class="headerlink" href="#django-s-security-policies" title="永久链接至标题">¶</a></h1>
+<p>Django的开发团队致力于负责地报告和披露与安全相关的问题。因此，我们采用并遵循了一套符合这种理想的策略，以便及时向Django的官方发行版和第三方发行版发布安全更新。</p>
+<div class="section" id="s-reporting-security-issues">
+<span id="s-id1"></span><span id="reporting-security-issues"></span><span id="id1"></span><h2>报告安全问题<a class="headerlink" href="#reporting-security-issues" title="永久链接至标题">¶</a></h2>
+<p><strong>简而言之:请通过电子邮件security&#64;djangoproject.com报告安全问题</strong>。</p>
+<p>Django 中的大多数普通错误都会报告到 <a class="reference external" href="https://code.djangoproject.com/query">我们的公共 Trac 实例</a>，但由于安全问题的敏感性质，我们要求不要以这种方式公开报告它们。</p>
+<p>相反，如果您认为在 Django 中发现了具有安全影响的问题，请通过电子邮件发送问题描述至 <code class="docutils literal notranslate"><span class="pre">security&#64;djangoproject.com</span></code>。发送到该地址的邮件将会传达给 <a class="reference external" href="https://www.djangoproject.com/foundation/teams/#security-team">安全团队</a>。</p>
+<p>一旦您通过电子邮件提交了问题，您应该会在48小时内收到来自安全团队成员的确认，并根据需要采取的行动，您可能会收到进一步的后续电子邮件。</p>
+<div class="admonition-sending-encrypted-reports admonition">
+<p class="first admonition-title">发送加密报告</p>
+<p class="last">如果您想发送加密邮件（<em>可选</em>），<code class="docutils literal notranslate"><span class="pre">security&#64;djangoproject.com</span></code> 的公钥 ID 是 <code class="docutils literal notranslate"><span class="pre">0xfcb84b8d1d17f80b</span></code>，并且这个公钥可以从大多数常用的密钥服务器获取。</p>
+</div>
+</div>
+<div class="section" id="s-supported-versions">
+<span id="s-security-support"></span><span id="supported-versions"></span><span id="security-support"></span><h2>支持的版本<a class="headerlink" href="#supported-versions" title="永久链接至标题">¶</a></h2>
+<p>Django团队在任何时候都会为几个版本的Django提供官方安全支持。</p>
+<ul class="simple">
+<li>在 GitHub 上托管的 <a class="reference external" href="https://github.com/django/django/">主开发分支</a>，将成为 Django 的下一个主要版本，会接收安全支持。仅影响主开发分支而不影响任何稳定发布版本的安全问题将在公开中修复，无需经过 <a class="reference internal" href="#security-disclosure"><span class="std std-ref">披露流程</span></a>。</li>
+<li>两个最新的Django发行版系列都提供了安全支持。例如，在Django 1.5发布之前的开发周期中，将支持Django 1.4和Django 1.3。在Django 1.5发布后，Django 1.3的安全支持将结束。</li>
+<li><span class="xref std std-term">长期支持版本</span> 将在指定的期限内接收安全更新。</li>
+</ul>
+<p>当出于安全原因发布新版本时，附带的通知将包括受影响的版本列表。此列表仅包含*支持*的Django版本:旧版本也可能受到影响，但我们不会调查这一点，也不会为这些版本发布补丁或新版本。</p>
+</div>
+<div class="section" id="s-how-django-discloses-security-issues">
+<span id="s-security-disclosure"></span><span id="how-django-discloses-security-issues"></span><span id="security-disclosure"></span><h2>Django 如何披露安全问题<a class="headerlink" href="#how-django-discloses-security-issues" title="永久链接至标题">¶</a></h2>
+<p>我们将一个安全问题从私下讨论到公开披露的过程涉及多个步骤。</p>
+<p>在公开披露前大约一周，我们会发送两个通知：</p>
+<p>首先，我们会通知 <a class="reference internal" href="mailing-lists.html#django-announce-mailing-list"><span class="std std-ref">django-announce</span></a> 关于即将发布的安全更新的日期和大致时间，以及问题的严重性。这是为了帮助需要确保他们有足够人员来处理我们的公告并根据需要升级 Django 的组织。严重性级别包括：</p>
+<ul class="simple">
+<li><strong>High</strong><ul>
+<li>远程代码执行</li>
+<li>SQL 注入</li>
+</ul>
+</li>
+<li><strong>Moderate</strong><ul>
+<li>跨站脚本攻击（XSS）</li>
+<li>跨站请求伪造（CSRF）</li>
+<li>拒绝服务攻击</li>
+<li>损坏的认证</li>
+</ul>
+</li>
+<li><strong>Low</strong><ul>
+<li>敏感数据暴露</li>
+<li>会话管理损坏</li>
+<li>未验证重定向</li>
+<li>需要不常见的配置选项的问题</li>
+</ul>
+</li>
+</ul>
+<p>其次，我们会通知一份 <a class="reference internal" href="#security-notifications"><span class="std std-ref">个人和组织名单</span></a>，主要由操作系统供应商和其他 Django 分发商组成。此电子邮件由 <a class="reference external" href="https://www.djangoproject.com/foundation/teams/#releasers-team">Django 发布团队</a> 的某人使用 PGP 密钥签名，内容包括：</p>
+<ul class="simple">
+<li>问题的完整描述以及受影响的Django版本</li>
+<li>我们将采取的补救措施。</li>
+<li>补丁(如果有的话)将应用于Django。</li>
+<li>Django 团队将应用这些补丁、发布新版本并公开披露问题的日期。</li>
+</ul>
+<p>在披露当天，我们将采取以下步骤：</p>
+<ol class="arabic simple">
+<li>将相关的补丁应用到 Django 的代码库中。</li>
+<li>发布相关版本，将新的软件包放在 <a class="reference external" href="https://pypi.org/project/Django/">Python Package Index</a> 和 <a class="reference external" href="https://www.djangoproject.com/download/">djangoproject.com 网站</a> 上，并在 Django 的 Git 存储库中标记新版本。</li>
+<li>在 <a class="reference external" href="https://www.djangoproject.com/weblog/">官方 Django 开发博客</a> 上发布一篇公开文章，详细描述问题及其解决方案，指向相关的补丁和新版本，并署名问题的报告者（如果报告者希望公开身份）。</li>
+<li>在 <a class="reference internal" href="mailing-lists.html#django-announce-mailing-list"><span class="std std-ref">django-announce</span></a> 和 <a class="reference external" href="mailto:oss-security&#37;&#52;&#48;lists&#46;openwall&#46;com">oss-security<span>&#64;</span>lists<span>&#46;</span>openwall<span>&#46;</span>com</a> 邮件列表上发布一则通知，其中包含指向博客文章的链接。</li>
+</ol>
+<p>如果认为报告的问题特别紧急——例如，由于已知有野外利用，提前通知和公开披露之间的时间可能会大大缩短。</p>
+<p>此外，如果我们有理由相信报告给我们的问题影响了 Python/web 生态系统中的其他框架或工具，我们可能会与适当的维护者私下联系并讨论这些问题，并协调我们自己的披露和解决方案与他们的一起进行。</p>
+<p>Django 团队还维护着一个 <a class="reference internal" href="../releases/security.html"><span class="doc">Django 中披露的安全问题的档案</span></a>。</p>
+</div>
+<div class="section" id="s-who-receives-advance-notification">
+<span id="s-security-notifications"></span><span id="who-receives-advance-notification"></span><span id="security-notifications"></span><h2>谁会收到提前通知<a class="headerlink" href="#who-receives-advance-notification" title="永久链接至标题">¶</a></h2>
+<p>接收安全问题提前通知的个人和组织的完整名单不会被公开。</p>
+<p>我们还希望将这个列表尽可能保持较小的规模，以更好地管理披露前的机密信息流动。因此，我们的通知列表并不仅仅是 Django 用户的列表，成为 Django 用户并不足以理由放置在通知列表上。</p>
+<p>广义上来说，安全通知的接收者分为三类：</p>
+<ol class="arabic simple">
+<li>操作系统供应商和其他 Django 分发商，他们提供了一个适合报告他们的 Django 包的问题或用于一般安全报告的通用（即不是个人的个人电子邮件地址）联系地址。在任何情况下，这些地址 <strong>不得</strong> 转发到公共邮件列表或 bug 跟踪器。转发到个人维护人员或安全响应联系人的私人电子邮件的地址是可以接受的，尽管私人安全跟踪器或安全响应组更可取。</li>
+<li>根据具体情况，已经表现出对回应和负责任地采取行动的个别包维护者。</li>
+<li>根据具体情况，根据 Django 开发团队的判断，其他需要了解即将到来的安全问题的实体。通常，该组成员将包括一些最大的和/或最有可能受到严重影响的已知 Django 用户或分发商，他们需要表现出负责任地接收、保密和采取行动的能力。</li>
+</ol>
+<div class="admonition-security-audit-and-scanning-entities admonition">
+<p class="first admonition-title">安全审计和扫描实体</p>
+<p class="last">作为政策，我们不会将这些类型的实体添加到通知列表中。</p>
+</div>
+</div>
+<div class="section" id="s-requesting-notifications">
+<span id="requesting-notifications"></span><h2>请求通知<a class="headerlink" href="#requesting-notifications" title="永久链接至标题">¶</a></h2>
+<p>如果您认为自己或您有授权代表的组织属于上述任何一组，您可以通过发送电子邮件至 <code class="docutils literal notranslate"><span class="pre">security&#64;djangoproject.com</span></code> 来请求加入 Django 的通知列表。请在主题行中使用 &quot;Security notification request&quot;。</p>
+<p>您的请求 <strong>必须</strong> 包含以下信息：</p>
+<ul class="simple">
+<li>您的全名和您所代表的组织的名称（如果适用），以及您在该组织中的角色。</li>
+<li>详细解释您或您的组织如何符合上述至少一组标准。</li>
+<li>详细解释您为什么要请求安全通知。请再次注意，这并不仅仅是给 Django 用户使用的列表，绝大多数用户应该订阅 <a class="reference internal" href="mailing-lists.html#django-announce-mailing-list"><span class="std std-ref">django-announce</span></a> 以提前收到安全发布的通知，而不是请求详细的通知。</li>
+<li>您希望添加到我们通知列表的电子邮件地址。</li>
+<li>解释谁将接收/审查发送到该地址的邮件，以及关于将采取的任何自动操作的信息（例如，在 bug 跟踪器中提出机密问题）。</li>
+<li>对于个人，与您的地址关联的可用于验证从您那里接收的电子邮件和根据需要加密发送给您的电子邮件的公钥的 ID。</li>
+</ul>
+<p>提交后，您的请求将由 Django 开发团队考虑；您将在30天内收到回复，通知您请求的结果。</p>
+<p>请您也要记住，对于任何个人或组织来说，接收安全通知是由 Django 开发团队完全自行决定的特权，而且这个特权可以在任何时候被撤销，有或无需解释。</p>
+<div class="admonition-provide-all-required-information admonition">
+<p class="first admonition-title">提供所有必要的信息</p>
+<p class="last">如果您在初始联系中未提供所需的信息，将影响我们是否批准您的请求的决定。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 的安全策略</a><ul>
+<li><a class="reference internal" href="#reporting-security-issues">报告安全问题</a></li>
+<li><a class="reference internal" href="#supported-versions">支持的版本</a></li>
+<li><a class="reference internal" href="#how-django-discloses-security-issues">Django 如何披露安全问题</a></li>
+<li><a class="reference internal" href="#who-receives-advance-notification">谁会收到提前通知</a></li>
+<li><a class="reference internal" href="#requesting-notifications">请求通知</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="organization.html"
+                          title="上一章">Django 项目的组织</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="release-process.html"
+                          title="下一章">Django 的发行流程</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/internals/security.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="organization.html" title="Django 项目的组织">previous</a>
+     |
+    <a href="index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="release-process.html" title="Django 的发行流程">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

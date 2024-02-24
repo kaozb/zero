@@ -1,0 +1,612 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>迁移操作 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="模型" href="models/index.html" />
+    <link rel="prev" title="中间件" href="middleware.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="middleware.html" title="中间件">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="models/index.html" title="模型">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-migration-operations">
+            
+  <div class="section" id="s-module-django.db.migrations.operations">
+<span id="s-migration-operations"></span><span id="module-django.db.migrations.operations"></span><span id="migration-operations"></span><h1>迁移操作<a class="headerlink" href="#module-django.db.migrations.operations" title="永久链接至标题">¶</a></h1>
+<p>迁移文件由一个或多个 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 组成，这些对象声明性地记录了迁移对数据库的作用。</p>
+<p>Django 也使用这些 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 对象来计算出你的模型在历史上的样子，并计算出自上次迁移以来你对模型做了哪些改变，这样它就可以自动写出你的迁移；这就是为什么它们是声明式的，因为这意味着 Django 可以很容易地将它们全部加载到内存中，并在不接触数据库的情况下运行它们，以计算出你的项目应该是什么样子。</p>
+<p>还有更专业的 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 对象，用于诸如 <a class="reference internal" href="../topics/migrations.html#data-migrations"><span class="std std-ref">数据迁移</span></a> 和进阶的手动数据库操作。如果你想封装你经常进行的自定义更改，你也可以编写自己的 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 类。</p>
+<p>如果你需要一个空的迁移文件来编写你自己的 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 对象，使用 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">makemigrations</span> <span class="pre">--empty</span> <span class="pre">yourappname</span></code>，但是要注意手动添加架构变化的操作会混淆迁移自动检测器，使 <a class="reference internal" href="django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 的运行结果输出错误的代码。</p>
+<p>所有的 Django 核心操作都可以在 <code class="docutils literal notranslate"><span class="pre">django.db.migrations.options</span></code> 模块中找到。</p>
+<p>关于介绍性材料，见 <a class="reference internal" href="../topics/migrations.html"><span class="doc">迁移专题指南</span></a>。</p>
+<div class="section" id="s-schema-operations">
+<span id="schema-operations"></span><h2>架构操作<a class="headerlink" href="#schema-operations" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-createmodel">
+<span id="createmodel"></span><h3><code class="docutils literal notranslate"><span class="pre">CreateModel</span></code><a class="headerlink" href="#createmodel" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.CreateModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">CreateModel</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">fields</span></span></em>, <em><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">bases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">managers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.CreateModel" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在项目历史中创建一个新的模型，并在数据库中创建与之匹配的相应表。</p>
+<p><code class="docutils literal notranslate"><span class="pre">name</span></code> 是模型名称，如在 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件中写的那样。</p>
+<p><code class="docutils literal notranslate"><span class="pre">fields</span></code> 是一个由 <code class="docutils literal notranslate"><span class="pre">(field_name,</span> <span class="pre">field_instance)</span></code> 组成的2二元元组的列表。字段实例应该是一个未绑定的字段（所以只是 <code class="docutils literal notranslate"><span class="pre">models.CharField(...)</span></code>，而不是取自另一个模型的字段）。</p>
+<p><code class="docutils literal notranslate"><span class="pre">options</span></code> 是模型 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 类的可选值字典。</p>
+<p><code class="docutils literal notranslate"><span class="pre">bases</span></code> 是一个可选的其他类的列表，让这个模型继承；它既可以包含类对象，也可以包含格式为 <code class="docutils literal notranslate"><span class="pre">&quot;appname.ModelName&quot;</span></code> 的字符串，如果你想依赖另一个模型（所以你继承了历史版本）。如果没有提供，它默认为从标准的 <code class="docutils literal notranslate"><span class="pre">models.Model</span></code> 继承。</p>
+<p><code class="docutils literal notranslate"><span class="pre">managers</span></code> 需要一个由 <code class="docutils literal notranslate"><span class="pre">(manager_name,</span> <span class="pre">manager_instance)</span></code> 组成的二元元组的列表。在迁移过程中，列表中的第一个管理器将是这个模型的默认管理器。</p>
+</div>
+<div class="section" id="s-deletemodel">
+<span id="deletemodel"></span><h3><code class="docutils literal notranslate"><span class="pre">DeleteModel</span></code><a class="headerlink" href="#deletemodel" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.DeleteModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DeleteModel</span></code>(<em><span class="n"><span class="pre">name</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.DeleteModel" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从项目历史中删除模型，并从数据库中删除它的表。</p>
+</div>
+<div class="section" id="s-renamemodel">
+<span id="renamemodel"></span><h3><code class="docutils literal notranslate"><span class="pre">RenameModel</span></code><a class="headerlink" href="#renamemodel" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RenameModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RenameModel</span></code>(<em><span class="n"><span class="pre">old_name</span></span></em>, <em><span class="n"><span class="pre">new_name</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RenameModel" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将模型从旧名称改名为新名称。</p>
+<p>如果你一次更改了模型的名称和相当多的字段，你可能必须手动添加这个；对自动检测器来说，这看起来就像你删除了一个使用旧名称的模型，并添加了一个使用不同名称的新模型，它创建的迁移将丢失旧表中的任何数据。</p>
+</div>
+<div class="section" id="s-altermodeltable">
+<span id="altermodeltable"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterModelTable</span></code><a class="headerlink" href="#altermodeltable" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterModelTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterModelTable</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">table</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterModelTable" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>更改模型的表名（<code class="docutils literal notranslate"><span class="pre">Meta</span></code> 子类上的 <a class="reference internal" href="models/options.html#django.db.models.Options.db_table" title="django.db.models.Options.db_table"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_table</span></code></a> 选项）。</p>
+</div>
+<div class="section" id="s-altermodeltablecomment">
+<span id="altermodeltablecomment"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterModelTableComment</span></code><a class="headerlink" href="#altermodeltablecomment" title="永久链接至标题">¶</a></h3>
+<div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterModelTableComment">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterModelTableComment</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">table_comment</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterModelTableComment" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>更改模型的表注释（位于 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 子类上的 <a class="reference internal" href="models/options.html#django.db.models.Options.db_table_comment" title="django.db.models.Options.db_table_comment"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_table_comment</span></code></a> 选项）。</p>
+</div>
+<div class="section" id="s-alteruniquetogether">
+<span id="alteruniquetogether"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterUniqueTogether</span></code><a class="headerlink" href="#alteruniquetogether" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterUniqueTogether">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterUniqueTogether</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">unique_together</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterUniqueTogether" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>改变模型的唯一约束集（<code class="docutils literal notranslate"><span class="pre">Meta</span></code> 子类上的 <a class="reference internal" href="models/options.html#django.db.models.Options.unique_together" title="django.db.models.Options.unique_together"><code class="xref py py-attr docutils literal notranslate"><span class="pre">unique_together</span></code></a> 选项）。</p>
+</div>
+<div class="section" id="s-alterindextogether">
+<span id="alterindextogether"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterIndexTogether</span></code><a class="headerlink" href="#alterindextogether" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterIndexTogether">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterIndexTogether</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">index_together</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterIndexTogether" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>更改模型的自定义索引集合（位于 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 子类上的 <code class="docutils literal notranslate"><span class="pre">index_together</span></code> 选项）。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">AlterIndexTogether</span></code> 官方上仅支持用于 Django 4.2 之前的迁移文件。出于向后兼容的原因，它仍然是公共 API 的一部分，没有计划弃用或移除它，但不应在新的迁移中使用它。而应该使用 <a class="reference internal" href="#django.db.migrations.operations.AddIndex" title="django.db.migrations.operations.AddIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">AddIndex</span></code></a> 和 <a class="reference internal" href="#django.db.migrations.operations.RemoveIndex" title="django.db.migrations.operations.RemoveIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">RemoveIndex</span></code></a> 操作。</p>
+</div>
+</div>
+<div class="section" id="s-alterorderwithrespectto">
+<span id="alterorderwithrespectto"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterOrderWithRespectTo</span></code><a class="headerlink" href="#alterorderwithrespectto" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterOrderWithRespectTo">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterOrderWithRespectTo</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">order_with_respect_to</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterOrderWithRespectTo" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>生成或删除 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 子类上的 <a class="reference internal" href="models/options.html#django.db.models.Options.order_with_respect_to" title="django.db.models.Options.order_with_respect_to"><code class="xref py py-attr docutils literal notranslate"><span class="pre">order_with_respect_to</span></code></a> 选项所需的 <code class="docutils literal notranslate"><span class="pre">_order</span></code> 列。</p>
+</div>
+<div class="section" id="s-altermodeloptions">
+<span id="altermodeloptions"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterModelOptions</span></code><a class="headerlink" href="#altermodeloptions" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterModelOptions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterModelOptions</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterModelOptions" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>存储对各种模型选项的更改（模型 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 上的设置），如 <code class="docutils literal notranslate"><span class="pre">permissions</span></code> 和 <code class="docutils literal notranslate"><span class="pre">verbose_name</span></code>。不影响数据库，但会将这些更改持久化，供 <a class="reference internal" href="#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 实例使用。<code class="docutils literal notranslate"><span class="pre">options</span></code> 应该是一个将选项名映射到值的字典。</p>
+</div>
+<div class="section" id="s-altermodelmanagers">
+<span id="altermodelmanagers"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterModelManagers</span></code><a class="headerlink" href="#altermodelmanagers" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterModelManagers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterModelManagers</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">managers</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterModelManagers" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>改变迁移期间可用的管理器。</p>
+</div>
+<div class="section" id="s-addfield">
+<span id="addfield"></span><h3><code class="docutils literal notranslate"><span class="pre">AddField</span></code><a class="headerlink" href="#addfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AddField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AddField</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">field</span></span></em>, <em><span class="n"><span class="pre">preserve_default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AddField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>为模型添加一个字段。<code class="docutils literal notranslate"><span class="pre">model_name</span></code> 是模型的名称，<code class="docutils literal notranslate"><span class="pre">name</span></code> 是字段的名称，<code class="docutils literal notranslate"><span class="pre">field</span></code> 是一个未绑定的字段实例（你会在 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 中的字段声明中放入的东西——例如，<code class="docutils literal notranslate"><span class="pre">models.IntegerField(null=True)</span></code>）。</p>
+<p><code class="docutils literal notranslate"><span class="pre">preserve_default</span></code> 参数表示字段的默认值是否是永久的，应该被内置到项目状态中（<code class="docutils literal notranslate"><span class="pre">True</span></code>），或者它是否是临时的，只适用于这次迁移（<code class="docutils literal notranslate"><span class="pre">False</span></code>）——通常是因为迁移在表中添加一个不可空的字段，需要一个默认值放到现有的行中。它不影响直接在数据库中设置默认值的行为——Django 从不设置数据库默认值，而总是在 Django ORM 代码中应用。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>在旧的数据库中，添加一个具有默认值的字段可能会导致表的完全重写。即使是对于可空字段，也会发生这种情况，可能会对性能产生负面影响。为了避免这种情况，应采取以下步骤。</p>
+<ul class="last simple">
+<li>添加可空字段，不含默认值，并运行 <a class="reference internal" href="django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 命令。这应该会产生一个带有 <code class="docutils literal notranslate"><span class="pre">AddField</span></code> 操作的迁移。</li>
+<li>将默认值添加到你的字段中，然后运行:djadmin:makemigrations 命令。这应该会生成一个带有 <code class="docutils literal notranslate"><span class="pre">AlterField</span></code> 操作的迁移。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-removefield">
+<span id="removefield"></span><h3><code class="docutils literal notranslate"><span class="pre">RemoveField</span></code><a class="headerlink" href="#removefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RemoveField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RemoveField</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RemoveField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从模型中删除一个字段。</p>
+<p>请记住，当反向迁移时，这实际上是向模型添加一个字段。如果字段是可空的，或者它有一个默认值，可以用来填充重新创建的列，那么这个操作是可逆的（除了任何数据损失，这是不可逆的）。如果字段不可为空，也没有默认值，则该操作是不可逆的。</p>
+</div>
+<div class="section" id="s-alterfield">
+<span id="alterfield"></span><h3><code class="docutils literal notranslate"><span class="pre">AlterField</span></code><a class="headerlink" href="#alterfield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AlterField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AlterField</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">field</span></span></em>, <em><span class="n"><span class="pre">preserve_default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AlterField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>改变字段的定义，包括改变其类型、<a class="reference internal" href="models/fields.html#django.db.models.Field.null" title="django.db.models.Field.null"><code class="xref py py-attr docutils literal notranslate"><span class="pre">null</span></code></a>、<a class="reference internal" href="models/fields.html#django.db.models.Field.unique" title="django.db.models.Field.unique"><code class="xref py py-attr docutils literal notranslate"><span class="pre">unique</span></code></a>、<a class="reference internal" href="models/fields.html#django.db.models.Field.db_column" title="django.db.models.Field.db_column"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_column</span></code></a> 等字段属性。</p>
+<p><code class="docutils literal notranslate"><span class="pre">preserve_default</span></code> 参数表示字段的默认值是否是永久的，应该被内置到项目状态中（<code class="docutils literal notranslate"><span class="pre">True</span></code>），或者它是否是临时的，只适用于这次迁移（<code class="docutils literal notranslate"><span class="pre">False</span></code>）——通常是因为迁移将一个可空的字段改变为不可空的字段，需要一个默认值放到现有的行中。它不影响直接在数据库中设置默认值的行为——Django 从不设置数据库默认值，而总是在 Django ORM 代码中应用。</p>
+<p>请注意，并不是所有的数据库都可以进行所有的更改——例如，在大多数数据库中，你不能将像 <code class="docutils literal notranslate"><span class="pre">models.TextField()</span></code> 这样的文本型字段改为像 <code class="docutils literal notranslate"><span class="pre">models.IntegerField()</span></code> 这样的数字型字段。</p>
+</div>
+<div class="section" id="s-renamefield">
+<span id="renamefield"></span><h3><code class="docutils literal notranslate"><span class="pre">RenameField</span></code><a class="headerlink" href="#renamefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RenameField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RenameField</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">old_name</span></span></em>, <em><span class="n"><span class="pre">new_name</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RenameField" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>改变一个字段的名称（除非设置了 <a class="reference internal" href="models/fields.html#django.db.models.Field.db_column" title="django.db.models.Field.db_column"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_column</span></code></a>，否则改变其列名）。</p>
+</div>
+<div class="section" id="s-addindex">
+<span id="addindex"></span><h3><code class="docutils literal notranslate"><span class="pre">AddIndex</span></code><a class="headerlink" href="#addindex" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AddIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AddIndex</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">index</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AddIndex" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在数据库表中为模型创建一个带有 <code class="docutils literal notranslate"><span class="pre">model_name</span></code> 的索引。index 是 <a class="reference internal" href="models/indexes.html#django.db.models.Index" title="django.db.models.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> 类的一个实例。</p>
+</div>
+<div class="section" id="s-removeindex">
+<span id="removeindex"></span><h3><code class="docutils literal notranslate"><span class="pre">RemoveIndex</span></code><a class="headerlink" href="#removeindex" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RemoveIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RemoveIndex</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RemoveIndex" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从带有 <code class="docutils literal notranslate"><span class="pre">model_name</span></code> 的模型中删除名为 <code class="docutils literal notranslate"><span class="pre">name</span></code> 的索引。</p>
+</div>
+<div class="section" id="s-renameindex">
+<span id="renameindex"></span><h3><code class="docutils literal notranslate"><span class="pre">RenameIndex</span></code><a class="headerlink" href="#renameindex" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RenameIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RenameIndex</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">new_name</span></span></em>, <em><span class="n"><span class="pre">old_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">old_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RenameIndex" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在模型的数据库表中重命名索引，使用 <code class="docutils literal notranslate"><span class="pre">model_name</span></code>。可以提供 <code class="docutils literal notranslate"><span class="pre">old_name</span></code> 和 <code class="docutils literal notranslate"><span class="pre">old_fields</span></code> 中的一个。<code class="docutils literal notranslate"><span class="pre">old_fields</span></code> 是一个可迭代的字符串，通常对应于 <a class="reference internal" href="models/options.html#django.db.models.Options.index_together" title="django.db.models.Options.index_together"><code class="xref py py-attr docutils literal notranslate"><span class="pre">index_together</span></code></a> 的字段。</p>
+<p>对于不支持索引重命名语句的数据库（如 SQLite 和 MariaDB &lt; 10.5.2），该操作将删除并重新创建索引，这可能会很昂贵。</p>
+</div>
+<div class="section" id="s-addconstraint">
+<span id="addconstraint"></span><h3><code class="docutils literal notranslate"><span class="pre">AddConstraint</span></code><a class="headerlink" href="#addconstraint" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.AddConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">AddConstraint</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">constraint</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.AddConstraint" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在数据库表中为带有 <code class="docutils literal notranslate"><span class="pre">model_name</span></code> 的模型创建一个 <a class="reference internal" href="models/constraints.html"><span class="doc">约束</span></a>。</p>
+</div>
+<div class="section" id="s-removeconstraint">
+<span id="removeconstraint"></span><h3><code class="docutils literal notranslate"><span class="pre">RemoveConstraint</span></code><a class="headerlink" href="#removeconstraint" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RemoveConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RemoveConstraint</span></code>(<em><span class="n"><span class="pre">model_name</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RemoveConstraint" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从带有 <code class="docutils literal notranslate"><span class="pre">model_name</span></code> 的模型中删除名为 <code class="docutils literal notranslate"><span class="pre">name</span></code> 的约束。</p>
+</div>
+</div>
+<div class="section" id="s-special-operations">
+<span id="special-operations"></span><h2>特殊操作<a class="headerlink" href="#special-operations" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-runsql">
+<span id="runsql"></span><h3><code class="docutils literal notranslate"><span class="pre">RunSQL</span></code><a class="headerlink" href="#runsql" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RunSQL">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RunSQL</span></code>(<em><span class="n"><span class="pre">sql</span></span></em>, <em><span class="n"><span class="pre">reverse_sql</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">state_operations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">hints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">elidable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RunSQL" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>允许在数据库上运行任意 SQL——这对于 Django 不直接支持的数据库后端高级功能非常有用。</p>
+<p><code class="docutils literal notranslate"><span class="pre">sql</span></code> 和 <code class="docutils literal notranslate"><span class="pre">reverse_sql</span></code> （如果提供），应该是要在数据库中运行的 SQL 字符串。在大多数数据库后端（除了 PostgreSQL），Django 会在执行 SQL 语句之前将其分割成独立的语句。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">在 PostgreSQL 和 SQLite上，只有在 <a class="reference internal" href="../howto/writing-migrations.html#non-atomic-migrations"><span class="std std-ref">非原子性迁移</span></a> 中的 SQL 中使用 <code class="docutils literal notranslate"><span class="pre">BEGIN</span></code> 或 <code class="docutils literal notranslate"><span class="pre">COMMIT</span></code>，才能避免破坏 Django 的事务状态。</p>
+</div>
+<p>你也可以传递一个字符串或二元元组的列表。后者与 <a class="reference internal" href="../topics/db/sql.html#executing-custom-sql"><span class="std std-ref">cursor.execute()</span></a> 一样，用于传递查询和参数。这三种操作是等价的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">migrations</span><span class="o">.</span><span class="n">RunSQL</span><span class="p">(</span><span class="s2">&quot;INSERT INTO musician (name) VALUES (&#39;Reinhardt&#39;);&quot;</span><span class="p">)</span>
+<span class="n">migrations</span><span class="o">.</span><span class="n">RunSQL</span><span class="p">([(</span><span class="s2">&quot;INSERT INTO musician (name) VALUES (&#39;Reinhardt&#39;);&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)])</span>
+<span class="n">migrations</span><span class="o">.</span><span class="n">RunSQL</span><span class="p">([(</span><span class="s2">&quot;INSERT INTO musician (name) VALUES (</span><span class="si">%s</span><span class="s2">);&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Reinhardt&quot;</span><span class="p">])])</span>
+</pre></div>
+</div>
+<p>如果你想在查询中包含字面的百分号，如果你传递的是参数，你必须将它们翻倍。</p>
+<p><code class="docutils literal notranslate"><span class="pre">reverse_sql</span></code> 查询是在未应用迁移时执行的。它们应该撤销 <code class="docutils literal notranslate"><span class="pre">sql</span></code> 查询所做的事情。例如，要撤销上面的插入与删除：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">migrations</span><span class="o">.</span><span class="n">RunSQL</span><span class="p">(</span>
+    <span class="n">sql</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;INSERT INTO musician (name) VALUES (</span><span class="si">%s</span><span class="s2">);&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Reinhardt&quot;</span><span class="p">])],</span>
+    <span class="n">reverse_sql</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;DELETE FROM musician where name=</span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Reinhardt&quot;</span><span class="p">])],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">reverse_sql</span></code> 是 <code class="docutils literal notranslate"><span class="pre">None</span></code> （默认），则 <code class="docutils literal notranslate"><span class="pre">RunSQL</span></code> 操作是不可逆的。</p>
+<p><code class="docutils literal notranslate"><span class="pre">state_operations</span></code> 参数允许你提供在项目状态方面相当于 SQL 的操作。例如，如果你正在手动创建一个列，你应该在这里传递一个包含 <code class="docutils literal notranslate"><span class="pre">AddField</span></code> 操作的列表，这样自动检测器仍然有一个最新的模型状态。如果你不这样做，当你下次运行 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 时，它不会看到任何添加该字段的操作，所以会尝试再次运行它。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">migrations</span><span class="o">.</span><span class="n">RunSQL</span><span class="p">(</span>
+    <span class="s2">&quot;ALTER TABLE musician ADD COLUMN name varchar(255) NOT NULL;&quot;</span><span class="p">,</span>
+    <span class="n">state_operations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">AddField</span><span class="p">(</span>
+            <span class="s2">&quot;musician&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+            <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>可选的 <code class="docutils literal notranslate"><span class="pre">hints</span></code> 参数将作为 <code class="docutils literal notranslate"><span class="pre">**hints</span></code> 传递给数据库路由器的 <a class="reference internal" href="../topics/db/multi-db.html#allow_migrate" title="allow_migrate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">allow_migrate()</span></code></a> 方法，以帮助它们做出路由决策。参见 <a class="reference internal" href="../topics/db/multi-db.html#topics-db-multi-db-hints"><span class="std std-ref">提示</span></a> 了解更多关于数据库提示的细节。</p>
+<p>可选的 <code class="docutils literal notranslate"><span class="pre">elidable</span></code> 参数决定了当 <a class="reference internal" href="../topics/migrations.html#migration-squashing"><span class="std std-ref">压缩迁移</span></a> 时，是否会删除（elided）该操作。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RunSQL.noop">
+<code class="sig-prename descclassname"><span class="pre">RunSQL.</span></code><code class="sig-name descname"><span class="pre">noop</span></code><a class="headerlink" href="#django.db.migrations.operations.RunSQL.noop" title="永久链接至目标">¶</a></dt>
+<dd><p>当你希望操作在给定的方向上不做任何事情时，将 <code class="docutils literal notranslate"><span class="pre">RunSQL.noop</span></code> 属性传递给 <code class="docutils literal notranslate"><span class="pre">sql</span></code> 或 <code class="docutils literal notranslate"><span class="pre">reverse_sql</span></code>。这在使操作可逆时特别有用。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-runpython">
+<span id="runpython"></span><h3><code class="docutils literal notranslate"><span class="pre">RunPython</span></code><a class="headerlink" href="#runpython" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RunPython">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RunPython</span></code>(<em><span class="n"><span class="pre">code</span></span></em>, <em><span class="n"><span class="pre">reverse_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">atomic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">hints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">elidable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.RunPython" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在历史上下文中运行自定义 Python 代码。<code class="docutils literal notranslate"><span class="pre">code</span></code> （如果提供了 <code class="docutils literal notranslate"><span class="pre">reverse_code</span></code>）应该是可调用的对象，接受两个参数；第一个是 <code class="docutils literal notranslate"><span class="pre">django.app.registry.Apps</span></code> 的实例，包含与操作在项目历史中的位置相匹配的历史模型，第二个是 <a class="reference internal" href="schema-editor.html#django.db.backends.base.schema.BaseDatabaseSchemaEditor" title="django.db.backends.base.schema.BaseDatabaseSchemaEditor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SchemaEditor</span></code></a> 的实例。</p>
+<p><code class="docutils literal notranslate"><span class="pre">reverse_code</span></code> 参数在取消应用迁移时被调用。这个可调用对象参数应该撤销在 <code class="docutils literal notranslate"><span class="pre">code</span></code> 可调用对象参数中所做的事情，这样迁移才是可逆的。如果 <code class="docutils literal notranslate"><span class="pre">reverse_code</span></code> 是``None`` （默认），则 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 操作是不可逆的。</p>
+<p>可选的 <code class="docutils literal notranslate"><span class="pre">hints</span></code> 参数将作为 <code class="docutils literal notranslate"><span class="pre">**hints</span></code> 传递给数据库路由器的 <a class="reference internal" href="../topics/db/multi-db.html#allow_migrate" title="allow_migrate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">allow_migrate()</span></code></a> 方法，以帮助它们做出路由决策。参见 <a class="reference internal" href="../topics/db/multi-db.html#topics-db-multi-db-hints"><span class="std std-ref">提示</span></a> 了解更多关于数据库提示的细节。</p>
+<p>可选的 <code class="docutils literal notranslate"><span class="pre">elidable</span></code> 参数决定了当 <a class="reference internal" href="../topics/migrations.html#migration-squashing"><span class="std std-ref">压缩迁移</span></a> 时，是否会删除（elided）该操作。</p>
+<p>建议你把这些代码写成一个单独的函数，放在迁移文件中的 <code class="docutils literal notranslate"><span class="pre">Migration</span></code> 类上面，然后传递给 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code>。下面是一个使用 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 在 <code class="docutils literal notranslate"><span class="pre">Country</span></code> 模型上创建一些初始对象的例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">migrations</span>
+
+
+<span class="k">def</span> <span class="nf">forwards_func</span><span class="p">(</span><span class="n">apps</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">):</span>
+    <span class="c1"># We get the model from the versioned app registry;</span>
+    <span class="c1"># if we directly import it, it&#39;ll be the wrong version</span>
+    <span class="n">Country</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s2">&quot;myapp&quot;</span><span class="p">,</span> <span class="s2">&quot;Country&quot;</span><span class="p">)</span>
+    <span class="n">db_alias</span> <span class="o">=</span> <span class="n">schema_editor</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">alias</span>
+    <span class="n">Country</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">using</span><span class="p">(</span><span class="n">db_alias</span><span class="p">)</span><span class="o">.</span><span class="n">bulk_create</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">Country</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;USA&quot;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;us&quot;</span><span class="p">),</span>
+            <span class="n">Country</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;France&quot;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;fr&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">reverse_func</span><span class="p">(</span><span class="n">apps</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">):</span>
+    <span class="c1"># forwards_func() creates two Country instances,</span>
+    <span class="c1"># so reverse_func() should delete them.</span>
+    <span class="n">Country</span> <span class="o">=</span> <span class="n">apps</span><span class="o">.</span><span class="n">get_model</span><span class="p">(</span><span class="s2">&quot;myapp&quot;</span><span class="p">,</span> <span class="s2">&quot;Country&quot;</span><span class="p">)</span>
+    <span class="n">db_alias</span> <span class="o">=</span> <span class="n">schema_editor</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">alias</span>
+    <span class="n">Country</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">using</span><span class="p">(</span><span class="n">db_alias</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;USA&quot;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;us&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">Country</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">using</span><span class="p">(</span><span class="n">db_alias</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;France&quot;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">&quot;fr&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span><span class="n">migrations</span><span class="o">.</span><span class="n">Migration</span><span class="p">):</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">operations</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">migrations</span><span class="o">.</span><span class="n">RunPython</span><span class="p">(</span><span class="n">forwards_func</span><span class="p">,</span> <span class="n">reverse_func</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+<p>这通常是你用来创建 <a class="reference internal" href="../topics/migrations.html#data-migrations"><span class="std std-ref">数据迁移</span></a> 的操作，运行自定义数据更新和更改，以及其他任何你需要访问 ORM 和／或 Python 代码的操作。</p>
+<p>就像 <a class="reference internal" href="#django.db.migrations.operations.RunSQL" title="django.db.migrations.operations.RunSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunSQL</span></code></a> 一样，确保如果你在这里改变模式，你要么是在 Django 模型系统的范围外进行（例如触发器），要么你使用 <a class="reference internal" href="#django.db.migrations.operations.SeparateDatabaseAndState" title="django.db.migrations.operations.SeparateDatabaseAndState"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeparateDatabaseAndState</span></code></a> 来添加操作，以反映你对模型状态的改变——否则，过时的 ORM 和自动检测器将停止正常工作。</p>
+<p>默认情况下，<code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 将在不支持 DDL 事务的数据库（例如 MySQL 和 Oracle）的事务中运行其内容。这应该是安全的，但如果你试图使用这些后端提供的 <code class="docutils literal notranslate"><span class="pre">schema_editor</span></code> 可能会导致崩溃；在这种情况下，将 <code class="docutils literal notranslate"><span class="pre">atomic=False</span></code> 传递给 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 操作。</p>
+<p>在支持 DDL 事务的数据库上（SQLite 和 PostgreSQL），<code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 操作除了为每次迁移创建的事务外，不会自动添加任何事务。因此，例如在 PostgreSQL 上，你应该避免在同一个迁移中把架构变化和 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 操作结合起来，否则你可能会遇到 <code class="docutils literal notranslate"><span class="pre">OperationalError:</span> <span class="pre">cannot</span> <span class="pre">ALTER</span> <span class="pre">TABLE</span> <span class="pre">&quot;mytable&quot;</span> <span class="pre">because</span> <span class="pre">it</span> <span class="pre">has</span> <span class="pre">pending</span> <span class="pre">trigger</span> <span class="pre">events</span></code> 这样的错误。</p>
+<p>如果你有一个不同的数据库，并且不确定它是否支持 DDL 事务，检查 <code class="docutils literal notranslate"><span class="pre">django.db.connection.features.can_rollback_ddl</span></code> 属性。</p>
+<p>如果 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 操作是 <a class="reference internal" href="../howto/writing-migrations.html#non-atomic-migrations"><span class="std std-ref">非原子性的迁移</span></a> 的一部分，那么只有当 <code class="docutils literal notranslate"><span class="pre">atomic=True</span></code> 传递给 <code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 操作时，该操作才会在事务中执行。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">RunPython</span></code> 不会为你神奇地改变模型的连接；你调用的任何模型方法将转到默认的数据库，除非你给它们当前的数据库别名（可从 <code class="docutils literal notranslate"><span class="pre">schema_editor.connection.alias</span></code> 中获得，其中 <code class="docutils literal notranslate"><span class="pre">schema_editor</span></code> 是你函数的第二个参数）。</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.db.migrations.operations.RunPython.noop">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">RunPython.</span></code><code class="sig-name descname"><span class="pre">noop</span></code>()<a class="headerlink" href="#django.db.migrations.operations.RunPython.noop" title="永久链接至目标">¶</a></dt>
+<dd><p>当你希望操作在给定的方向上不做任何事情时，将 <code class="docutils literal notranslate"><span class="pre">RunPython.noop</span></code> 方法传递给 <code class="docutils literal notranslate"><span class="pre">code</span></code> 或 <code class="docutils literal notranslate"><span class="pre">reverse_code</span></code>。这在使操作可逆时特别有用。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-separatedatabaseandstate">
+<span id="separatedatabaseandstate"></span><h3><code class="docutils literal notranslate"><span class="pre">SeparateDatabaseAndState</span></code><a class="headerlink" href="#separatedatabaseandstate" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.migrations.operations.SeparateDatabaseAndState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SeparateDatabaseAndState</span></code>(<em><span class="n"><span class="pre">database_operations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">state_operations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.migrations.operations.SeparateDatabaseAndState" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>一个高度专业化的操作，让你混合和匹配数据库（架构改变）和状态（自动检测器支持）方面的操作。</p>
+<p>它接受两个操作列表。当要求它应用状态时，它将使用 <code class="docutils literal notranslate"><span class="pre">state_operations</span></code> 列表（这是 <a class="reference internal" href="#django.db.migrations.operations.RunSQL" title="django.db.migrations.operations.RunSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunSQL</span></code></a> 的 <code class="docutils literal notranslate"><span class="pre">state_operations</span></code> 参数的通用版本）。当要求它对数据库进行更改时，它将使用 <code class="docutils literal notranslate"><span class="pre">database_operations</span></code> 列表。</p>
+<p>如果数据库的实际状态和 Django 的状态视图不同步，就会破坏迁移框架，甚至导致数据丢失。值得谨慎行事，仔细检查你的数据库和状态操作。你可以使用 <a class="reference internal" href="django-admin.html#django-admin-sqlmigrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">sqlmigrate</span></code></a> 和 <a class="reference internal" href="django-admin.html#django-admin-dbshell"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">dbshell</span></code></a> 来检查你的数据库操作。你可以使用 <a class="reference internal" href="django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a>，特别是使用 <a class="reference internal" href="django-admin.html#cmdoption-makemigrations-dry-run"><code class="xref std std-option docutils literal notranslate"><span class="pre">--dry-run</span></code></a>，来检查你的状态操作。</p>
+<p>关于使用 <code class="docutils literal notranslate"><span class="pre">SeparateDatabaseAndState</span></code> 的例子，请参见 <span class="xref std std-ref">changing-a-manytomanyfield to use-a-through-model</span>。</p>
+</div>
+</div>
+<div class="section" id="s-writing-your-own">
+<span id="s-writing-your-own-migration-operation"></span><span id="writing-your-own"></span><span id="writing-your-own-migration-operation"></span><h2>自己写<a class="headerlink" href="#writing-your-own" title="永久链接至标题">¶</a></h2>
+<p>操作有一个相对简单的 API，而且它们被设计成可以让你很容易地编写自己的 API 来补充内置的 Django 的 API。一个 <code class="docutils literal notranslate"><span class="pre">Operation</span></code> 的基本结构是这样的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.migrations.operations.base</span> <span class="kn">import</span> <span class="n">Operation</span>
+
+
+<span class="k">class</span> <span class="nc">MyCustomOperation</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="c1"># If this is False, it means that this operation will be ignored by</span>
+    <span class="c1"># sqlmigrate; if true, it will be run and the SQL collected for its output.</span>
+    <span class="n">reduces_to_sql</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># If this is False, Django will refuse to reverse past this operation.</span>
+    <span class="n">reversible</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">):</span>
+        <span class="c1"># Operations are usually instantiated with arguments in migration</span>
+        <span class="c1"># files. Store the values of them on self for later use.</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">state_forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="c1"># The Operation should take the &#39;state&#39; parameter (an instance of</span>
+        <span class="c1"># django.db.migrations.state.ProjectState) and mutate it to match</span>
+        <span class="c1"># any schema changes that have occurred.</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">database_forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">,</span> <span class="n">from_state</span><span class="p">,</span> <span class="n">to_state</span><span class="p">):</span>
+        <span class="c1"># The Operation should use schema_editor to apply any changes it</span>
+        <span class="c1"># wants to make to the database.</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">database_backwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">,</span> <span class="n">from_state</span><span class="p">,</span> <span class="n">to_state</span><span class="p">):</span>
+        <span class="c1"># If reversible is True, this is called when the operation is reversed.</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># This is used to describe what the operation does in console output.</span>
+        <span class="k">return</span> <span class="s2">&quot;Custom Operation&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">migration_name_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Optional. A filename part suitable for automatically naming a</span>
+        <span class="c1"># migration containing this operation, or None if not applicable.</span>
+        <span class="k">return</span> <span class="s2">&quot;custom_operation_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arg1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">arg2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>你可以使用这个模板，并在此基础上进行工作，不过我们建议查看 <code class="docutils literal notranslate"><span class="pre">django.db.migrations.options</span></code> 中内置的 Django 操作——它们涵盖了很多迁移框架半内部方面的例子，比如 <code class="docutils literal notranslate"><span class="pre">ProjectState</span></code> 和用于获取历史模型的模式，以及 <code class="docutils literal notranslate"><span class="pre">ModelState</span></code> 和 <code class="docutils literal notranslate"><span class="pre">state_forwards()</span></code> 中用于突变历史模型的模式。</p>
+<p>注意事项：</p>
+<ul>
+<li><p class="first">你不需要学习太多关于 <code class="docutils literal notranslate"><span class="pre">ProjectState</span></code> 的知识来编写迁移；只需要知道它有一个 <code class="docutils literal notranslate"><span class="pre">apps</span></code> 属性，它提供了对应用程序注册表的访问（然后你可以调用 <code class="docutils literal notranslate"><span class="pre">get_model</span></code>）。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">database_forwards</span></code> 和 <code class="docutils literal notranslate"><span class="pre">database_backwards</span></code> 都有两个状态传递给它们；这些状态代表了 <code class="docutils literal notranslate"><span class="pre">state_forwards</span></code> 方法本会应用的差异，但为了方便和速度的原因，给了你。</p>
+</li>
+<li><p class="first">如果你想从 <code class="docutils literal notranslate"><span class="pre">database_forwards()</span></code> 或 <code class="docutils literal notranslate"><span class="pre">database_backwards()</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">from_state</span></code> 参数中处理模型类或模型实例，你必须使用 <code class="docutils literal notranslate"><span class="pre">clear_delayed_apps_cache()</span></code> 方法渲染模型状态，以使相关模型可用：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">database_forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">,</span> <span class="n">from_state</span><span class="p">,</span> <span class="n">to_state</span><span class="p">):</span>
+    <span class="c1"># This operation should have access to all models. Ensure that all models are</span>
+    <span class="c1"># reloaded in case any are delayed.</span>
+    <span class="n">from_state</span><span class="o">.</span><span class="n">clear_delayed_apps_cache</span><span class="p">()</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">database_backwards 方法中的 <code class="docutils literal notranslate"><span class="pre">to_state</span></code> 是指 <em>旧</em> 的状态；也就是反向迁移完成后将成为当前状态的状态。</p>
+</li>
+<li><p class="first">你可能会在内置操作上看到 <code class="docutils literal notranslate"><span class="pre">references_model</span></code> 的实现，这是自动检测代码的一部分，对自定义操作并不重要。</p>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">由于性能原因，<code class="docutils literal notranslate"><span class="pre">ModelState.fields.Field</span></code> 中的 <code class="xref py py-class docutils literal notranslate"><span class="pre">Field`</span></code> 实例会在不同的迁移中重复使用。你决不能改变这些实例的属性。如果你需要在 <code class="docutils literal notranslate"><span class="pre">state_forwards()</span></code> 中突变一个字段，你必须从 <code class="docutils literal notranslate"><span class="pre">ModelState.fields</span></code> 中删除旧的实例，并在其位置上添加一个新的实例。对于 <code class="docutils literal notranslate"><span class="pre">ModelState.managers</span></code> 中的 <code class="xref py py-class docutils literal notranslate"><span class="pre">Manager`</span></code> 实例也是如此。</p>
+</div>
+<p>举个例子，让我们做一个加载 PostgreSQL 扩展的操作（其中包含了 PostgreSQL 的一些更令人兴奋的特性）。由于没有改变模型状态，所以它所做的只是运行一条命令：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.migrations.operations.base</span> <span class="kn">import</span> <span class="n">Operation</span>
+
+
+<span class="k">class</span> <span class="nc">LoadExtension</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="n">reversible</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">state_forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">database_forwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">,</span> <span class="n">from_state</span><span class="p">,</span> <span class="n">to_state</span><span class="p">):</span>
+        <span class="n">schema_editor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">database_backwards</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">,</span> <span class="n">schema_editor</span><span class="p">,</span> <span class="n">from_state</span><span class="p">,</span> <span class="n">to_state</span><span class="p">):</span>
+        <span class="n">schema_editor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;DROP EXTENSION </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Creates extension </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">migration_name_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;create_extension_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">迁移操作</a><ul>
+<li><a class="reference internal" href="#schema-operations">架构操作</a><ul>
+<li><a class="reference internal" href="#createmodel"><code class="docutils literal notranslate"><span class="pre">CreateModel</span></code></a></li>
+<li><a class="reference internal" href="#deletemodel"><code class="docutils literal notranslate"><span class="pre">DeleteModel</span></code></a></li>
+<li><a class="reference internal" href="#renamemodel"><code class="docutils literal notranslate"><span class="pre">RenameModel</span></code></a></li>
+<li><a class="reference internal" href="#altermodeltable"><code class="docutils literal notranslate"><span class="pre">AlterModelTable</span></code></a></li>
+<li><a class="reference internal" href="#altermodeltablecomment"><code class="docutils literal notranslate"><span class="pre">AlterModelTableComment</span></code></a></li>
+<li><a class="reference internal" href="#alteruniquetogether"><code class="docutils literal notranslate"><span class="pre">AlterUniqueTogether</span></code></a></li>
+<li><a class="reference internal" href="#alterindextogether"><code class="docutils literal notranslate"><span class="pre">AlterIndexTogether</span></code></a></li>
+<li><a class="reference internal" href="#alterorderwithrespectto"><code class="docutils literal notranslate"><span class="pre">AlterOrderWithRespectTo</span></code></a></li>
+<li><a class="reference internal" href="#altermodeloptions"><code class="docutils literal notranslate"><span class="pre">AlterModelOptions</span></code></a></li>
+<li><a class="reference internal" href="#altermodelmanagers"><code class="docutils literal notranslate"><span class="pre">AlterModelManagers</span></code></a></li>
+<li><a class="reference internal" href="#addfield"><code class="docutils literal notranslate"><span class="pre">AddField</span></code></a></li>
+<li><a class="reference internal" href="#removefield"><code class="docutils literal notranslate"><span class="pre">RemoveField</span></code></a></li>
+<li><a class="reference internal" href="#alterfield"><code class="docutils literal notranslate"><span class="pre">AlterField</span></code></a></li>
+<li><a class="reference internal" href="#renamefield"><code class="docutils literal notranslate"><span class="pre">RenameField</span></code></a></li>
+<li><a class="reference internal" href="#addindex"><code class="docutils literal notranslate"><span class="pre">AddIndex</span></code></a></li>
+<li><a class="reference internal" href="#removeindex"><code class="docutils literal notranslate"><span class="pre">RemoveIndex</span></code></a></li>
+<li><a class="reference internal" href="#renameindex"><code class="docutils literal notranslate"><span class="pre">RenameIndex</span></code></a></li>
+<li><a class="reference internal" href="#addconstraint"><code class="docutils literal notranslate"><span class="pre">AddConstraint</span></code></a></li>
+<li><a class="reference internal" href="#removeconstraint"><code class="docutils literal notranslate"><span class="pre">RemoveConstraint</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#special-operations">特殊操作</a><ul>
+<li><a class="reference internal" href="#runsql"><code class="docutils literal notranslate"><span class="pre">RunSQL</span></code></a></li>
+<li><a class="reference internal" href="#runpython"><code class="docutils literal notranslate"><span class="pre">RunPython</span></code></a></li>
+<li><a class="reference internal" href="#separatedatabaseandstate"><code class="docutils literal notranslate"><span class="pre">SeparateDatabaseAndState</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-your-own">自己写</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="middleware.html"
+                          title="上一章">中间件</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="models/index.html"
+                          title="下一章">模型</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/ref/migration-operations.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="middleware.html" title="中间件">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="models/index.html" title="模型">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

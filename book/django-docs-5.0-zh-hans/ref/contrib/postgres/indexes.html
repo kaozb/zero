@@ -1,0 +1,272 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PostgreSQL 特有模型索引 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="PostgreSQL 特有查找" href="lookups.html" />
+    <link rel="prev" title="PostgreSQL 特有数据库函数" href="functions.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="functions.html" title="PostgreSQL 特有数据库函数">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="lookups.html" title="PostgreSQL 特有查找">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-postgres-indexes">
+            
+  <div class="section" id="s-module-django.contrib.postgres.indexes">
+<span id="s-postgresql-specific-model-indexes"></span><span id="module-django.contrib.postgres.indexes"></span><span id="postgresql-specific-model-indexes"></span><h1>PostgreSQL 特有模型索引<a class="headerlink" href="#module-django.contrib.postgres.indexes" title="永久链接至标题">¶</a></h1>
+<p>以下是 PostgreSQL 特有的 <a class="reference internal" href="../../models/indexes.html"><span class="doc">索引</span></a> 可以从 <code class="docutils literal notranslate"><span class="pre">django.contrib.postgres.indexes</span></code> 模块中获得。</p>
+<div class="section" id="s-bloomindex">
+<span id="bloomindex"></span><h2><code class="docutils literal notranslate"><span class="pre">BloomIndex</span></code><a class="headerlink" href="#bloomindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.BloomIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">BloomIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.BloomIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个 <a class="reference external" href="https://www.postgresql.org/docs/current/bloom.html">bloom</a> 索引。</p>
+<p>要使用这个索引访问，你需要激活 PostgreSQL 上的 <a class="reference external" href="https://www.postgresql.org/docs/current/bloom.html">bloom</a> 扩展。你可以使用 <a class="reference internal" href="operations.html#django.contrib.postgres.operations.BloomExtension" title="django.contrib.postgres.operations.BloomExtension"><code class="xref py py-class docutils literal notranslate"><span class="pre">BloomExtension</span></code></a> 迁移操作来安装它。</p>
+<p>为 <code class="docutils literal notranslate"><span class="pre">length</span></code> 参数提供一个从 1 到 4096 的整数位，用于指定每个索引条目的长度。PostgreSQL 的默认值是 80。</p>
+<p><code class="docutils literal notranslate"><span class="pre">columns</span></code> 参数取一个元组或最多 32 个值的列表，这些值是 1 到 4095 的整数位。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-brinindex">
+<span id="brinindex"></span><h2><code class="docutils literal notranslate"><span class="pre">BrinIndex</span></code><a class="headerlink" href="#brinindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.BrinIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">BrinIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">autosummarize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">pages_per_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.BrinIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个 <a class="reference external" href="https://www.postgresql.org/docs/current/brin-intro.html">BRIN 索引</a> 。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">autosummarize</span></code> 参数设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>，启用 autovacuum 进行 <a class="reference external" href="https://www.postgresql.org/docs/current/brin-intro.html#BRIN-OPERATION">自动汇总</a> 。</p>
+<p><code class="docutils literal notranslate"><span class="pre">pages_per_range</span></code> 参数取一个正整数。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-btreeindex">
+<span id="btreeindex"></span><h2><code class="docutils literal notranslate"><span class="pre">BTreeIndex</span></code><a class="headerlink" href="#btreeindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.BTreeIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">BTreeIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">fillfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.BTreeIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个 B 树索引。</p>
+<p>为 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-STORAGE-PARAMETERS">fillfactor</a> 参数提供一个从  10 到 100 的整数值，以调整索引页的打包程度。PostgreSQL 的默认值是 90。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-ginindex">
+<span id="ginindex"></span><h2><code class="docutils literal notranslate"><span class="pre">GinIndex</span></code><a class="headerlink" href="#ginindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.GinIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GinIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">fastupdate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">gin_pending_list_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.GinIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个 <a class="reference external" href="https://www.postgresql.org/docs/current/gin.html">gin 索引</a> 。</p>
+<p>要想在不在 <a class="reference external" href="https://www.postgresql.org/docs/current/gin-builtin-opclasses.html">内置运算符类</a> 的数据类型上使用这个索引，需要在 PostgreSQL 上激活 <a class="reference external" href="https://www.postgresql.org/docs/current/btree-gin.html">btree_gin 扩展</a> 。你可以使用 <a class="reference internal" href="operations.html#django.contrib.postgres.operations.BtreeGinExtension" title="django.contrib.postgres.operations.BtreeGinExtension"><code class="xref py py-class docutils literal notranslate"><span class="pre">BtreeGinExtension</span></code></a> 迁移操作来安装它。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">fastupdate</span></code> 参数设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，以禁用 PostgreSQL 中默认启用的 <a class="reference external" href="https://www.postgresql.org/docs/current/gin-implementation.html#GIN-FAST-UPDATE">GIN 快速更新技术</a> 。</p>
+<p>将一个整数值以千字节为单位提供给 <a class="reference external" href="https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-GIN-PENDING-LIST-LIMIT">gin_pending_list_limit</a> 参数，以调整当启用 <code class="docutils literal notranslate"><span class="pre">fastupdate</span></code> 时用于限制 GIN 待处理列表的最大大小。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-gistindex">
+<span id="gistindex"></span><h2><code class="docutils literal notranslate"><span class="pre">GistIndex</span></code><a class="headerlink" href="#gistindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.GistIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GistIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">buffering</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">fillfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.GistIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个 <a class="reference external" href="https://www.postgresql.org/docs/current/gist.html">GiST 索引</a> 。这些索引在空间字段上会自动创建 <a class="reference internal" href="../gis/model-api.html#django.contrib.gis.db.models.BaseSpatialField.spatial_index" title="django.contrib.gis.db.models.BaseSpatialField.spatial_index"><code class="xref py py-attr docutils literal notranslate"><span class="pre">spatial_index=True</span></code></a>。它们在其他类型上也很有用，比如 <code class="xref py py-class docutils literal notranslate"><span class="pre">HStoreField</span></code> 或者 <span class="xref std std-ref">range fields</span>。</p>
+<p>要在不在内置的 <a class="reference external" href="https://www.postgresql.org/docs/current/gist-builtin-opclasses.html">gist 操作类</a> 的数据类型上使用这个索引，需要在 PostgreSQL 上激活 <a class="reference external" href="https://www.postgresql.org/docs/current/btree-gist.html">btree_gist 扩展</a> 。你可以使用 <a class="reference internal" href="operations.html#django.contrib.postgres.operations.BtreeGistExtension" title="django.contrib.postgres.operations.BtreeGistExtension"><code class="xref py py-class docutils literal notranslate"><span class="pre">BtreeGistExtension</span></code></a> 迁移操作来安装它。</p>
+<p>将 <code class="docutils literal notranslate"><span class="pre">buffering</span></code> 参数设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code>，手动启用或禁用索引的 <a class="reference external" href="https://www.postgresql.org/docs/current/gist-implementation.html#GIST-BUFFERING-BUILD">buffering build</a> 。</p>
+<p>为 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-STORAGE-PARAMETERS">fillfactor</a> 参数提供一个从  10 到 100 的整数值，以调整索引页的打包程度。PostgreSQL 的默认值是 90。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-hashindex">
+<span id="hashindex"></span><h2><code class="docutils literal notranslate"><span class="pre">HashIndex</span></code><a class="headerlink" href="#hashindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.HashIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">HashIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">fillfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.HashIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建一个哈希索引。</p>
+<p>为 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-STORAGE-PARAMETERS">fillfactor</a> 参数提供一个从  10 到 100 的整数值，以调整索引页的打包程度。PostgreSQL 的默认值是 90。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-spgistindex">
+<span id="spgistindex"></span><h2><code class="docutils literal notranslate"><span class="pre">SpGistIndex</span></code><a class="headerlink" href="#spgistindex" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.SpGistIndex">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">SpGistIndex</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">fillfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.SpGistIndex" title="永久链接至目标">¶</a></dt>
+<dd><p>创建 <a class="reference external" href="https://www.postgresql.org/docs/current/spgist.html">SP-GIST 索引</a> 。</p>
+<p>为 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-STORAGE-PARAMETERS">fillfactor</a> 参数提供一个从  10 到 100 的整数值，以调整索引页的打包程度。PostgreSQL 的默认值是 90。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-opclass-expressions">
+<span id="opclass-expressions"></span><h2><code class="docutils literal notranslate"><span class="pre">OpClass()</span></code> 表达式<a class="headerlink" href="#opclass-expressions" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.indexes.OpClass">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">OpClass</span></code>(<em><span class="n"><span class="pre">expression</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.indexes.OpClass" title="永久链接至目标">¶</a></dt>
+<dd><p>一个 <code class="docutils literal notranslate"><span class="pre">OpClass()</span></code> 表达式表示带有自定义 <a class="reference external" href="https://www.postgresql.org/docs/current/indexes-opclass.html">operator class</a> 的 <code class="docutils literal notranslate"><span class="pre">expression</span></code>，它可用于定义功能索引、功能唯一约束或排除约束。要使用它，您需要在 <a class="reference internal" href="../../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中添加 <code class="docutils literal notranslate"><span class="pre">'django.contrib.postgres'</span></code>。将 <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数设置为 <a class="reference external" href="https://www.postgresql.org/docs/current/indexes-opclass.html">operator class</a> 的名称。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Index</span><span class="p">(</span>
+    <span class="n">OpClass</span><span class="p">(</span><span class="n">Lower</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;varchar_pattern_ops&quot;</span><span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lower_username_idx&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">varchar_pattern_ops</span></code> 在 <code class="docutils literal notranslate"><span class="pre">Lower('username')</span></code> 上创建一个索引。:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UniqueConstraint</span><span class="p">(</span>
+    <span class="n">OpClass</span><span class="p">(</span><span class="n">Upper</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;text_pattern_ops&quot;</span><span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;upper_description_unique&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">text_pattern_ops</span></code> 在 <code class="docutils literal notranslate"><span class="pre">Upper('description')</span></code> 上创建一个唯一约束。:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ExclusionConstraint</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;exclude_overlapping_ops&quot;</span><span class="p">,</span>
+    <span class="n">expressions</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span><span class="n">OpClass</span><span class="p">(</span><span class="s2">&quot;circle&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;circle_ops&quot;</span><span class="p">),</span> <span class="n">RangeOperators</span><span class="o">.</span><span class="n">OVERLAPS</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">circle_ops</span></code> 在 <code class="docutils literal notranslate"><span class="pre">circle</span></code> 上创建一个排除约束。</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">PostgreSQL 特有模型索引</a><ul>
+<li><a class="reference internal" href="#bloomindex"><code class="docutils literal notranslate"><span class="pre">BloomIndex</span></code></a></li>
+<li><a class="reference internal" href="#brinindex"><code class="docutils literal notranslate"><span class="pre">BrinIndex</span></code></a></li>
+<li><a class="reference internal" href="#btreeindex"><code class="docutils literal notranslate"><span class="pre">BTreeIndex</span></code></a></li>
+<li><a class="reference internal" href="#ginindex"><code class="docutils literal notranslate"><span class="pre">GinIndex</span></code></a></li>
+<li><a class="reference internal" href="#gistindex"><code class="docutils literal notranslate"><span class="pre">GistIndex</span></code></a></li>
+<li><a class="reference internal" href="#hashindex"><code class="docutils literal notranslate"><span class="pre">HashIndex</span></code></a></li>
+<li><a class="reference internal" href="#spgistindex"><code class="docutils literal notranslate"><span class="pre">SpGistIndex</span></code></a></li>
+<li><a class="reference internal" href="#opclass-expressions"><code class="docutils literal notranslate"><span class="pre">OpClass()</span></code> 表达式</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="functions.html"
+                          title="上一章">PostgreSQL 特有数据库函数</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="lookups.html"
+                          title="下一章">PostgreSQL 特有查找</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/postgres/indexes.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="functions.html" title="PostgreSQL 特有数据库函数">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="lookups.html" title="PostgreSQL 特有查找">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

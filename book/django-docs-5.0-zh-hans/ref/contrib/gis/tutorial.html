@@ -1,0 +1,1014 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoDjango 教程 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="GeoDjango 安装" href="install/index.html" />
+    <link rel="prev" title="GeoDjango" href="index.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../../../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="index.html" title="GeoDjango">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="install/index.html" title="GeoDjango 安装">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-tutorial">
+            
+  <div class="section" id="s-geodjango-tutorial">
+<span id="geodjango-tutorial"></span><h1>GeoDjango 教程<a class="headerlink" href="#geodjango-tutorial" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-introduction">
+<span id="introduction"></span><h2>介绍<a class="headerlink" href="#introduction" title="永久链接至标题">¶</a></h2>
+<p>GeoDjango 是 Django 的一个包含的贡献模块，将其转变为一个世界级的地理 Web 框架。GeoDjango 力求使创建地理 Web 应用程序（如基于位置的服务）尽可能简单化。其功能包括：</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.ogc.org/">OGC</a> 几何图形和光栅数据的 Django 模型字段。</li>
+<li>Django ORM 的扩展，用于查询和操作空间数据。</li>
+<li>松散耦合的高级 Python 接口，用于 GIS 几何和栅格操作以及不同格式的数据处理。</li>
+<li>从管理界面编辑几何字段。</li>
+</ul>
+<p>本教程假设你对 Django 很熟悉，因此，如果你是一个全新的 Django 新手，请先阅读 <a class="reference internal" href="../../../intro/tutorial01.html"><span class="doc">常规教程</span></a> 来熟悉 Django。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">GeoDjango 有一些额外的要求，超出了 Django 的要求——请查阅 <a class="reference internal" href="install/index.html"><span class="doc">安装文档</span></a> 了解更多细节。</p>
+</div>
+<p>本教程将指导你创建一个用于查看 <a class="reference internal" href="#id3">世界边界</a> 的地理网络应用。<a class="footnote-reference" href="#id11" id="id1">[1]</a> 本教程中使用的一些代码来自于“GeoDjango 基本应用”项目，或者说是受其启发。<a class="footnote-reference" href="#id12" id="id2">[2]</a></p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">依次进行教程部分的步骤说明。</p>
+</div>
+</div>
+<div class="section" id="s-setting-up">
+<span id="setting-up"></span><h2>设置<a class="headerlink" href="#setting-up" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-create-a-spatial-database">
+<span id="create-a-spatial-database"></span><h3>创建一个空间数据库<a class="headerlink" href="#create-a-spatial-database" title="永久链接至标题">¶</a></h3>
+<p>通常情况下，不需要特殊的设置，因此你可以像创建其他项目一样创建数据库。我们为选定的数据库提供一些提示：</p>
+<ul class="simple">
+<li><a class="reference internal" href="install/postgis.html"><span class="doc">安装 PostGIS</span></a></li>
+<li><a class="reference internal" href="install/spatialite.html"><span class="doc">安装 SpatiaLite</span></a></li>
+</ul>
+</div>
+<div class="section" id="s-create-a-new-project">
+<span id="create-a-new-project"></span><h3>创建一个新项目<a class="headerlink" href="#create-a-new-project" title="永久链接至标题">¶</a></h3>
+<p>使用标准的 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 脚本创建一个名为 <code class="docutils literal notranslate"><span class="pre">geodjango</span></code> 的项目：</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin startproject geodjango
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> django-admin startproject geodjango
+</pre></div>
+</section>
+</div>
+<p>这将初始化一个新项目。现在，在 <code class="docutils literal notranslate"><span class="pre">geodjango</span></code> 项目中创建一个 <code class="docutils literal notranslate"><span class="pre">world</span></code> Django 应用程序：</p>
+<div class="console-block" id="console-block-1">
+<input class="c-tab-unix" id="c-tab-1-unix" type="radio" name="console-1" checked>
+<label for="c-tab-1-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-1-win" type="radio" name="console-1">
+<label for="c-tab-1-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-1-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> geodjango
+<span class="gp">$ </span>python manage.py startapp world
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-1-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> <span class="k">cd</span> geodjango
+<span class="gp">...\&gt;</span> py manage.py startapp world
+</pre></div>
+</section>
+</div>
+</div>
+<div class="section" id="s-configure-settings-py">
+<span id="configure-settings-py"></span><h3>设置 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code><a class="headerlink" href="#configure-settings-py" title="永久链接至标题">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">geodjango</span></code> 项目配置存储在 <code class="docutils literal notranslate"><span class="pre">geodjango/settings.py</span></code> 文件中。编辑数据库连接配置以符合你的设置：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;ENGINE&quot;</span><span class="p">:</span> <span class="s2">&quot;django.contrib.gis.db.backends.postgis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NAME&quot;</span><span class="p">:</span> <span class="s2">&quot;geodjango&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;USER&quot;</span><span class="p">:</span> <span class="s2">&quot;geo&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>此外，修改 <a class="reference internal" href="../../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 设置，将 <a class="reference internal" href="../admin/index.html#module-django.contrib.admin" title="django.contrib.admin: Django's admin site."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.admin</span></code></a>、 <a class="reference internal" href="index.html#module-django.contrib.gis" title="django.contrib.gis: Geographic Information System (GIS) extensions for Django"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.gis</span></code></a> 和 <code class="docutils literal notranslate"><span class="pre">world</span></code> （你新创建的应用程序）包含进去：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;django.contrib.admin&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.contrib.auth&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.contrib.contenttypes&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.contrib.sessions&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.contrib.messages&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.contrib.staticfiles&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;django.contrib.gis&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;world&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-geographic-data">
+<span id="geographic-data"></span><h2>地理数据<a class="headerlink" href="#geographic-data" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-worldborders">
+<span id="s-id3"></span><span id="worldborders"></span><span id="id3"></span><h3>世界边界<a class="headerlink" href="#worldborders" title="永久链接至标题">¶</a></h3>
+<p>世界边界数据就在这个 <a href="#id15"><span class="problematic" id="id16">`zip file`__</span></a> 中。 在 <code class="docutils literal notranslate"><span class="pre">world</span></code> 应用程序中创建一个 <code class="docutils literal notranslate"><span class="pre">data</span></code> 目录，下载世界边界数据，然后解压。在 GNU/Linux 平台上，使用以下命令：</p>
+<div class="console-block" id="console-block-2">
+<input class="c-tab-unix" id="c-tab-2-unix" type="radio" name="console-2" checked>
+<label for="c-tab-2-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-2-win" type="radio" name="console-2">
+<label for="c-tab-2-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-2-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mkdir world/data
+<span class="gp">$ </span><span class="nb">cd</span> world/data
+<span class="gp">$ </span>wget https://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip
+<span class="gp">$ </span>unzip TM_WORLD_BORDERS-0.3.zip
+<span class="gp">$ </span><span class="nb">cd</span> ../..
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-2-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> <span class="k">mkdir</span> world\data
+<span class="gp">...\&gt;</span> <span class="k">cd</span> world\data
+<span class="gp">...\&gt;</span> wget https://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip
+<span class="gp">...\&gt;</span> unzip TM_WORLD_BORDERS-0.3.zip
+<span class="gp">...\&gt;</span> <span class="k">cd</span> ..\..
+</pre></div>
+</section>
+</div>
+<p>世界边界 ZIP 文件包含一组数据文件，统称为“ESRI Shapefile”，是最流行的地理空间数据格式之一。 解压后，世界边界数据集包括以下扩展名的文件：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">.shp</span></code>：保存世界边界几何图形的向量数据。</li>
+<li><code class="docutils literal notranslate"><span class="pre">.shx</span></code>：<code class="docutils literal notranslate"><span class="pre">.shp</span></code> 中存储的几何体空间索引文件。</li>
+<li><code class="docutils literal notranslate"><span class="pre">.dbf</span></code>：用于存放非几何属性数据（如整数和字符字段）的数据库文件。</li>
+<li><code class="docutils literal notranslate"><span class="pre">.prj</span></code>：包含形状文件中存储的地理数据的空间参考信息。</li>
+</ul>
+</div>
+<div class="section" id="s-use-ogrinfo-to-examine-spatial-data">
+<span id="use-ogrinfo-to-examine-spatial-data"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">ogrinfo</span></code> 检查空间数据<a class="headerlink" href="#use-ogrinfo-to-examine-spatial-data" title="永久链接至标题">¶</a></h3>
+<p>GDAL <code class="docutils literal notranslate"><span class="pre">ogrinfo</span></code> 实用程序允许检查形状文件或其他矢量数据源的元数据：</p>
+<div class="console-block" id="console-block-3">
+<input class="c-tab-unix" id="c-tab-3-unix" type="radio" name="console-3" checked>
+<label for="c-tab-3-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-3-win" type="radio" name="console-3">
+<label for="c-tab-3-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-3-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>ogrinfo world/data/TM_WORLD_BORDERS-0.3.shp
+<span class="go">INFO: Open of `world/data/TM_WORLD_BORDERS-0.3.shp&#39;</span>
+<span class="go">      using driver `ESRI Shapefile&#39; successful.</span>
+<span class="go">1: TM_WORLD_BORDERS-0.3 (Polygon)</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-3-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> ogrinfo world\data\TM_WORLD_BORDERS-0.3.shp
+<span class="go">INFO: Open of `world/data/TM_WORLD_BORDERS-0.3.shp&#39;</span>
+<span class="go">      using driver `ESRI Shapefile&#39; successful.</span>
+<span class="go">1: TM_WORLD_BORDERS-0.3 (Polygon)</span>
+</pre></div>
+</section>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ogrinfo</span></code> 告诉我们形状文件有一个图层，这个图层包含多边形数据。 为了了解更多信息，我们将指定图层名称，并使用 <code class="docutils literal notranslate"><span class="pre">so</span></code> 选项只获取重要的摘要信息：</p>
+<div class="console-block" id="console-block-4">
+<input class="c-tab-unix" id="c-tab-4-unix" type="radio" name="console-4" checked>
+<label for="c-tab-4-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-4-win" type="radio" name="console-4">
+<label for="c-tab-4-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-4-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>ogrinfo -so world/data/TM_WORLD_BORDERS-0.3.shp TM_WORLD_BORDERS-0.3
+<span class="go">INFO: Open of `world/data/TM_WORLD_BORDERS-0.3.shp&#39;</span>
+<span class="go">      using driver `ESRI Shapefile&#39; successful.</span>
+
+<span class="go">Layer name: TM_WORLD_BORDERS-0.3</span>
+<span class="go">Geometry: Polygon</span>
+<span class="go">Feature Count: 246</span>
+<span class="go">Extent: (-180.000000, -90.000000) - (180.000000, 83.623596)</span>
+<span class="go">Layer SRS WKT:</span>
+<span class="go">GEOGCS[&quot;GCS_WGS_1984&quot;,</span>
+<span class="go">    DATUM[&quot;WGS_1984&quot;,</span>
+<span class="go">        SPHEROID[&quot;WGS_1984&quot;,6378137.0,298.257223563]],</span>
+<span class="go">    PRIMEM[&quot;Greenwich&quot;,0.0],</span>
+<span class="go">    UNIT[&quot;Degree&quot;,0.0174532925199433]]</span>
+<span class="go">FIPS: String (2.0)</span>
+<span class="go">ISO2: String (2.0)</span>
+<span class="go">ISO3: String (3.0)</span>
+<span class="go">UN: Integer (3.0)</span>
+<span class="go">NAME: String (50.0)</span>
+<span class="go">AREA: Integer (7.0)</span>
+<span class="go">POP2005: Integer (10.0)</span>
+<span class="go">REGION: Integer (3.0)</span>
+<span class="go">SUBREGION: Integer (3.0)</span>
+<span class="go">LON: Real (8.3)</span>
+<span class="go">LAT: Real (7.3)</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-4-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> ogrinfo -so world\data\TM_WORLD_BORDERS-0.3.shp TM_WORLD_BORDERS-0.3
+<span class="go">INFO: Open of `world/data/TM_WORLD_BORDERS-0.3.shp&#39;</span>
+<span class="go">      using driver `ESRI Shapefile&#39; successful.</span>
+
+<span class="go">Layer name: TM_WORLD_BORDERS-0.3</span>
+<span class="go">Geometry: Polygon</span>
+<span class="go">Feature Count: 246</span>
+<span class="go">Extent: (-180.000000, -90.000000) - (180.000000, 83.623596)</span>
+<span class="go">Layer SRS WKT:</span>
+<span class="go">GEOGCS[&quot;GCS_WGS_1984&quot;,</span>
+<span class="go">    DATUM[&quot;WGS_1984&quot;,</span>
+<span class="go">        SPHEROID[&quot;WGS_1984&quot;,6378137.0,298.257223563]],</span>
+<span class="go">    PRIMEM[&quot;Greenwich&quot;,0.0],</span>
+<span class="go">    UNIT[&quot;Degree&quot;,0.0174532925199433]]</span>
+<span class="go">FIPS: String (2.0)</span>
+<span class="go">ISO2: String (2.0)</span>
+<span class="go">ISO3: String (3.0)</span>
+<span class="go">UN: Integer (3.0)</span>
+<span class="go">NAME: String (50.0)</span>
+<span class="go">AREA: Integer (7.0)</span>
+<span class="go">POP2005: Integer (10.0)</span>
+<span class="go">REGION: Integer (3.0)</span>
+<span class="go">SUBREGION: Integer (3.0)</span>
+<span class="go">LON: Real (8.3)</span>
+<span class="go">LAT: Real (7.3)</span>
+</pre></div>
+</section>
+</div>
+<p>这种详细的摘要信息告诉我们图层中特征的数量（246）、数据的地理界限、空间参考系统（“SRS WKT”）以及每个属性字段的类型信息。例如，<code class="docutils literal notranslate"><span class="pre">FIPS:</span> <span class="pre">String</span> <span class="pre">(2.0)</span></code> 表示 <code class="docutils literal notranslate"><span class="pre">FIPS</span></code> 字符域的最大长度为 2。同样，<code class="docutils literal notranslate"><span class="pre">LON:</span> <span class="pre">Real</span> <span class="pre">(8.3)</span></code> 是一个浮点字段，最多可容纳 8 位数字，最多可容纳 3 位小数。</p>
+</div>
+</div>
+<div class="section" id="s-geographic-models">
+<span id="geographic-models"></span><h2>地理模型<a class="headerlink" href="#geographic-models" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-defining-a-geographic-model">
+<span id="defining-a-geographic-model"></span><h3>定义地理模型<a class="headerlink" href="#defining-a-geographic-model" title="永久链接至标题">¶</a></h3>
+<p>现在你已经用 <code class="docutils literal notranslate"><span class="pre">ogrinfo</span></code> 检查了你的数据集，创建一个 GeoDjango 模型来表示这个数据：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.gis.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">WorldBorder</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="c1"># Regular Django fields corresponding to the attributes in the</span>
+    <span class="c1"># world borders shapefile.</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">area</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">pop2005</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="s2">&quot;Population 2005&quot;</span><span class="p">)</span>
+    <span class="n">fips</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s2">&quot;FIPS Code&quot;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">iso2</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s2">&quot;2 Digit ISO&quot;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">iso3</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="s2">&quot;3 Digit ISO&quot;</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">un</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="s2">&quot;United Nations Code&quot;</span><span class="p">)</span>
+    <span class="n">region</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="s2">&quot;Region Code&quot;</span><span class="p">)</span>
+    <span class="n">subregion</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="s2">&quot;Sub-Region Code&quot;</span><span class="p">)</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span>
+
+    <span class="c1"># GeoDjango-specific: a geometry field (MultiPolygonField)</span>
+    <span class="n">mpoly</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">MultiPolygonField</span><span class="p">()</span>
+
+    <span class="c1"># Returns the string representation of the model.</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<p>请注意，<code class="docutils literal notranslate"><span class="pre">models</span></code> 模块是从 <code class="docutils literal notranslate"><span class="pre">django.contrib.gis.db</span></code> 导入的。</p>
+<p>几何场的默认空间参考系统是 WGS84（意味着 <a href="#id15"><span class="problematic" id="id17">`SRID`__</span></a> 是 4326）——换句话说，场的坐标是以经度和纬度对为单位的。 要使用不同的坐标系，可以用 <code class="docutils literal notranslate"><span class="pre">srid</span></code> 参数设置几何字段的 SRID。使用一个整数代表坐标系的 EPSG 代码。</p>
+</div>
+<div class="section" id="s-run-migrate">
+<span id="run-migrate"></span><h3>运行 <code class="docutils literal notranslate"><span class="pre">migrate</span></code><a class="headerlink" href="#run-migrate" title="永久链接至标题">¶</a></h3>
+<p>定义完模型后，你需要将其与数据库同步。首先，创建一个数据库迁移：</p>
+<div class="console-block" id="console-block-5">
+<input class="c-tab-unix" id="c-tab-5-unix" type="radio" name="console-5" checked>
+<label for="c-tab-5-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-5-win" type="radio" name="console-5">
+<label for="c-tab-5-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-5-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py makemigrations
+<span class="go">Migrations for &#39;world&#39;:</span>
+<span class="go">  world/migrations/0001_initial.py:</span>
+<span class="go">    - Create model WorldBorder</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-5-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py makemigrations
+<span class="go">Migrations for &#39;world&#39;:</span>
+<span class="go">  world/migrations/0001_initial.py:</span>
+<span class="go">    - Create model WorldBorder</span>
+</pre></div>
+</section>
+</div>
+<p>让我们看看将为 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 模型生成表的 SQL：</p>
+<div class="console-block" id="console-block-6">
+<input class="c-tab-unix" id="c-tab-6-unix" type="radio" name="console-6" checked>
+<label for="c-tab-6-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-6-win" type="radio" name="console-6">
+<label for="c-tab-6-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-6-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py sqlmigrate world <span class="m">0001</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-6-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py sqlmigrate world 0001
+</pre></div>
+</section>
+</div>
+<p>该命令应产生以下输出：</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">BEGIN</span><span class="p">;</span><span class="w"></span>
+<span class="c1">--</span>
+<span class="c1">-- Create model WorldBorder</span>
+<span class="c1">--</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="ss">&quot;world_worldborder&quot;</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;id&quot;</span><span class="w"> </span><span class="nb">bigint</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="k">GENERATED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">IDENTITY</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;name&quot;</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;area&quot;</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;pop2005&quot;</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;fips&quot;</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;iso2&quot;</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;iso3&quot;</span><span class="w"> </span><span class="nb">varchar</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;un&quot;</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;region&quot;</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;subregion&quot;</span><span class="w"> </span><span class="nb">integer</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;lon&quot;</span><span class="w"> </span><span class="n">double</span><span class="w"> </span><span class="k">precision</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;lat&quot;</span><span class="w"> </span><span class="n">double</span><span class="w"> </span><span class="k">precision</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"></span>
+<span class="w">    </span><span class="ss">&quot;mpoly&quot;</span><span class="w"> </span><span class="n">geometry</span><span class="p">(</span><span class="n">MULTIPOLYGON</span><span class="p">,</span><span class="mi">4326</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+<span class="p">;</span><span class="w"></span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="ss">&quot;world_worldborder_mpoly_id&quot;</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="ss">&quot;world_worldborder&quot;</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">GIST</span><span class="w"> </span><span class="p">(</span><span class="ss">&quot;mpoly&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="k">COMMIT</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>如果这个看起来是正确的，运行 <a class="reference internal" href="../../django-admin.html#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a> 在数据库中创建这个表：</p>
+<div class="console-block" id="console-block-7">
+<input class="c-tab-unix" id="c-tab-7-unix" type="radio" name="console-7" checked>
+<label for="c-tab-7-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-7-win" type="radio" name="console-7">
+<label for="c-tab-7-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-7-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py migrate
+<span class="go">Operations to perform:</span>
+<span class="go">  Apply all migrations: admin, auth, contenttypes, sessions, world</span>
+<span class="go">Running migrations:</span>
+<span class="go">  ...</span>
+<span class="go">  Applying world.0001_initial... OK</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-7-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py migrate
+<span class="go">Operations to perform:</span>
+<span class="go">  Apply all migrations: admin, auth, contenttypes, sessions, world</span>
+<span class="go">Running migrations:</span>
+<span class="go">  ...</span>
+<span class="go">  Applying world.0001_initial... OK</span>
+</pre></div>
+</section>
+</div>
+</div>
+</div>
+<div class="section" id="s-importing-spatial-data">
+<span id="importing-spatial-data"></span><h2>导入空间数据<a class="headerlink" href="#importing-spatial-data" title="永久链接至标题">¶</a></h2>
+<p>本节将展示如何通过 GeoDjango 模型使用 <a class="reference internal" href="layermapping.html"><span class="doc">LayerMapping 是一个数据导入实用程序</span></a> 将世界边界形状文件导入数据库。</p>
+<p>有许多不同的方法可以将数据导入空间数据库——除了 GeoDjango 中包含的工具外，你还可以使用以下方法：</p>
+<ul class="simple">
+<li><a class="reference external" href="https://gdal.org/programs/ogr2ogr.html">ogr2ogr</a> ：GDAL 包含的一个命令行实用程序，可将许多矢量数据格式导入 PostGIS、MySQL 和 Oracle 数据库。</li>
+<li><a class="reference external" href="https://postgis.net/docs/using_postgis_dbmanagement.html#shp2pgsql_usage">shp2pgsql</a> ：PostGIS 所包含的这一工具将 ESRI 形状文件导入 PostGIS。</li>
+</ul>
+<div class="section" id="s-gdal-interface">
+<span id="s-gdalinterface"></span><span id="gdal-interface"></span><span id="gdalinterface"></span><h3>GDAL 接口<a class="headerlink" href="#gdal-interface" title="永久链接至标题">¶</a></h3>
+<p>之前，你使用 <code class="docutils literal notranslate"><span class="pre">ogrinfo</span></code> 来检查世界边界形状文件的内容。 GeoDjango 还包含了一个 Pythonic 接口，用于 GDAL 强大的 OGR 库，它可以与 OGR 支持的所有矢量数据源一起工作。</p>
+<p>首先，调用 Django 命令行：</p>
+<div class="console-block" id="console-block-8">
+<input class="c-tab-unix" id="c-tab-8-unix" type="radio" name="console-8" checked>
+<label for="c-tab-8-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-8-win" type="radio" name="console-8">
+<label for="c-tab-8-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-8-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py shell
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-8-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py shell
+</pre></div>
+</section>
+</div>
+<p>如果您在教程早期下载了 <a class="reference internal" href="#worldborders"><span class="std std-ref">世界边界</span></a> 数据，那么您可以使用 Python 的 <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> 来确定其路径：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">world</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">world_shp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;TM_WORLD_BORDERS-0.3.shp&quot;</span>
+</pre></div>
+</div>
+<p>现在，使用 GeoDjango 的 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.DataSource" title="django.contrib.gis.gdal.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a> 接口打开世界边界 shapefile 文件：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.gdal</span> <span class="kn">import</span> <span class="n">DataSource</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">DataSource</span><span class="p">(</span><span class="n">world_shp</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+<span class="go">/ ... /geodjango/world/data/TM_WORLD_BORDERS-0.3.shp (ESRI Shapefile)</span>
+</pre></div>
+</div>
+<p>数据源对象可以具有不同层的地理空间要素；然而，shapefile 只允许有一个图层：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">))</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lyr</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">lyr</span><span class="p">)</span>
+<span class="go">TM_WORLD_BORDERS-0.3</span>
+</pre></div>
+</div>
+<p>您可以查看图层的几何类型以及它包含多少要素：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">lyr</span><span class="o">.</span><span class="n">geom_type</span><span class="p">)</span>
+<span class="go">Polygon</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lyr</span><span class="p">))</span>
+<span class="go">246</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">遗憾的是，形状文件数据格式不允许在几何体类型方面有更大的特殊性。 这个形状文件，和其他的形状一样，实际上包含了 <code class="docutils literal notranslate"><span class="pre">MultiPolygon</span></code> 的几何体，而不是多边形。在模型中使用更通用的字段类型是很重要的：GeoDjango 的 <code class="docutils literal notranslate"><span class="pre">MultiPolygonField</span></code> 将接受 <code class="docutils literal notranslate"><span class="pre">Polygon</span></code> 几何体，但 <code class="docutils literal notranslate"><span class="pre">PolygonField</span></code> 将不接受 <code class="docutils literal notranslate"><span class="pre">MultiPolygon</span></code> 类型的几何体。 这就是为什么上面定义的 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 模型使用 <code class="docutils literal notranslate"><span class="pre">MultiPolygonField</span></code>。</p>
+</div>
+<p><a class="reference internal" href="gdal.html#django.contrib.gis.gdal.Layer" title="django.contrib.gis.gdal.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a> 也可以与空间参考系统关联。如果有的话，<code class="docutils literal notranslate"><span class="pre">srs</span></code> 属性将返回一个 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.SpatialReference" title="django.contrib.gis.gdal.SpatialReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpatialReference</span></code></a> 对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">srs</span> <span class="o">=</span> <span class="n">lyr</span><span class="o">.</span><span class="n">srs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">srs</span><span class="p">)</span>
+<span class="go">GEOGCS[&quot;WGS 84&quot;,</span>
+<span class="go">DATUM[&quot;WGS_1984&quot;,</span>
+<span class="go">    SPHEROID[&quot;WGS 84&quot;,6378137,298.257223563,</span>
+<span class="go">        AUTHORITY[&quot;EPSG&quot;,&quot;7030&quot;]],</span>
+<span class="go">    AUTHORITY[&quot;EPSG&quot;,&quot;6326&quot;]],</span>
+<span class="go">PRIMEM[&quot;Greenwich&quot;,0,</span>
+<span class="go">    AUTHORITY[&quot;EPSG&quot;,&quot;8901&quot;]],</span>
+<span class="go">UNIT[&quot;degree&quot;,0.0174532925199433,</span>
+<span class="go">    AUTHORITY[&quot;EPSG&quot;,&quot;9122&quot;]],</span>
+<span class="go">AXIS[&quot;Latitude&quot;,NORTH],</span>
+<span class="go">AXIS[&quot;Longitude&quot;,EAST],</span>
+<span class="go">AUTHORITY[&quot;EPSG&quot;,&quot;4326&quot;]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">srs</span><span class="o">.</span><span class="n">proj</span>  <span class="c1"># PROJ representation</span>
+<span class="go">&#39;+proj=longlat +datum=WGS84 +no_defs&#39;</span>
+</pre></div>
+</div>
+<p>这个形状文件采用流行的 WGS84 空间参考系统——换句话说，数据使用经度、纬度对，单位是度。</p>
+<p>此外，空间文件还支持可能包含附加数据的属性字段。 以下是世界边界图层上的字段：</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">lyr</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
+<span class="go">[&#39;FIPS&#39;, &#39;ISO2&#39;, &#39;ISO3&#39;, &#39;UN&#39;, &#39;NAME&#39;, &#39;AREA&#39;, &#39;POP2005&#39;, &#39;REGION&#39;, &#39;SUBREGION&#39;, &#39;LON&#39;, &#39;LAT&#39;]</span>
+</pre></div>
+</div>
+<p>下面的代码将让你检查与每个字段相关联的 OGR 类型（如整数或字符串）：</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">fld</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">fld</span> <span class="ow">in</span> <span class="n">lyr</span><span class="o">.</span><span class="n">field_types</span><span class="p">]</span>
+<span class="go">[&#39;OFTString&#39;, &#39;OFTString&#39;, &#39;OFTString&#39;, &#39;OFTInteger&#39;, &#39;OFTString&#39;, &#39;OFTInteger&#39;, &#39;OFTInteger64&#39;, &#39;OFTInteger&#39;, &#39;OFTInteger&#39;, &#39;OFTReal&#39;, &#39;OFTReal&#39;]</span>
+</pre></div>
+</div>
+<p>您可以迭代图层中的每个要素，并从要素的几何（通过 <code class="docutils literal notranslate"><span class="pre">geom</span></code> 属性访问）以及要素的属性字段（其 <strong>值</strong> 通过 <code class="docutils literal notranslate"><span class="pre">get()</span></code> 方法访问）中提取信息：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">lyr</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">feat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NAME&quot;</span><span class="p">),</span> <span class="n">feat</span><span class="o">.</span><span class="n">geom</span><span class="o">.</span><span class="n">num_points</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">Guernsey 18</span>
+<span class="go">Jersey 26</span>
+<span class="go">South Georgia South Sandwich Islands 338</span>
+<span class="go">Taiwan 363</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="gdal.html#django.contrib.gis.gdal.Layer" title="django.contrib.gis.gdal.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Layer</span></code></a> 对象可以进行切片操作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lyr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">[&lt;django.contrib.gis.gdal.feature.Feature object at 0x2f47690&gt;, &lt;django.contrib.gis.gdal.feature.Feature object at 0x2f47650&gt;]</span>
+</pre></div>
+</div>
+<p>并且可以通过其要素 ID 检索单个要素：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feat</span> <span class="o">=</span> <span class="n">lyr</span><span class="p">[</span><span class="mi">234</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">feat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NAME&quot;</span><span class="p">))</span>
+<span class="go">San Marino</span>
+</pre></div>
+</div>
+<p>边界几何体可以导出为 WKT 和 GeoJSON 格式：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">geom</span> <span class="o">=</span> <span class="n">feat</span><span class="o">.</span><span class="n">geom</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">wkt</span><span class="p">)</span>
+<span class="go">POLYGON ((12.415798 43.957954,12.450554 ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">geom</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+<span class="go">{ &quot;type&quot;: &quot;Polygon&quot;, &quot;coordinates&quot;: [ [ [ 12.415798, 43.957954 ], [ 12.450554, 43.979721 ], ...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-layermapping">
+<span id="layermapping"></span><h3><code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code><a class="headerlink" href="#layermapping" title="永久链接至标题">¶</a></h3>
+<p>要导入数据，可以在 Python 脚本中使用 <code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code>。在 <code class="docutils literal notranslate"><span class="pre">world</span></code> 应用程序内创建一个名为 <code class="docutils literal notranslate"><span class="pre">load.py</span></code> 的文件，其中包含以下代码：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">django.contrib.gis.utils</span> <span class="kn">import</span> <span class="n">LayerMapping</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">WorldBorder</span>
+
+<span class="n">world_mapping</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;fips&quot;</span><span class="p">:</span> <span class="s2">&quot;FIPS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;iso2&quot;</span><span class="p">:</span> <span class="s2">&quot;ISO2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;iso3&quot;</span><span class="p">:</span> <span class="s2">&quot;ISO3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;un&quot;</span><span class="p">:</span> <span class="s2">&quot;UN&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;area&quot;</span><span class="p">:</span> <span class="s2">&quot;AREA&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pop2005&quot;</span><span class="p">:</span> <span class="s2">&quot;POP2005&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;region&quot;</span><span class="p">:</span> <span class="s2">&quot;REGION&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;subregion&quot;</span><span class="p">:</span> <span class="s2">&quot;SUBREGION&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="s2">&quot;LON&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="s2">&quot;LAT&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mpoly&quot;</span><span class="p">:</span> <span class="s2">&quot;MULTIPOLYGON&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">world_shp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;TM_WORLD_BORDERS-0.3.shp&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">lm</span> <span class="o">=</span> <span class="n">LayerMapping</span><span class="p">(</span><span class="n">WorldBorder</span><span class="p">,</span> <span class="n">world_shp</span><span class="p">,</span> <span class="n">world_mapping</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">lm</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>说说现在的情况：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">world_mapping</span></code> 字典中的每个键对应 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 模型中的一个字段。 其值是数据将被载入的形状文件字段的名称。</li>
+<li>几何字段的关键 <code class="docutils literal notranslate"><span class="pre">mpoly</span></code> 是 <code class="docutils literal notranslate"><span class="pre">MULTIPOLYGON</span></code>，即 GeoDjango 将导入字段的几何类型。 即使是形状文件中的简单多边形，也会在插入数据库之前自动转换为集合。</li>
+<li>形状文件的路径不是绝对的——换句话说，如果你把 <code class="docutils literal notranslate"><span class="pre">world</span></code> 应用程序（带 <code class="docutils literal notranslate"><span class="pre">data</span></code> 子目录）移到不同的位置，脚本仍然会工作。</li>
+<li><code class="docutils literal notranslate"><span class="pre">transform</span></code> 关键字设置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，因为形状文件中的数据不需要转换——它已经是 WGS84 的数据（SRID=4326）。</li>
+</ul>
+<p>之后，从 <code class="docutils literal notranslate"><span class="pre">geodjango</span></code> 项目目录中调用 Django shell：</p>
+<div class="console-block" id="console-block-9">
+<input class="c-tab-unix" id="c-tab-9-unix" type="radio" name="console-9" checked>
+<label for="c-tab-9-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-9-win" type="radio" name="console-9">
+<label for="c-tab-9-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-9-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py shell
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-9-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py shell
+</pre></div>
+</section>
+</div>
+<p>接下来，导入 <code class="docutils literal notranslate"><span class="pre">load</span></code> 模块，调用 <code class="docutils literal notranslate"><span class="pre">run</span></code> 函数，观察 <code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 完成工作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">world</span> <span class="kn">import</span> <span class="n">load</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">load</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-try-ogrinspect">
+<span id="s-ogrinspect-intro"></span><span id="try-ogrinspect"></span><span id="ogrinspect-intro"></span><h3>试试 <code class="docutils literal notranslate"><span class="pre">ogrinspect</span></code><a class="headerlink" href="#try-ogrinspect" title="永久链接至标题">¶</a></h3>
+<p>现在你已经看到了如何使用 <a class="reference internal" href="layermapping.html"><span class="doc">LayerMapping 是一个数据导入实用程序</span></a> 定义地理模型和导入数据，可以使用 <a class="reference internal" href="commands.html#django-admin-ogrinspect"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">ogrinspect</span></code></a> 管理命令进一步自动化这一过程。 <a class="reference internal" href="commands.html#django-admin-ogrinspect"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">ogrinspect</span></code></a> 命令对 GDAL 支持的矢量数据源（如形状文件）进行内省，并自动生成模型定义和 <code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code> 字典。</p>
+<p>该命令的一般用法如下：</p>
+<div class="console-block" id="console-block-10">
+<input class="c-tab-unix" id="c-tab-10-unix" type="radio" name="console-10" checked>
+<label for="c-tab-10-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-10-win" type="radio" name="console-10">
+<label for="c-tab-10-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-10-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py ogrinspect <span class="o">[</span>options<span class="o">]</span> &lt;data_source&gt; &lt;model_name&gt; <span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-10-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py ogrinspect [options] <span class="p">&lt;</span>data_source<span class="p">&gt;</span> &lt;model_name<span class="p">&gt;</span> [options]
+</pre></div>
+</section>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">data_source</span></code> 是通往 GDAL 支持的数据源的路径，<code class="docutils literal notranslate"><span class="pre">model_name</span></code> 是用于模型的名称。 命令行选项可用于进一步定义模型的生成方式。</p>
+<p>例如，下面的命令几乎自动复制了上面创建的 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 模型和映射字典：</p>
+<div class="console-block" id="console-block-11">
+<input class="c-tab-unix" id="c-tab-11-unix" type="radio" name="console-11" checked>
+<label for="c-tab-11-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-11-win" type="radio" name="console-11">
+<label for="c-tab-11-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-11-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py ogrinspect world/data/TM_WORLD_BORDERS-0.3.shp WorldBorder <span class="se">\</span>
+    --srid<span class="o">=</span><span class="m">4326</span> --mapping --multi
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-11-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py ogrinspect world\data\TM_WORLD_BORDERS-0.3.shp WorldBorder \
+    --srid=4326 --mapping --multi
+</pre></div>
+</section>
+</div>
+<p>关于上面给出的命令行选项的一些说明：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--srid=4326</span></code> 选项设置地理区域的 SRID。</li>
+<li><code class="docutils literal notranslate"><span class="pre">--mapping</span></code> 选项告诉 <code class="docutils literal notranslate"><span class="pre">ogrinspect</span></code> 也要生成一个映射字典，供 <a class="reference internal" href="layermapping.html#django.contrib.gis.utils.LayerMapping" title="django.contrib.gis.utils.LayerMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerMapping</span></code></a> 使用。</li>
+<li>指定了 <code class="docutils literal notranslate"><span class="pre">--multi</span></code> 选项，这样地理区域就是一个 <a class="reference internal" href="model-api.html#django.contrib.gis.db.models.MultiPolygonField" title="django.contrib.gis.db.models.MultiPolygonField"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPolygonField</span></code></a> 而不是一个 <a class="reference internal" href="model-api.html#django.contrib.gis.db.models.PolygonField" title="django.contrib.gis.db.models.PolygonField"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolygonField</span></code></a>。</li>
+</ul>
+<p>该命令产生以下输出，可以直接复制到 GeoDjango 应用程序的 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 中：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># This is an auto-generated Django model module created by ogrinspect.</span>
+<span class="kn">from</span> <span class="nn">django.contrib.gis.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">WorldBorder</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">fips</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">iso2</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">iso3</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">un</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">area</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">pop2005</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">region</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">subregion</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span>
+    <span class="n">geom</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">MultiPolygonField</span><span class="p">(</span><span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
+
+
+<span class="c1"># Auto-generated `LayerMapping` dictionary for WorldBorder model</span>
+<span class="n">worldborders_mapping</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;fips&quot;</span><span class="p">:</span> <span class="s2">&quot;FIPS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;iso2&quot;</span><span class="p">:</span> <span class="s2">&quot;ISO2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;iso3&quot;</span><span class="p">:</span> <span class="s2">&quot;ISO3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;un&quot;</span><span class="p">:</span> <span class="s2">&quot;UN&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;NAME&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;area&quot;</span><span class="p">:</span> <span class="s2">&quot;AREA&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pop2005&quot;</span><span class="p">:</span> <span class="s2">&quot;POP2005&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;region&quot;</span><span class="p">:</span> <span class="s2">&quot;REGION&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;subregion&quot;</span><span class="p">:</span> <span class="s2">&quot;SUBREGION&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="s2">&quot;LON&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="s2">&quot;LAT&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;geom&quot;</span><span class="p">:</span> <span class="s2">&quot;MULTIPOLYGON&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-spatial-queries">
+<span id="spatial-queries"></span><h2>空间查询<a class="headerlink" href="#spatial-queries" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-spatial-lookups">
+<span id="spatial-lookups"></span><h3>空间查找<a class="headerlink" href="#spatial-lookups" title="永久链接至标题">¶</a></h3>
+<p>GeoDjango 在 Django ORM 中增加了空间查询功能。 例如，你可以在 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 表中找到包含某个点的国家。 首先，启动管理 shell：</p>
+<div class="console-block" id="console-block-12">
+<input class="c-tab-unix" id="c-tab-12-unix" type="radio" name="console-12" checked>
+<label for="c-tab-12-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-12-win" type="radio" name="console-12">
+<label for="c-tab-12-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-12-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py shell
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-12-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py shell
+</pre></div>
+</section>
+</div>
+<p>现在，定义一个兴趣点 <a class="footnote-reference" href="#id13" id="id7">[3]</a>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt_wkt</span> <span class="o">=</span> <span class="s2">&quot;POINT(-95.3385 29.7245)&quot;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pnt_wkt</span></code> 字符串表示位于 -95.3385 度经度，29.7245 度纬度的点。几何形状采用一种称为 Well Known Text (WKT) 的格式，这是由开放地理空间协会（OGC）发布的标准。<a class="footnote-reference" href="#id14" id="id8">[4]</a> 导入 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 模型，并使用 <code class="docutils literal notranslate"><span class="pre">pnt_wkt</span></code> 作为参数执行 <code class="docutils literal notranslate"><span class="pre">contains</span></code> 查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">world.models</span> <span class="kn">import</span> <span class="n">WorldBorder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WorldBorder</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mpoly__contains</span><span class="o">=</span><span class="n">pnt_wkt</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;WorldBorder: United States&gt;]&gt;</span>
+</pre></div>
+</div>
+<p>在这里，你检索到的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 只有一个模型：美国的边界（正是你所期望的）。</p>
+<p>同样，您还可以使用 <a class="reference internal" href="geos.html"><span class="doc">GEOS 几何对象</span></a>。在这里，您可以将 <code class="docutils literal notranslate"><span class="pre">intersects</span></code> 空间查询与 <code class="docutils literal notranslate"><span class="pre">get</span></code> 方法相结合，以检索只包含圣马力诺的 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 实例而不是查询集：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mf">12.4604</span><span class="p">,</span> <span class="mf">43.9420</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">WorldBorder</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mpoly__intersects</span><span class="o">=</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&lt;WorldBorder: San Marino&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">contains</span></code> 和 <code class="docutils literal notranslate"><span class="pre">intersects</span></code> 查询只是可用查询的一个子集 —— <a class="reference internal" href="db-api.html"><span class="doc">GeoDjango 数据库 API</span></a> 文档中有更多的内容。</p>
+</div>
+<div class="section" id="s-automatic-spatial-transformations">
+<span id="s-id9"></span><span id="automatic-spatial-transformations"></span><span id="id9"></span><h3>自动空间变换<a class="headerlink" href="#automatic-spatial-transformations" title="永久链接至标题">¶</a></h3>
+<p>在进行空间查询时，如果几何图形处于不同的坐标系统中，GeoDjango 会自动进行坐标变换。在以下示例中，坐标将以 <a href="#id15"><span class="problematic" id="id18">`EPSG SRID 32140`__</span></a> 表示，这是特定于德克萨斯南部的坐标系统，并且单位是 <strong>米</strong>，而不是度：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">GEOSGeometry</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mf">954158.1</span><span class="p">,</span> <span class="mf">4215137.1</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">32140</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>请注意，<code class="docutils literal notranslate"><span class="pre">pnt</span></code> 也可以使用 EWKT 构建，EWKT 是 WKT 的&quot;扩展&quot;形式，包括 SRID 信息：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;SRID=32140;POINT(954158.1 4215137.1)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>GeoDjango 的 ORM 将自动将几何值包装在变换 SQL 中，使开发人员能够以更高的抽象级别工作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">qs</span> <span class="o">=</span> <span class="n">WorldBorder</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">mpoly__intersects</span><span class="o">=</span><span class="n">pnt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">qs</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>  <span class="c1"># Generating the SQL</span>
+<span class="go">SELECT &quot;world_worldborder&quot;.&quot;id&quot;, &quot;world_worldborder&quot;.&quot;name&quot;, &quot;world_worldborder&quot;.&quot;area&quot;,</span>
+<span class="go">&quot;world_worldborder&quot;.&quot;pop2005&quot;, &quot;world_worldborder&quot;.&quot;fips&quot;, &quot;world_worldborder&quot;.&quot;iso2&quot;,</span>
+<span class="go">&quot;world_worldborder&quot;.&quot;iso3&quot;, &quot;world_worldborder&quot;.&quot;un&quot;, &quot;world_worldborder&quot;.&quot;region&quot;,</span>
+<span class="go">&quot;world_worldborder&quot;.&quot;subregion&quot;, &quot;world_worldborder&quot;.&quot;lon&quot;, &quot;world_worldborder&quot;.&quot;lat&quot;,</span>
+<span class="go">&quot;world_worldborder&quot;.&quot;mpoly&quot; FROM &quot;world_worldborder&quot;</span>
+<span class="go">WHERE ST_Intersects(&quot;world_worldborder&quot;.&quot;mpoly&quot;, ST_Transform(%s, 4326))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qs</span>  <span class="c1"># printing evaluates the queryset</span>
+<span class="go">&lt;QuerySet [&lt;WorldBorder: United States&gt;]&gt;</span>
+</pre></div>
+</div>
+<div class="admonition-raw-queries admonition" id="gis-raw-sql">
+<p class="first admonition-title">原始查询</p>
+<p>在使用 <a class="reference internal" href="../../../topics/db/sql.html"><span class="doc">原始查询</span></a> 时，必须包装几何字段，以便 GEOS 可以识别字段值：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># or if you&#39;re querying a non-default database:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connections</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">connection</span> <span class="o">=</span> <span class="n">connections</span><span class="p">[</span><span class="s2">&quot;your_gis_db_alias&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">City</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">raw</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;SELECT id, name, </span><span class="si">%s</span><span class="s2"> as point from myapp_city&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">select</span> <span class="o">%</span> <span class="s2">&quot;point&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="last">只有当你确切知道自己在做什么的时候，你才应该使用原始查询。</p>
+</div>
+</div>
+<div class="section" id="s-lazy-geometries">
+<span id="lazy-geometries"></span><h3>惰性几何<a class="headerlink" href="#lazy-geometries" title="永久链接至标题">¶</a></h3>
+<p>GeoDjango 使用标准化的文本表示加载几何图形。当首次访问几何字段时，GeoDjango 创建一个 <a class="reference internal" href="geos.html#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象，该对象具有强大的功能，例如流行的地理空间格式的序列化属性：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span> <span class="o">=</span> <span class="n">WorldBorder</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;San Marino&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span><span class="o">.</span><span class="n">mpoly</span>
+<span class="go">&lt;MultiPolygon object at 0x24c6798&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span><span class="o">.</span><span class="n">mpoly</span><span class="o">.</span><span class="n">wkt</span>  <span class="c1"># WKT</span>
+<span class="go">MULTIPOLYGON (((12.4157980000000006 43.9579540000000009, 12.4505540000000003 43.9797209999999978, ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span><span class="o">.</span><span class="n">mpoly</span><span class="o">.</span><span class="n">wkb</span>  <span class="c1"># WKB (as Python binary buffer)</span>
+<span class="go">&lt;read-only buffer for 0x1fe2c70, size -1, offset 0 at 0x2564c40&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span><span class="o">.</span><span class="n">mpoly</span><span class="o">.</span><span class="n">geojson</span>  <span class="c1"># GeoJSON</span>
+<span class="go">&#39;{ &quot;type&quot;: &quot;MultiPolygon&quot;, &quot;coordinates&quot;: [ [ [ [ 12.415798, 43.957954 ], [ 12.450554, 43.979721 ], ...</span>
+</pre></div>
+</div>
+<p>这包括访问 GEOS 库提供的所有高级几何操作：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mf">12.4604</span><span class="p">,</span> <span class="mf">43.9420</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sm</span><span class="o">.</span><span class="n">mpoly</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">mpoly</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-geographic-annotations">
+<span id="geographic-annotations"></span><h3>地理注解<a class="headerlink" href="#geographic-annotations" title="永久链接至标题">¶</a></h3>
+<p>GeoDjango 还提供了一组地理注解来计算距离和其他一些操作（交点、差值等）。参见 <a class="reference internal" href="functions.html"><span class="doc">地理数据库函数</span></a> 文档。</p>
+</div>
+</div>
+<div class="section" id="s-putting-your-data-on-the-map">
+<span id="putting-your-data-on-the-map"></span><h2>将你的数据放在地图上<a class="headerlink" href="#putting-your-data-on-the-map" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-geographic-admin">
+<span id="geographic-admin"></span><h3>地理管理<a class="headerlink" href="#geographic-admin" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="../admin/index.html"><span class="doc">Django 的管理应用程序</span></a> 支持编辑几何字段。</p>
+<div class="section" id="s-basics">
+<span id="basics"></span><h4>基础<a class="headerlink" href="#basics" title="永久链接至标题">¶</a></h4>
+<p>Django 管理界面允许用户在一个由 <a class="reference external" href="https://openlayers.org/">OpenLayers</a> 驱动的 JavaScript slippy 地图上创建和修改几何图形。</p>
+<p>让我们开始吧。在 <code class="docutils literal notranslate"><span class="pre">world</span></code> 应用程序内创建一个名为 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 的文件，其中包含以下代码：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.gis</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">WorldBorder</span>
+
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">WorldBorder</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>接下来，在 <code class="docutils literal notranslate"><span class="pre">geodjango</span></code> 应用程序文件夹中编辑 <code class="docutils literal notranslate"><span class="pre">urls.py</span></code> 如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">django.urls</span> <span class="kn">import</span> <span class="n">include</span><span class="p">,</span> <span class="n">path</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s2">&quot;admin/&quot;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">urls</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>创建一个管理用户：</p>
+<div class="console-block" id="console-block-13">
+<input class="c-tab-unix" id="c-tab-13-unix" type="radio" name="console-13" checked>
+<label for="c-tab-13-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-13-win" type="radio" name="console-13">
+<label for="c-tab-13-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-13-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py createsuperuser
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-13-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py createsuperuser
+</pre></div>
+</section>
+</div>
+<p>接下来，启动 Django 开发服务器：</p>
+<div class="console-block" id="console-block-14">
+<input class="c-tab-unix" id="c-tab-14-unix" type="radio" name="console-14" checked>
+<label for="c-tab-14-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-14-win" type="radio" name="console-14">
+<label for="c-tab-14-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-14-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py runserver
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-14-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py runserver
+</pre></div>
+</section>
+</div>
+<p>最后，浏览 <code class="docutils literal notranslate"><span class="pre">http://localhost:8000/admin/</span></code>，用你刚刚创建的用户登录。浏览到任何一个 <code class="docutils literal notranslate"><span class="pre">WorldBorder</span></code> 条目——通过点击多边形并将顶点拖到所需位置，可以编辑边界。</p>
+</div>
+<div class="section" id="s-gismodeladmin">
+<span id="gismodeladmin"></span><h4><code class="docutils literal notranslate"><span class="pre">GISModelAdmin</span></code><a class="headerlink" href="#gismodeladmin" title="永久链接至标题">¶</a></h4>
+<p>使用 <a class="reference internal" href="admin.html#django.contrib.gis.admin.GISModelAdmin" title="django.contrib.gis.admin.GISModelAdmin"><code class="xref py py-class docutils literal notranslate"><span class="pre">GISModelAdmin</span></code></a>，GeoDjango 在管理界面中使用了一个 <a class="reference external" href="https://www.openstreetmap.org/">OpenStreetMap</a> 图层。这提供了比 <a class="reference internal" href="../admin/index.html#django.contrib.admin.ModelAdmin" title="django.contrib.admin.ModelAdmin"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelAdmin</span></code></a> 更多的上下文信息（包括街道和道路的详细信息），后者使用在 <a class="reference external" href="https://www.osgeo.org/">OSGeo</a> 托管的 <a class="reference external" href="http://web.archive.org/web/20201024202709/https://earth-info.nga.mil/publications/vmap0.html">Vector Map Level 0</a> WMS 数据集。</p>
+<p>必须安装 PROJ 基准转换文件（请参阅 <a class="reference internal" href="install/geolibs.html#proj4"><span class="std std-ref">PROJ 安装说明</span></a> 以获取更多详细信息）。</p>
+<p>如果满足这个要求，那么在您的 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 文件中使用 <code class="docutils literal notranslate"><span class="pre">GISModelAdmin</span></code> 选项类：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">WorldBorder</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">GISModelAdmin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="id11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>特别感谢 <a class="reference external" href="https://thematicmapping.org/">thematicmapping.org</a> 的Bjørn Sandvik 提供和维护这一数据集。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>GeoDjango 基本应用由 Dane Springmeyer、Josh Livni 和 Christopher Schmidt 编写。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id13" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[3]</a></td><td>这一点是 <a class="reference external" href="https://www.law.uh.edu/">休斯顿大学法律中心</a> 。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[4]</a></td><td>开放地理空间联盟（Open Geospatial Consortium, Inc.）的 <a class="reference external" href="https://www.ogc.org/standards/sfs">OpenGIS Simple Feature Specification For SQL</a>。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GeoDjango 教程</a><ul>
+<li><a class="reference internal" href="#introduction">介绍</a></li>
+<li><a class="reference internal" href="#setting-up">设置</a><ul>
+<li><a class="reference internal" href="#create-a-spatial-database">创建一个空间数据库</a></li>
+<li><a class="reference internal" href="#create-a-new-project">创建一个新项目</a></li>
+<li><a class="reference internal" href="#configure-settings-py">设置 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geographic-data">地理数据</a><ul>
+<li><a class="reference internal" href="#worldborders">世界边界</a></li>
+<li><a class="reference internal" href="#use-ogrinfo-to-examine-spatial-data">使用 <code class="docutils literal notranslate"><span class="pre">ogrinfo</span></code> 检查空间数据</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geographic-models">地理模型</a><ul>
+<li><a class="reference internal" href="#defining-a-geographic-model">定义地理模型</a></li>
+<li><a class="reference internal" href="#run-migrate">运行 <code class="docutils literal notranslate"><span class="pre">migrate</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#importing-spatial-data">导入空间数据</a><ul>
+<li><a class="reference internal" href="#gdal-interface">GDAL 接口</a></li>
+<li><a class="reference internal" href="#layermapping"><code class="docutils literal notranslate"><span class="pre">LayerMapping</span></code></a></li>
+<li><a class="reference internal" href="#try-ogrinspect">试试 <code class="docutils literal notranslate"><span class="pre">ogrinspect</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spatial-queries">空间查询</a><ul>
+<li><a class="reference internal" href="#spatial-lookups">空间查找</a></li>
+<li><a class="reference internal" href="#automatic-spatial-transformations">自动空间变换</a></li>
+<li><a class="reference internal" href="#lazy-geometries">惰性几何</a></li>
+<li><a class="reference internal" href="#geographic-annotations">地理注解</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#putting-your-data-on-the-map">将你的数据放在地图上</a><ul>
+<li><a class="reference internal" href="#geographic-admin">地理管理</a><ul>
+<li><a class="reference internal" href="#basics">基础</a></li>
+<li><a class="reference internal" href="#gismodeladmin"><code class="docutils literal notranslate"><span class="pre">GISModelAdmin</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="index.html"
+                          title="上一章">GeoDjango</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="install/index.html"
+                          title="下一章">GeoDjango 安装</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/gis/tutorial.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="index.html" title="GeoDjango">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="install/index.html" title="GeoDjango 安装">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

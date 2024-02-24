@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.5.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.5.2 版本发行说明" href="1.5.2.html" />
+    <link rel="prev" title="Django 1.5.4 版本发行说明" href="1.5.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.5.4.html" title="Django 1.5.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.5.2.html" title="Django 1.5.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.5.3">
+            
+  <div class="section" id="s-django-1-5-3-release-notes">
+<span id="django-1-5-3-release-notes"></span><h1>Django 1.5.3 版本发行说明<a class="headerlink" href="#django-1-5-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2013 年 9 月 10 日</em></p>
+<p>这是 Django 1.5.3，是 Django 1.5 系列的第三个发布版本。它解决了一个安全问题，并包含一个可选择的功能，以增强 <a class="reference internal" href="../topics/http/sessions.html#module-django.contrib.sessions" title="django.contrib.sessions: Provides session management for Django projects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code></a> 的安全性。</p>
+<div class="section" id="s-directory-traversal-vulnerability-in-ssi-template-tag">
+<span id="directory-traversal-vulnerability-in-ssi-template-tag"></span><h2><code class="docutils literal notranslate"><span class="pre">ssi</span></code> 模板标签中的目录遍历漏洞<a class="headerlink" href="#directory-traversal-vulnerability-in-ssi-template-tag" title="永久链接至标题">¶</a></h2>
+<p>在以前的 Django 版本中，可以通过指定以允许的根目录之一开头的相对路径来绕过 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 模板标签用于安全性的 <code class="docutils literal notranslate"><span class="pre">ALLOWED_INCLUDE_ROOTS</span></code> 设置。例如，如果 <code class="docutils literal notranslate"><span class="pre">ALLOWED_INCLUDE_ROOTS</span> <span class="pre">=</span> <span class="pre">(&quot;/var/www&quot;,)</span></code>，那么以下情况是可能的：</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">ssi</span> <span class="s2">&quot;/var/www/../../etc/passwd&quot;</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>实际上，这并不是一个非常常见的问题，因为它需要模板作者将 <code class="docutils literal notranslate"><span class="pre">ssi</span></code> 文件放入用户可控制的变量中，但从原理上讲是可能的。</p>
+</div>
+<div class="section" id="s-mitigating-a-remote-code-execution-vulnerability-in-django-contrib-sessions">
+<span id="mitigating-a-remote-code-execution-vulnerability-in-django-contrib-sessions"></span><h2>应对 <a class="reference internal" href="../topics/http/sessions.html#module-django.contrib.sessions" title="django.contrib.sessions: Provides session management for Django projects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code></a> 中的远程代码执行漏洞。<a class="headerlink" href="#mitigating-a-remote-code-execution-vulnerability-in-django-contrib-sessions" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="../topics/http/sessions.html#module-django.contrib.sessions" title="django.contrib.sessions: Provides session management for Django projects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code></a> 目前在将会话数据存储到后端之前使用 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 进行序列化。如果您使用的是 <a class="reference internal" href="../topics/http/sessions.html#cookie-session-backend"><span class="std std-ref">签名的 Cookie 会话后端</span></a> 并且 <a class="reference internal" href="../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> 被攻击者知晓（Django 本身没有固有的漏洞导致泄漏），攻击者可以在他们的会话中插入一个字符串，当反序列化时，在服务器上执行任意代码。执行此操作的技术简单且易于在互联网上找到。虽然 Cookie 会话存储会对存储在 Cookie 中的数据进行签名以防止篡改，但一旦 <a class="reference internal" href="../ref/settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> 泄漏，立即升级为远程代码执行漏洞。</p>
+<p>可以通过使用 JSON 而不是 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 对会话数据进行序列化来缓解此攻击。为了方便这一点，Django 1.5.3 引入了一个新的设置 <a class="reference internal" href="../ref/settings.html#std-setting-SESSION_SERIALIZER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SESSION_SERIALIZER</span></code></a>，用于自定义会话序列化格式。为了向后兼容，默认情况下这个设置使用 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a>。虽然 JSON 序列化不像 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#module-pickle" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 那样支持所有的 Python 对象，但我们强烈建议切换到 JSON 序列化的值。此外，由于 JSON 要求使用字符串键，如果在 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 中使用非字符串键，可能会遇到问题。有关更多详细信息，请参阅 <a class="reference internal" href="../topics/http/sessions.html#session-serialization"><span class="std std-ref">会话序列化</span></a> 文档。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.5.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#directory-traversal-vulnerability-in-ssi-template-tag"><code class="docutils literal notranslate"><span class="pre">ssi</span></code> 模板标签中的目录遍历漏洞</a></li>
+<li><a class="reference internal" href="#mitigating-a-remote-code-execution-vulnerability-in-django-contrib-sessions">应对 <code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code> 中的远程代码执行漏洞。</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.5.4.html"
+                          title="上一章">Django 1.5.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.5.2.html"
+                          title="下一章">Django 1.5.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.5.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.5.4.html" title="Django 1.5.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.5.2.html" title="Django 1.5.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

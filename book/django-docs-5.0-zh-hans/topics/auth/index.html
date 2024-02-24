@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django中的用户认证 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="使用 Django 的验证系统" href="default.html" />
+    <link rel="prev" title="进阶测试主题" href="../testing/advanced.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="../testing/advanced.html" title="进阶测试主题">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="default.html" title="使用 Django 的验证系统">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-auth-index">
+            
+  <div class="section" id="s-user-authentication-in-django">
+<span id="user-authentication-in-django"></span><h1>Django中的用户认证<a class="headerlink" href="#user-authentication-in-django" title="永久链接至标题">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-django.contrib.auth"></span><p>Django 自带一个用户验证系统。它负责处理用户账号、组、权限和基于cookie的用户会话。文档的这部分解释了默认的实现如何开箱即用，以及如何扩展和自定义以满足你的项目需求。</p>
+<div class="section" id="s-overview">
+<span id="overview"></span><h2>概况<a class="headerlink" href="#overview" title="永久链接至标题">¶</a></h2>
+<p>Django 验证系统处理验证和授权。简单来说，验证检验用户是否是他们的用户，授权决定已验证用户能做什么。这里的术语验证用于指代这两个任务。</p>
+<p>认证系统由以下部分组成：</p>
+<ul class="simple">
+<li>用户</li>
+<li>权限：二进制（是/否）标识指定用户是否可以执行特定任务。</li>
+<li>组：将标签和权限应用于多个用户的一般方法。</li>
+<li>可配置的密码哈希化系统</li>
+<li>为登录用户或限制内容提供表单和视图工具</li>
+<li>可插拔的后端系统</li>
+</ul>
+<p>Django 里的验证系统旨在通用化，不提供一些常见的 web 验证系统的特性。其中一些常见问题的解决方案已在第三方包中实现。</p>
+<ul class="simple">
+<li>密码强度检查</li>
+<li>限制登录尝试</li>
+<li>针对第三方的身份验证（例如OAuth）</li>
+<li>对象级权限</li>
+</ul>
+</div>
+<div class="section" id="s-installation">
+<span id="installation"></span><h2>安装<a class="headerlink" href="#installation" title="永久链接至标题">¶</a></h2>
+<p>验证系统被捆绑为 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code> 的 Django contrib 模块。默认情况下，所需的配置以及包含在 <a class="reference internal" href="../../ref/django-admin.html#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">startproject</span></code></a> 生成的 <code class="file docutils literal notranslate"><span class="pre">settings.py</span></code> 中，在 <a class="reference internal" href="../../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a>&nbsp;配置列出了以下两个条目：</p>
+<ol class="arabic simple">
+<li><code class="docutils literal notranslate"><span class="pre">'django.contrib.auth'</span></code> 包含了验证框架的内核和它的默认模型。</li>
+<li><code class="docutils literal notranslate"><span class="pre">'django.contrib.contenttypes'</span></code> 是 Django <a class="reference internal" href="../../ref/contrib/contenttypes.html"><span class="doc">content type system</span></a> ，允许你创建的模型和权限相关联。</li>
+</ol>
+<p>这些条目在你的 <a class="reference internal" href="../../ref/settings.html#std-setting-MIDDLEWARE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIDDLEWARE</span></code></a> 设置中：</p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="../../ref/middleware.html#django.contrib.sessions.middleware.SessionMiddleware" title="django.contrib.sessions.middleware.SessionMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">SessionMiddleware</span></code></a> 通过请求管理 <a class="reference internal" href="../http/sessions.html"><span class="doc">sessions</span></a>&nbsp;。</li>
+<li><a class="reference internal" href="../../ref/middleware.html#django.contrib.auth.middleware.AuthenticationMiddleware" title="django.contrib.auth.middleware.AuthenticationMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">AuthenticationMiddleware</span></code></a> 使用会话将用户和请求关联。</li>
+</ol>
+<p>有了这些设置，运行命令 <code class="docutils literal notranslate"><span class="pre">manage.py</span> <span class="pre">migrate</span></code> 为auth相关模型创建必要的数据表，并为已安装应用中定义的任何模型创建许可。</p>
+</div>
+<div class="section" id="s-usage">
+<span id="usage"></span><h2>用法<a class="headerlink" href="#usage" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="default.html"><span class="doc">使用 Django 的默认实现</span></a></p>
+<ul class="simple">
+<li><a class="reference internal" href="default.html#user-objects"><span class="std std-ref">使用 User 对象</span></a></li>
+<li><a class="reference internal" href="default.html#topic-authorization"><span class="std std-ref">权限和认证</span></a></li>
+<li><a class="reference internal" href="default.html#auth-web-requests"><span class="std std-ref">请求中的认证</span></a></li>
+<li><a class="reference internal" href="default.html#auth-admin"><span class="std std-ref">在管理系统中管理用户</span></a></li>
+</ul>
+<p><a class="reference internal" href="../../ref/contrib/auth.html"><span class="doc">默认实现的 API 参考</span></a></p>
+<p><a class="reference internal" href="customizing.html"><span class="doc">自定义 Users 和认证</span></a></p>
+<p><a class="reference internal" href="passwords.html"><span class="doc">Django 中的密码管理</span></a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django中的用户认证</a><ul>
+<li><a class="reference internal" href="#overview">概况</a></li>
+<li><a class="reference internal" href="#installation">安装</a></li>
+<li><a class="reference internal" href="#usage">用法</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="../testing/advanced.html"
+                          title="上一章">进阶测试主题</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="default.html"
+                          title="下一章">使用 Django 的验证系统</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/auth/index.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="../testing/advanced.html" title="进阶测试主题">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="default.html" title="使用 Django 的验证系统">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

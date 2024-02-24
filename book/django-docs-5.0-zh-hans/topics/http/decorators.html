@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>视图装饰器 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="文件上传" href="file-uploads.html" />
+    <link rel="prev" title="编写视图" href="views.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="views.html" title="编写视图">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="file-uploads.html" title="文件上传">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-http-decorators">
+            
+  <div class="section" id="s-module-django.views.decorators.http">
+<span id="s-view-decorators"></span><span id="module-django.views.decorators.http"></span><span id="view-decorators"></span><h1>视图装饰器<a class="headerlink" href="#module-django.views.decorators.http" title="永久链接至标题">¶</a></h1>
+<p>Django 提供很多装饰器，它们可以为视图支持多种 HTTP 特性。</p>
+<p>查看 <a class="reference internal" href="../class-based-views/intro.html#id1"><span class="std std-ref">装饰类</span></a> 来了解如何在基于类的视图中使用这些装饰器。</p>
+<div class="section" id="s-allowed-http-methods">
+<span id="allowed-http-methods"></span><h2>允许的 HTTP 方法<a class="headerlink" href="#allowed-http-methods" title="永久链接至标题">¶</a></h2>
+<p>在 <a class="reference internal" href="#module-django.views.decorators.http" title="django.views.decorators.http"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.views.decorators.http</span></code></a> 中的装饰器可以用来根据请求方法来限制对视图的访问。如果条件不满足，这些装饰器将返回 <a class="reference internal" href="../../ref/request-response.html#django.http.HttpResponseNotAllowed" title="django.http.HttpResponseNotAllowed"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.http.HttpResponseNotAllowed</span></code></a> 。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.require_http_methods">
+<code class="sig-name descname"><span class="pre">require_http_methods</span></code>(<em><span class="n"><span class="pre">request_method_list</span></span></em>)<a class="headerlink" href="#django.views.decorators.http.require_http_methods" title="永久链接至目标">¶</a></dt>
+<dd><p>装饰器可以要求视图只接受特定的请求方法。用法如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.http</span> <span class="kn">import</span> <span class="n">require_http_methods</span>
+
+
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="c1"># I can assume now that only GET or POST requests make it this far</span>
+    <span class="c1"># ...</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>注意请求方法应该是大写。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.require_GET">
+<code class="sig-name descname"><span class="pre">require_GET</span></code>()<a class="headerlink" href="#django.views.decorators.http.require_GET" title="永久链接至目标">¶</a></dt>
+<dd><p>装饰器可以要求视图只接受 GET 方法。用法如下：</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.require_POST">
+<code class="sig-name descname"><span class="pre">require_POST</span></code>()<a class="headerlink" href="#django.views.decorators.http.require_POST" title="永久链接至目标">¶</a></dt>
+<dd><p>装饰器可以要求视图只接受 POST 方法。用法如下：</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.require_safe">
+<code class="sig-name descname"><span class="pre">require_safe</span></code>()<a class="headerlink" href="#django.views.decorators.http.require_safe" title="永久链接至目标">¶</a></dt>
+<dd><p>装饰器可以要求视图只接收 GET 和 HEAD 方法。这些方法通常被认为是安全的，因为它们除了检索请求的资源外，没有特别的操作。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">Web 服务器自动删除对 HEAD 请求的相应内容，并保持头部不变，所以你可以像处理视图里的 GET 请求一样处理 HEAD 请求。因为一些软件依赖 HEAD 请求（比如链接检测器），因此你需要使用 <code class="docutils literal notranslate"><span class="pre">require_safe</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">require_GET</span></code> 。</p>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-conditional-view-processing">
+<span id="conditional-view-processing"></span><h2>条件视图处理<a class="headerlink" href="#conditional-view-processing" title="永久链接至标题">¶</a></h2>
+<p>下面 <a class="reference internal" href="#module-django.views.decorators.http" title="django.views.decorators.http"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.views.decorators.http</span></code></a> 的装饰器被用来控制特殊视图中的缓存行为。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.condition">
+<code class="sig-name descname"><span class="pre">condition</span></code>(<em><span class="n"><span class="pre">etag_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">last_modified_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.views.decorators.http.condition" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.etag">
+<code class="sig-name descname"><span class="pre">etag</span></code>(<em><span class="n"><span class="pre">etag_func</span></span></em>)<a class="headerlink" href="#django.views.decorators.http.etag" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.http.last_modified">
+<code class="sig-name descname"><span class="pre">last_modified</span></code>(<em><span class="n"><span class="pre">last_modified_func</span></span></em>)<a class="headerlink" href="#django.views.decorators.http.last_modified" title="永久链接至目标">¶</a></dt>
+<dd><p>这些装饰器被用来生成 <code class="docutils literal notranslate"><span class="pre">ETag</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> 头部；查看 <a class="reference internal" href="../conditional-view-processing.html"><span class="doc">conditional view processing</span></a> 。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<span class="target" id="module-django.views.decorators.gzip"></span></div>
+<div class="section" id="s-gzip-compression">
+<span id="gzip-compression"></span><h2>GZip 压缩<a class="headerlink" href="#gzip-compression" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="#module-django.views.decorators.gzip" title="django.views.decorators.gzip"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.views.decorators.gzip</span></code></a> 里的装饰器控制基于每个视图的内容压缩。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.gzip.gzip_page">
+<code class="sig-name descname"><span class="pre">gzip_page</span></code>()<a class="headerlink" href="#django.views.decorators.gzip.gzip_page" title="永久链接至目标">¶</a></dt>
+<dd><p>如果浏览器允许 gzip 压缩，那么这个装饰器将压缩内容。它相应的设置了 <code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头部，这样缓存将基于 <code class="docutils literal notranslate"><span class="pre">Accept-Encoding</span></code> 头进行存储。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<span class="target" id="module-django.views.decorators.vary"></span></div>
+<div class="section" id="s-vary-headers">
+<span id="vary-headers"></span><h2>Vary 头<a class="headerlink" href="#vary-headers" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="#module-django.views.decorators.vary" title="django.views.decorators.vary"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.views.decorators.vary</span></code></a> 里的装饰器被用来根据特殊请求头的缓存控制。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.vary.vary_on_cookie">
+<code class="sig-name descname"><span class="pre">vary_on_cookie</span></code>(<em><span class="n"><span class="pre">func</span></span></em>)<a class="headerlink" href="#django.views.decorators.vary.vary_on_cookie" title="永久链接至目标">¶</a></dt>
+<dd><div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.vary.vary_on_headers">
+<code class="sig-name descname"><span class="pre">vary_on_headers</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">headers</span></span></em>)<a class="headerlink" href="#django.views.decorators.vary.vary_on_headers" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">Vary</span></code> 头定义了缓存机制在构建其缓存密钥时应该考虑哪些请求报头。</p>
+<p>查看 <a class="reference internal" href="../cache.html#using-vary-headers"><span class="std std-ref">using vary headers</span></a> 。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<span class="target" id="module-django.views.decorators.cache"></span></div>
+<div class="section" id="s-caching">
+<span id="caching"></span><h2>缓存<a class="headerlink" href="#caching" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="#module-django.views.decorators.cache" title="django.views.decorators.cache"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.views.decorators.cache</span></code></a> 中的装饰器控制服务器及客户端的缓存。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.cache.cache_control">
+<code class="sig-name descname"><span class="pre">cache_control</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.views.decorators.cache.cache_control" title="永久链接至目标">¶</a></dt>
+<dd><p>这个装饰器通过添加所有关键字参数来修补响应的 <code class="docutils literal notranslate"><span class="pre">Cache-Control</span></code> 头。查看 <a class="reference internal" href="../../ref/utils.html#django.utils.cache.patch_cache_control" title="django.utils.cache.patch_cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch_cache_control()</span></code></a> 来了解转换的详情。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.cache.never_cache">
+<code class="sig-name descname"><span class="pre">never_cache</span></code>(<em><span class="n"><span class="pre">view_func</span></span></em>)<a class="headerlink" href="#django.views.decorators.cache.never_cache" title="永久链接至目标">¶</a></dt>
+<dd><p>这个装饰器会为当前日期/时间添加一个 <code class="docutils literal notranslate"><span class="pre">Expires</span></code> 头部。</p>
+<p>这个装饰器添加 <code class="docutils literal notranslate"><span class="pre">Cache-Control:</span> <span class="pre">max-age=0,</span> <span class="pre">no-cache,</span> <span class="pre">no-store,</span> <span class="pre">must-revalidate</span></code> 头到一个响应来标识禁止缓存该页面。</p>
+<p>每个头只有在还没有设置的情况下才会被添加。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+<span class="target" id="module-django.views.decorators.common"></span></div>
+<div class="section" id="s-common">
+<span id="common"></span><h2>Common<a class="headerlink" href="#common" title="永久链接至标题">¶</a></h2>
+<p>在 <a class="reference internal" href="#module-django.views.decorators.common" title="django.views.decorators.common"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.views.decorators.common</span></code></a> 中的装饰器允许对 <a class="reference internal" href="../../ref/middleware.html#django.middleware.common.CommonMiddleware" title="django.middleware.common.CommonMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommonMiddleware</span></code></a> 的行为进行每视图自定义。</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.views.decorators.common.no_append_slash">
+<code class="sig-name descname"><span class="pre">no_append_slash</span></code>()<a class="headerlink" href="#django.views.decorators.common.no_append_slash" title="永久链接至目标">¶</a></dt>
+<dd><p>这个装饰器允许单独的视图排除 <a class="reference internal" href="../../ref/settings.html#std-setting-APPEND_SLASH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APPEND_SLASH</span></code></a> URL 标准化。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 5.0:</span> <p>已添加对包装异步视图函数的支持。</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">视图装饰器</a><ul>
+<li><a class="reference internal" href="#allowed-http-methods">允许的 HTTP 方法</a></li>
+<li><a class="reference internal" href="#conditional-view-processing">条件视图处理</a></li>
+<li><a class="reference internal" href="#gzip-compression">GZip 压缩</a></li>
+<li><a class="reference internal" href="#vary-headers">Vary 头</a></li>
+<li><a class="reference internal" href="#caching">缓存</a></li>
+<li><a class="reference internal" href="#common">Common</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="views.html"
+                          title="上一章">编写视图</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="file-uploads.html"
+                          title="下一章">文件上传</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/http/decorators.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="views.html" title="编写视图">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="file-uploads.html" title="文件上传">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

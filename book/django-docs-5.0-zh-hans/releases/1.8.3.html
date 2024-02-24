@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.8.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.8.2 版本发行说明" href="1.8.2.html" />
+    <link rel="prev" title="Django 1.8.4 版本发行说明" href="1.8.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.8.4.html" title="Django 1.8.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.8.2.html" title="Django 1.8.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.8.3">
+            
+  <div class="section" id="s-django-1-8-3-release-notes">
+<span id="django-1-8-3-release-notes"></span><h1>Django 1.8.3 版本发行说明<a class="headerlink" href="#django-1-8-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2015 年 7 月 8 日</em></p>
+<p>Django 1.8.3 修复了 1.8.2 中的几个安全问题和错误。</p>
+<p>此外，<code class="docutils literal notranslate"><span class="pre">django.utils.deprecation.RemovedInDjango20Warning</span></code> 已被重命名为 <code class="docutils literal notranslate"><span class="pre">RemovedInDjango110Warning</span></code>，因为版本规划已经修订为 1.9、1.10、1.11（LTS）、2.0（不再支持 Python 2）。为了向后兼容，<code class="docutils literal notranslate"><span class="pre">RemovedInDjango20Warning</span></code> 仍然可以作为可导入的别名使用。</p>
+<div class="section" id="s-denial-of-service-possibility-by-filling-session-store">
+<span id="denial-of-service-possibility-by-filling-session-store"></span><h2>通过填充会话存储可能导致拒绝服务攻击。<a class="headerlink" href="#denial-of-service-possibility-by-filling-session-store" title="永久链接至标题">¶</a></h2>
+<p>在以前版本的 Django 中，会话后端在访问 <code class="docutils literal notranslate"><span class="pre">request.session</span></code> 时，如果请求的 cookies 中提供了一个没有会话记录的会话键，就会创建一个新的空记录在会话存储中。这可能允许攻击者通过发送带有未知会话键的重复请求来轻松创建许多新的会话记录，潜在地填满会话存储或导致其他用户的会话记录被逐出。</p>
+<p>内置的会话后端现在仅在会话实际修改时创建会话记录；不会创建空的会话记录。因此，只有在网站选择向匿名用户公开会话修改视图时，才可能发生这种潜在的 DoS 攻击。</p>
+<p>由于每个内置会话后端都是单独修复的（而不是在核心会话框架中进行修复），第三方会话后端的维护者应检查他们的后端是否存在相同的漏洞，并在存在的情况下进行修正。</p>
+</div>
+<div class="section" id="s-header-injection-possibility-since-validators-accept-newlines-in-input">
+<span id="header-injection-possibility-since-validators-accept-newlines-in-input"></span><h2>由于验证器接受换行符输入，可能导致头部注入。<a class="headerlink" href="#header-injection-possibility-since-validators-accept-newlines-in-input" title="永久链接至标题">¶</a></h2>
+<p>Django 的一些内置验证器（尤其是 <a class="reference internal" href="../ref/validators.html#django.core.validators.EmailValidator" title="django.core.validators.EmailValidator"><code class="xref py py-class docutils literal notranslate"><span class="pre">EmailValidator</span></code></a>）没有禁止换行字符（因为正则表达式中使用了 <code class="docutils literal notranslate"><span class="pre">$</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">\Z</span></code>）。如果在 HTTP 响应或电子邮件头中使用带有换行符的值，可能会受到头部注入攻击的影响。Django 本身不会受到影响，因为 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 和 <a class="reference internal" href="../topics/email.html#module-django.core.mail" title="django.core.mail: Helpers to easily send email."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.core.mail</span></code></a> 中的邮件发送工具在 HTTP 和 SMTP 头部中分别禁止了换行符。尽管验证器已经在 Django 中修复，但如果以其他方式创建 HTTP 响应或电子邮件消息，最好确保这些方法也禁止换行符。您还可以验证应用程序中的任何现有数据是否包含意外的换行符。</p>
+<p><a class="reference internal" href="../ref/validators.html#django.core.validators.validate_ipv4_address" title="django.core.validators.validate_ipv4_address"><code class="xref py py-func docutils literal notranslate"><span class="pre">validate_ipv4_address()</span></code></a>、<a class="reference internal" href="../ref/validators.html#django.core.validators.validate_slug" title="django.core.validators.validate_slug"><code class="xref py py-func docutils literal notranslate"><span class="pre">validate_slug()</span></code></a> 和 <a class="reference internal" href="../ref/validators.html#django.core.validators.URLValidator" title="django.core.validators.URLValidator"><code class="xref py py-class docutils literal notranslate"><span class="pre">URLValidator</span></code></a> 也受到影响，但从 Django 1.6 开始，使用这些验证器的 <code class="docutils literal notranslate"><span class="pre">GenericIPAddresseField</span></code>、<code class="docutils literal notranslate"><span class="pre">IPAddressField</span></code>、<code class="docutils literal notranslate"><span class="pre">SlugField</span></code> 和 <code class="docutils literal notranslate"><span class="pre">URLField</span></code> 表单字段都会剥离输入，因此只有在在表单字段之外使用这些验证器时才存在新行进入数据的可能性。</p>
+<p>未记录的、内部未使用的 <code class="docutils literal notranslate"><span class="pre">validate_integer()</span></code> 函数现在更加严格，因为它使用正则表达式进行验证，而不仅仅是使用 <code class="docutils literal notranslate"><span class="pre">int()</span></code> 强制转换值并检查是否引发了异常。</p>
+</div>
+<div class="section" id="s-denial-of-service-possibility-in-url-validation">
+<span id="denial-of-service-possibility-in-url-validation"></span><h2>URL 验证中的拒绝服务漏洞可能性。<a class="headerlink" href="#denial-of-service-possibility-in-url-validation" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="../ref/validators.html#django.core.validators.URLValidator" title="django.core.validators.URLValidator"><code class="xref py py-class docutils literal notranslate"><span class="pre">URLValidator</span></code></a> 包含一个对某些无效输入极其缓慢的正则表达式进行评估的问题。现在已简化和优化了这个正则表达式。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">BaseRangeField.prepare_value()</span></code> 以使用每个 <code class="docutils literal notranslate"><span class="pre">base_field</span></code> 的 <code class="docutils literal notranslate"><span class="pre">prepare_value()</span></code> 方法 (<a class="reference external" href="https://code.djangoproject.com/ticket/24841">#24841</a>)。</li>
+<li>修复了在执行 <a class="reference internal" href="../ref/django-admin.html#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 时出现的崩溃问题，如果迁移模块缺少 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 或是一个文件 (<a class="reference external" href="https://code.djangoproject.com/ticket/24848">#24848</a>)。</li>
+<li>修复了在使用 <code class="docutils literal notranslate"><span class="pre">Count()</span></code> 注释后，<code class="docutils literal notranslate"><span class="pre">QuerySet.exists()</span></code> 返回不正确的结果 (<a class="reference external" href="https://code.djangoproject.com/ticket/24835">#24835</a>)。</li>
+<li>修正了 <code class="docutils literal notranslate"><span class="pre">HStoreField.has_changed()</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/24844">#24844</a>)。</li>
+<li>撤销了 CSRF 模板上下文处理器的优化，因为它导致了一个回归问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24836">#24836</a>)。</li>
+<li>修复了一个导致模板上下文处理器在 <code class="docutils literal notranslate"><span class="pre">RequestContext</span></code> 创建后覆盖设置的变量的回归问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24847">#24847</a>)。</li>
+<li>在重命名 MySQL 数据库字段时防止了丢失 <code class="docutils literal notranslate"><span class="pre">null</span></code>/<code class="docutils literal notranslate"><span class="pre">not</span> <span class="pre">null</span></code> 列属性（<a class="reference external" href="https://code.djangoproject.com/ticket/24817">#24817</a>）。</li>
+<li>修复了在 <code class="docutils literal notranslate"><span class="pre">ModelAdmin.list_display</span></code> 中使用反向一对一关系时发生崩溃的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24851">#24851</a>)。</li>
+<li>修复了在 PostgreSQL 中将字段重命名为 <code class="docutils literal notranslate"><span class="pre">AutoField</span></code> 时 SQL 引用的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24892">#24892</a>)。</li>
+<li>修复了从 <code class="docutils literal notranslate"><span class="pre">primary_key=True</span></code> 更改字段为 <code class="docutils literal notranslate"><span class="pre">unique=True</span></code> 时缺少唯一约束的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24893">#24893</a>)。</li>
+<li>修复了在删除对象后使用 <code class="docutils literal notranslate"><span class="pre">prefetch_related()</span></code> 时的查询集 pickling 问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24831">#24831</a>)。</li>
+<li>允许在 <code class="docutils literal notranslate"><span class="pre">DurationField</span></code> 中使用长于 1 天的 <code class="docutils literal notranslate"><span class="pre">choices</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/24897">#24897</a>)。</li>
+<li>修复了在加载两个具有依赖关系的应用程序的压缩迁移时发生崩溃的问题，在这种情况下，受依赖应用程序替换的迁移部分被应用 (<a class="reference external" href="https://code.djangoproject.com/ticket/24895">#24895</a>)。</li>
+<li>修复了对已应用状态的压缩（替代）迁移的记录问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24628">#24628</a>)。</li>
+<li>修复了在使用 <code class="docutils literal notranslate"><span class="pre">Case</span></code> 表达式与 <code class="docutils literal notranslate"><span class="pre">exclude()</span></code> 时的查询集注释问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24833">#24833</a>)。</li>
+<li>修正了多个 <code class="docutils literal notranslate"><span class="pre">Case</span></code> 表达式的联接升级。在查询中使用多个 <code class="docutils literal notranslate"><span class="pre">Case</span></code> 表达式进行注释可能会意外地过滤掉结果 (<a class="reference external" href="https://code.djangoproject.com/ticket/24924">#24924</a>)。</li>
+<li>修复了在子查询中使用 transforms 的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24744">#24744</a>)。</li>
+<li>修复了在 Python 2.7.10 上的 <code class="docutils literal notranslate"><span class="pre">SimpleTestCase.assertRaisesMessage()</span></code> （<a class="reference external" href="https://code.djangoproject.com/ticket/24903">#24903</a>）。</li>
+<li>通过将 <code class="docutils literal notranslate"><span class="pre">optparse</span></code> 管理命令中的 <code class="docutils literal notranslate"><span class="pre">verbosity</span></code> 参数转换为整数，提供了更好的向后兼容性 (<a class="reference external" href="https://code.djangoproject.com/ticket/24769">#24769</a>)。</li>
+<li>修复了在使用 UUID 主键的模型上，除了 PostgreSQL 数据库外的其他数据库上的 <code class="docutils literal notranslate"><span class="pre">prefetch_related()</span></code> 问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24912">#24912</a>)。</li>
+<li>修复了在 MySQL 上删除 <code class="docutils literal notranslate"><span class="pre">unique_together</span></code> 约束的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24972">#24972</a>)。</li>
+<li>修复了在 <code class="docutils literal notranslate"><span class="pre">forms.ImageField</span></code> 中上传 Pillow 无法检测到的 MIME 类型的图像时的崩溃问题，例如位图 (<a class="reference external" href="https://code.djangoproject.com/ticket/24948">#24948</a>)。</li>
+<li>修复了通过管理员删除具有 <code class="docutils literal notranslate"><span class="pre">related_query_name</span></code> 的 <code class="docutils literal notranslate"><span class="pre">GenericRelation</span></code> 的模型时发生的回归问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24940">#24940</a>)。</li>
+<li>通过修复虚假的系统检查，重新允许在 Python 3 上使用非 ASCII 值的 <code class="docutils literal notranslate"><span class="pre">ForeignKey.related_name</span></code> (<a class="reference external" href="https://code.djangoproject.com/ticket/25016">#25016</a>)。</li>
+<li>修复了使用具有 <code class="docutils literal notranslate"><span class="pre">UUIDField</span></code> 主键的父对象和具有 <code class="docutils literal notranslate"><span class="pre">AutoField</span></code> 主键的子对象的内联表单的问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/24958">#24958</a>)。</li>
+<li>修复了在某些输入上 <code class="docutils literal notranslate"><span class="pre">unordered_list</span></code> 模板过滤器中的回归问题 (<a class="reference external" href="https://code.djangoproject.com/ticket/25031">#25031</a>)。</li>
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">URLValidator</span></code> 中的回归问题，该问题使 Punycode TLD 无效 (<a class="reference external" href="https://code.djangoproject.com/ticket/25059">#25059</a>)。</li>
+<li>改进了 <code class="docutils literal notranslate"><span class="pre">pyinotify</span></code> 在 <code class="docutils literal notranslate"><span class="pre">runserver</span></code> 中的轮询功能 (<a class="reference external" href="https://code.djangoproject.com/ticket/23882">#23882</a>)。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.8.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#denial-of-service-possibility-by-filling-session-store">通过填充会话存储可能导致拒绝服务攻击。</a></li>
+<li><a class="reference internal" href="#header-injection-possibility-since-validators-accept-newlines-in-input">由于验证器接受换行符输入，可能导致头部注入。</a></li>
+<li><a class="reference internal" href="#denial-of-service-possibility-in-url-validation">URL 验证中的拒绝服务漏洞可能性。</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.8.4.html"
+                          title="上一章">Django 1.8.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.8.2.html"
+                          title="下一章">Django 1.8.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.8.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.8.4.html" title="Django 1.8.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.8.2.html" title="Django 1.8.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

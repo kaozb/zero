@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何输出 CSV &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何创建 PDF 文件" href="outputting-pdf.html" />
+    <link rel="prev" title="如何配置和使用日志" href="logging.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="logging.html" title="如何配置和使用日志">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="outputting-pdf.html" title="如何创建 PDF 文件">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-outputting-csv">
+            
+  <div class="section" id="s-how-to-create-csv-output">
+<span id="how-to-create-csv-output"></span><h1>如何输出 CSV<a class="headerlink" href="#how-to-create-csv-output" title="永久链接至标题">¶</a></h1>
+<p>本文介绍如何用 Django 的视图动态输出 CSV (Comma Separated Values)。要达到目的，你可以使用 Python 的 CSV 库或 Django 的模板系统。</p>
+<div class="section" id="s-using-the-python-csv-library">
+<span id="using-the-python-csv-library"></span><h2>使用 Python 的 CSV 库<a class="headerlink" href="#using-the-python-csv-library" title="永久链接至标题">¶</a></h2>
+<p>Python 有用一个 CSV 库 <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">csv</span></code></a>。它配合 Django 使用的关键是 <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">csv</span></code></a> 模块的 CSV 创建行为作用于类文件对象，而 Django 的 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 对象也是类文件对象。</p>
+<p>这有个例子:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponse</span>
+
+
+<span class="k">def</span> <span class="nf">some_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="c1"># Create the HttpResponse object with the appropriate CSV header.</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">HttpResponse</span><span class="p">(</span>
+        <span class="n">content_type</span><span class="o">=</span><span class="s2">&quot;text/csv&quot;</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Content-Disposition&quot;</span><span class="p">:</span> <span class="s1">&#39;attachment; filename=&quot;somefilename.csv&quot;&#39;</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;First row&quot;</span><span class="p">,</span> <span class="s2">&quot;Foo&quot;</span><span class="p">,</span> <span class="s2">&quot;Bar&quot;</span><span class="p">,</span> <span class="s2">&quot;Baz&quot;</span><span class="p">])</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;Second row&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s1">&#39;&quot;Testing&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;Here&#39;s a quote&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+</div>
+<p>代码和注释应该是不言自明的，但是有几件事值得提一下：</p>
+<ul class="simple">
+<li>响应指定了特殊的 MIME 类型 <em class="mimetype">text/csv</em>。这告诉浏览器该文档是一个 CSV 文件，而不是一个 HTML 文件。如果你没这么干，浏览器可能会将输出视作 HTML，这会在浏览器窗口展示丑陋的，恐怖的官样文章。</li>
+<li>相应还包括一个额外的 <code class="docutils literal notranslate"><span class="pre">Content-Disposition</span></code> 头，其中包含了 CSV 文件的名称。文件名是任意的；随便你怎么叫。它会被浏览器在 &quot;保存为……&quot; 对话框中用到。</li>
+<li>你需将 <code class="docutils literal notranslate"><span class="pre">response</span></code> 作为第一个参数传给 <code class="docutils literal notranslate"><span class="pre">csv.writer</span></code> 来接入生成 CSV API 。 <code class="docutils literal notranslate"><span class="pre">csv.writer</span></code> 函数期望一个类文件对象，而 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 对象满足该要求。</li>
+<li>要按行输出 CSV 文件，调用 <code class="docutils literal notranslate"><span class="pre">writer.writerrow</span></code>，传入一个 <a class="reference external" href="https://docs.python.org/3/glossary.html#term-iterable" title="(在 Python v3.12)"><span class="xref std std-term">iterable</span></a> 参数。</li>
+<li>CSV 模块为你处理了引号，所以你无需担心包含引号或逗号的字符串的转义问题。你需要为 <code class="docutils literal notranslate"><span class="pre">writerow()</span></code> 传入原始字符串，它为你处理好一切。</li>
+</ul>
+<div class="section" id="s-streaming-large-csv-files">
+<span id="s-streaming-csv-files"></span><span id="streaming-large-csv-files"></span><span id="streaming-csv-files"></span><h3>输出超大 CSV 文件<a class="headerlink" href="#streaming-large-csv-files" title="永久链接至标题">¶</a></h3>
+<p>当处理生成很多回复的视图时，你可能要考虑使用 Django 的 <a class="reference internal" href="../ref/request-response.html#django.http.StreamingHttpResponse" title="django.http.StreamingHttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamingHttpResponse</span></code></a>&nbsp;作为替代。例如，要进行耗时的输出文件流的操作，你可以避免负载均衡器在服务器输出耗时相应时，可能由于超时抛弃改连接。</p>
+<p>在本例中，我们充分利用 Python 的生成器，高效地处理大型 CSV 文件的装配和输出任务:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">csv</span>
+
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">StreamingHttpResponse</span>
+
+
+<span class="k">class</span> <span class="nc">Echo</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;An object that implements just the write method of the file-like</span>
+<span class="sd">    interface.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write the value by returning it, instead of storing in a buffer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span> <span class="nf">some_streaming_csv_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A view that streams a large CSV file.&quot;&quot;&quot;</span>
+    <span class="c1"># Generate a sequence of rows. The range is based on the maximum number of</span>
+    <span class="c1"># rows that can be handled by a single sheet in most spreadsheet</span>
+    <span class="c1"># applications.</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;Row </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">65536</span><span class="p">))</span>
+    <span class="n">pseudo_buffer</span> <span class="o">=</span> <span class="n">Echo</span><span class="p">()</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">pseudo_buffer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">StreamingHttpResponse</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
+        <span class="n">content_type</span><span class="o">=</span><span class="s2">&quot;text/csv&quot;</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Content-Disposition&quot;</span><span class="p">:</span> <span class="s1">&#39;attachment; filename=&quot;somefilename.csv&quot;&#39;</span><span class="p">},</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-using-the-template-system">
+<span id="using-the-template-system"></span><h2>使用模板系统<a class="headerlink" href="#using-the-template-system" title="永久链接至标题">¶</a></h2>
+<p>或者，你也能用 <a class="reference internal" href="../topics/templates.html"><span class="doc">Djano 模板系统</span></a> 生成 CSV。这比使用方便的 <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">csv</span></code></a> 模块级别低点，但是，解决方案就在这，你可以选。</p>
+<p>办法就是将项目列表传给模板，让模板在 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-for"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">for</span></code></a> 循环中输出逗号。</p>
+<p>以下例子输出与前文一样的 CSV 文件:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">HttpResponse</span>
+<span class="kn">from</span> <span class="nn">django.template</span> <span class="kn">import</span> <span class="n">loader</span>
+
+
+<span class="k">def</span> <span class="nf">some_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="c1"># Create the HttpResponse object with the appropriate CSV header.</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">HttpResponse</span><span class="p">(</span>
+        <span class="n">content_type</span><span class="o">=</span><span class="s2">&quot;text/csv&quot;</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Content-Disposition&quot;</span><span class="p">:</span> <span class="s1">&#39;attachment; filename=&quot;somefilename.csv&quot;&#39;</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="c1"># The data is hard-coded here, but you could load it from a database or</span>
+    <span class="c1"># some other source.</span>
+    <span class="n">csv_data</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;First row&quot;</span><span class="p">,</span> <span class="s2">&quot;Foo&quot;</span><span class="p">,</span> <span class="s2">&quot;Bar&quot;</span><span class="p">,</span> <span class="s2">&quot;Baz&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;Second row&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s1">&#39;&quot;Testing&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;Here&#39;s a quote&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;my_template_name.txt&quot;</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">csv_data</span><span class="p">}</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+</div>
+<p>本例与前例唯一的不同是本例使用模板加载，而不是 CSV 模块。剩下的代码都一样，例如  <code class="docutils literal notranslate"><span class="pre">content_type='text/csv'</span></code>。</p>
+<p>然后，用模板代码创建模板 <code class="docutils literal notranslate"><span class="pre">my_template_name.txt</span></code>。</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">row</span> <span class="k">in</span> <span class="nv">data</span> <span class="cp">%}</span>&quot;<span class="cp">{{</span> <span class="nv">row.0</span><span class="o">|</span><span class="nf">addslashes</span> <span class="cp">}}</span>&quot;, &quot;<span class="cp">{{</span> <span class="nv">row.1</span><span class="o">|</span><span class="nf">addslashes</span> <span class="cp">}}</span>&quot;, &quot;<span class="cp">{{</span> <span class="nv">row.2</span><span class="o">|</span><span class="nf">addslashes</span> <span class="cp">}}</span>&quot;, &quot;<span class="cp">{{</span> <span class="nv">row.3</span><span class="o">|</span><span class="nf">addslashes</span> <span class="cp">}}</span>&quot;, &quot;<span class="cp">{{</span> <span class="nv">row.4</span><span class="o">|</span><span class="nf">addslashes</span> <span class="cp">}}</span>&quot;
+<span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+<p>这个简短的模板遍历所给的数据，并为每行生成一个 CSV 行。它利用 <a class="reference internal" href="../ref/templates/builtins.html#std-templatefilter-addslashes"><code class="xref std std-tfilter docutils literal notranslate"><span class="pre">addslashes</span></code></a> 模板过滤器确保引号不会引发任何问题。</p>
+</div>
+<div class="section" id="s-other-text-based-formats">
+<span id="other-text-based-formats"></span><h2>其它文本格式<a class="headerlink" href="#other-text-based-formats" title="永久链接至标题">¶</a></h2>
+<p>注意，这里并没有太多特定于 CSV 的内容——仅是特定的输出格式。你可以使用其中任意一种输出你能想到文本内容。你也能用类似的技术生成任意二进制数据；参考 <a class="reference internal" href="outputting-pdf.html"><span class="doc">如何创建 PDF 文件</span></a> 的例子。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何输出 CSV</a><ul>
+<li><a class="reference internal" href="#using-the-python-csv-library">使用 Python 的 CSV 库</a><ul>
+<li><a class="reference internal" href="#streaming-large-csv-files">输出超大 CSV 文件</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-template-system">使用模板系统</a></li>
+<li><a class="reference internal" href="#other-text-based-formats">其它文本格式</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="logging.html"
+                          title="上一章">如何配置和使用日志</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="outputting-pdf.html"
+                          title="下一章">如何创建 PDF 文件</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/howto/outputting-csv.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="logging.html" title="如何配置和使用日志">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="outputting-pdf.html" title="如何创建 PDF 文件">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

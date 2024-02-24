@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何编写一个自定义的文件存储类 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="如何部署 Django" href="deployment/index.html" />
+    <link rel="prev" title="如何编写自定义的模板标签和过滤器" href="custom-template-tags.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="custom-template-tags.html" title="如何编写自定义的模板标签和过滤器">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="deployment/index.html" title="如何部署 Django">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-custom-file-storage">
+            
+  <div class="section" id="s-how-to-write-a-custom-storage-class">
+<span id="how-to-write-a-custom-storage-class"></span><h1>如何编写一个自定义的文件存储类<a class="headerlink" href="#how-to-write-a-custom-storage-class" title="永久链接至标题">¶</a></h1>
+<p>如果你需要提供自定义文件储存功能——一个普通的例子是，把文件储存在远程系统中——自定义一个存储类可以完成这一任务来完成。下面是需要完成的具体步骤：</p>
+<ol class="arabic">
+<li><p class="first">你自定义的存储系统必须为 <code class="docutils literal notranslate"><span class="pre">Django.core.files.storage.Storage</span></code> 的一个子类:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.files.storage</span> <span class="kn">import</span> <span class="n">Storage</span>
+
+
+<span class="k">class</span> <span class="nc">MyStorage</span><span class="p">(</span><span class="n">Storage</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Django 必须能以无参数实例化你的存储系统。意味着所有配置都应从 <code class="docutils literal notranslate"><span class="pre">django.conf.settings</span></code> 配置中获取:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.core.files.storage</span> <span class="kn">import</span> <span class="n">Storage</span>
+
+
+<span class="k">class</span> <span class="nc">MyStorage</span><span class="p">(</span><span class="n">Storage</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">option</span><span class="p">:</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">CUSTOM_STORAGE_OPTIONS</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">在你的存储类中，除了其他自定义的方法外，还必须实现  <a class="reference internal" href="#django.core.files.storage._open" title="django.core.files.storage._open"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_open()</span></code></a> 以及 <a class="reference internal" href="#django.core.files.storage._save" title="django.core.files.storage._save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_save()</span></code></a> 等其他适合你的存储类的方法。关于这些方法，详情请查看下面的信息。</p>
+<p>另外，如果你的类提供了本地文件存储，它必须重写  <code class="docutils literal notranslate"><span class="pre">path()</span></code> 方法。</p>
+</li>
+<li><p class="first">您的存储类必须是 <a class="reference internal" href="../topics/migrations.html#custom-deconstruct-method"><span class="std std-ref">deconstructible</span></a>，以便在迁移中的字段上使用它时可以序列化。 只要你的字段有自己的参数 <a class="reference internal" href="../topics/migrations.html#migration-serializing"><span class="std std-ref">serializable</span></a>，你可以使用 <code class="docutils literal notranslate"><span class="pre">django.utils.deconstruct.deconstructible</span></code> 类装饰器（这是 Django 在 FileSystemStorage 上使用的）。</p>
+</li>
+</ol>
+<p>默认情况下，下面的方法将引发一个 NotImplementedError 的错误，并且通常它们必须被重写。</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage.delete" title="django.core.files.storage.Storage.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Storage.delete()</span></code></a></li>
+<li><a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage.exists" title="django.core.files.storage.Storage.exists"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Storage.exists()</span></code></a></li>
+<li><a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage.listdir" title="django.core.files.storage.Storage.listdir"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Storage.listdir()</span></code></a></li>
+<li><a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage.size" title="django.core.files.storage.Storage.size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Storage.size()</span></code></a></li>
+<li><a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.Storage.url" title="django.core.files.storage.Storage.url"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Storage.url()</span></code></a></li>
+</ul>
+<p>可是，记住并非所有这些方法都是需要的，并且可能故意被省略。正因为如此，让每个方法未实现并仍然拥有一个可用储存是可能的。</p>
+<p>举例来说，如果列出某些存储后端的内容被证明代价会很昂贵，那么您可以决定不实现 Storage.listdir() 方法。</p>
+<p>另一个例子是只处理写入文件的后端。在这种情况下，你不需要实现上述任何方法。</p>
+<p>最终，你决定实现这些方法中的哪一个。一些方法未实现结果会生成部分（可能会损坏的）接口。</p>
+<p>你可能也经常会用到专为自定义存储对象设计的钩子函数。他们是：</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.storage._open">
+<code class="sig-name descname"><span class="pre">_open</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rb'</span></span></em>)<a class="headerlink" href="#django.core.files.storage._open" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><strong>要求</strong>。</p>
+<p>由 <code class="docutils literal notranslate"><span class="pre">Storage.open()</span></code> 调用，这是存储类用于打开文件的实际机制。这必须返回一个 <code class="docutils literal notranslate"><span class="pre">File</span></code> 对象，尽管在大多数情况下，你会想在这里返回一些实现特定于后端存储系统的逻辑的子类。当文件不存在时，应该引发 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(在 Python v3.12)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">FileNotFoundError</span></code></a> 异常。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.storage._save">
+<code class="sig-name descname"><span class="pre">_save</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">content</span></span></em>)<a class="headerlink" href="#django.core.files.storage._save" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>被称为 <code class="docutils literal notranslate"><span class="pre">Storage.save()</span></code>。这个 <code class="docutils literal notranslate"><span class="pre">name</span></code> 会早已经历 <code class="docutils literal notranslate"><span class="pre">get_valid_name()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">get_available_name()</span></code>，并且 <code class="docutils literal notranslate"><span class="pre">content</span></code> 将会成为 <code class="docutils literal notranslate"><span class="pre">File</span></code> 对象自身。</p>
+<p>应该返回实际保存的文件的名称（通常是传递的 <code class="docutils literal notranslate"><span class="pre">name</span></code>，但如果存储需要更改文件名，则返回新名称）。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.storage.get_valid_name">
+<code class="sig-name descname"><span class="pre">get_valid_name</span></code>(<em><span class="n"><span class="pre">name</span></span></em>)<a class="headerlink" href="#django.core.files.storage.get_valid_name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回适用于底层存储系统的文件名。 传递给此方法的 <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数既不是发送给服务器的原始文件名，如果 <code class="docutils literal notranslate"><span class="pre">upload_to</span></code> 是可调用的，则在删除任何路径信息后由该方法返回的文件名。 重写此操作可以自定义如何将非标准字符转换为安全文件名。</p>
+<p>“Storage”上提供的代码仅保留原始文件名中的字母数字字符，句点和下划线，并删除其他所有内容。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.storage.get_alternative_name">
+<code class="sig-name descname"><span class="pre">get_alternative_name</span></code>(<em><span class="n"><span class="pre">file_root</span></span></em>, <em><span class="n"><span class="pre">file_ext</span></span></em>)<a class="headerlink" href="#django.core.files.storage.get_alternative_name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将会在 <code class="docutils literal notranslate"><span class="pre">file_root</span></code> 和 <code class="docutils literal notranslate"><span class="pre">file_ext</span></code> 这两个参数的基础上返回另一个文件名。默认情况下，在执行前一个下划线再加上 7 个由字母和数字组成的字符串将将会追加到原来的文件名后。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.core.files.storage.get_available_name">
+<code class="sig-name descname"><span class="pre">get_available_name</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.core.files.storage.get_available_name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回存储机制中可用的文件名，可能会考虑提供的文件名。 根据上述 <code class="docutils literal notranslate"><span class="pre">get_valid_name()</span></code> 方法，传递给此方法的 <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数已经被清除为一个对存储系统有效的文件名。</p>
+<p>返回的文件名的长度不会超过 <code class="docutils literal notranslate"><span class="pre">max_length</span></code>，如果该参数被提供的话。若找不到一个可用的独一无二的文件名，则抛出一个 <a class="reference internal" href="../ref/exceptions.html#django.core.exceptions.SuspiciousOperation" title="django.core.exceptions.SuspiciousOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SuspiciousFileOperation</span></code></a> 异常。</p>
+<p>假如已经存在名为 <code class="docutils literal notranslate"><span class="pre">name</span></code> 的文件，那么 <code class="docutils literal notranslate"><span class="pre">get_alternative_name()</span></code> 将会被调用来得到另一个替代的名称。</p>
+<div class="section" id="s-use-your-custom-storage-engine">
+<span id="s-using-custom-storage-engine"></span><span id="use-your-custom-storage-engine"></span><span id="using-custom-storage-engine"></span><h2>使用你的自定义存储引擎<a class="headerlink" href="#use-your-custom-storage-engine" title="永久链接至标题">¶</a></h2>
+<div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p>使用自定义存储与 Django 的第一步是告诉 Django 你将要使用的文件存储后端。这可以通过 <a class="reference internal" href="../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 设置来完成。该设置将存储别名（这是在整个 Django 中引用特定存储的一种方式）映射到该特定存储后端的设置字典。内部字典中的设置在 <a class="reference internal" href="../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 文档中有详细描述。</p>
+<p>然后通过别名从 <a class="reference internal" href="../ref/files/storage.html#django.core.files.storage.storages" title="django.core.files.storage.storages"><code class="xref py py-data docutils literal notranslate"><span class="pre">django.core.files.storage.storages</span></code></a> 字典中访问存储：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.files.storage</span> <span class="kn">import</span> <span class="n">storages</span>
+
+<span class="n">example_storage</span> <span class="o">=</span> <span class="n">storages</span><span class="p">[</span><span class="s2">&quot;example&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何编写一个自定义的文件存储类</a><ul>
+<li><a class="reference internal" href="#use-your-custom-storage-engine">使用你的自定义存储引擎</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="custom-template-tags.html"
+                          title="上一章">如何编写自定义的模板标签和过滤器</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="deployment/index.html"
+                          title="下一章">如何部署 Django</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/howto/custom-file-storage.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="custom-template-tags.html" title="如何编写自定义的模板标签和过滤器">previous</a>
+     |
+    <a href="index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="deployment/index.html" title="如何部署 Django">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

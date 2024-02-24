@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.5.2 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.5.1 版本发行说明" href="1.5.1.html" />
+    <link rel="prev" title="Django 1.5.3 版本发行说明" href="1.5.3.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.5.3.html" title="Django 1.5.3 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.5.1.html" title="Django 1.5.1 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.5.2">
+            
+  <div class="section" id="s-django-1-5-2-release-notes">
+<span id="django-1-5-2-release-notes"></span><h1>Django 1.5.2 版本发行说明<a class="headerlink" href="#django-1-5-2-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2013 年 8 月 13 日</em></p>
+<p>这是 Django 1.5.2，是 Django 1.5 的修复错误和安全发布版本。</p>
+<div class="section" id="s-mitigated-possible-xss-attack-via-user-supplied-redirect-urls">
+<span id="mitigated-possible-xss-attack-via-user-supplied-redirect-urls"></span><h2>通过用户提供的重定向 URL 减轻了可能的 XSS 攻击风险。<a class="headerlink" href="#mitigated-possible-xss-attack-via-user-supplied-redirect-urls" title="永久链接至标题">¶</a></h2>
+<p>Django 在某些情况下（例如，<code class="docutils literal notranslate"><span class="pre">django.contrib.auth.views.login()</span></code>、<code class="docutils literal notranslate"><span class="pre">django.contrib.comments</span></code> 和 <a class="reference internal" href="../topics/i18n/index.html"><span class="doc">i18n</span></a>）依赖于用户输入来将用户重定向到“成功”URL。这些重定向的安全检查（即 <code class="docutils literal notranslate"><span class="pre">django.utils.http.is_safe_url()</span></code>）没有检查 URL 的协议是否为 <code class="docutils literal notranslate"><span class="pre">http(s)</span></code>，因此允许输入 <code class="docutils literal notranslate"><span class="pre">javascript:...</span></code> 类型的 URL。如果开发人员依赖于 <code class="docutils literal notranslate"><span class="pre">is_safe_url()</span></code> 来提供安全的重定向目标，并将这样的 URL 放入链接中，他们可能会受到 XSS 攻击的影响。当前情况下，这个错误不会影响 Django，因为我们只将这个 URL 放入 <code class="docutils literal notranslate"><span class="pre">Location</span></code> 响应头中，而浏览器似乎会忽略其中的 JavaScript。</p>
+</div>
+<div class="section" id="s-xss-vulnerability-in-django-contrib-admin">
+<span id="xss-vulnerability-in-django-contrib-admin"></span><h2><a class="reference internal" href="../ref/contrib/admin/index.html#module-django.contrib.admin" title="django.contrib.admin: Django's admin site."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.admin</span></code></a> 中的 XSS 漏洞<a class="headerlink" href="#xss-vulnerability-in-django-contrib-admin" title="永久链接至标题">¶</a></h2>
+<p>如果在 Django 1.5 中使用了 <a class="reference internal" href="../ref/models/fields.html#django.db.models.URLField" title="django.db.models.URLField"><code class="xref py py-class docutils literal notranslate"><span class="pre">URLField</span></code></a>，它会在管理页面的更改页面上显示字段的当前值和到目标的链接。这个小部件的显示程序存在缺陷，允许进行 XSS 攻击。</p>
+</div>
+<div class="section" id="s-bugfixes">
+<span id="bugfixes"></span><h2>漏洞修复<a class="headerlink" href="#bugfixes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>修复了与 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.prefetch_related" title="django.db.models.query.QuerySet.prefetch_related"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_related()</span></code></a> 有关的崩溃问题 (#19607)，以及一些与 <code class="docutils literal notranslate"><span class="pre">prefetch_related</span></code> 有关的 <code class="docutils literal notranslate"><span class="pre">pickle</span></code> 回归问题 (#20157 和 #20257)。</li>
+<li>在 Python 3 上修复了 <a class="reference internal" href="../ref/contrib/gis/index.html#module-django.contrib.gis" title="django.contrib.gis: Geographic Information System (GIS) extensions for Django"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.gis</span></code></a> 中 Google 地图输出的回归问题 (#20773)。</li>
+<li>使 <code class="docutils literal notranslate"><span class="pre">DjangoTestSuiteRunner.setup_databases</span></code> 正确处理默认数据库的别名 (#19940)，并防止 <code class="docutils literal notranslate"><span class="pre">teardown_databases</span></code> 尝试拆除别名 (#20681)。</li>
+<li>修复了 Python 3 上的 <code class="docutils literal notranslate"><span class="pre">django.core.cache.backends.memcached.MemcachedCache</span></code> 后端的 <code class="docutils literal notranslate"><span class="pre">get_many()</span></code> 方法 (#20722)。</li>
+<li>修复了 <a class="reference internal" href="../ref/contrib/humanize.html#module-django.contrib.humanize" title="django.contrib.humanize: A set of Django template filters useful for adding a &quot;human touch&quot; to data."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.humanize</span></code></a> 中的翻译语法错误。受影响的语言包括墨西哥西班牙语、蒙古语、罗马尼亚语和土耳其语 (#20695)。</li>
+<li>新增对 wheel 软件包的支持（ #19252 ）。</li>
+<li>用户登录时，CSRF 令牌现在会轮换。</li>
+<li>包括 #20212 和 #20025 在内的一些 Python 3 兼容性修复。</li>
+<li>修复了一些罕见情况下 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.get" title="django.db.models.query.QuerySet.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a> 引发无限递归异常的问题 (#20278)。</li>
+<li><a class="reference internal" href="../ref/django-admin.html#django-admin-makemessages"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemessages</span></code></a> 不再因为 <code class="docutils literal notranslate"><span class="pre">UnicodeDecodeError</span></code> 而崩溃 (#20354)。</li>
+<li>修复了与 SpatiaLite 的 <code class="docutils literal notranslate"><span class="pre">geojson</span></code> 检测问题。</li>
+<li><a class="reference internal" href="../topics/testing/tools.html#django.test.SimpleTestCase.assertContains" title="django.test.SimpleTestCase.assertContains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assertContains()</span></code></a> 再次能够处理二进制内容 (#20237)。</li>
+<li>修复了如果 <a class="reference internal" href="../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 具有 Unicode <code class="docutils literal notranslate"><span class="pre">name</span></code> 参数时的问题 (#20207)。</li>
+<li>确保 WSGI 请求的路径根据 <code class="docutils literal notranslate"><span class="pre">SCRIPT_NAME</span></code> 环境变量或 <a class="reference internal" href="../ref/settings.html#std-setting-FORCE_SCRIPT_NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">FORCE_SCRIPT_NAME</span></code></a> 设置正确设置，无论它们是否以斜杠结尾 (#20169)。</li>
+<li>修复了 <a class="reference internal" href="../topics/testing/tools.html#django.test.override_settings" title="django.test.override_settings"><code class="xref py py-func docutils literal notranslate"><span class="pre">override_settings()</span></code></a> 装饰器的一个晦涩 Bug。如果你遇到了 <code class="docutils literal notranslate"><span class="pre">AttributeError:</span> <span class="pre">'Settings'</span> <span class="pre">object</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">attribute</span> <span class="pre">'_original_allowed_hosts'</span></code> 异常，那么这个问题可能已经修复了（#20636）。</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.5.2 版本发行说明</a><ul>
+<li><a class="reference internal" href="#mitigated-possible-xss-attack-via-user-supplied-redirect-urls">通过用户提供的重定向 URL 减轻了可能的 XSS 攻击风险。</a></li>
+<li><a class="reference internal" href="#xss-vulnerability-in-django-contrib-admin"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.admin</span></code> 中的 XSS 漏洞</a></li>
+<li><a class="reference internal" href="#bugfixes">漏洞修复</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.5.3.html"
+                          title="上一章">Django 1.5.3 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.5.1.html"
+                          title="下一章">Django 1.5.1 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.5.2.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.5.3.html" title="Django 1.5.3 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.5.1.html" title="Django 1.5.1 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

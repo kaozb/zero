@@ -1,0 +1,2035 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>django-admin 和 manage.py &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 异常" href="exceptions.html" />
+    <link rel="prev" title="数据库" href="databases.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="databases.html" title="数据库">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="exceptions.html" title="Django 异常">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-django-admin">
+            
+  <div class="section" id="s-django-admin-and-manage-py">
+<span id="django-admin-and-manage-py"></span><h1><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 和 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code><a class="headerlink" href="#django-admin-and-manage-py" title="永久链接至标题">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">django</span> <span class="pre">admin</span></code> 是 Django 用于管理任务的命令行实用程序。这份文件概述了它所能做的一切。</p>
+<p>此外，<code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 会在每个 Django 项目中自动创建。它做的事情和 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 一样，但也设置了 <span class="target" id="index-21"></span><a class="reference internal" href="../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 环境变量，使其指向你的项目的 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 文件。</p>
+<p>如果你通过 <code class="docutils literal notranslate"><span class="pre">pip</span></code> 安装 Django，<code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 脚本应该在你的系统路径中。如果它不在你的系统路径中，请确保你的虚拟环境已经被激活。</p>
+<p>一般来说，当你在一个 Django 项目中工作时，使用 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 比使用 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 更容易。如果你需要在多个 Django 配置文件之间切换，可以使用 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 与 <span class="target" id="index-22"></span><a class="reference internal" href="../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 或 <a class="reference internal" href="#cmdoption-settings"><code class="xref std std-option docutils literal notranslate"><span class="pre">--settings</span></code></a> 命令行选项。</p>
+<p>为了保持一致，本文中的命令行例子都使用了 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code>，但任何例子都可以使用 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 或 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">django</span></code>。</p>
+<div class="section" id="s-usage">
+<span id="usage"></span><h2>用法<a class="headerlink" href="#usage" title="永久链接至标题">¶</a></h2>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin &lt;command&gt; <span class="o">[</span>options<span class="o">]</span>
+<span class="gp">$ </span>manage.py &lt;command&gt; <span class="o">[</span>options<span class="o">]</span>
+<span class="gp">$ </span>python -m django &lt;command&gt; <span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> django-admin <span class="p">&lt;</span>command<span class="p">&gt;</span> [options]
+<span class="gp">...\&gt;</span> manage.py <span class="p">&lt;</span>command<span class="p">&gt;</span> [options]
+<span class="gp">...\&gt;</span> py -m django <span class="p">&lt;</span>command<span class="p">&gt;</span> [options]
+</pre></div>
+</section>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">command</span></code> 应是本文件所列的命令之一。<code class="docutils literal notranslate"><span class="pre">options</span></code> 是可选的，应该是 0 个或更多可用于指定命令的选项。</p>
+<div class="section" id="s-getting-runtime-help">
+<span id="getting-runtime-help"></span><h3>获得运行时帮助<a class="headerlink" href="#getting-runtime-help" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-help">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">help</span></code><a class="headerlink" href="#django-admin-help" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>运行 <code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">help</span></code> 来显示使用信息和每个应用程序提供的命令列表。</p>
+<p>运行 <code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">help</span> <span class="pre">--commands</span></code> 来显示所有可用命令的列表。</p>
+<p>运行 <code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">help</span> <span class="pre">&lt;command&gt;</span></code> 来显示命令的描述和可用选项的列表。</p>
+</div>
+<div class="section" id="s-app-names">
+<span id="app-names"></span><h3>应用名称<a class="headerlink" href="#app-names" title="永久链接至标题">¶</a></h3>
+<p>许多命令都需要一个“应用名称”的列表。一个“应用名称”是包含你模型的包的基名。例如，如果你的 <a class="reference internal" href="settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 包含字符串 <code class="docutils literal notranslate"><span class="pre">'mysite.blog'</span></code>，则应用名称为 <code class="docutils literal notranslate"><span class="pre">blog</span></code>。</p>
+</div>
+<div class="section" id="s-determining-the-version">
+<span id="determining-the-version"></span><h3>确定版本<a class="headerlink" href="#determining-the-version" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-version">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">version</span></code><a class="headerlink" href="#django-admin-version" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>运行 <code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">version</span></code> 来显示当前的 Django 版本。</p>
+<p>输出遵循了 <span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0440/"><strong>PEP 440</strong></a> 中描述的模式：</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1.4.dev17026
+1.4a1
+1.4
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-displaying-debug-output">
+<span id="displaying-debug-output"></span><h3>显示 debug 输出<a class="headerlink" href="#displaying-debug-output" title="永久链接至标题">¶</a></h3>
+<p>使用 <a class="reference internal" href="#cmdoption-verbosity"><code class="xref std std-option docutils literal notranslate"><span class="pre">--verbosity</span></code></a>，如果支持的话，可以指定 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 打印到控制台的通知和调试信息的数量。</p>
+</div>
+</div>
+<div class="section" id="s-available-commands">
+<span id="available-commands"></span><h2>可用命令<a class="headerlink" href="#available-commands" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-check">
+<span id="check"></span><h3><code class="docutils literal notranslate"><span class="pre">check</span></code><a class="headerlink" href="#check" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-check">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">check</span> <span class="pre">[app_label</span> <span class="pre">[app_label</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-check" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用 <a class="reference internal" href="checks.html"><span class="doc">系统检查框架</span></a> 来检查整个 Django 项目的常见问题。</p>
+<p>默认情况下，将检查所有应用程序。你可以通过提供应用程序标签的列表作为参数来检查一部分应用程序：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin check auth admin myapp</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-check-tag">
+<span id="cmdoption-check-t"></span><code class="sig-name descname"><span class="pre">--tag</span></code><code class="sig-prename descclassname"> <span class="pre">TAGS</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-t</span></code><code class="sig-prename descclassname"> <span class="pre">TAGS</span></code><a class="headerlink" href="#cmdoption-check-tag" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>系统检查框架执行许多不同类型的检查，这些检查被 <a class="reference internal" href="checks.html#system-check-builtin-tags"><span class="std std-ref">分类为标签</span></a>。你可以使用这些标签将执行的检查限制为特定类别中的检查。例如，要只执行模型和兼容性检查，请运行：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin check --tag models --tag compatibility</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-check-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-check-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要运行需要数据库访问的检查的数据库：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin check --database default --database other</span>
+</pre></div>
+</div>
+<p>默认情况下，这些检查不会被运行。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-check-list-tags">
+<code class="sig-name descname"><span class="pre">--list-tags</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-check-list-tags" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>列出所有可用的标签。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-check-deploy">
+<code class="sig-name descname"><span class="pre">--deploy</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-check-deploy" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>激活一些仅在部署环境中相关的附加检查。</p>
+<p>你可以在本地开发环境中使用这个选项，但由于你的本地开发设置模块可能不包含许多生产设置，所以你可能希望将 <code class="docutils literal notranslate"><span class="pre">check</span></code> 命令指向不同的设置模块，可以通过设置 <span class="target" id="index-24"></span><a class="reference internal" href="../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 环境变量或通过传递 <code class="docutils literal notranslate"><span class="pre">--settings</span></code> 选项来实现：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin check --deploy --settings=production_settings</span>
+</pre></div>
+</div>
+<p>或者你可以直接在生产或暂存部署上运行它，以验证是否使用了正确的配置（省略 <code class="docutils literal notranslate"><span class="pre">--settings</span></code>）。你甚至可以把它作为集成测试套件的一部分。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-check-fail-level">
+<code class="sig-name descname"><span class="pre">--fail-level</span></code><code class="sig-prename descclassname"> <span class="pre">{CRITICAL,ERROR,WARNING,INFO,DEBUG}</span></code><a class="headerlink" href="#cmdoption-check-fail-level" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定导致命令以非零状态退出的消息级别。默认值是 <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>。</p>
+</div>
+<div class="section" id="s-compilemessages">
+<span id="compilemessages"></span><h3><code class="docutils literal notranslate"><span class="pre">compilemessages</span></code><a class="headerlink" href="#compilemessages" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-compilemessages">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">compilemessages</span></code><a class="headerlink" href="#django-admin-compilemessages" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将 <a class="reference internal" href="#django-admin-makemessages"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemessages</span></code></a> 创建的 <code class="docutils literal notranslate"><span class="pre">.po</span></code> 文件编译成 <code class="docutils literal notranslate"><span class="pre">.mo</span></code> 文件，以用于内置的 gettext 支持。参见 <a class="reference internal" href="../topics/i18n/index.html"><span class="doc">国际化和本地化</span></a>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-compilemessages-locale">
+<span id="cmdoption-compilemessages-l"></span><code class="sig-name descname"><span class="pre">--locale</span></code><code class="sig-prename descclassname"> <span class="pre">LOCALE</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-l</span></code><code class="sig-prename descclassname"> <span class="pre">LOCALE</span></code><a class="headerlink" href="#cmdoption-compilemessages-locale" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要处理的 locale。如果没有提供，则会处理所有的 locale。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-compilemessages-exclude">
+<span id="cmdoption-compilemessages-x"></span><code class="sig-name descname"><span class="pre">--exclude</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-x</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><a class="headerlink" href="#cmdoption-compilemessages-exclude" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要从处理中排除的 locale。如果没有提供，则不排除任何 locale。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-compilemessages-use-fuzzy">
+<span id="cmdoption-compilemessages-f"></span><code class="sig-name descname"><span class="pre">--use-fuzzy</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-f</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-compilemessages-use-fuzzy" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>包括 <a class="reference external" href="https://www.gnu.org/software/gettext/manual/html_node/Fuzzy-Entries.html">fuzzy 翻译</a> 到编译文件。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin compilemessages --locale=pt_BR</span>
+<span class="go">django-admin compilemessages --locale=pt_BR --locale=fr -f</span>
+<span class="go">django-admin compilemessages -l pt_BR</span>
+<span class="go">django-admin compilemessages -l pt_BR -l fr --use-fuzzy</span>
+<span class="go">django-admin compilemessages --exclude=pt_BR</span>
+<span class="go">django-admin compilemessages --exclude=pt_BR --exclude=fr</span>
+<span class="go">django-admin compilemessages -x pt_BR</span>
+<span class="go">django-admin compilemessages -x pt_BR -x fr</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-compilemessages-ignore">
+<span id="cmdoption-compilemessages-i"></span><code class="sig-name descname"><span class="pre">--ignore</span></code><code class="sig-prename descclassname"> <span class="pre">PATTERN</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-i</span></code><code class="sig-prename descclassname"> <span class="pre">PATTERN</span></code><a class="headerlink" href="#cmdoption-compilemessages-ignore" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>忽略与给定 <a class="reference external" href="https://docs.python.org/3/library/glob.html#module-glob" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glob</span></code></a> 风格的模式相匹配的目录。使用多次可以忽略更多的目录。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin compilemessages --ignore=cache --ignore=outdated/*/locale</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-createcachetable">
+<span id="createcachetable"></span><h3><code class="docutils literal notranslate"><span class="pre">createcachetable</span></code><a class="headerlink" href="#createcachetable" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-createcachetable">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">createcachetable</span></code><a class="headerlink" href="#django-admin-createcachetable" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用你的配置文件中的信息创建用于数据库缓存后台的缓存表。更多信息请参见 <a class="reference internal" href="../topics/cache.html"><span class="doc">Django 缓存框架</span></a>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-createcachetable-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-createcachetable-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定创建缓存表的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-createcachetable-dry-run">
+<code class="sig-name descname"><span class="pre">--dry-run</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-createcachetable-dry-run" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>打印无需实际运行的 SQL，所以你可以自定义它或使用迁移框架。</p>
+</div>
+<div class="section" id="s-dbshell">
+<span id="dbshell"></span><h3><code class="docutils literal notranslate"><span class="pre">dbshell</span></code><a class="headerlink" href="#dbshell" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-dbshell">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">dbshell</span></code><a class="headerlink" href="#django-admin-dbshell" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>运行你的 <a class="reference internal" href="settings.html#std-setting-DATABASE-ENGINE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ENGINE</span></code></a> 配置中指定的数据库引擎的命令行客户端，连接参数在你的 <a class="reference internal" href="settings.html#std-setting-USER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">USER</span></code></a>、 <a class="reference internal" href="settings.html#std-setting-PASSWORD"><code class="xref std std-setting docutils literal notranslate"><span class="pre">PASSWORD</span></code></a> 等配置中指定。</p>
+<ul class="simple">
+<li>对于 PostgreSQL 来说，这将运行 <code class="docutils literal notranslate"><span class="pre">psql</span></code> 命令行客户端。</li>
+<li>对于 MySQL 来说，这将运行 <code class="docutils literal notranslate"><span class="pre">mysql</span></code> 命令行客户端。</li>
+<li>对于 SQLite 来说，这将运行 <code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> 命令行客户端。</li>
+<li>对于 Oracle 来说，这将运行 <code class="docutils literal notranslate"><span class="pre">sqlplus</span></code> 命令行客户端。</li>
+</ul>
+<p>这个命令假设程序在你的 <code class="docutils literal notranslate"><span class="pre">PATH</span></code> 上，这样调用程序名（<code class="docutils literal notranslate"><span class="pre">psql</span></code>、<code class="docutils literal notranslate"><span class="pre">mysql</span></code>、<code class="docutils literal notranslate"><span class="pre">sqlite3</span></code>、<code class="docutils literal notranslate"><span class="pre">sqlplus</span></code>）就能在正确的地方找到程序。没有办法手动指定程序的位置。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dbshell-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-dbshell-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定打开命令行的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dbshell-0">
+<span id="cmdoption-dbshell"></span><code class="sig-name descname"><span class="pre">--</span></code><code class="sig-prename descclassname"> <span class="pre">ARGUMENTS</span></code><a class="headerlink" href="#cmdoption-dbshell-0" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">--</span></code> 分界线后的任何参数都会被传递给底层的命令行客户端。例如，对于 PostgreSQL，你可以使用 <code class="docutils literal notranslate"><span class="pre">psql</span></code> 命令的 <code class="docutils literal notranslate"><span class="pre">-c</span></code> 标志直接执行一个原始 SQL 查询：</p>
+<div class="console-block" id="console-block-7">
+<input class="c-tab-unix" id="c-tab-7-unix" type="radio" name="console-7" checked>
+<label for="c-tab-7-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-7-win" type="radio" name="console-7">
+<label for="c-tab-7-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-7-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin dbshell -- -c <span class="s1">&#39;select current_user&#39;</span>
+<span class="go"> current_user</span>
+<span class="go">--------------</span>
+<span class="go"> postgres</span>
+<span class="gp gp-VirtualEnv">(1 row)</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-7-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> django-admin dbshell -- -c &#39;select current_user&#39;
+<span class="go"> current_user</span>
+<span class="go">--------------</span>
+<span class="go"> postgres</span>
+<span class="gp gp-VirtualEnv">(1 row)</span>
+</pre></div>
+</section>
+</div>
+<p>在 MySQL／MariaDB 上，你可以用 <code class="docutils literal notranslate"><span class="pre">mysql</span></code> 命令的 <code class="docutils literal notranslate"><span class="pre">-e</span></code> 标志来实现：</p>
+<div class="console-block" id="console-block-8">
+<input class="c-tab-unix" id="c-tab-8-unix" type="radio" name="console-8" checked>
+<label for="c-tab-8-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-8-win" type="radio" name="console-8">
+<label for="c-tab-8-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-8-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin dbshell -- -e <span class="s2">&quot;select user()&quot;</span>
+<span class="go">+----------------------+</span>
+<span class="go">| user()               |</span>
+<span class="go">+----------------------+</span>
+<span class="go">| djangonaut@localhost |</span>
+<span class="go">+----------------------+</span>
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-8-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> django-admin dbshell -- -e <span class="s2">&quot;select user()&quot;</span>
+<span class="go">+----------------------+</span>
+<span class="go">| user()               |</span>
+<span class="go">+----------------------+</span>
+<span class="go">| djangonaut@localhost |</span>
+<span class="go">+----------------------+</span>
+</pre></div>
+</section>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">要注意的是，在数据库配置的 <a class="reference internal" href="settings.html#std-setting-OPTIONS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">OPTIONS</span></code></a> 部分的 <a class="reference internal" href="settings.html#std-setting-DATABASES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DATABASES</span></code></a> 中，并不是所有的选项都会传递给命令行客户端，例如 <code class="docutils literal notranslate"><span class="pre">'isolation_level'</span></code>。</p>
+</div>
+</div>
+<div class="section" id="s-diffsettings">
+<span id="diffsettings"></span><h3><code class="docutils literal notranslate"><span class="pre">diffsettings</span></code><a class="headerlink" href="#diffsettings" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-diffsettings">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">diffsettings</span></code><a class="headerlink" href="#django-admin-diffsettings" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>显示当前设置文件与 Django 默认配置（或由 <a class="reference internal" href="#cmdoption-diffsettings-default"><code class="xref std std-option docutils literal notranslate"><span class="pre">--default</span></code></a> 指定的其他配置文件）之间的差异。</p>
+<p>默认配置中没有出现的配置，后面都是 <code class="docutils literal notranslate"><span class="pre">&quot;##&quot;</span></code>。例如，默认配置没有定义 <a class="reference internal" href="settings.html#std-setting-ROOT_URLCONF"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ROOT_URLCONF</span></code></a>，所以 <a class="reference internal" href="settings.html#std-setting-ROOT_URLCONF"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ROOT_URLCONF</span></code></a> 在 <code class="docutils literal notranslate"><span class="pre">diffsettings</span></code> 的输出中，后面跟了 <code class="docutils literal notranslate"><span class="pre">&quot;##&quot;</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-diffsettings-all">
+<code class="sig-name descname"><span class="pre">--all</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-diffsettings-all" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>显示所有的配置，即使它们有 Django 的默认值。这些配置的前缀是 <code class="docutils literal notranslate"><span class="pre">&quot;##&quot;</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-diffsettings-default">
+<code class="sig-name descname"><span class="pre">--default</span></code><code class="sig-prename descclassname"> <span class="pre">MODULE</span></code><a class="headerlink" href="#cmdoption-diffsettings-default" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>要与当前配置进行比较的配置模块。留空以便与 Django 的默认配置进行比较。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-diffsettings-output">
+<code class="sig-name descname"><span class="pre">--output</span></code><code class="sig-prename descclassname"> <span class="pre">{hash,unified}</span></code><a class="headerlink" href="#cmdoption-diffsettings-output" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定输出格式。可用值是 <code class="docutils literal notranslate"><span class="pre">hash</span></code> 和 <code class="docutils literal notranslate"><span class="pre">unified</span></code>。<code class="docutils literal notranslate"><span class="pre">hash</span></code> 是默认模式，显示上述的输出。<code class="docutils literal notranslate"><span class="pre">unified</span></code> 显示的输出类似于 <code class="docutils literal notranslate"><span class="pre">diff</span> <span class="pre">-u</span></code>。缺省配置的前面是减号，后面是改变后的配置，前面是加号。</p>
+</div>
+<div class="section" id="s-dumpdata">
+<span id="dumpdata"></span><h3><code class="docutils literal notranslate"><span class="pre">dumpdata</span></code><a class="headerlink" href="#dumpdata" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-dumpdata">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">dumpdata</span> <span class="pre">[app_label[.ModelName]</span> <span class="pre">[app_label[.ModelName]</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-dumpdata" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将数据库中与指定应用程序相关联的所有数据输出到标准输出。</p>
+<p>如果没有提供应用程序名称，所有安装的应用程序将被转储。</p>
+<p><code class="docutils literal notranslate"><span class="pre">dumpdata</span></code> 的输出可以作为 <a class="reference internal" href="#django-admin-loaddata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">loaddata</span></code></a> 的输入。</p>
+<p>当 <code class="docutils literal notranslate"><span class="pre">dumpdata</span></code> 的结果被保存为一个文件时，它可以作为 <a class="reference internal" href="../topics/db/fixtures.html#fixtures-explanation"><span class="std std-ref">fixture</span></a> 用于 <a class="reference internal" href="../topics/testing/tools.html#topics-testing-fixtures"><span class="std std-ref">tests</span></a> 或作为 <a class="reference internal" href="../howto/initial-data.html#initial-data-via-fixtures"><span class="std std-ref">initial data</span></a>。</p>
+<p>注意 <code class="docutils literal notranslate"><span class="pre">dumpdata</span></code> 使用模型上的默认管理器来选择要转储的记录。如果你使用 <a class="reference internal" href="../topics/db/managers.html#custom-managers"><span class="std std-ref">自定义管理器</span></a> 作为默认管理器，并且它过滤了一些可用的记录，那么并非所有的对象都会被转储。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-all">
+<span id="cmdoption-dumpdata-a"></span><code class="sig-name descname"><span class="pre">--all</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-a</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-dumpdata-all" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用 Django 的基础管理器，转储那些可能被自定义管理器过滤或修改的记录。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-format">
+<code class="sig-name descname"><span class="pre">--format</span></code><code class="sig-prename descclassname"> <span class="pre">FORMAT</span></code><a class="headerlink" href="#cmdoption-dumpdata-format" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定输出的序列化格式。默认为 JSON。支持的格式在 <a class="reference internal" href="../topics/serialization.html#serialization-formats"><span class="std std-ref">序列化格式</span></a> 中列出。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-indent">
+<code class="sig-name descname"><span class="pre">--indent</span></code><code class="sig-prename descclassname"> <span class="pre">INDENT</span></code><a class="headerlink" href="#cmdoption-dumpdata-indent" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定输出中使用的缩进空格数。默认值为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，在单行上显示所有数据。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-exclude">
+<span id="cmdoption-dumpdata-e"></span><code class="sig-name descname"><span class="pre">--exclude</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-e</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><a class="headerlink" href="#cmdoption-dumpdata-exclude" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>防止特定的应用程序或模型（以 <code class="docutils literal notranslate"><span class="pre">app_label.ModelName</span></code> 的形式指定）被转储。如果你指定一个模型名称，那么只有该模型将被排除，而不是整个应用程序。你也可以混合应用程序名称和模型名称。</p>
+<p>如果要排除多个应用程序，请多次传递 <code class="docutils literal notranslate"><span class="pre">--exclude</span></code> 参数：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin dumpdata --exclude=auth --exclude=contenttypes</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-dumpdata-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定转储数据的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-natural-foreign">
+<code class="sig-name descname"><span class="pre">--natural-foreign</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-dumpdata-natural-foreign" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用 <code class="docutils literal notranslate"><span class="pre">natural_key()</span></code> 模型方法将任何外键和多对多关系序列化到定义该方法的类型的对象。 请参阅 <a class="reference internal" href="../topics/serialization.html#topics-serialization-natural-keys"><span class="std std-ref">自然键</span></a> 文档，了解更多关于这个和下一个选项的细节。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-natural-primary">
+<code class="sig-name descname"><span class="pre">--natural-primary</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-dumpdata-natural-primary" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>省略该对象序列化数据中的主键，因为它可以在反序列化过程中计算。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-pks">
+<code class="sig-name descname"><span class="pre">--pks</span></code><code class="sig-prename descclassname"> <span class="pre">PRIMARY_KEYS</span></code><a class="headerlink" href="#cmdoption-dumpdata-pks" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>只输出由逗号分隔的主键列表指定的对象。这仅在转储一个模型时可用。默认情况下，输出模型的所有记录。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-dumpdata-output">
+<span id="cmdoption-dumpdata-o"></span><code class="sig-name descname"><span class="pre">--output</span></code><code class="sig-prename descclassname"> <span class="pre">OUTPUT</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-o</span></code><code class="sig-prename descclassname"> <span class="pre">OUTPUT</span></code><a class="headerlink" href="#cmdoption-dumpdata-output" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要将序列化数据写入的文件。默认情况下，数据将被写入标准输出。</p>
+<p>当设置了这个选项，并且 <code class="docutils literal notranslate"><span class="pre">--verbosity</span></code> 大于 0（默认值）时，终端会显示一个进度条。</p>
+<div class="section" id="s-fixtures-compression">
+<span id="fixtures-compression"></span><h4>固定数据压缩<a class="headerlink" href="#fixtures-compression" title="永久链接至标题">¶</a></h4>
+<p>输出文件可以使用 <code class="docutils literal notranslate"><span class="pre">bz2</span></code>、<code class="docutils literal notranslate"><span class="pre">gz</span></code>、<code class="docutils literal notranslate"><span class="pre">lzma</span></code> 或 <code class="docutils literal notranslate"><span class="pre">xz</span></code> 格式之一进行压缩，只需在文件名末尾添加相应的扩展名即可。例如，要将数据输出为压缩的 JSON 文件：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin dumpdata -o mydata.json.gz</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-flush">
+<span id="flush"></span><h3><code class="docutils literal notranslate"><span class="pre">flush</span></code><a class="headerlink" href="#flush" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-flush">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">flush</span></code><a class="headerlink" href="#django-admin-flush" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从数据库中删除所有数据，并重新执行任何同步后处理程序。已应用迁移的表不会被清除。</p>
+<p>如果你更愿意从一个空的数据库开始，并重新运行所有迁移，你应该删除并重新创建数据库，然后运行 <a class="reference internal" href="#django-admin-migrate"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">migrate</span></code></a>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-flush-noinput">
+<span id="cmdoption-flush-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-flush-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁止所有的用户提示。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-flush-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-flush-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要刷新的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+</div>
+<div class="section" id="s-inspectdb">
+<span id="inspectdb"></span><h3><code class="docutils literal notranslate"><span class="pre">inspectdb</span></code><a class="headerlink" href="#inspectdb" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-inspectdb">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">inspectdb</span> <span class="pre">[table</span> <span class="pre">[table</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-inspectdb" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>对 <a class="reference internal" href="settings.html#std-setting-NAME"><code class="xref std std-setting docutils literal notranslate"><span class="pre">NAME</span></code></a> 配置指向的数据库中的数据库表进行检查，并将一个 Django 模型模块（<code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件）输出到标准输出。</p>
+<p>你可以通过传递表或视图的名称作为参数来选择要检查的表或视图。如果没有提供参数，只有在使用 <a class="reference internal" href="#cmdoption-inspectdb-include-views"><code class="xref std std-option docutils literal notranslate"><span class="pre">--include-views</span></code></a> 选项时，才会为视图创建模型。如果使用了 <a class="reference internal" href="#cmdoption-inspectdb-include-partitions"><code class="xref std std-option docutils literal notranslate"><span class="pre">--include-partitions</span></code></a> 选项，则会在 PostgreSQL 上为分区表创建模型。</p>
+<p>如果你有一个遗留的数据库，并且你想使用 Django，那么就使用这个脚本。脚本将检查数据库，并为其中的每个表创建一个模型。</p>
+<p>正如你所期望的那样，创建的模型将为表中的每个字段提供一个属性。请注意，<code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 在其字段名输出中有一些特殊情况：</p>
+<ul class="simple">
+<li>如果 <code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 不能将列的类型映射到模型字段类型，它将使用 <code class="docutils literal notranslate"><span class="pre">TextField</span></code>，并在生成的模型中的字段旁边插入 Python 注释 <code class="docutils literal notranslate"><span class="pre">'This</span> <span class="pre">field</span> <span class="pre">type</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">guess.'</span></code>。识别的字段可能取决于 <a class="reference internal" href="settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中列出的应用程序。例如，<a class="reference internal" href="contrib/postgres/index.html#module-django.contrib.postgres" title="django.contrib.postgres: PostgreSQL-specific fields and features"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.postgres</span></code></a> 增加了对几个 PostgreSQL 特定字段类型的识别。</li>
+<li>如果数据库列名是 Python 的保留字（如 <code class="docutils literal notranslate"><span class="pre">'pass'</span></code>、<code class="docutils literal notranslate"><span class="pre">'class'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'for'</span></code>），<code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 将在属性名后面附加 <code class="docutils literal notranslate"><span class="pre">'_field'</span></code>。例如，如果一个表有一列 <code class="docutils literal notranslate"><span class="pre">'for'</span></code>，生成的模型将有一个字段 <code class="docutils literal notranslate"><span class="pre">'for_field'</span></code>，<code class="docutils literal notranslate"><span class="pre">db_column</span></code> 属性设置为 <code class="docutils literal notranslate"><span class="pre">'for'</span></code>。<code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 将在字段旁边插入 Python 注释 <code class="docutils literal notranslate"><span class="pre">'Field</span> <span class="pre">renamed</span> <span class="pre">because</span> <span class="pre">it</span> <span class="pre">was</span> <span class="pre">a</span> <span class="pre">Python</span> <span class="pre">reserved</span> <span class="pre">word.'</span></code>。</li>
+</ul>
+<p>这个功能是作为一个快捷方式，而不是作为明确的模型生成。在你运行它之后，你将希望自己查看生成的模型以进行自定义。特别是，你需要重新安排模型的顺序，使引用其他模型的模型正确排序。</p>
+<p>当在模型字段上指定了 <a class="reference internal" href="models/fields.html#django.db.models.Field.default" title="django.db.models.Field.default"><code class="xref py py-attr docutils literal notranslate"><span class="pre">default</span></code></a> 时，Django 不会创建数据库默认值。同样，数据库默认值也不会转化为模型字段默认值，也不会被 <code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 以任何方式检测到。</p>
+<p>默认情况下，<code class="docutils literal notranslate"><span class="pre">inspectdb</span></code> 创建的是未管理的模型。也就是说，模型的 <code class="docutils literal notranslate"><span class="pre">Meta</span></code> 类中的 <code class="docutils literal notranslate"><span class="pre">managed</span> <span class="pre">=</span> <span class="pre">False</span></code> 告诉 Django 不要管理每个表的创建、修改和删除。如果你确实想让 Django 管理表的生命周期，你需要将 <a class="reference internal" href="models/options.html#django.db.models.Options.managed" title="django.db.models.Options.managed"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managed</span></code></a> 选项改为 <code class="docutils literal notranslate"><span class="pre">True</span></code> （或者将其删除，因为 <code class="docutils literal notranslate"><span class="pre">True</span></code> 是其默认值）。</p>
+<div class="section" id="s-database-specific-notes">
+<span id="database-specific-notes"></span><h4>特定于数据库的注释<a class="headerlink" href="#database-specific-notes" title="永久链接至标题">¶</a></h4>
+<div class="section" id="s-oracle">
+<span id="oracle"></span><h5>Oracle<a class="headerlink" href="#oracle" title="永久链接至标题">¶</a></h5>
+<ul class="simple">
+<li>如果使用 <code class="xref std std-option docutils literal notranslate"><span class="pre">--includ-views</span></code>，则会为物化视图创建模型。</li>
+</ul>
+</div>
+<div class="section" id="s-postgresql">
+<span id="postgresql"></span><h5>PostgreSQL<a class="headerlink" href="#postgresql" title="永久链接至标题">¶</a></h5>
+<ul class="simple">
+<li>为外部表创建模型。</li>
+<li>如果使用 <code class="xref std std-option docutils literal notranslate"><span class="pre">--includ-views</span></code>，则会为物化视图创建模型。</li>
+<li>如果使用 <a class="reference internal" href="#cmdoption-inspectdb-include-partitions"><code class="xref std std-option docutils literal notranslate"><span class="pre">--include-partitions</span></code></a>，则为分区表创建模型。</li>
+</ul>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-inspectdb-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-inspectdb-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要检查的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-inspectdb-include-partitions">
+<code class="sig-name descname"><span class="pre">--include-partitions</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-inspectdb-include-partitions" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果提供了这个选项，也会为分区创建模型。</p>
+<p>只实现了对 PostgreSQL 的支持。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-inspectdb-include-views">
+<code class="sig-name descname"><span class="pre">--include-views</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-inspectdb-include-views" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果提供了这个选项，也会为数据库视图创建模型。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-loaddata">
+<span id="loaddata"></span><h3><code class="docutils literal notranslate"><span class="pre">loaddata</span></code><a class="headerlink" href="#loaddata" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-loaddata">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">loaddata</span> <span class="pre">fixture</span> <span class="pre">[fixture</span> <span class="pre">...]</span></code><a class="headerlink" href="#django-admin-loaddata" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>搜索并加载指定名称的 <a class="reference internal" href="../topics/db/fixtures.html#fixtures-explanation"><span class="std std-ref">fixture</span></a> 内容到数据库中。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-loaddata-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-loaddata-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定数据将被载入的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-loaddata-ignorenonexistent">
+<span id="cmdoption-loaddata-i"></span><code class="sig-name descname"><span class="pre">--ignorenonexistent</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-i</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-loaddata-ignorenonexistent" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>忽略自固定数据最初生成以来可能已经被删除的字段和模型。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-loaddata-app">
+<code class="sig-name descname"><span class="pre">--app</span></code><code class="sig-prename descclassname"> <span class="pre">APP_LABEL</span></code><a class="headerlink" href="#cmdoption-loaddata-app" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定一个单一的应用来寻找固定数据，而不是在所有的应用程序中寻找。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-loaddata-format">
+<code class="sig-name descname"><span class="pre">--format</span></code><code class="sig-prename descclassname"> <span class="pre">FORMAT</span></code><a class="headerlink" href="#cmdoption-loaddata-format" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>为 <a class="reference internal" href="#loading-fixtures-stdin"><span class="std std-ref">从标准输入中读取</span></a> 的固定数据指定 <a class="reference internal" href="../topics/serialization.html#serialization-formats"><span class="std std-ref">序列化格式</span></a> （例如，<code class="docutils literal notranslate"><span class="pre">json</span></code> 或 <code class="docutils literal notranslate"><span class="pre">xml</span></code>）。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-loaddata-exclude">
+<span id="cmdoption-loaddata-e"></span><code class="sig-name descname"><span class="pre">--exclude</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-e</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><a class="headerlink" href="#cmdoption-loaddata-exclude" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>排除从给定的应用程序和／或模型加载固定数据（以 <code class="docutils literal notranslate"><span class="pre">app_label</span></code> 或 <code class="docutils literal notranslate"><span class="pre">app_label.ModelName</span></code> 的形式）。多次使用该选项以排除一个以上的应用程序或模型。</p>
+<div class="section" id="s-loading-fixtures-from-stdin">
+<span id="s-loading-fixtures-stdin"></span><span id="loading-fixtures-from-stdin"></span><span id="loading-fixtures-stdin"></span><h4>从 <code class="docutils literal notranslate"><span class="pre">stdin</span></code> 加载固定数据<a class="headerlink" href="#loading-fixtures-from-stdin" title="永久链接至标题">¶</a></h4>
+<p>你可以使用短横线作为 fixture 名称来加载来自 <code class="docutils literal notranslate"><span class="pre">sys.stdin</span></code> 的输入。例如：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin loaddata --format=json -</span>
+</pre></div>
+</div>
+<p>当从 <code class="docutils literal notranslate"><span class="pre">stdin</span></code> 读取时，需要使用 <a class="reference internal" href="#cmdoption-loaddata-format"><code class="xref std std-option docutils literal notranslate"><span class="pre">--format</span></code></a> 选项来指定输入的 <a class="reference internal" href="../topics/serialization.html#serialization-formats"><span class="std std-ref">序列化格式</span></a> （例如 <code class="docutils literal notranslate"><span class="pre">json</span></code> 或 <code class="docutils literal notranslate"><span class="pre">xml</span></code>）。</p>
+<p>从 <code class="docutils literal notranslate"><span class="pre">stdin</span></code> 加载在标准输入和输出重定向时非常有用。例如：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin dumpdata --format=json --database=test app_label.ModelName | django-admin loaddata --format=json --database=prod -</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#django-admin-dumpdata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">dumpdata</span></code></a> 命令可以用来生成 <code class="docutils literal notranslate"><span class="pre">loaddata</span></code> 的输入。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">有关 fixture 的更多详细信息，请参阅 <a class="reference internal" href="../topics/db/fixtures.html#fixtures-explanation"><span class="std std-ref">辅助工具</span></a> 主题。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-makemessages">
+<span id="makemessages"></span><h3><code class="docutils literal notranslate"><span class="pre">makemessages</span></code><a class="headerlink" href="#makemessages" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-makemessages">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">makemessages</span></code><a class="headerlink" href="#django-admin-makemessages" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>遍历当前目录下的整个源码树，并提取所有标记为翻译的字符串，并在 conf/locale（在 Django 树中）或 locale（对于项目和应用程序）目录下创建（或更新）一个消息文件。在对消息文件进行修改后，你需要使用 <a class="reference internal" href="#django-admin-compilemessages"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">compilemessages</span></code></a> 来编译它们，以便使用内置的 gettext 支持。详情请看 <a class="reference internal" href="../topics/i18n/translation.html#how-to-create-language-files"><span class="std std-ref">i18n 文档</span></a>。</p>
+<p>该命令不需要设置配置。但是，当配置没有设置时，命令不能忽略 <a class="reference internal" href="settings.html#std-setting-MEDIA_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_ROOT</span></code></a> 和 <a class="reference internal" href="settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a> 目录，也不能包含 <a class="reference internal" href="settings.html#std-setting-LOCALE_PATHS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOCALE_PATHS</span></code></a>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-all">
+<span id="cmdoption-makemessages-a"></span><code class="sig-name descname"><span class="pre">--all</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-a</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-all" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>更新所有可用语言的消息文件。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-extension">
+<span id="cmdoption-makemessages-e"></span><code class="sig-name descname"><span class="pre">--extension</span></code><code class="sig-prename descclassname"> <span class="pre">EXTENSIONS</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-e</span></code><code class="sig-prename descclassname"> <span class="pre">EXTENSIONS</span></code><a class="headerlink" href="#cmdoption-makemessages-extension" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要检查的文件扩展名列表（默认：<code class="docutils literal notranslate"><span class="pre">html</span></code>、<code class="docutils literal notranslate"><span class="pre">txt</span></code>、<code class="docutils literal notranslate"><span class="pre">py</span></code> 或 <code class="docutils literal notranslate"><span class="pre">js</span></code> 如果 <a class="reference internal" href="#cmdoption-makemessages-domain"><code class="xref std std-option docutils literal notranslate"><span class="pre">--domain</span></code></a> 是 <code class="docutils literal notranslate"><span class="pre">js</span></code>）。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin makemessages --locale=de --extension xhtml</span>
+</pre></div>
+</div>
+<p>用逗号分隔多个扩展名或多次使用 <code class="docutils literal notranslate"><span class="pre">-e</span></code> 或 <code class="docutils literal notranslate"><span class="pre">--extension</span></code> 参数：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin makemessages --locale=de --extension=html,txt --extension xml</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-locale">
+<span id="cmdoption-makemessages-l"></span><code class="sig-name descname"><span class="pre">--locale</span></code><code class="sig-prename descclassname"> <span class="pre">LOCALE</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-l</span></code><code class="sig-prename descclassname"> <span class="pre">LOCALE</span></code><a class="headerlink" href="#cmdoption-makemessages-locale" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要处理的 locale。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-exclude">
+<span id="cmdoption-makemessages-x"></span><code class="sig-name descname"><span class="pre">--exclude</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-x</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE</span></code><a class="headerlink" href="#cmdoption-makemessages-exclude" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要从处理中排除的 locale。如果没有提供，则不排除任何 locale。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin makemessages --locale=pt_BR</span>
+<span class="go">django-admin makemessages --locale=pt_BR --locale=fr</span>
+<span class="go">django-admin makemessages -l pt_BR</span>
+<span class="go">django-admin makemessages -l pt_BR -l fr</span>
+<span class="go">django-admin makemessages --exclude=pt_BR</span>
+<span class="go">django-admin makemessages --exclude=pt_BR --exclude=fr</span>
+<span class="go">django-admin makemessages -x pt_BR</span>
+<span class="go">django-admin makemessages -x pt_BR -x fr</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-domain">
+<span id="cmdoption-makemessages-d"></span><code class="sig-name descname"><span class="pre">--domain</span></code><code class="sig-prename descclassname"> <span class="pre">DOMAIN</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-d</span></code><code class="sig-prename descclassname"> <span class="pre">DOMAIN</span></code><a class="headerlink" href="#cmdoption-makemessages-domain" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定消息文件的域。支持的选项有：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">django</span></code> 适用于所有 <code class="docutils literal notranslate"><span class="pre">*.py</span></code>、<code class="docutils literal notranslate"><span class="pre">*.html</span></code> 和 <code class="docutils literal notranslate"><span class="pre">*.txt</span></code> 文件（默认）</li>
+<li><code class="docutils literal notranslate"><span class="pre">djangojs</span></code> 适用于 <code class="docutils literal notranslate"><span class="pre">*.js</span></code> 文件</li>
+</ul>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-symlinks">
+<span id="cmdoption-makemessages-s"></span><code class="sig-name descname"><span class="pre">--symlinks</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-s</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-symlinks" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在寻找新的翻译字符串时，跟踪指向目录的符号链接。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin makemessages --locale=de --symlinks</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-ignore">
+<span id="cmdoption-makemessages-i"></span><code class="sig-name descname"><span class="pre">--ignore</span></code><code class="sig-prename descclassname"> <span class="pre">PATTERN</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-i</span></code><code class="sig-prename descclassname"> <span class="pre">PATTERN</span></code><a class="headerlink" href="#cmdoption-makemessages-ignore" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>忽略与给定的 <a class="reference external" href="https://docs.python.org/3/library/glob.html#module-glob" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">glob</span></code></a> 风格模式匹配的文件或目录。多次使用可以忽略更多的文件或目录。</p>
+<p>这些模式默认使用：<code class="docutils literal notranslate"><span class="pre">'CVS'</span></code>、<code class="docutils literal notranslate"><span class="pre">'.*'</span></code>、<code class="docutils literal notranslate"><span class="pre">'*~'</span></code>、<code class="docutils literal notranslate"><span class="pre">'*.pyc'</span></code>。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin makemessages --locale=en_US --ignore=apps/* --ignore=secret/*.html</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-no-default-ignore">
+<code class="sig-name descname"><span class="pre">--no-default-ignore</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-no-default-ignore" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁用 <code class="docutils literal notranslate"><span class="pre">--ignore</span></code> 的默认值。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-no-wrap">
+<code class="sig-name descname"><span class="pre">--no-wrap</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-no-wrap" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁用将语言文件中的长消息行分成几行。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-no-location">
+<code class="sig-name descname"><span class="pre">--no-location</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-no-location" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁止在语言文件中写 '<code class="docutils literal notranslate"><span class="pre">#:</span> <span class="pre">filename:line</span></code>' 注释行。使用该选项会使技术熟练的译者更难理解每条消息的上下文。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-add-location">
+<code class="sig-name descname"><span class="pre">--add-location</span></code><code class="sig-prename descclassname"> <span class="pre">[{full,file,never}]</span></code><a class="headerlink" href="#cmdoption-makemessages-add-location" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>控制语言文件中的 <code class="docutils literal notranslate"><span class="pre">#:</span> <span class="pre">filename:line</span></code> 注释行。如果该选项是：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">full</span></code> （如果没有给出，则为默认值）：行中包括文件名和行号。</li>
+<li><code class="docutils literal notranslate"><span class="pre">file</span></code> ：省略行号。</li>
+<li><code class="docutils literal notranslate"><span class="pre">never</span></code> ：压制行数（与 <a class="reference internal" href="#cmdoption-makemessages-no-location"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-location</span></code></a> 相同）。</li>
+</ul>
+<p>需要 <code class="docutils literal notranslate"><span class="pre">gettext</span></code> 0.19 或更新版本。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-no-obsolete">
+<code class="sig-name descname"><span class="pre">--no-obsolete</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-no-obsolete" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从 <code class="docutils literal notranslate"><span class="pre">.po</span></code> 文件中删除过时的消息字符串。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemessages-keep-pot">
+<code class="sig-name descname"><span class="pre">--keep-pot</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemessages-keep-pot" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>防止删除在创建 <code class="docutils literal notranslate"><span class="pre">.po</span></code> 文件之前生成的临时 <code class="docutils literal notranslate"><span class="pre">.pot</span></code> 文件。这对调试可能妨碍最终语言文件创建的错误很有用。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">关于如何自定义 <a class="reference internal" href="#django-admin-makemessages"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemessages</span></code></a> 传递给 <code class="docutils literal notranslate"><span class="pre">xgettext</span></code> 的关键字，请参见 <a class="reference internal" href="../topics/i18n/translation.html#customizing-makemessages"><span class="std std-ref">自定义 makemessages&nbsp;命令</span></a> 的说明。</p>
+</div>
+</div>
+<div class="section" id="s-makemigrations">
+<span id="makemigrations"></span><h3><code class="docutils literal notranslate"><span class="pre">makemigrations</span></code><a class="headerlink" href="#makemigrations" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-makemigrations">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">makemigrations</span> <span class="pre">[app_label</span> <span class="pre">[app_label</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-makemigrations" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>根据检测到的模型变化创建新的迁移。迁移，它们与应用程序的关系以及更多的内容在 <a class="reference internal" href="../topics/migrations.html"><span class="doc">迁移文档</span></a> 中深入介绍。</p>
+<p>提供一个或多个应用名称作为参数，将把创建的迁移限制在指定的应用和任何所需的依赖关系上（例如，<code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code> 的另一端的表）。</p>
+<p>要将迁移添加到没有 <code class="docutils literal notranslate"><span class="pre">migrations</span></code> 目录的应用中，运行 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code>，并使用应用的 <code class="docutils literal notranslate"><span class="pre">app_label</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-noinput">
+<span id="cmdoption-makemigrations-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>压制所有用户提示。如果不能自动解决被抑制的提示，命令将以 error code 3 退出。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-empty">
+<code class="sig-name descname"><span class="pre">--empty</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-empty" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>为指定的应用程序输出一个空的迁移，用于手动编辑。这是为高级用户准备的，除非你熟悉迁移格式、迁移操作和迁移之间的依赖关系，否则不应使用。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-dry-run">
+<code class="sig-name descname"><span class="pre">--dry-run</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-dry-run" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>显示在不向磁盘写入任何迁移文件的情况下进行的迁移。使用这个选项和 <code class="docutils literal notranslate"><span class="pre">--verbosity</span> <span class="pre">3</span></code> 也会显示将被写入的完整迁移文件。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-merge">
+<code class="sig-name descname"><span class="pre">--merge</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-merge" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>可以解决迁移冲突。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-name">
+<span id="cmdoption-makemigrations-n"></span><code class="sig-name descname"><span class="pre">--name</span></code><code class="sig-prename descclassname"> <span class="pre">NAME</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-n</span></code><code class="sig-prename descclassname"> <span class="pre">NAME</span></code><a class="headerlink" href="#cmdoption-makemigrations-name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>允许对生成的迁移进行命名，而不是使用生成的名称。名称必须是有效的 Python <a class="reference external" href="https://docs.python.org/3/reference/lexical_analysis.html#identifiers" title="(在 Python v3.12)"><span class="xref std std-ref">标识符</span></a>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-no-header">
+<code class="sig-name descname"><span class="pre">--no-header</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-no-header" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>生成没有 Django 版本和时间戳头的迁移文件。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-check">
+<code class="sig-name descname"><span class="pre">--check</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-check" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在检测到模型更改而没有迁移时，使 <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> 以非零状态退出。意味着 <code class="docutils literal notranslate"><span class="pre">--dry-run</span></code>。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>在较旧的版本中，在使用 <code class="docutils literal notranslate"><span class="pre">--check</span></code> 选项时也会创建缺失的迁移。</p>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-scriptable">
+<code class="sig-name descname"><span class="pre">--scriptable</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-scriptable" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将日志输出和输入提示重定向到 <code class="docutils literal notranslate"><span class="pre">stderr</span></code>，仅将生成的迁移文件的路径写入 <code class="docutils literal notranslate"><span class="pre">stdout</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-makemigrations-update">
+<code class="sig-name descname"><span class="pre">--update</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-makemigrations-update" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<div class="versionadded">
+<span class="title">New in Django 4.2.</span> </div>
+<p>将模型更改合并到最新的迁移中，并优化生成的操作。</p>
+<p>更新后的迁移将具有生成的名称。为了保留先前的名称，请使用 <code class="docutils literal notranslate"><span class="pre">--name</span></code> 进行设置。</p>
+</div>
+<div class="section" id="s-migrate">
+<span id="migrate"></span><h3><code class="docutils literal notranslate"><span class="pre">migrate</span></code><a class="headerlink" href="#migrate" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-migrate">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">migrate</span> <span class="pre">[app_label]</span> <span class="pre">[migration_name]</span></code><a class="headerlink" href="#django-admin-migrate" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将数据库状态与当前的模型集和迁移同步。在 <a class="reference internal" href="../topics/migrations.html"><span class="doc">迁移文档</span></a> 中深入介绍了迁移，它们与应用的关系等。</p>
+<p>该命令的行为根据提供的参数而改变：</p>
+<ul class="simple">
+<li>没有参数：运行所有的应用程序的所有迁移。</li>
+<li><code class="docutils literal notranslate"><span class="pre">&lt;app_label&gt;</span></code> ：指定的应用程序将运行其迁移，直至其最近的迁移。由于依赖关系，这可能涉及到运行其他应用的迁移。</li>
+<li><code class="docutils literal notranslate"><span class="pre">&lt;app_label&gt;</span> <span class="pre">&lt;migrationname&gt;</span></code>: 将数据库模式调整到适用指定迁移的状态，但不适用同一应用程序中后来的迁移。如果你之前已经迁移过命名的迁移，这可能涉及到取消应用迁移。你可以使用迁移名称的前缀，例如 <code class="docutils literal notranslate"><span class="pre">0001</span></code>，只要它对给定的应用程序名称是唯一的。使用名称 <code class="docutils literal notranslate"><span class="pre">zero</span></code> 来回溯所有的迁移，即恢复一个应用的所有已应用迁移。</li>
+</ul>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">当取消应用迁移时，所有依赖的迁移也将被取消应用，无论 <code class="docutils literal notranslate"><span class="pre">&lt;app_label&gt;</span></code>。你可以使用 <code class="docutils literal notranslate"><span class="pre">--plan</span></code> 来检查哪些迁移将被取消应用。</p>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-migrate-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要迁移的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-fake">
+<code class="sig-name descname"><span class="pre">--fake</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-fake" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>标记目标的迁移（按照上面的规则）已应用，但没有实际运行 SQL 来改变你的数据库架构。</p>
+<p>这是为高级用户准备的，如果他们要手动应用更改，可以直接操作当前的迁移状态；要注意的是，使用 <code class="docutils literal notranslate"><span class="pre">--fake</span></code> 会有将迁移状态表置于需要手动恢复才能使迁移正确运行的状态的风险。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-fake-initial">
+<code class="sig-name descname"><span class="pre">--fake-initial</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-fake-initial" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>允许 Django 在迁移中所有 <a class="reference internal" href="migration-operations.html#django.db.migrations.operations.CreateModel" title="django.db.migrations.operations.CreateModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateModel</span></code></a> 操作创建的所有模型名称的数据库表已经存在的情况下，跳过应用的初始迁移。这个选项是为了在第一次针对一个在使用 migrations 之前就存在的数据库运行迁移时使用。但是，除了匹配表名之外，这个选项并不检查数据库架构是否匹配，因此只有当你确信你现有的架构与初始迁移中记录的内容相匹配时，才可以安全使用。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-plan">
+<code class="sig-name descname"><span class="pre">--plan</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-plan" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>显示对给定的 <code class="docutils literal notranslate"><span class="pre">migrate</span></code> 命令将进行的迁移操作。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-run-syncdb">
+<code class="sig-name descname"><span class="pre">--run-syncdb</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-run-syncdb" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>允许在没有迁移的情况下为应用创建表。虽然不推荐这样做，但在有数百个模型的大型项目中，迁移框架有时太慢。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-noinput">
+<span id="cmdoption-migrate-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>压制所有用户提示。一个例子是询问有关删除陈旧内容类型的提示。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-check">
+<code class="sig-name descname"><span class="pre">--check</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-check" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当检测到未应用的迁移时，使 <code class="docutils literal notranslate"><span class="pre">migrate</span></code> 以非零状态退出。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-migrate-prune">
+<code class="sig-name descname"><span class="pre">--prune</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-migrate-prune" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>从 <code class="docutils literal notranslate"><span class="pre">django_migrations</span></code> 表中删除不存在的迁移。当迁移文件被压缩迁移替代后已被删除时，这是有用的。请参阅 <a class="reference internal" href="../topics/migrations.html#migration-squashing"><span class="std std-ref">压缩迁移</span></a> 以获取更多详细信息。</p>
+</div>
+<div class="section" id="s-optimizemigration">
+<span id="optimizemigration"></span><h3><code class="docutils literal notranslate"><span class="pre">optimizemigration</span></code><a class="headerlink" href="#optimizemigration" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-optimizemigration">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">optimizemigration</span> <span class="pre">app_label</span> <span class="pre">migration_name</span></code><a class="headerlink" href="#django-admin-optimizemigration" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>优化指定迁移的操作并覆盖现有文件。如果迁移包含必须手动复制的函数，该命令会创建一个新的迁移文件，后缀为 <code class="docutils literal notranslate"><span class="pre">_optimized</span></code>，旨在替代指定的迁移。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-optimizemigration-check">
+<code class="sig-name descname"><span class="pre">--check</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-optimizemigration-check" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当迁移可以优化时，使 <code class="docutils literal notranslate"><span class="pre">optimizemigration</span></code> 以非零状态退出。</p>
+</div>
+<div class="section" id="s-runserver">
+<span id="runserver"></span><h3><code class="docutils literal notranslate"><span class="pre">runserver</span></code><a class="headerlink" href="#runserver" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-runserver">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">runserver</span> <span class="pre">[addrport]</span></code><a class="headerlink" href="#django-admin-runserver" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在本地机器上启动一个轻量级的开发网络服务器。默认情况下，该服务器在 IP 地址 127.0.0.1 的 8000 端口上运行。你可以明确地传递一个 IP 地址和端口号。</p>
+<p>如果你以普通用户的身份运行这个脚本 (推荐)， 你可能无法在低端口号上启动一个端口。低端口号是为超级用户（root）保留的。</p>
+<p>本服务器使用 <a class="reference internal" href="settings.html#std-setting-WSGI_APPLICATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">WSGI_APPLICATION</span></code></a> 配置中指定的 WSGI 应用对象。</p>
+<p><strong>请勿在生产环境中使用本服务器</strong>。它没有经过安全审计或性能测试。（这也是它将会一直存在的原因。我们的业务是制作网络框架，而不是网络服务器，所以改进这个服务器使其能够处理生产环境不在 Django 的范围之内。)</p>
+<p>开发服务器会根据需要为每个请求自动重新加载 Python 代码。你不需要重新启动服务器以使代码更改生效。然而，有些操作，如添加文件不会触发重启，所以在这些情况下你必须重启服务器。</p>
+<p>如果你在 Linux 或 MacOS 上安装了 <a class="reference external" href="https://pypi.org/project/pywatchman/">pywatchman</a> 和 <a class="reference external" href="https://facebook.github.io/watchman/">Watchman</a> 服务，那么将使用内核信号来自动重新加载服务器（而不是每秒轮询文件修改时间戳）。这在大型项目上提供了更好的性能，在代码更改后减少了响应时间，更强大的更改检测以及减少了电力消耗。Django 支持 <code class="docutils literal notranslate"><span class="pre">pywatchman</span></code> 1.2.0 及更高版本。</p>
+<div class="admonition-large-directories-with-many-files-may-cause-performance-issues admonition">
+<p class="first admonition-title">有许多文件的大目录可能会导致性能问题。</p>
+<p class="last">当使用 Watchman 时，如果项目中包含大的非 Python 目录，比如 <code class="docutils literal notranslate"><span class="pre">node_modules</span></code>，建议忽略这个目录以获得最佳性能。关于如何做到这一点，请参见 <a class="reference external" href="https://facebook.github.io/watchman/docs/config#ignore_dirs">watchman文档</a> 。</p>
+</div>
+<div class="admonition-watchman-timeout admonition">
+<p class="first admonition-title">Watchman 超时</p>
+<dl class="std envvar">
+<dt class="sig sig-object std" id="envvar-DJANGO_WATCHMAN_TIMEOUT">
+<code class="sig-name descname"><span class="pre">DJANGO_WATCHMAN_TIMEOUT</span></code><a class="headerlink" href="#envvar-DJANGO_WATCHMAN_TIMEOUT" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p class="last"><code class="docutils literal notranslate"><span class="pre">Watchman</span></code> 客户端的默认超时时间是 5 秒。你可以通过设置 <span class="target" id="index-25"></span><a class="reference internal" href="#envvar-DJANGO_WATCHMAN_TIMEOUT"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_WATCHMAN_TIMEOUT</span></code></a> 环境变量来改变它。</p>
+</div>
+<p>当你启动服务器时，以及每次在服务器运行时修改 Python 代码时，系统检查框架会检查你的整个 Django 项目是否存在一些常见的错误（参见 <a class="reference internal" href="#django-admin-check"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">check</span></code></a> 命令）。如果发现任何错误，它们将被打印到标准输出。 你可以使用 <code class="docutils literal notranslate"><span class="pre">--skip-checks</span></code> 选项来跳过运行系统检查。</p>
+<p>您可以根据需要运行任意数量的并发服务器,只要它们通过多次执行 django-admin runserver 运行在不同的端口上即可。</p>
+<p>请注意，默认 IP 地址 <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> 无法从您网络上的其他计算机访问。为了使您的开发服务器对网络上的其他机器可见，请使用它自己的 IP 地址（例如 <code class="docutils literal notranslate"><span class="pre">192.168.2.1</span></code>）、<code class="docutils literal notranslate"><span class="pre">0``（``0.0.0.0</span></code> 的快捷方式）、<code class="docutils literal notranslate"><span class="pre">0.0.</span> <span class="pre">0.0</span></code> 或 <a href="#id1"><span class="problematic" id="id2">``</span></a>::<a href="#id3"><span class="problematic" id="id4">``</span></a>（启用 IPv6）。</p>
+<p>你可以提供一个用括号包围的 IPv6 地址（例如 <code class="docutils literal notranslate"><span class="pre">[200a::1]:8000</span></code>）。这将自动启用 IPv6 支持。</p>
+<p>也可以使用只包含 ASCII 字符的主机名。</p>
+<p>如果 <a class="reference internal" href="contrib/staticfiles.html"><span class="doc">staticfiles</span></a> contrib 应用被启用（新项目中的默认值）， <a class="reference internal" href="#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 命令将被它自己的 <a class="reference internal" href="contrib/staticfiles.html#staticfiles-runserver"><span class="std std-ref">runserver</span></a> 命令覆盖。</p>
+<p>服务器的每个请求和响应的日志都会被发送到 <a class="reference internal" href="logging.html#django-server-logger"><span class="std std-ref">django.server</span></a> 日志器。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-runserver-noreload">
+<code class="sig-name descname"><span class="pre">--noreload</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-runserver-noreload" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁用自动加载器。这意味着，如果特定的 Python 模块已经被加载到内存中，那么你在服务器运行时所做的任何 Python 代码更改将 <em>不会</em> 生效。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-runserver-nothreading">
+<code class="sig-name descname"><span class="pre">--nothreading</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-runserver-nothreading" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在开发服务器中禁止使用线程。默认情况下，服务器是多线程的。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-runserver-ipv6">
+<span id="cmdoption-runserver-6"></span><code class="sig-name descname"><span class="pre">--ipv6</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-6</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-runserver-ipv6" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>开发服务器使用 IPv6。这将默认 IP 地址从 <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> 改为 <code class="docutils literal notranslate"><span class="pre">::1</span></code>。</p>
+<div class="section" id="s-examples-of-using-different-ports-and-addresses">
+<span id="examples-of-using-different-ports-and-addresses"></span><h4>使用不同端口和地址的例子<a class="headerlink" href="#examples-of-using-different-ports-and-addresses" title="永久链接至标题">¶</a></h4>
+<p>IP 地址 <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> 上的端口 8000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver</span>
+</pre></div>
+</div>
+<p>IP 地址 <code class="docutils literal notranslate"><span class="pre">1.2.3.4</span></code> 上的端口 8000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver 1.2.3.4:8000</span>
+</pre></div>
+</div>
+<p>IP 地址 <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> 上的端口 7000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver 7000</span>
+</pre></div>
+</div>
+<p>IP 地址 <code class="docutils literal notranslate"><span class="pre">1.2.3.4</span></code> 上的端口 7000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver 1.2.3.4:7000</span>
+</pre></div>
+</div>
+<p>IPv6 地址 <code class="docutils literal notranslate"><span class="pre">::1</span></code> 上的端口 8000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver -6</span>
+</pre></div>
+</div>
+<p>IPv6 地址 <code class="docutils literal notranslate"><span class="pre">::1</span></code> 上的端口 7000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver -6 7000</span>
+</pre></div>
+</div>
+<p>IPv6 地址 <code class="docutils literal notranslate"><span class="pre">2001:0db8:1234:5678::9</span></code> 上的端口 7000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver [2001:0db8:1234:5678::9]:7000</span>
+</pre></div>
+</div>
+<p>主机 <code class="docutils literal notranslate"><span class="pre">localhost</span></code> 的 IPv4 地址上的端口 8000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver localhost:8000</span>
+</pre></div>
+</div>
+<p>主机 <code class="docutils literal notranslate"><span class="pre">localhost</span></code> 的 IPv6 地址上的端口 8000：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver -6 localhost:8000</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-serving-static-files-with-the-development-server">
+<span id="serving-static-files-with-the-development-server"></span><h4>用开发服务器服务静态文件<a class="headerlink" href="#serving-static-files-with-the-development-server" title="永久链接至标题">¶</a></h4>
+<p>默认情况下，开发服务器不会为你的网站提供任何静态文件（比如 CSS 文件、图片、 <a class="reference internal" href="settings.html#std-setting-MEDIA_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MEDIA_URL</span></code></a> 下的东西等等）。如果你想设置 Django 为服务静态媒体，请阅读 <a class="reference internal" href="../howto/static-files/index.html"><span class="doc">如何管理静态文件（如图片、JavaScript、CSS）</span></a>。</p>
+</div>
+<div class="section" id="s-serving-with-asgi-in-development">
+<span id="serving-with-asgi-in-development"></span><h4>在开发中使用 ASGI 进行服务<a class="headerlink" href="#serving-with-asgi-in-development" title="永久链接至标题">¶</a></h4>
+<p>Django 的 <code class="docutils literal notranslate"><span class="pre">runserver</span></code> 命令提供了一个 WSGI 服务器。要在 ASGI 下运行，您需要使用一个 <a class="reference internal" href="../howto/deployment/asgi/index.html"><span class="doc">ASGI 服务器</span></a>。Django Daphne 项目提供了 <a class="reference internal" href="../howto/deployment/asgi/daphne.html#daphne-runserver"><span class="std std-ref">与 runserver 集成</span></a>，您可以使用它。</p>
+</div>
+</div>
+<div class="section" id="s-sendtestemail">
+<span id="sendtestemail"></span><h3><code class="docutils literal notranslate"><span class="pre">sendtestemail</span></code><a class="headerlink" href="#sendtestemail" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-sendtestemail">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">sendtestemail</span> <span class="pre">[email</span> <span class="pre">[email</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-sendtestemail" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>发送一个测试邮件（以确认通过 Django 发送邮件是否正常工作）给指定的收件人。例如：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin sendtestemail foo@example.com bar@example.com</span>
+</pre></div>
+</div>
+<p>有几个选项，你可以将它们任意组合在一起使用：</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-sendtestemail-managers">
+<code class="sig-name descname"><span class="pre">--managers</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-sendtestemail-managers" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用 <a class="reference internal" href="../topics/email.html#django.core.mail.mail_managers" title="django.core.mail.mail_managers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mail_managers()</span></code></a> 向 <a class="reference internal" href="settings.html#std-setting-MANAGERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MANAGERS</span></code></a> 中指定的邮件地址发送邮件。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-sendtestemail-admins">
+<code class="sig-name descname"><span class="pre">--admins</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-sendtestemail-admins" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用 <a class="reference internal" href="../topics/email.html#django.core.mail.mail_admins" title="django.core.mail.mail_admins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mail_admins()</span></code></a> 向 <a class="reference internal" href="settings.html#std-setting-ADMINS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ADMINS</span></code></a> 中指定的邮件地址发送邮件。</p>
+</div>
+<div class="section" id="s-shell">
+<span id="shell"></span><h3><code class="docutils literal notranslate"><span class="pre">shell</span></code><a class="headerlink" href="#shell" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-shell">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">shell</span></code><a class="headerlink" href="#django-admin-shell" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>启动 Python 交互式解释器。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-shell-interface">
+<span id="cmdoption-shell-i"></span><code class="sig-name descname"><span class="pre">--interface</span></code><code class="sig-prename descclassname"> <span class="pre">{ipython,bpython,python}</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-i</span></code><code class="sig-prename descclassname"> <span class="pre">{ipython,bpython,python}</span></code><a class="headerlink" href="#cmdoption-shell-interface" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要使用的命令行。默认情况下，Django 会使用安装了的 <a class="reference external" href="https://ipython.org/">IPython</a> 或 <a class="reference external" href="https://bpython-interpreter.org/">bpython</a> 。如果两者都安装了，请指定使用哪一个：</p>
+<p>IPython:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin shell -i ipython</span>
+</pre></div>
+</div>
+<p>bpython:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin shell -i bpython</span>
+</pre></div>
+</div>
+<p>如果你安装了一个 &quot;rich&quot; shell 但想要强制使用 &quot;plain&quot; Python 解释器，请使用 <code class="docutils literal notranslate"><span class="pre">python</span></code> 作为接口名称，如下所示：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin shell -i python</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-shell-nostartup">
+<code class="sig-name descname"><span class="pre">--nostartup</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-shell-nostartup" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁止读取“纯&quot; Python 解释器的启动脚本。默认情况下，读取 <span class="target" id="index-26"></span><a class="reference external" href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONSTARTUP" title="(在 Python v3.12)"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONSTARTUP</span></code></a> 环境变量或 <code class="docutils literal notranslate"><span class="pre">~/.pythonrc.py</span></code> 脚本所指向的脚本。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-shell-command">
+<span id="cmdoption-shell-c"></span><code class="sig-name descname"><span class="pre">--command</span></code><code class="sig-prename descclassname"> <span class="pre">COMMAND</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-c</span></code><code class="sig-prename descclassname"> <span class="pre">COMMAND</span></code><a class="headerlink" href="#cmdoption-shell-command" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>允许你将一个命令作为字符串传递，以便像这样作为 Django 执行它：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin shell --command=&quot;import django; print(django.__version__)&quot;</span>
+</pre></div>
+</div>
+<p>你也可以在标准输入上传入代码来执行。例如：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin shell &lt;&lt;EOF
+<span class="go">&gt; import django</span>
+<span class="go">&gt; print(django.__version__)</span>
+<span class="go">&gt; EOF</span>
+</pre></div>
+</div>
+<p>在 Windows 上，由于 <a class="reference external" href="https://docs.python.org/3/library/select.html#select.select" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">select.select()</span></code></a> 在该平台上的实现限制，REPL 被输出。</p>
+</div>
+<div class="section" id="s-showmigrations">
+<span id="showmigrations"></span><h3><code class="docutils literal notranslate"><span class="pre">showmigrations</span></code><a class="headerlink" href="#showmigrations" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-showmigrations">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">showmigrations</span> <span class="pre">[app_label</span> <span class="pre">[app_label</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-showmigrations" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>显示一个项目中的所有迁移。你可以从两种格式中选择一种：</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-showmigrations-list">
+<span id="cmdoption-showmigrations-l"></span><code class="sig-name descname"><span class="pre">--list</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-l</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-showmigrations-list" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>列出 Django 知道的所有应用，每个应用的可用迁移，以及每个迁移是否被应用（在迁移名称旁边用 <code class="docutils literal notranslate"><span class="pre">[X]</span></code> 标记）。对于 <code class="docutils literal notranslate"><span class="pre">--verbosity</span></code> 2 及以上的应用，也会显示应用的日期时间。</p>
+<p>没有迁移的应用程序也在列表中，但下面印有 <code class="docutils literal notranslate"><span class="pre">(no</span> <span class="pre">migrations)</span></code>。</p>
+<p>这是默认的输出格式。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-showmigrations-plan">
+<span id="cmdoption-showmigrations-p"></span><code class="sig-name descname"><span class="pre">--plan</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-p</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-showmigrations-plan" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>显示 Django 将遵循的迁移计划。和 <code class="docutils literal notranslate"><span class="pre">--list</span></code> 一样，应用的迁移也用 <code class="docutils literal notranslate"><span class="pre">[X]</span></code> 标记。对于 <code class="docutils literal notranslate"><span class="pre">--verbosity</span></code> 2 以上，也会显示迁移的所有依赖关系。</p>
+<p><code class="docutils literal notranslate"><span class="pre">app_label</span></code> 参数限制了输出，但是，所提供的应用的依赖也可能被包括在内。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-showmigrations-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-showmigrations-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要检查的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+</div>
+<div class="section" id="s-sqlflush">
+<span id="sqlflush"></span><h3><code class="docutils literal notranslate"><span class="pre">sqlflush</span></code><a class="headerlink" href="#sqlflush" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-sqlflush">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">sqlflush</span></code><a class="headerlink" href="#django-admin-sqlflush" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>打印 <a class="reference internal" href="#django-admin-flush"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">flush</span></code></a> 命令执行的 SQL 语句。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-sqlflush-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-sqlflush-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要打印 SQL 的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+</div>
+<div class="section" id="s-sqlmigrate">
+<span id="sqlmigrate"></span><h3><code class="docutils literal notranslate"><span class="pre">sqlmigrate</span></code><a class="headerlink" href="#sqlmigrate" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-sqlmigrate">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">sqlmigrate</span> <span class="pre">app_label</span> <span class="pre">migration_name</span></code><a class="headerlink" href="#django-admin-sqlmigrate" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>打印指定迁移的 SQL。这需要一个活动的数据库连接，它将用来解析约束名；这意味着你必须针对你希望以后应用它的数据库副本生成 SQL。</p>
+<p>请注意，<code class="docutils literal notranslate"><span class="pre">sqlmigrate</span></code> 不会对其输出进行着色。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-sqlmigrate-backwards">
+<code class="sig-name descname"><span class="pre">--backwards</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-sqlmigrate-backwards" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>生成用于解除应用迁移的 SQL。默认情况下，所创建的 SQL 是用于向前运行迁移。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-sqlmigrate-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-sqlmigrate-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要生成 SQL 的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+</div>
+<div class="section" id="s-sqlsequencereset">
+<span id="sqlsequencereset"></span><h3><code class="docutils literal notranslate"><span class="pre">sqlsequencereset</span></code><a class="headerlink" href="#sqlsequencereset" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-sqlsequencereset">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">sqlsequencereset</span> <span class="pre">app_label</span> <span class="pre">[app_label</span> <span class="pre">...]</span></code><a class="headerlink" href="#django-admin-sqlsequencereset" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>打印用于重置给定应用名称序列的 SQL 语句。</p>
+<p>序列是一些数据库引擎用来跟踪自动递增字段的下一个可用数字的索引。</p>
+<p>使用此命令生成 SQL，它将修复序列与其自动递增的字段数据不同步的情况。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-sqlsequencereset-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-sqlsequencereset-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要打印 SQL 的数据库。默认值为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+</div>
+<div class="section" id="s-squashmigrations">
+<span id="squashmigrations"></span><h3><code class="docutils literal notranslate"><span class="pre">squashmigrations</span></code><a class="headerlink" href="#squashmigrations" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-squashmigrations">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">squashmigrations</span> <span class="pre">app_label</span> <span class="pre">[start_migration_name]</span> <span class="pre">migration_name</span></code><a class="headerlink" href="#django-admin-squashmigrations" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>如果可能的话，将 <code class="docutils literal notranslate"><span class="pre">app_label</span></code> 的迁移（包括 <code class="docutils literal notranslate"><span class="pre">migration_name</span></code>）压缩成较少的迁移。压制后的迁移可以和未压制的迁移安全地并存。更多信息，请阅读 <a class="reference internal" href="../topics/migrations.html#migration-squashing"><span class="std std-ref">压缩迁移</span></a>。</p>
+<p>当给定 <code class="docutils literal notranslate"><span class="pre">start_migration_name</span></code> 时，Django 将只包含从这个迁移开始的迁移。这有助于减少 <a class="reference internal" href="migration-operations.html#django.db.migrations.operations.RunPython" title="django.db.migrations.operations.RunPython"><code class="xref py py-class docutils literal notranslate"><span class="pre">RunPython</span></code></a> 和 <a class="reference internal" href="migration-operations.html#django.db.migrations.operations.RunSQL" title="django.db.migrations.operations.RunSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.db.migrations.operations.RunSQL</span></code></a> 迁移操作的限制。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-squashmigrations-no-optimize">
+<code class="sig-name descname"><span class="pre">--no-optimize</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-squashmigrations-no-optimize" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当生成一个压缩的迁移时，禁用优化器。默认情况下，Django 会尝试优化迁移中的操作，以减少生成文件的大小。如果这个过程失败或创建不正确的迁移，请使用这个选项，不过也请提交一个 Django 的 bug 报告来说明这个行为，因为优化的目的是为了安全。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-squashmigrations-noinput">
+<span id="cmdoption-squashmigrations-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-squashmigrations-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁止所有的用户提示。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-squashmigrations-squashed-name">
+<code class="sig-name descname"><span class="pre">--squashed-name</span></code><code class="sig-prename descclassname"> <span class="pre">SQUASHED_NAME</span></code><a class="headerlink" href="#cmdoption-squashmigrations-squashed-name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>设置被压缩的迁移的名称。当省略时，名称以第一次和最后一次迁移为基础，中间为 <code class="docutils literal notranslate"><span class="pre">_squashed_</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-squashmigrations-no-header">
+<code class="sig-name descname"><span class="pre">--no-header</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-squashmigrations-no-header" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>生成没有 Django 版本和时间戳头的压缩迁移文件。</p>
+</div>
+<div class="section" id="s-startapp">
+<span id="startapp"></span><h3><code class="docutils literal notranslate"><span class="pre">startapp</span></code><a class="headerlink" href="#startapp" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-startapp">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">startapp</span> <span class="pre">name</span> <span class="pre">[directory]</span></code><a class="headerlink" href="#django-admin-startapp" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在当前目录或给定的目标目录中为给定的应用名创建一个 Django 应用目录结构。</p>
+<p>默认情况下，<a class="reference external" href="https://github.com/django/django/blob/main/django/conf/app_template">新目录</a> 包含 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 文件和其他应用模板文件。如果只给出应用名称，应用目录将被创建在当前工作目录下。</p>
+<p>如果提供了可选的目的地，Django 将使用现有的目录，而不是创建一个新的目录。你可以使用 '.' 来表示当前的工作目录。</p>
+<p>例如：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin startapp myapp /Users/jezdez/Code/myapp</span>
+</pre></div>
+</div>
+<span class="target" id="custom-app-and-project-templates"></span><dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startapp-template">
+<code class="sig-name descname"><span class="pre">--template</span></code><code class="sig-prename descclassname"> <span class="pre">TEMPLATE</span></code><a class="headerlink" href="#cmdoption-startapp-template" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>提供指向自定义应用模板文件目录的路径，或指向未压缩档案（<code class="docutils literal notranslate"><span class="pre">.tar</span></code>）或压缩档案（<code class="docutils literal notranslate"><span class="pre">.</span> <span class="pre">tar.gz</span></code>、<code class="docutils literal notranslate"><span class="pre">.tar.bz2</span></code>、<code class="docutils literal notranslate"><span class="pre">.tar.xz</span></code>、<code class="docutils literal notranslate"><span class="pre">.tar.lzma</span></code>、<code class="docutils literal notranslate"><span class="pre">.tgz</span></code>、<code class="docutils literal notranslate"><span class="pre">.tbz2</span></code>、<code class="docutils literal notranslate"><span class="pre">.txz</span></code>、<code class="docutils literal notranslate"><span class="pre">.tlz</span></code>、<code class="docutils literal notranslate"><span class="pre">.zip</span></code>）的路径。</p>
+<p>例如，当创建 <code class="docutils literal notranslate"><span class="pre">myapp</span></code> 应用程序时，这将在给定目录中查找一个应用程序模板：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin startapp --template=/Users/jezdez/Code/my_app_template myapp</span>
+</pre></div>
+</div>
+<p>Django 还将接受 URL（<code class="docutils literal notranslate"><span class="pre">http</span></code>、<code class="docutils literal notranslate"><span class="pre">https</span></code>、<code class="docutils literal notranslate"><span class="pre">ftp</span></code>）与应用模板文件一起压缩归档，即时下载并解压。</p>
+<p>例如，利用 GitHub 提供的将存储库公开为 zip 文件的功能，你可以使用如下的 URL：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin startapp --template=https://github.com/githubuser/django-app-template/archive/main.zip myapp</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startapp-extension">
+<span id="cmdoption-startapp-e"></span><code class="sig-name descname"><span class="pre">--extension</span></code><code class="sig-prename descclassname"> <span class="pre">EXTENSIONS</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-e</span></code><code class="sig-prename descclassname"> <span class="pre">EXTENSIONS</span></code><a class="headerlink" href="#cmdoption-startapp-extension" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定应用模板中的哪些文件扩展名应该用模板引擎渲染。默认值为 <code class="docutils literal notranslate"><span class="pre">py</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startapp-name">
+<span id="cmdoption-startapp-n"></span><code class="sig-name descname"><span class="pre">--name</span></code><code class="sig-prename descclassname"> <span class="pre">FILES</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-n</span></code><code class="sig-prename descclassname"> <span class="pre">FILES</span></code><a class="headerlink" href="#cmdoption-startapp-name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定应用模板中的哪些文件（除了那些匹配 <code class="docutils literal notranslate"><span class="pre">--extension</span></code> 的文件外）应该用模板引擎渲染。默认为空列表。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startapp-exclude">
+<span id="cmdoption-startapp-x"></span><code class="sig-name descname"><span class="pre">--exclude</span></code><code class="sig-prename descclassname"> <span class="pre">DIRECTORIES</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-x</span></code><code class="sig-prename descclassname"> <span class="pre">DIRECTORIES</span></code><a class="headerlink" href="#cmdoption-startapp-exclude" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定除了 <code class="docutils literal notranslate"><span class="pre">.git</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__pycache__</span></code> 之外，应用模板中的哪些目录应该被排除。如果没有提供这个选项，名为 <code class="docutils literal notranslate"><span class="pre">__pycache__</span></code> 或以 <code class="docutils literal notranslate"><span class="pre">.</span></code> 开头的目录将被排除。</p>
+<p>所有匹配文件使用的 <a class="reference internal" href="templates/api.html#django.template.Context" title="django.template.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">template</span> <span class="pre">context</span></code></a> 是：</p>
+<ul class="simple">
+<li>传递给 <code class="docutils literal notranslate"><span class="pre">startapp</span></code> 命令的任何选项（在命令行支持的选项中）</li>
+<li><code class="docutils literal notranslate"><span class="pre">app_name</span></code> ——传递给命令的应用名称</li>
+<li><code class="docutils literal notranslate"><span class="pre">app_directory</span></code> ——新创建的应用的完整路径</li>
+<li><code class="docutils literal notranslate"><span class="pre">camel_case_app_name</span></code> ——驼峰大小写格式的应用名称</li>
+<li><code class="docutils literal notranslate"><span class="pre">docs_version</span></code> ——文档的版本： <code class="docutils literal notranslate"><span class="pre">'dev'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'1.x'</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">django_version</span></code> ——Django 的版本，例如 <code class="docutils literal notranslate"><span class="pre">'2.0.3'</span></code>。</li>
+</ul>
+<div class="admonition warning" id="render-warning">
+<p class="first admonition-title">警告</p>
+<p>当应用模板文件用 Django 模板引擎渲染时（默认是所有 <code class="docutils literal notranslate"><span class="pre">*.py</span></code> 文件），Django 也会替换掉所有包含的游离模板变量。例如，如果其中一个 Python 文件中包含了解释与模板渲染相关的特定功能的 docstring，可能会导致一个错误的例子。</p>
+<p>为了解决这个问题，你可以使用 <a class="reference internal" href="templates/builtins.html#std-templatetag-templatetag"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">templatetag</span></code></a> 模板标签来”转义“模板语法的各个部分。</p>
+<p class="last">此外，为了允许包含 Django 模板语言语法的 Python 模板文件，同时也为了防止打包系统试图对无效的 <code class="docutils literal notranslate"><span class="pre">*.py</span></code> 文件进行字节编译，以 <code class="docutils literal notranslate"><span class="pre">.py-tpl</span></code> 结尾的模板文件将改名为 <code class="docutils literal notranslate"><span class="pre">.py</span></code>。</p>
+</div>
+<div class="admonition warning" id="trusted-code-warning">
+<p class="first admonition-title">警告</p>
+<p class="last">在使用自定义应用程序（或项目）模板之前，应始终审查其内容：这些模板定义了将成为项目一部分的代码，这意味着这些代码将被视为你安装的任何应用程序或自己编写的代码一样可信。此外，甚至渲染模板实际上是执行作为管理命令输入提供的代码。Django 模板语言可能会为系统提供广泛的访问权限，因此请确保你使用的任何自定义模板值得信任。</p>
+</div>
+</div>
+<div class="section" id="s-startproject">
+<span id="startproject"></span><h3><code class="docutils literal notranslate"><span class="pre">startproject</span></code><a class="headerlink" href="#startproject" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-startproject">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">startproject</span> <span class="pre">name</span> <span class="pre">[directory]</span></code><a class="headerlink" href="#django-admin-startproject" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在当前目录或给定的目标目录中为给定的项目名称创建一个 Django 项目目录结构。</p>
+<p>默认情况下，<a class="reference external" href="https://github.com/django/django/blob/main/django/conf/project_template">新目录</a> 包含 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 和一个项目包（包含 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> 和其他文件）。</p>
+<p>如果只给出项目名称，则项目目录和项目包都将命名为 <code class="docutils literal notranslate"><span class="pre">&lt;projectname&gt;</span></code>，并在当前工作目录下创建项目目录。</p>
+<p>如果提供了可选的目的地，Django 将使用该已有目录作为项目目录，并在其中创建 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 和项目包。用 '.' 表示当前的工作目录。</p>
+<p>例如：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin startproject myproject /Users/jezdez/Code/myproject_repo</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startproject-template">
+<code class="sig-name descname"><span class="pre">--template</span></code><code class="sig-prename descclassname"> <span class="pre">TEMPLATE</span></code><a class="headerlink" href="#cmdoption-startproject-template" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定一个自定义项目模板的目录、文件路径或 URL。参见 <a class="reference internal" href="#cmdoption-startapp-template"><code class="xref std std-option docutils literal notranslate"><span class="pre">startapp</span> <span class="pre">--template</span></code></a> 文档中的例子和用法。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startproject-extension">
+<span id="cmdoption-startproject-e"></span><code class="sig-name descname"><span class="pre">--extension</span></code><code class="sig-prename descclassname"> <span class="pre">EXTENSIONS</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-e</span></code><code class="sig-prename descclassname"> <span class="pre">EXTENSIONS</span></code><a class="headerlink" href="#cmdoption-startproject-extension" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定项目模板中的哪些文件扩展名应该用模板引擎渲染。默认值为 <code class="docutils literal notranslate"><span class="pre">py</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startproject-name">
+<span id="cmdoption-startproject-n"></span><code class="sig-name descname"><span class="pre">--name</span></code><code class="sig-prename descclassname"> <span class="pre">FILES</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-n</span></code><code class="sig-prename descclassname"> <span class="pre">FILES</span></code><a class="headerlink" href="#cmdoption-startproject-name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定项目模板中的哪些文件（除了那些匹配 <code class="docutils literal notranslate"><span class="pre">--extension</span></code> 的文件外）应该用模板引擎渲染。默认为空列表。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-startproject-exclude">
+<span id="cmdoption-startproject-x"></span><code class="sig-name descname"><span class="pre">--exclude</span></code><code class="sig-prename descclassname"> <span class="pre">DIRECTORIES</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-x</span></code><code class="sig-prename descclassname"> <span class="pre">DIRECTORIES</span></code><a class="headerlink" href="#cmdoption-startproject-exclude" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定除了 <code class="docutils literal notranslate"><span class="pre">.git</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__pycache__</span></code> 之外，项目模板中哪些目录应该被排除。如果没有提供这个选项，名为 <code class="docutils literal notranslate"><span class="pre">__pycache__</span></code> 或以 <code class="docutils literal notranslate"><span class="pre">.</span></code> 开头的目录将被排除。</p>
+<p>使用的 <a class="reference internal" href="templates/api.html#django.template.Context" title="django.template.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">template</span> <span class="pre">context</span></code></a> 是：</p>
+<ul class="simple">
+<li>传递给 <code class="docutils literal notranslate"><span class="pre">startproject</span></code> 命令的任何选项（在命令支持的选项中）</li>
+<li><code class="docutils literal notranslate"><span class="pre">project_name</span></code> ——传给命令的项目名称</li>
+<li><code class="docutils literal notranslate"><span class="pre">project_directory</span></code> ——新创建项目的完整路径</li>
+<li><code class="docutils literal notranslate"><span class="pre">secret_key</span></code> —— <a class="reference internal" href="settings.html#std-setting-SECRET_KEY"><code class="xref std std-setting docutils literal notranslate"><span class="pre">SECRET_KEY</span></code></a> 设置的随机密钥</li>
+<li><code class="docutils literal notranslate"><span class="pre">docs_version</span></code> ——文档的版本： <code class="docutils literal notranslate"><span class="pre">'dev'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'1.x'</span></code>。</li>
+<li><code class="docutils literal notranslate"><span class="pre">django_version</span></code> ——Django 的版本，例如 <code class="docutils literal notranslate"><span class="pre">'2.0.3'</span></code>。</li>
+</ul>
+<p>请参阅与 <a class="reference internal" href="#django-admin-startapp"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startapp</span></code></a> 中提到的 <a class="reference internal" href="#render-warning"><span class="std std-ref">渲染警告</span></a> 和 <a class="reference internal" href="#trusted-code-warning"><span class="std std-ref">可信代码警告</span></a> 相关的内容。</p>
+</div>
+<div class="section" id="s-test">
+<span id="test"></span><h3><code class="docutils literal notranslate"><span class="pre">test</span></code><a class="headerlink" href="#test" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-test">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">test</span> <span class="pre">[test_label</span> <span class="pre">[test_label</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-test" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>为所有安装的应用运行测试。参见 <a class="reference internal" href="../topics/testing/index.html"><span class="doc">Django 中的测试</span></a> 获取更多信息。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-failfast">
+<code class="sig-name descname"><span class="pre">--failfast</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-failfast" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>测试失败后立即停止运行测试并报告失败。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-testrunner">
+<code class="sig-name descname"><span class="pre">--testrunner</span></code><code class="sig-prename descclassname"> <span class="pre">TESTRUNNER</span></code><a class="headerlink" href="#cmdoption-test-testrunner" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>控制用于执行测试的测试运行器类。这个值会覆盖 <a class="reference internal" href="settings.html#std-setting-TEST_RUNNER"><code class="xref std std-setting docutils literal notranslate"><span class="pre">TEST_RUNNER</span></code></a> 配置提供的值。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-noinput">
+<span id="cmdoption-test-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>压制所有用户提示。一个典型的提示是关于删除现有测试数据库的警告。</p>
+<div class="section" id="s-test-runner-options">
+<span id="test-runner-options"></span><h4>测试运行器选项<a class="headerlink" href="#test-runner-options" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">test</span></code> 命令代表指定的 <a class="reference internal" href="#cmdoption-test-testrunner"><code class="xref std std-option docutils literal notranslate"><span class="pre">--testrunner</span></code></a> 接收选项。这些是默认测试运行器的选项： <a class="reference internal" href="../topics/testing/advanced.html#django.test.runner.DiscoverRunner" title="django.test.runner.DiscoverRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiscoverRunner</span></code></a>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-keepdb">
+<code class="sig-name descname"><span class="pre">--keepdb</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-keepdb" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在测试运行之间保留测试数据库。这样做的好处是可以跳过创建和销毁这两个动作，从而大大缩短测试运行的时间，尤其是在大型测试套件中。如果测试数据库不存在，将在第一次运行时创建，然后在以后的每次运行中保留。除非 <a class="reference internal" href="settings.html#std-setting-TEST_MIGRATE"><code class="xref std std-setting docutils literal notranslate"><span class="pre">MIGRATE</span></code></a> 测试配置为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，否则任何未应用的迁移也会在运行测试套件之前应用到测试数据库。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-shuffle">
+<code class="sig-name descname"><span class="pre">--shuffle</span></code><code class="sig-prename descclassname"> <span class="pre">[SEED]</span></code><a class="headerlink" href="#cmdoption-test-shuffle" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在运行测试之前，随机化测试的顺序。这可以帮助发现那些没有正确隔离的测试。这个选项产生的测试顺序是给定的整数种子的一个确定性函数。当没有传递种子时，会随机选择一个种子并打印到控制台。要重复一个特定的测试顺序，需要传递一个种子。这个选项生成的测试顺序保留了 Django 的 <a class="reference internal" href="../topics/testing/overview.html#order-of-tests"><span class="std std-ref">测试顺序的保证</span></a>。它们还保持了测试案例类别的测试分组。</p>
+<p>在缩小隔离问题时，洗牌后的顺序也有一个特殊的一致性属性。也就是说，对于一个给定的种子，当运行一个测试子集时，新的顺序将是限制在较小的集合上的原始洗牌。同样地，在保持种子不变的情况下增加测试时，原始测试的顺序在新的顺序中也是一样的。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-reverse">
+<span id="cmdoption-test-r"></span><code class="sig-name descname"><span class="pre">--reverse</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-r</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-reverse" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将测试案例以相反的执行顺序排序。这可能有助于调试没有正确隔离的测试的副作用。 <a class="reference internal" href="../topics/testing/overview.html#order-of-tests"><span class="std std-ref">按测试类别分组</span></a> 在使用此选项时被保留下来。这可以和 <code class="docutils literal notranslate"><span class="pre">--shuffle</span></code> 一起使用，以扭转特定种子的顺序。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-debug-mode">
+<code class="sig-name descname"><span class="pre">--debug-mode</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-debug-mode" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在运行测试之前，将 <a class="reference internal" href="settings.html#std-setting-DEBUG"><code class="xref std std-setting docutils literal notranslate"><span class="pre">DEBUG</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。这可能有助于解决测试失败的问题。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-debug-sql">
+<span id="cmdoption-test-d"></span><code class="sig-name descname"><span class="pre">--debug-sql</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-d</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-debug-sql" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>对失败的测试启用 <a class="reference internal" href="logging.html#django-db-logger"><span class="std std-ref">SQL 日志</span></a>。如果 <code class="docutils literal notranslate"><span class="pre">--verbosity</span></code> 是 <code class="docutils literal notranslate"><span class="pre">2</span></code>，那么通过测试的查询也会被输出。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-parallel">
+<code class="sig-name descname"><span class="pre">--parallel</span></code><code class="sig-prename descclassname"> <span class="pre">[N]</span></code><a class="headerlink" href="#cmdoption-test-parallel" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std envvar">
+<dt class="sig sig-object std" id="envvar-DJANGO_TEST_PROCESSES">
+<code class="sig-name descname"><span class="pre">DJANGO_TEST_PROCESSES</span></code><a class="headerlink" href="#envvar-DJANGO_TEST_PROCESSES" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在单独的并行进程中运行测试。由于现代处理器拥有多个内核，这使得运行测试的速度大大加快。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">--parallel</span></code> 不加值，或使用 <code class="docutils literal notranslate"><span class="pre">auto</span></code> 值，根据 <a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.cpu_count" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">multiprocessing.cpu_count()</span></code></a> 每个核心运行一个测试进程。你可以通过传递所需的进程数来覆盖这一点，例如：<code class="docutils literal notranslate"><span class="pre">--parallel</span> <span class="pre">4</span></code>，或者通过设置 <span class="target" id="index-27"></span><a class="reference internal" href="#envvar-DJANGO_TEST_PROCESSES"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_TEST_PROCESSES</span></code></a> 环境变量。</p>
+<p>Django 将测试用例（<a class="reference external" href="https://docs.python.org/3/library/unittest.html#unittest.TestCase" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a> 子类）分发给子进程。如果测试用例类的数量少于配置的进程数量，Django 将相应地减少进程数量。</p>
+<p>每个进程都有自己的数据库。您必须确保不同的测试用例类不会访问相同的资源。例如，涉及文件系统的测试用例类应该为自己创建一个临时目录以供使用。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">如果你有不能并行运行的测试类，你可以使用 <code class="docutils literal notranslate"><span class="pre">SerializeMixin</span></code> 按顺序运行它们。参见 <a class="reference internal" href="../topics/testing/advanced.html#topics-testing-enforce-run-sequentially"><span class="std std-ref">强制按顺序运行测试类</span></a>。</p>
+</div>
+<p>这个选项需要第三方的 <code class="docutils literal notranslate"><span class="pre">tlib</span></code> 包才能正确显示回溯。</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip install tblib
+</pre></div>
+</div>
+<p>这个功能在 Windows 上无法使用。它也不能与 Oracle 数据库后端一起工作。</p>
+<p>如果你想在调试测试时使用 <a class="reference external" href="https://docs.python.org/3/library/pdb.html#module-pdb" title="(在 Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pdb</span></code></a>，你必须禁用并行执行（<code class="docutils literal notranslate"><span class="pre">-parallel=1</span></code>）。如果不这样做，你会看到类似 <code class="docutils literal notranslate"><span class="pre">bdb.BdbQuit</span></code> 的东西。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p>当启用测试并行化后，测试失败时，Django 可能无法显示异常回溯。这可能会给调试带来困难。如果你遇到这个问题，请在不并行的情况下运行受影响的测试，以查看失败的回溯。</p>
+<p class="last">这是一个众所周知的限制。这是因为需要对对象进行序列化，以便在进程间进行交换。详见 <a class="reference external" href="https://docs.python.org/3/library/pickle.html#pickle-picklable" title="(在 Python v3.12)"><span>What can be pickled and unpickled?</span></a>。</p>
+</div>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-test-tag">
+<code class="sig-name descname"><span class="pre">--tag</span></code><code class="sig-prename descclassname"> <span class="pre">TAGS</span></code><a class="headerlink" href="#cmdoption-test-tag" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>只运行 <a class="reference internal" href="../topics/testing/tools.html#topics-tagging-tests"><span class="std std-ref">特定标签标记</span></a> 的测试。可多次指定，并与 <code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--exclud-tag</span></code> 结合使用。</p>
+<p>未能加载的测试总是被认为是匹配的。</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-test-exclude-tag">
+<code class="sig-name descname"><span class="pre">--exclude-tag</span></code><code class="sig-prename descclassname"> <span class="pre">EXCLUDE_TAGS</span></code><a class="headerlink" href="#cmdoption-test-exclude-tag" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>不包括 <a class="reference internal" href="../topics/testing/tools.html#topics-tagging-tests"><span class="std std-ref">特定标签标记的</span></a> 测试。可多次指定，并与 <a class="reference internal" href="#cmdoption-test-tag"><code class="xref std std-option docutils literal notranslate"><span class="pre">test</span> <span class="pre">--tag</span></code></a> 结合使用。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-k">
+<code class="sig-name descname"><span class="pre">-k</span></code><code class="sig-prename descclassname"> <span class="pre">TEST_NAME_PATTERNS</span></code><a class="headerlink" href="#cmdoption-test-k" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>运行与测试名称模式相匹配的测试方法和类，与 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#cmdoption-unittest-k" title="(在 Python v3.12)"><code class="xref std std-option docutils literal notranslate"><span class="pre">unittest's</span> <span class="pre">-k</span> <span class="pre">option</span></code></a> 一样。可以指定多次。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-pdb">
+<code class="sig-name descname"><span class="pre">--pdb</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-pdb" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在每次测试错误或失败时，都会产生一个 <code class="docutils literal notranslate"><span class="pre">pdb</span></code> 调试器。如果你安装了 <code class="docutils literal notranslate"><span class="pre">ipdb</span></code>，则使用其代替。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-buffer">
+<span id="cmdoption-test-b"></span><code class="sig-name descname"><span class="pre">--buffer</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-b</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-buffer" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>丢弃通过测试的输出（<code class="docutils literal notranslate"><span class="pre">stdout</span></code> 和 <code class="docutils literal notranslate"><span class="pre">stderr</span></code>），与 <a class="reference external" href="https://docs.python.org/3/library/unittest.html#cmdoption-unittest-b" title="(在 Python v3.12)"><code class="xref std std-option docutils literal notranslate"><span class="pre">unittest's</span> <span class="pre">--buffer</span> <span class="pre">option</span></code></a> 一样。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-no-faulthandler">
+<code class="sig-name descname"><span class="pre">--no-faulthandler</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-no-faulthandler" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>Django 在启动测试时自动调用 <a class="reference external" href="https://docs.python.org/3/library/faulthandler.html#faulthandler.enable" title="(在 Python v3.12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">faulthandler.enable()</span></code></a>，这允许它在解释器崩溃时打印一个回溯信息。传递 <code class="docutils literal notranslate"><span class="pre">--no-faulthandler</span></code> 来禁止这种行为。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-timing">
+<code class="sig-name descname"><span class="pre">--timing</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-test-timing" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>输出时间，包括数据库设置和总运行时间。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-test-durations">
+<code class="sig-name descname"><span class="pre">--durations</span></code><code class="sig-prename descclassname"> <span class="pre">N</span></code><a class="headerlink" href="#cmdoption-test-durations" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<div class="versionadded">
+<span class="title">New in Django 5.0.</span> </div>
+<p>显示 N 个最慢的测试用例（当 N=0 时显示所有）。</p>
+<div class="admonition-python-3-12-and-later admonition">
+<p class="first admonition-title">Python 3.12 及以后版本</p>
+<p class="last">此功能仅适用于 Python 3.12 及更高版本。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-testserver">
+<span id="testserver"></span><h3><code class="docutils literal notranslate"><span class="pre">testserver</span></code><a class="headerlink" href="#testserver" title="永久链接至标题">¶</a></h3>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-testserver">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">testserver</span> <span class="pre">[fixture</span> <span class="pre">[fixture</span> <span class="pre">...]]</span></code><a class="headerlink" href="#django-admin-testserver" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>使用给定固定数据中的数据运行一个 Django 开发服务器（如 <a class="reference internal" href="#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a>）。</p>
+<p>例如，这个命令：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin testserver mydata.json</span>
+</pre></div>
+</div>
+<p>...将执行以下步骤：</p>
+<ol class="arabic simple">
+<li>按照 <a class="reference internal" href="../topics/testing/overview.html#the-test-database"><span class="std std-ref">测试数据库</span></a> 中的描述，创建一个测试数据库。</li>
+<li>用给定固定数据的数据填充测试数据库。关于固定数据的更多信息，请参见上面的 <a class="reference internal" href="#django-admin-loaddata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">loaddata</span></code></a> 的文档）。</li>
+<li>运行 Django 开发服务器（如 <a class="reference internal" href="#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a>），指向这个新创建的测试数据库，而不是你的生产数据库。</li>
+</ol>
+<p>这在很多方面都很有用：</p>
+<ul class="simple">
+<li>当你在写 <a class="reference internal" href="../topics/testing/overview.html"><span class="doc">单元测试</span></a> 时，你的视图如何与某些固定数据一起行动，你可以使用 <code class="docutils literal notranslate"><span class="pre">testserver</span></code> 在网络浏览器中手动与视图互动。</li>
+<li>假设你正在开发你的 Django 应用程序，并且有一个“原始”的数据库副本，你想要与之交互。你可以将数据库转储为一个 <a class="reference internal" href="../topics/db/fixtures.html#fixtures-explanation"><span class="std std-ref">fixture</span></a> （使用上面介绍的 <a class="reference internal" href="#django-admin-dumpdata"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">dumpdata</span></code></a> 命令），然后使用 <code class="docutils literal notranslate"><span class="pre">testserver</span></code> 运行你的 Web 应用程序，并使用那些数据。通过这种安排，你可以灵活地对数据进行任何更改，因为你知道你所做的任何数据更改只会影响测试数据库。</li>
+</ul>
+<p>请注意，这个服务器 <em>不会</em> 自动检测你的 Python 源代码的变化（就像 <code class="xref std std-djadmin docutils literal notranslate"><span class="pre">srunerver</span></code> 那样)。但是，它可以检测到对模板的更改。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-testserver-addrport">
+<code class="sig-name descname"><span class="pre">--addrport</span></code><code class="sig-prename descclassname"> <span class="pre">ADDRPORT</span></code><a class="headerlink" href="#cmdoption-testserver-addrport" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定与默认的 <code class="docutils literal notranslate"><span class="pre">127.0.0.1:8000</span></code> 不同的端口或 IP 地址和端口。这个值的格式和作用与 <a class="reference internal" href="#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 命令的参数完全相同。</p>
+<p>举例：</p>
+<p>要在端口 7000 上运行测试服务器并使用 <code class="docutils literal notranslate"><span class="pre">fixture1</span></code> 和 <code class="docutils literal notranslate"><span class="pre">fixture2</span></code>：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin testserver --addrport 7000 fixture1 fixture2</span>
+<span class="go">django-admin testserver fixture1 fixture2 --addrport 7000</span>
+</pre></div>
+</div>
+<p>（上面的语句是等价的。我们把这两句话都包括在内，是为了证明选项是在固定数据参数之前还是之后并不重要。）</p>
+<p>要在 1.2.3.4:7000 上运行，并使用 <code class="docutils literal notranslate"><span class="pre">test</span></code> fixture：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin testserver --addrport 1.2.3.4:7000 test</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-testserver-noinput">
+<span id="cmdoption-testserver-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-testserver-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>压制所有用户提示。一个典型的提示是关于删除现有测试数据库的警告。</p>
+</div>
+</div>
+<div class="section" id="s-commands-provided-by-applications">
+<span id="commands-provided-by-applications"></span><h2>应用程序提供的命令<a class="headerlink" href="#commands-provided-by-applications" title="永久链接至标题">¶</a></h2>
+<p>有些命令只有 <a class="reference internal" href="settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">enabled</span></code></a> <a class="reference internal" href="../howto/custom-management-commands.html"><span class="doc">实现</span></a> 它们的 <code class="docutils literal notranslate"><span class="pre">django.contrib</span></code> 应用程序时才可用。本节将按照应用来介绍这些命令。</p>
+<div class="section" id="s-django-contrib-auth">
+<span id="django-contrib-auth"></span><h3><code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code><a class="headerlink" href="#django-contrib-auth" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-changepassword">
+<span id="changepassword"></span><h4><code class="docutils literal notranslate"><span class="pre">changepassword</span></code><a class="headerlink" href="#changepassword" title="永久链接至标题">¶</a></h4>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-changepassword">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">changepassword</span> <span class="pre">[&lt;username&gt;]</span></code><a class="headerlink" href="#django-admin-changepassword" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>只有安装了 Django 的 <a class="reference internal" href="../topics/auth/index.html"><span class="doc">认证系统</span></a> （<code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code>），这个命令才有效。</p>
+<p>允许更改用户的密码。它提示你为给定的用户输入两次新密码。如果输入的密码相同，则立即成为新密码。如果你没有提供用户，命令将尝试更改与当前用户用户名匹配的密码。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-changepassword-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-changepassword-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要为用户查询的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin changepassword ringo</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-createsuperuser">
+<span id="createsuperuser"></span><h4><code class="docutils literal notranslate"><span class="pre">createsuperuser</span></code><a class="headerlink" href="#createsuperuser" title="永久链接至标题">¶</a></h4>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-createsuperuser">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">createsuperuser</span></code><a class="headerlink" href="#django-admin-createsuperuser" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std envvar">
+<dt class="sig sig-object std" id="envvar-DJANGO_SUPERUSER_PASSWORD">
+<code class="sig-name descname"><span class="pre">DJANGO_SUPERUSER_PASSWORD</span></code><a class="headerlink" href="#envvar-DJANGO_SUPERUSER_PASSWORD" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>只有安装了 Django 的 <a class="reference internal" href="../topics/auth/index.html"><span class="doc">认证系统</span></a> （<code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code>），这个命令才有效。</p>
+<p>创建一个超级用户账户（拥有所有权限的用户）。如果你需要创建一个初始的超级用户账户，或者你需要为你的网站程序化地生成超级用户账户，这很有用。</p>
+<p>当交互式运行时，该命令将提示为新的超级用户账户提供密码。非交互式运行时，可以通过设置 <span class="target" id="index-28"></span><a class="reference internal" href="#envvar-DJANGO_SUPERUSER_PASSWORD"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SUPERUSER_PASSWORD</span></code></a> 环境变量提供密码。否则，将不设置密码，超级用户账户将无法登录，直到手动为其设置密码。</p>
+<p>在非交互模式下， <a class="reference internal" href="../topics/auth/customizing.html#django.contrib.auth.models.CustomUser.USERNAME_FIELD" title="django.contrib.auth.models.CustomUser.USERNAME_FIELD"><code class="xref py py-attr docutils literal notranslate"><span class="pre">USERNAME_FIELD</span></code></a> 和必填字段（列在 <a class="reference internal" href="../topics/auth/customizing.html#django.contrib.auth.models.CustomUser.REQUIRED_FIELDS" title="django.contrib.auth.models.CustomUser.REQUIRED_FIELDS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">REQUIRED_FIELDS</span></code></a> 中）回落到 <code class="docutils literal notranslate"><span class="pre">DJANGO_SUPERUSER_&lt;uppercase_field_name&gt;</span></code> 环境变量，除非它们被命令行参数覆盖。例如，要提供一个 <code class="docutils literal notranslate"><span class="pre">email</span></code> 字段，你可以使用 <code class="docutils literal notranslate"><span class="pre">DJANGO_SUPERUSER_EMAIL</span></code> 环境变量。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-createsuperuser-noinput">
+<span id="cmdoption-createsuperuser-no-input"></span><code class="sig-name descname"><span class="pre">--noinput</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--no-input</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-createsuperuser-noinput" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>压制所有用户提示。如果被抑制的提示不能自动解决，命令将以 error code 1 退出。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-createsuperuser-username">
+<code class="sig-name descname"><span class="pre">--username</span></code><code class="sig-prename descclassname"> <span class="pre">USERNAME</span></code><a class="headerlink" href="#cmdoption-createsuperuser-username" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-createsuperuser-email">
+<code class="sig-name descname"><span class="pre">--email</span></code><code class="sig-prename descclassname"> <span class="pre">EMAIL</span></code><a class="headerlink" href="#cmdoption-createsuperuser-email" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>新账户的用户名和电子邮件地址可以通过使用命令行中的 <code class="docutils literal notranslate"><span class="pre">--username</span></code> 和 <code class="docutils literal notranslate"><span class="pre">--email</span></code> 参数来提供。如果没有提供这两个参数中的任何一个，<code class="docutils literal notranslate"><span class="pre">createsuperuser</span></code> 将在交互式运行时提示输入。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-createsuperuser-database">
+<code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-createsuperuser-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定保存超级用户对象的数据库。</p>
+<p>如果你想自定义数据输入和验证，可以子类管理命令，并覆盖 <code class="docutils literal notranslate"><span class="pre">get_input_data()</span></code>。关于现有的实现和方法的参数，请查阅源代码。例如，如果你在 <a class="reference internal" href="../topics/auth/customizing.html#django.contrib.auth.models.CustomUser.REQUIRED_FIELDS" title="django.contrib.auth.models.CustomUser.REQUIRED_FIELDS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">REQUIRED_FIELDS</span></code></a> 中有一个 <code class="docutils literal notranslate"><span class="pre">ForeignKey</span></code>，并且希望允许创建一个实例，而不是输入现有实例的主键，这可能是有用的。</p>
+</div>
+</div>
+<div class="section" id="s-django-contrib-contenttypes">
+<span id="django-contrib-contenttypes"></span><h3><code class="docutils literal notranslate"><span class="pre">django.contrib.contenttypes</span></code><a class="headerlink" href="#django-contrib-contenttypes" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-remove-stale-contenttypes">
+<span id="remove-stale-contenttypes"></span><h4><code class="docutils literal notranslate"><span class="pre">remove_stale_contenttypes</span></code><a class="headerlink" href="#remove-stale-contenttypes" title="永久链接至标题">¶</a></h4>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-remove_stale_contenttypes">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">remove_stale_contenttypes</span></code><a class="headerlink" href="#django-admin-remove_stale_contenttypes" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>只有安装了 Django 的 <a class="reference internal" href="contrib/contenttypes.html"><span class="doc">contenttypes 应用</span></a> （ <a class="reference internal" href="contrib/contenttypes.html#module-django.contrib.contenttypes" title="django.contrib.contenttypes: Provides generic interface to installed models."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.contenttypes</span></code></a>），这个命令才有效。</p>
+<p>删除数据库中陈旧的内容类型（来自已删除的模型）。依赖于已删除内容类型的任何对象也将被删除。在你确认可以继续删除之前，将显示一个已删除对象的列表。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-remove_stale_contenttypes-database">
+<span id="cmdoption-remove-stale-contenttypes-database"></span><code class="sig-name descname"><span class="pre">--database</span></code><code class="sig-prename descclassname"> <span class="pre">DATABASE</span></code><a class="headerlink" href="#cmdoption-remove_stale_contenttypes-database" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要使用的数据库。默认为 <code class="docutils literal notranslate"><span class="pre">default</span></code>。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-remove_stale_contenttypes-include-stale-apps">
+<span id="cmdoption-remove-stale-contenttypes-include-stale-apps"></span><code class="sig-name descname"><span class="pre">--include-stale-apps</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-remove_stale_contenttypes-include-stale-apps" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>删除陈旧的内容类型，包括以前安装的应用程序的内容类型，这些内容类型已经从 <a class="reference internal" href="settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中删除。默认值为 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+</div>
+</div>
+<div class="section" id="s-django-contrib-gis">
+<span id="django-contrib-gis"></span><h3><code class="docutils literal notranslate"><span class="pre">django.contrib.gis</span></code><a class="headerlink" href="#django-contrib-gis" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-ogrinspect">
+<span id="ogrinspect"></span><h4><code class="docutils literal notranslate"><span class="pre">ogrinspect</span></code><a class="headerlink" href="#ogrinspect" title="永久链接至标题">¶</a></h4>
+<p>只有在安装了 <a class="reference internal" href="contrib/gis/index.html"><span class="doc">GeoDjango</span></a> （<code class="docutils literal notranslate"><span class="pre">django.contrib.gis</span></code>）的情况下，该命令才可用。</p>
+<p>请参考 GeoDjango 文档中它的 <a class="reference internal" href="contrib/gis/commands.html#django-admin-ogrinspect"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">描述</span></code></a>。</p>
+</div>
+</div>
+<div class="section" id="s-django-contrib-sessions">
+<span id="django-contrib-sessions"></span><h3><code class="docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code><a class="headerlink" href="#django-contrib-sessions" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-clearsessions">
+<span id="clearsessions"></span><h4><code class="docutils literal notranslate"><span class="pre">clearsessions</span></code><a class="headerlink" href="#clearsessions" title="永久链接至标题">¶</a></h4>
+<dl class="std django-admin">
+<dt class="sig sig-object std" id="django-admin-clearsessions">
+<code class="sig-name descname"><span class="pre">django-admin</span> <span class="pre">clearsessions</span></code><a class="headerlink" href="#django-admin-clearsessions" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>可以以定时任务的形式运行，也可以直接清理过期会话。</p>
+</div>
+</div>
+<div class="section" id="s-django-contrib-staticfiles">
+<span id="django-contrib-staticfiles"></span><h3><code class="docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code><a class="headerlink" href="#django-contrib-staticfiles" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-collectstatic">
+<span id="collectstatic"></span><h4><code class="docutils literal notranslate"><span class="pre">collectstatic</span></code><a class="headerlink" href="#collectstatic" title="永久链接至标题">¶</a></h4>
+<p>只有安装了 <a class="reference internal" href="../howto/static-files/index.html"><span class="doc">静态文件应用程序</span></a> （<code class="docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code>），该命令才可用。</p>
+<p>请参考它的 <a class="reference internal" href="contrib/staticfiles.html"><span class="doc">静态文件</span></a> 文档中的 <a class="reference internal" href="contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">描述</span></code></a>。</p>
+</div>
+<div class="section" id="s-findstatic">
+<span id="findstatic"></span><h4><code class="docutils literal notranslate"><span class="pre">findstatic</span></code><a class="headerlink" href="#findstatic" title="永久链接至标题">¶</a></h4>
+<p>只有安装了 <a class="reference internal" href="../howto/static-files/index.html"><span class="doc">静态文件应用程序</span></a> （<code class="docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code>），该命令才可用。</p>
+<p>请参考它的 <a class="reference internal" href="contrib/staticfiles.html"><span class="doc">静态文件</span></a> 文档中的 <a class="reference internal" href="contrib/staticfiles.html#django-admin-findstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">描述</span></code></a>。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-default-options">
+<span id="default-options"></span><h2>默认选项<a class="headerlink" href="#default-options" title="永久链接至标题">¶</a></h2>
+<p>尽管有些命令可能允许自己的自定义选项，但每个命令都默认允许以下选项：</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-pythonpath">
+<code class="sig-name descname"><span class="pre">--pythonpath</span></code><code class="sig-prename descclassname"> <span class="pre">PYTHONPATH</span></code><a class="headerlink" href="#cmdoption-pythonpath" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>Adds the given filesystem path to the Python <a class="reference external" href="https://docs.python.org/3/library/sys.html#sys.path" title="(在 Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> module
+attribute. If this isn't provided, <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> will use the
+<span class="target" id="index-8"></span><a class="reference external" href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH" title="(在 Python v3.12)"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> environment variable.</p>
+<p>这个选项在 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 中是不必要的，因为它为你设置了 Python 路径。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin migrate --pythonpath=&#39;/home/djangoprojects/myproject&#39;</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-settings">
+<code class="sig-name descname"><span class="pre">--settings</span></code><code class="sig-prename descclassname"> <span class="pre">SETTINGS</span></code><a class="headerlink" href="#cmdoption-settings" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定要使用的配置模块。配置模块应该使用 Python 包语法，例如 <code class="docutils literal notranslate"><span class="pre">mysite.settings</span></code>。如果没有提供，<code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 将使用 <span class="target" id="index-29"></span><a class="reference internal" href="../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 环境变量。</p>
+<p>这个选项在 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 中是不必要的，因为它默认使用当前项目中的 <code class="docutils literal notranslate"><span class="pre">settings.py</span></code>。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin migrate --settings=mysite.settings</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-traceback">
+<code class="sig-name descname"><span class="pre">--traceback</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-traceback" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>当发生 <a class="reference internal" href="../howto/custom-management-commands.html#django.core.management.CommandError" title="django.core.management.CommandError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">CommandError</span></code></a> 时，显示完整的堆栈跟踪。默认情况下，<code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 将在发生 <code class="docutils literal notranslate"><span class="pre">CommandError</span></code> 时显示一个错误信息，并对任何其他异常显示一个完整的堆栈跟踪。</p>
+<p>这个选项被 <a class="reference internal" href="#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 忽略。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin migrate --traceback</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-verbosity">
+<span id="cmdoption-v"></span><code class="sig-name descname"><span class="pre">--verbosity</span></code><code class="sig-prename descclassname"> <span class="pre">{0,1,2,3}</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-v</span></code><code class="sig-prename descclassname"> <span class="pre">{0,1,2,3}</span></code><a class="headerlink" href="#cmdoption-verbosity" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>指定命令应打印到控制台的通知和调试信息的数量。</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">0</span></code> 表示没有输出。</li>
+<li><code class="docutils literal notranslate"><span class="pre">1</span></code> 表示正常输出（默认）。</li>
+<li><code class="docutils literal notranslate"><span class="pre">2</span></code> 表示详细输出。</li>
+<li><code class="docutils literal notranslate"><span class="pre">3</span></code> 表示 <em>非常</em> 详细输出。</li>
+</ul>
+<p>这个选项被 <a class="reference internal" href="#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 忽略。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin migrate --verbosity 2</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-no-color">
+<code class="sig-name descname"><span class="pre">--no-color</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-no-color" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>禁用彩色化的命令输出。 有些命令会将其输出格式化为彩色。例如，错误将以红色打印到控制台，SQL 语句将以语法高亮显示。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin runserver --no-color</span>
+</pre></div>
+</div>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-force-color">
+<code class="sig-name descname"><span class="pre">--force-color</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-force-color" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>强制对命令输出进行着色，如果不这样做的话，就会像 <a class="reference internal" href="#syntax-coloring"><span class="std std-ref">语法着色</span></a> 中所讨论的那样被禁用。例如，你可能希望将彩色输出管道到另一个命令。</p>
+<dl class="django-admin-option">
+<dt class="sig sig-object" id="cmdoption-skip-checks">
+<code class="sig-name descname"><span class="pre">--skip-checks</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-skip-checks" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在运行命令之前，跳过运行系统检查。这个选项只有在 <code class="xref py py-attr docutils literal notranslate"><span class="pre">required_system_checks</span></code> 命令属性不是一个空列表或元组时才可用。</p>
+<p>使用实例：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">django-admin migrate --skip-checks</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-extra-niceties">
+<span id="extra-niceties"></span><h2>额外的细节<a class="headerlink" href="#extra-niceties" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-syntax-coloring">
+<span id="s-id1"></span><span id="syntax-coloring"></span><span id="id1"></span><h3>语法着色<a class="headerlink" href="#syntax-coloring" title="永久链接至标题">¶</a></h3>
+<dl class="std envvar">
+<dt class="sig sig-object std" id="envvar-DJANGO_COLORS">
+<code class="sig-name descname"><span class="pre">DJANGO_COLORS</span></code><a class="headerlink" href="#envvar-DJANGO_COLORS" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> ／ <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 命令会使用漂亮的彩色编码输出，如果你的终端支持 ANSI 彩色输出的话。如果你把命令的输出用管道传送到另一个程序，它不会使用颜色代码，除非使用 <a class="reference internal" href="#cmdoption-force-color"><code class="xref std std-option docutils literal notranslate"><span class="pre">--force-color</span></code></a> 选项。</p>
+<div class="section" id="s-windows-support">
+<span id="windows-support"></span><h4>Windows 支持<a class="headerlink" href="#windows-support" title="永久链接至标题">¶</a></h4>
+<p>在 Windows 10 上，<a class="reference external" href="https://www.microsoft.com/en-us/p/windows-terminal-preview/9n0dx20hk701">Windows Terminal</a> 应用程序、<a class="reference external" href="https://code.visualstudio.com">VS Code</a> 和 PowerShell（启用虚拟终端处理）允许彩色输出，并且默认支持。</p>
+<p>在 Windows 下，传统的 <code class="docutils literal notranslate"><span class="pre">cmd.exe</span></code> 本地控制台不支持 ANSI 转义序列，所以默认情况下没有彩色输出。在这种情况下，需要两个第三方库中的一个：</p>
+<ul>
+<li><p class="first">安装 <a class="reference external" href="https://pypi.org/project/colorama/">colorama</a>，这是一个将 ANSI 颜色代码转化为 Windows API 调用的 Python 包。Django 命令会检测到其存在，并将使用其服务来使输出具有类似 Unix 平台上的颜色效果。可以使用 pip 安装 <code class="docutils literal notranslate"><span class="pre">colorama</span></code>：</p>
+<div class="highlight-doscon notranslate"><div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py -m pip install <span class="s2">&quot;colorama &gt;= 0.4.6&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">安装 <a class="reference external" href="http://adoxa.altervista.org/ansicon/">ANSICON</a> ，一个第三方工具，允许 <code class="docutils literal notranslate"><span class="pre">cmd.exe</span></code> 处理 ANSI 颜色代码。Django 命令会检测到它的存在，并利用它的服务为输出着色，就像在基于 Unix 的平台上一样。</p>
+</li>
+</ul>
+<p>在 Windows 上的其他现代终端环境，支持终端颜色，但没有被 Django 自动检测到，可以通过设置适当的环境变量 <code class="docutils literal notranslate"><span class="pre">ANSICON=&quot;on&quot;</span></code> 来 “假装” 安装 <code class="docutils literal notranslate"><span class="pre">ANSICON</span></code>。</p>
+</div>
+<div class="section" id="s-custom-colors">
+<span id="custom-colors"></span><h4>自定义颜色<a class="headerlink" href="#custom-colors" title="永久链接至标题">¶</a></h4>
+<p>语法高亮的颜色是可以自定义的。Django 有三种调色板：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">dark</span></code>，适合在黑色背景上显示白色文字的终端。这是默认的调色板。</li>
+<li><code class="docutils literal notranslate"><span class="pre">light</span></code>，适用于白底黑字的终端。</li>
+<li><code class="docutils literal notranslate"><span class="pre">nocolor</span></code>，禁用语法高亮。</li>
+</ul>
+<p>你可以通过设置 <span class="target" id="index-30"></span><a class="reference internal" href="#envvar-DJANGO_COLORS"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_COLORS</span></code></a> 环境变量来选择一个调色板，以指定你想要使用的调色板。例如，在 Unix 或 OS/X BASH shell 下指定 <code class="docutils literal notranslate"><span class="pre">light</span></code> 调色板，你可以在命令提示符下运行以下命令：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">DJANGO_COLORS</span><span class="o">=</span><span class="s2">&quot;light&quot;</span>
+</pre></div>
+</div>
+<p>你也可以自定义使用的颜色。Django 指定了一些使用颜色的角色：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">error</span></code> - 一个重大错误。</li>
+<li><code class="docutils literal notranslate"><span class="pre">notice</span></code> - 一个小错误。</li>
+<li><code class="docutils literal notranslate"><span class="pre">success</span></code> - 成功。</li>
+<li><code class="docutils literal notranslate"><span class="pre">warning</span></code> - 警告。</li>
+<li><code class="docutils literal notranslate"><span class="pre">sql_field</span></code> - SQL 中模型字段的名称。</li>
+<li><code class="docutils literal notranslate"><span class="pre">sql_coltype</span></code> - SQL 中模型字段的类型。</li>
+<li><code class="docutils literal notranslate"><span class="pre">sql_keyword</span></code> - 一个 SQL 关键字。</li>
+<li><code class="docutils literal notranslate"><span class="pre">sql_table</span></code> - SQL 中的模型名称。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_info</span></code> - 一个 1XX 的 HTTP Informational 服务器响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_success</span></code> - 一个 2XX 的 HTTP Success 服务器响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_not_modified</span></code> - 一个 304 HTTP Not Modified 服务器响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_redirect</span></code> - 一个除 304 之外的 3XX HTTP 重定向服务器响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_not_found</span></code> - 一个 404 HTTP Not Found 服务器响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_bad_request</span></code> - 一个除了 404 之外的 4XX HTTP Bad Request 服务器响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">http_server_error</span></code> - 5XX HTTP 服务器错误响应。</li>
+<li><code class="docutils literal notranslate"><span class="pre">migrate_heading</span></code> - 迁移管理命令中的标题。</li>
+<li><code class="docutils literal notranslate"><span class="pre">migrate_label</span></code> - 迁移名称。</li>
+</ul>
+<p>这些角色中的每一个都可以从以下列表中指定特定的前景和背景颜色：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">black</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">red</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">green</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">yellow</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">blue</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">magenta</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">cyan</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">white</span></code></li>
+</ul>
+<p>然后可以通过使用以下显示选项来修改这些颜色：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">bold</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">underscore</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">blink</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">reverse</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">conceal</span></code></li>
+</ul>
+<p>颜色规格遵循以下模式之一：</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">role=fg</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">role=fg/bg</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">role=fg,option,option</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">role=fg/bg,option,option</span></code></li>
+</ul>
+<p>其中，<code class="docutils literal notranslate"><span class="pre">role</span></code> 是有效颜色角色的名称，<code class="docutils literal notranslate"><span class="pre">fg</span></code> 是前景颜色，<code class="docutils literal notranslate"><span class="pre">bg</span></code> 是背景颜色，每个 <code class="docutils literal notranslate"><span class="pre">option</span></code> 都是颜色修改选项之一。多个颜色规范之间用分号分隔。例如：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">DJANGO_COLORS</span><span class="o">=</span><span class="s2">&quot;error=yellow/blue,blink;notice=magenta&quot;</span>
+</pre></div>
+</div>
+<p>将指定使用蓝色上闪烁的黄色显示错误，使用洋红色显示通知。所有其他颜色角色将不着色。</p>
+<p>颜色也可以通过扩展基本调色板来指定。如果在颜色规范中放置了一个调色板名称，那么将加载由该调色板暗示的所有颜色。所以：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">DJANGO_COLORS</span><span class="o">=</span><span class="s2">&quot;light;error=yellow/blue,blink;notice=magenta&quot;</span>
+</pre></div>
+</div>
+<p>将指定使用浅色调色板中的所有颜色，<em>除了</em> 错误和通知的颜色，这些颜色将被覆盖。</p>
+</div>
+</div>
+<div class="section" id="s-bash-completion">
+<span id="bash-completion"></span><h3>Bash 补全<a class="headerlink" href="#bash-completion" title="永久链接至标题">¶</a></h3>
+<p>如果你使用 Bash shell，请考虑安装 Django bash 补全脚本，它位于 Django 源分发中的 <a class="reference external" href="https://github.com/django/django/blob/main/extras/django_bash_completion">extras/django_bash_completion</a>。它启用了对 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 和 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 命令的制表符自动补全，这样你可以，例如...</p>
+<ul class="simple">
+<li>输入 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code>。</li>
+<li>按 [TAB] 查看所有可用选项。</li>
+<li>输入 <code class="docutils literal notranslate"><span class="pre">sql</span></code>，然后输入 [TAB]，查看所有名称以 <code class="docutils literal notranslate"><span class="pre">sql</span></code> 开头的可用选项。</li>
+</ul>
+<p>关于如何添加自定义动作，请参见 <a class="reference internal" href="../howto/custom-management-commands.html"><span class="doc">编写自定义 django-admin 命令</span></a>。</p>
+</div>
+<div class="section" id="s-black-formatting">
+<span id="black-formatting"></span><h3>Black 格式化<a class="headerlink" href="#black-formatting" title="永久链接至标题">¶</a></h3>
+<p>由 <a class="reference internal" href="#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startproject</span></code></a>、<a class="reference internal" href="#django-admin-startapp"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startapp</span></code></a>、<a class="reference internal" href="#django-admin-optimizemigration"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">optimizemigration</span></code></a>、<a class="reference internal" href="#django-admin-makemigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">makemigrations</span></code></a> 和 <a class="reference internal" href="#django-admin-squashmigrations"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">squashmigrations</span></code></a> 创建的 Python 文件将使用 <code class="docutils literal notranslate"><span class="pre">black</span></code> 命令进行格式化，如果它存在于你的 <code class="docutils literal notranslate"><span class="pre">PATH</span></code> 中的话。</p>
+<p>如果你已经全局安装了 <code class="docutils literal notranslate"><span class="pre">black</span></code>，但不希望它用于当前项目，你可以显式设置 <code class="docutils literal notranslate"><span class="pre">PATH</span></code>：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">PATH</span><span class="o">=</span>path/to/venv/bin django-admin makemigrations
+</pre></div>
+</div>
+<p>对于使用 <code class="docutils literal notranslate"><span class="pre">stdout</span></code> 的命令，如果需要，你可以将输出导向到 <code class="docutils literal notranslate"><span class="pre">black</span></code>：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>django-admin inspectdb <span class="p">|</span> black -
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-running-management-commands-from-your-code">
+<span id="running-management-commands-from-your-code"></span><h1>从你的代码中运行管理命令<a class="headerlink" href="#running-management-commands-from-your-code" title="永久链接至标题">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.core.management.call_command">
+<code class="sig-prename descclassname"><span class="pre">django.core.management.</span></code><code class="sig-name descname"><span class="pre">call_command</span></code>(<em><span class="n"><span class="pre">name</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.core.management.call_command" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>要从代码中调用管理命令，请使用 <code class="docutils literal notranslate"><span class="pre">call_command()</span></code>。</p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code></dt><dd>要调用的命令名称或命令对象的名称。除非测试时需要该对象，否则最好传递名称。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">*args</span></code></dt><dd>命令接受的参数列表。参数被传递给参数解析器，所以你可以使用与命令行相同的风格。例如，<code class="docutils literal notranslate"><span class="pre">call_command('flush',</span> <span class="pre">'--verbosity=0')</span></code>。</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">**options</span></code></dt><dd>在命令行中接受的命名选项。选项传递给命令时不会触发参数解析器，这意味着你需要传递正确的类型。例如，<code class="docutils literal notranslate"><span class="pre">call_command('flush',</span> <span class="pre">verbosity=0)</span></code> （0 必须是一个整数而不是字符串）。</dd>
+</dl>
+<p>举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core</span> <span class="kn">import</span> <span class="n">management</span>
+<span class="kn">from</span> <span class="nn">django.core.management.commands</span> <span class="kn">import</span> <span class="n">loaddata</span>
+
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;flush&quot;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;loaddata&quot;</span><span class="p">,</span> <span class="s2">&quot;test_data&quot;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="n">loaddata</span><span class="o">.</span><span class="n">Command</span><span class="p">(),</span> <span class="s2">&quot;test_data&quot;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>需要注意的是，没有参数的命令选项是以关键字 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code> 的形式传递的，如上面的 <code class="docutils literal notranslate"><span class="pre">interactive</span></code> 选项。</p>
+<p>命名的参数可以通过使用以下任何一种语法来传递：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Similar to the command line</span>
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;dumpdata&quot;</span><span class="p">,</span> <span class="s2">&quot;--natural-foreign&quot;</span><span class="p">)</span>
+
+<span class="c1"># Named argument similar to the command line minus the initial dashes and</span>
+<span class="c1"># with internal dashes replaced by underscores</span>
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;dumpdata&quot;</span><span class="p">,</span> <span class="n">natural_foreign</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># `use_natural_foreign_keys` is the option destination variable</span>
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;dumpdata&quot;</span><span class="p">,</span> <span class="n">use_natural_foreign_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>当使用 <code class="docutils literal notranslate"><span class="pre">call_command()</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 或 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 时，一些命令选项有不同的名称。例如，<code class="docutils literal notranslate"><span class="pre">django-admin</span> <span class="pre">createsuperuser</span> <span class="pre">--no-input</span></code> 翻译成 <code class="docutils literal notranslate"><span class="pre">call_command('creasuperuser',</span> <span class="pre">interactive=False)</span></code>。要找到 <code class="docutils literal notranslate"><span class="pre">call_command()</span></code> 的关键字参数名，请检查命令的源代码中传递给 <code class="docutils literal notranslate"><span class="pre">parser.add_argument()</span></code> 的 <code class="docutils literal notranslate"><span class="pre">dest</span></code> 参数。</p>
+<p>取多个选项的命令选项会通过一个列表：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;dumpdata&quot;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;contenttypes&quot;</span><span class="p">,</span> <span class="s2">&quot;auth&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">call_command()</span></code> 函数的返回值与命令的 <code class="docutils literal notranslate"><span class="pre">handle()</span></code> 方法的返回值相同。</p>
+<div class="section" id="s-output-redirection">
+<span id="output-redirection"></span><h2>输出重定向<a class="headerlink" href="#output-redirection" title="永久链接至标题">¶</a></h2>
+<p>注意，你可以重定向标准输出和错误流，因为所有命令都支持 <code class="docutils literal notranslate"><span class="pre">stdout</span></code> 和 <code class="docutils literal notranslate"><span class="pre">stderr</span></code> 选项。例如，你可以写：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/path/to/command_output&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;dumpdata&quot;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 和 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code></a><ul>
+<li><a class="reference internal" href="#usage">用法</a><ul>
+<li><a class="reference internal" href="#getting-runtime-help">获得运行时帮助</a></li>
+<li><a class="reference internal" href="#app-names">应用名称</a></li>
+<li><a class="reference internal" href="#determining-the-version">确定版本</a></li>
+<li><a class="reference internal" href="#displaying-debug-output">显示 debug 输出</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#available-commands">可用命令</a><ul>
+<li><a class="reference internal" href="#check"><code class="docutils literal notranslate"><span class="pre">check</span></code></a></li>
+<li><a class="reference internal" href="#compilemessages"><code class="docutils literal notranslate"><span class="pre">compilemessages</span></code></a></li>
+<li><a class="reference internal" href="#createcachetable"><code class="docutils literal notranslate"><span class="pre">createcachetable</span></code></a></li>
+<li><a class="reference internal" href="#dbshell"><code class="docutils literal notranslate"><span class="pre">dbshell</span></code></a></li>
+<li><a class="reference internal" href="#diffsettings"><code class="docutils literal notranslate"><span class="pre">diffsettings</span></code></a></li>
+<li><a class="reference internal" href="#dumpdata"><code class="docutils literal notranslate"><span class="pre">dumpdata</span></code></a><ul>
+<li><a class="reference internal" href="#fixtures-compression">固定数据压缩</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#flush"><code class="docutils literal notranslate"><span class="pre">flush</span></code></a></li>
+<li><a class="reference internal" href="#inspectdb"><code class="docutils literal notranslate"><span class="pre">inspectdb</span></code></a><ul>
+<li><a class="reference internal" href="#database-specific-notes">特定于数据库的注释</a><ul>
+<li><a class="reference internal" href="#oracle">Oracle</a></li>
+<li><a class="reference internal" href="#postgresql">PostgreSQL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#loaddata"><code class="docutils literal notranslate"><span class="pre">loaddata</span></code></a><ul>
+<li><a class="reference internal" href="#loading-fixtures-from-stdin">从 <code class="docutils literal notranslate"><span class="pre">stdin</span></code> 加载固定数据</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#makemessages"><code class="docutils literal notranslate"><span class="pre">makemessages</span></code></a></li>
+<li><a class="reference internal" href="#makemigrations"><code class="docutils literal notranslate"><span class="pre">makemigrations</span></code></a></li>
+<li><a class="reference internal" href="#migrate"><code class="docutils literal notranslate"><span class="pre">migrate</span></code></a></li>
+<li><a class="reference internal" href="#optimizemigration"><code class="docutils literal notranslate"><span class="pre">optimizemigration</span></code></a></li>
+<li><a class="reference internal" href="#runserver"><code class="docutils literal notranslate"><span class="pre">runserver</span></code></a><ul>
+<li><a class="reference internal" href="#examples-of-using-different-ports-and-addresses">使用不同端口和地址的例子</a></li>
+<li><a class="reference internal" href="#serving-static-files-with-the-development-server">用开发服务器服务静态文件</a></li>
+<li><a class="reference internal" href="#serving-with-asgi-in-development">在开发中使用 ASGI 进行服务</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sendtestemail"><code class="docutils literal notranslate"><span class="pre">sendtestemail</span></code></a></li>
+<li><a class="reference internal" href="#shell"><code class="docutils literal notranslate"><span class="pre">shell</span></code></a></li>
+<li><a class="reference internal" href="#showmigrations"><code class="docutils literal notranslate"><span class="pre">showmigrations</span></code></a></li>
+<li><a class="reference internal" href="#sqlflush"><code class="docutils literal notranslate"><span class="pre">sqlflush</span></code></a></li>
+<li><a class="reference internal" href="#sqlmigrate"><code class="docutils literal notranslate"><span class="pre">sqlmigrate</span></code></a></li>
+<li><a class="reference internal" href="#sqlsequencereset"><code class="docutils literal notranslate"><span class="pre">sqlsequencereset</span></code></a></li>
+<li><a class="reference internal" href="#squashmigrations"><code class="docutils literal notranslate"><span class="pre">squashmigrations</span></code></a></li>
+<li><a class="reference internal" href="#startapp"><code class="docutils literal notranslate"><span class="pre">startapp</span></code></a></li>
+<li><a class="reference internal" href="#startproject"><code class="docutils literal notranslate"><span class="pre">startproject</span></code></a></li>
+<li><a class="reference internal" href="#test"><code class="docutils literal notranslate"><span class="pre">test</span></code></a><ul>
+<li><a class="reference internal" href="#test-runner-options">测试运行器选项</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testserver"><code class="docutils literal notranslate"><span class="pre">testserver</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#commands-provided-by-applications">应用程序提供的命令</a><ul>
+<li><a class="reference internal" href="#django-contrib-auth"><code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code></a><ul>
+<li><a class="reference internal" href="#changepassword"><code class="docutils literal notranslate"><span class="pre">changepassword</span></code></a></li>
+<li><a class="reference internal" href="#createsuperuser"><code class="docutils literal notranslate"><span class="pre">createsuperuser</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#django-contrib-contenttypes"><code class="docutils literal notranslate"><span class="pre">django.contrib.contenttypes</span></code></a><ul>
+<li><a class="reference internal" href="#remove-stale-contenttypes"><code class="docutils literal notranslate"><span class="pre">remove_stale_contenttypes</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#django-contrib-gis"><code class="docutils literal notranslate"><span class="pre">django.contrib.gis</span></code></a><ul>
+<li><a class="reference internal" href="#ogrinspect"><code class="docutils literal notranslate"><span class="pre">ogrinspect</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#django-contrib-sessions"><code class="docutils literal notranslate"><span class="pre">django.contrib.sessions</span></code></a><ul>
+<li><a class="reference internal" href="#clearsessions"><code class="docutils literal notranslate"><span class="pre">clearsessions</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#django-contrib-staticfiles"><code class="docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code></a><ul>
+<li><a class="reference internal" href="#collectstatic"><code class="docutils literal notranslate"><span class="pre">collectstatic</span></code></a></li>
+<li><a class="reference internal" href="#findstatic"><code class="docutils literal notranslate"><span class="pre">findstatic</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#default-options">默认选项</a></li>
+<li><a class="reference internal" href="#extra-niceties">额外的细节</a><ul>
+<li><a class="reference internal" href="#syntax-coloring">语法着色</a><ul>
+<li><a class="reference internal" href="#windows-support">Windows 支持</a></li>
+<li><a class="reference internal" href="#custom-colors">自定义颜色</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bash-completion">Bash 补全</a></li>
+<li><a class="reference internal" href="#black-formatting">Black 格式化</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-management-commands-from-your-code">从你的代码中运行管理命令</a><ul>
+<li><a class="reference internal" href="#output-redirection">输出重定向</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="databases.html"
+                          title="上一章">数据库</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="exceptions.html"
+                          title="下一章">Django 异常</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/ref/django-admin.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="databases.html" title="数据库">previous</a>
+     |
+    <a href="index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="exceptions.html" title="Django 异常">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

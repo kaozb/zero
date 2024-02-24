@@ -1,0 +1,486 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据库访问优化 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="数据库工具" href="instrumentation.html" />
+    <link rel="prev" title="表空间（Tablespaces）" href="tablespaces.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="tablespaces.html" title="表空间（Tablespaces）">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="instrumentation.html" title="数据库工具">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-optimization">
+            
+  <div class="section" id="s-database-access-optimization">
+<span id="database-access-optimization"></span><h1>数据库访问优化<a class="headerlink" href="#database-access-optimization" title="永久链接至标题">¶</a></h1>
+<p>Django 的数据库层提供了各种方法来帮助开发者最大限度地利用数据库。本文档收集了相关文档的链接，并添加了各种提示，按照一些标题组织，概述了在尝试优化数据库使用时的步骤。</p>
+<div class="section" id="s-profile-first">
+<span id="profile-first"></span><h2>首先性能分析<a class="headerlink" href="#profile-first" title="永久链接至标题">¶</a></h2>
+<p>作为一般的编程实践，这个不用多说。找出 <a class="reference internal" href="../../faq/models.html#faq-see-raw-sql-queries"><span class="std std-ref">你在做什么查询以及它们花费的代价</span></a>。使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.explain" title="django.db.models.query.QuerySet.explain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.explain()</span></code></a> 来了解你的数据库是如何执行特定的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的。你可能还想使用一个外部项目，比如 <a class="reference external" href="https://github.com/jazzband/django-debug-toolbar/">django-debug-toolbar</a> ，或者一个直接监控数据库的工具。</p>
+<p>请记住，你可能会根据你的需求，对速度或内存或两者进行优化。有时为其中之一进行优化会损害另一个，但有时它们会相互帮助。另外，由数据库进程完成的工作可能与在 Python 进程中完成的相同数量的工作的成本并不相同（对你来说）。这取决于你的优先级是什么，平衡点在哪里，并根据需要对所有这些进行性能分析，因为这将取决于你的应用程序和服务器。</p>
+<p>对于下面的所有内容，请记住在每次修改后都要进行性能分析，以确保修改有好处，而且是一个足够大的好处，因为你的代码的可读性降低了。<strong>以下所有</strong> 的建议都有一个警告，那就是在你自身情况下，一般的原则可能不适用，甚至可能会被反过来。</p>
+</div>
+<div class="section" id="s-use-standard-db-optimization-techniques">
+<span id="use-standard-db-optimization-techniques"></span><h2>使用标准数据库优化技巧<a class="headerlink" href="#use-standard-db-optimization-techniques" title="永久链接至标题">¶</a></h2>
+<p>……包括：</p>
+<ul class="simple">
+<li><a class="reference external" href="https://en.wikipedia.org/wiki/Database_index">Indexes</a> 。这是第一优先级，在你从性能分析中确定应该添加哪些索引 <em>之后</em>。这是第一优先级的。使用 <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.indexes" title="django.db.models.Options.indexes"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.indexes</span></code></a> 或 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.db_index" title="django.db.models.Field.db_index"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Field.db_index</span></code></a> 从 Django 添加这些索引。可以考虑使用 <code class="xref py py-meth docutils literal notranslate"><span class="pre">filter()</span></code>、<code class="xref py py-meth docutils literal notranslate"><span class="pre">exclude()</span></code>、<code class="xref py py-meth docutils literal notranslate"><span class="pre">order_by()</span></code> 等方式为你经常查询的字段添加索引，因为索引可能有助于加快查询速度。请注意，确定最好的索引是一个复杂的数据库依赖性话题，将取决于你的特定应用。维护索引的开销可能会超过查询速度的任何收益。</li>
+</ul>
+<ul class="simple">
+<li>合理使用字段类型。</li>
+</ul>
+<p>我们将假设你已经做了上面列出的事情。本文档的其余部分主要介绍如何使用 Django，使你不做不必要的工作。本文档也不涉及其他适用于所有昂贵操作的优化技术，比如 <a class="reference internal" href="../cache.html"><span class="doc">通用缓存</span></a>。</p>
+</div>
+<div class="section" id="s-understand-querysets">
+<span id="understand-querysets"></span><h2>理解 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code><a class="headerlink" href="#understand-querysets" title="永久链接至标题">¶</a></h2>
+<p>理解 <a class="reference internal" href="../../ref/models/querysets.html"><span class="doc">QuerySets</span></a> 是用简单代码获得高效率的关键。特别是在：</p>
+<div class="section" id="s-understand-queryset-evaluation">
+<span id="understand-queryset-evaluation"></span><h3>理解 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的执行过程<a class="headerlink" href="#understand-queryset-evaluation" title="永久链接至标题">¶</a></h3>
+<p>要避免执行过程中的问题，一定要理解：</p>
+<ul class="simple">
+<li><a class="reference internal" href="queries.html#querysets-are-lazy"><span class="std std-ref">QuertSets 是惰性的</span></a>。</li>
+<li>当 <a class="reference internal" href="../../ref/models/querysets.html#when-querysets-are-evaluated"><span class="std std-ref">它们被计算时</span></a>。</li>
+<li>不过 <a class="reference internal" href="queries.html#caching-and-querysets"><span class="std std-ref">数据保存在内存中</span></a>。</li>
+</ul>
+</div>
+<div class="section" id="s-understand-cached-attributes">
+<span id="understand-cached-attributes"></span><h3>理解缓存属性<a class="headerlink" href="#understand-cached-attributes" title="永久链接至标题">¶</a></h3>
+<p>除了整个 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的缓存之外，还对 ORM 对象上的属性结果进行了缓存。通常，不可调用的属性会被缓存。例如，假设 <a class="reference internal" href="queries.html#queryset-model-example"><span class="std std-ref">示例博客模型</span></a>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span><span class="o">.</span><span class="n">blog</span>  <span class="c1"># Blog object is retrieved at this point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span><span class="o">.</span><span class="n">blog</span>  <span class="c1"># cached version, no DB access</span>
+</pre></div>
+</div>
+<p>但一般来说，可调用属性每次都会导致数据库查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span><span class="o">.</span><span class="n">authors</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>  <span class="c1"># query performed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span><span class="o">.</span><span class="n">authors</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>  <span class="c1"># query performed again</span>
+</pre></div>
+</div>
+<p>阅读模板代码时要注意——模板系统不允许使用括号，但会自动调用可调用对象代码，隐藏了上述区别。</p>
+<p>小心使用你自己的自定义属性——在需要的时候由你自己来实现缓存，例如使用 <a class="reference internal" href="../../ref/utils.html#django.utils.functional.cached_property" title="django.utils.functional.cached_property"><code class="xref py py-class docutils literal notranslate"><span class="pre">cached_property</span></code></a> 装饰器。</p>
+</div>
+<div class="section" id="s-use-the-with-template-tag">
+<span id="use-the-with-template-tag"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">with</span></code> 模板标签<a class="headerlink" href="#use-the-with-template-tag" title="永久链接至标题">¶</a></h3>
+<p>要使用 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的缓存行为，你可能需要使用 <a class="reference internal" href="../../ref/templates/builtins.html#std-templatetag-with"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">with</span></code></a> 模板标签。</p>
+</div>
+<div class="section" id="s-use-iterator">
+<span id="use-iterator"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">iterator()</span></code><a class="headerlink" href="#use-iterator" title="永久链接至标题">¶</a></h3>
+<p>当你有很多对象时，<code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的缓存行为可能会导致大量的内存被使用。在这种情况下，<a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.iterator" title="django.db.models.query.QuerySet.iterator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">iterator()</span></code></a> 可能会有帮助。</p>
+</div>
+<div class="section" id="s-use-explain">
+<span id="use-explain"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">explain()</span></code><a class="headerlink" href="#use-explain" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.explain" title="django.db.models.query.QuerySet.explain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QuerySet.explain()</span></code></a> 为你提供有关数据库如何执行查询的详细信息，包括使用的索引和连接（jion）。这些细节可能会帮助你找到可以更有效地重写的查询，或确定可以添加的索引以提高性能。</p>
+</div>
+</div>
+<div class="section" id="s-do-database-work-in-the-database-rather-than-in-python">
+<span id="do-database-work-in-the-database-rather-than-in-python"></span><h2>在数据库中执行数据库操作，而不是在 Python 代码中<a class="headerlink" href="#do-database-work-in-the-database-rather-than-in-python" title="永久链接至标题">¶</a></h2>
+<p>例子：</p>
+<ul class="simple">
+<li>在最基本的层面上，使用 <a class="reference internal" href="../../ref/models/querysets.html#queryset-api"><span class="std std-ref">filter 和 exclude</span></a> 在数据库中进行过滤。</li>
+<li>使用 <a class="reference internal" href="../../ref/models/expressions.html#django.db.models.F" title="django.db.models.F"><code class="xref py py-class docutils literal notranslate"><span class="pre">F</span> <span class="pre">表达式</span></code></a> 根据同一模型中的其他字段进行过滤。</li>
+<li>利用 <a class="reference internal" href="aggregation.html"><span class="doc">注解在数据库中执行聚合</span></a>。</li>
+</ul>
+<p>若其不足以生成你需要的 SQL：</p>
+<div class="section" id="s-use-rawsql">
+<span id="use-rawsql"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">RawSQL</span></code><a class="headerlink" href="#use-rawsql" title="永久链接至标题">¶</a></h3>
+<p>最简单直接的方法是 <a class="reference internal" href="../../ref/models/expressions.html#django.db.models.expressions.RawSQL" title="django.db.models.expressions.RawSQL"><code class="xref py py-class docutils literal notranslate"><span class="pre">RawSQL</span></code></a> 表达式，它允许一些 SQL 显式的添加到查询中。如果这还不够强大：</p>
+</div>
+<div class="section" id="s-use-raw-sql">
+<span id="use-raw-sql"></span><h3>使用原生 SQL<a class="headerlink" href="#use-raw-sql" title="永久链接至标题">¶</a></h3>
+<p>编写你自己的 <a class="reference internal" href="sql.html"><span class="doc">自定义 SQL 来检索数据或填充模型</span></a>。使用 <code class="docutils literal notranslate"><span class="pre">django.db.connection.query</span></code> 找出 Django 为你写的东西，然后从那里开始。</p>
+</div>
+</div>
+<div class="section" id="s-retrieve-individual-objects-using-a-unique-indexed-column">
+<span id="retrieve-individual-objects-using-a-unique-indexed-column"></span><h2>使用唯一索引列来检索单个对象。<a class="headerlink" href="#retrieve-individual-objects-using-a-unique-indexed-column" title="永久链接至标题">¶</a></h2>
+<p>当使用 <code class="xref py py-meth docutils literal notranslate"><span class="pre">unique()</span></code> 或 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.Field.db_index" title="django.db.models.Field.db_index"><code class="xref py py-attr docutils literal notranslate"><span class="pre">db_index</span></code></a> 的列来检索单个对象时，有两个原因。首先，由于底层数据库索引的存在，查询的速度会更快。另外，如果多个对象与查找对象相匹配，查询的运行速度可能会慢很多；在列上有一个唯一约束保证这种情况永远不会发生。</p>
+<p>因此，使用 <a class="reference internal" href="queries.html#queryset-model-example"><span class="std std-ref">示例博客模型</span></a>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>会比以下更快：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;News Item Title&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>因为 <code class="docutils literal notranslate"><span class="pre">id</span></code> 通过数据库索引，并且保证是唯一的。</p>
+<p>执行以下操作可能非常慢：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">headline__startswith</span><span class="o">=</span><span class="s2">&quot;News&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>首先，<code class="docutils literal notranslate"><span class="pre">headline</span></code> 没有被索引，这将使得底层数据库获取变慢。</p>
+<p>其次，查找不保证只返回一个对象。如果查询匹配多于一个对象，它将从数据库中检索并传递所有对象。如果数据库位于单独的服务器上，那这个损失将更复杂，网络开销和延迟也是一个因素。</p>
+</div>
+<div class="section" id="s-retrieve-everything-at-once-if-you-know-you-will-need-it">
+<span id="retrieve-everything-at-once-if-you-know-you-will-need-it"></span><h2>如果你明确需要它，那么立即检索所有内容。<a class="headerlink" href="#retrieve-everything-at-once-if-you-know-you-will-need-it" title="永久链接至标题">¶</a></h2>
+<p>对于你需要的所有部分的单个数据集的不同部分，多次访问数据库比单次查询所有内容的效率低。如果有一个查找，它在循环中执行，这点就尤其重要，当只需要一个查询时，最终会执行许多数据库查询。因此：</p>
+<div class="section" id="s-use-queryset-select-related-and-prefetch-related">
+<span id="use-queryset-select-related-and-prefetch-related"></span><h3>使用  <code class="docutils literal notranslate"><span class="pre">QuerySet.select_related()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">prefetch_related()</span></code><a class="headerlink" href="#use-queryset-select-related-and-prefetch-related" title="永久链接至标题">¶</a></h3>
+<p>深入理解 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.select_related" title="django.db.models.query.QuerySet.select_related"><code class="xref py py-meth docutils literal notranslate"><span class="pre">select_related()</span></code></a> 和 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.prefetch_related" title="django.db.models.query.QuerySet.prefetch_related"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prefetch_related()</span></code></a> ，并使用它们：</p>
+<ul class="simple">
+<li>在 <a class="reference internal" href="managers.html"><span class="doc">管理器和默认管理器</span></a> 中使用。请注意管理器何时被使用；有时这很棘手，所以不要做出假设。</li>
+<li>在视图代码层或其他层中，可能在需要时使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.prefetch_related_objects" title="django.db.models.prefetch_related_objects"><code class="xref py py-func docutils literal notranslate"><span class="pre">prefetch_related_objects()</span></code></a> 。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-don-t-retrieve-things-you-don-t-need">
+<span id="don-t-retrieve-things-you-don-t-need"></span><h2>不要检索你不需要的东西<a class="headerlink" href="#don-t-retrieve-things-you-don-t-need" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-use-queryset-values-and-values-list">
+<span id="use-queryset-values-and-values-list"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.values()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">values_list()</span></code><a class="headerlink" href="#use-queryset-values-and-values-list" title="永久链接至标题">¶</a></h3>
+<p>当你只想得到字典或列表的值，并且不需要 ORM 模型对象时，可以适当使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.values" title="django.db.models.query.QuerySet.values"><code class="xref py py-meth docutils literal notranslate"><span class="pre">values()</span></code></a> 。这些对于替换模板代码中的模型对象非常有用——只要你提供的字典具有与模板中使用时相同的属性就行。</p>
+</div>
+<div class="section" id="s-use-queryset-defer-and-only">
+<span id="use-queryset-defer-and-only"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.defer()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">only()</span></code><a class="headerlink" href="#use-queryset-defer-and-only" title="永久链接至标题">¶</a></h3>
+<p>如果你明确不需要这个数据库列（或在大部分情况里不需要），使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.defer" title="django.db.models.query.QuerySet.defer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">defer()</span></code></a> 和 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.only" title="django.db.models.query.QuerySet.only"><code class="xref py py-meth docutils literal notranslate"><span class="pre">only()</span></code></a> 来避免加载它们。注意如果你使用它们，ORM 将必须在单独的查询中获取它们，如果你不恰当的使用，会让事情变得糟糕。</p>
+<p>在不进行性能分析的情况下，不要过于激进地推迟字段，因为数据库必须从磁盘读取大多数非文本、非 <code class="docutils literal notranslate"><span class="pre">VARCHAR</span></code> 数据，即使最终只使用了几列。<code class="docutils literal notranslate"><span class="pre">defer()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">only()</span></code> 方法在你可以避免加载大量文本数据或对需要大量处理才能转换回 Python 的字段时最有用。与往常一样，首先进行性能分析，然后进行优化。</p>
+</div>
+<div class="section" id="s-use-queryset-contains-obj">
+<span id="use-queryset-contains-obj"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.contains(obj)</span></code><a class="headerlink" href="#use-queryset-contains-obj" title="永久链接至标题">¶</a></h3>
+<p>...如果你只想找出 <code class="docutils literal notranslate"><span class="pre">obj</span></code> 是否在查询集中，而不是 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">obj</span> <span class="pre">in</span> <span class="pre">queryset</span></code>。</p>
+</div>
+<div class="section" id="s-use-queryset-count">
+<span id="use-queryset-count"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.count()</span></code><a class="headerlink" href="#use-queryset-count" title="永久链接至标题">¶</a></h3>
+<p>……如果你只想计数，不要使用 <code class="docutils literal notranslate"><span class="pre">len(queryset)</span></code>。</p>
+</div>
+<div class="section" id="s-use-queryset-exists">
+<span id="use-queryset-exists"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.exists()</span></code><a class="headerlink" href="#use-queryset-exists" title="永久链接至标题">¶</a></h3>
+<p>……若你只想要确认是否有至少存在一项满足条件的结果，而不是 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">queryset</span></code>。</p>
+<p>但是：</p>
+</div>
+<div class="section" id="s-don-t-overuse-contains-count-and-exists">
+<span id="s-overuse-of-count-and-exists"></span><span id="don-t-overuse-contains-count-and-exists"></span><span id="overuse-of-count-and-exists"></span><h3>不要滥用 <code class="docutils literal notranslate"><span class="pre">contains()</span></code>, <code class="docutils literal notranslate"><span class="pre">count()</span></code>, 和 <code class="docutils literal notranslate"><span class="pre">exists()</span></code>。<a class="headerlink" href="#don-t-overuse-contains-count-and-exists" title="永久链接至标题">¶</a></h3>
+<p>如果你需要查询集中的其他数据，请立即对其进行评估。</p>
+<p>例如，假设有一个 <code class="docutils literal notranslate"><span class="pre">Group</span></code> 模型，它与 <code class="docutils literal notranslate"><span class="pre">User</span></code> 有一个多对多关系，下面的代码是最优的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">members</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">display_group_members</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">members</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">current_user</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You and&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">members</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;other users are members of this group.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">members</span><span class="p">),</span> <span class="s2">&quot;members in this group.&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are no members in this group.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这是最佳的，因为：</p>
+<ol class="arabic simple">
+<li>由于查询集是惰性加载的，如果 <code class="docutils literal notranslate"><span class="pre">display_group_members</span></code> 是 <code class="docutils literal notranslate"><span class="pre">False</span></code>，则不会执行任何数据库查询。</li>
+<li>将 <code class="docutils literal notranslate"><span class="pre">group.members.all()</span></code> 存储在 <code class="docutils literal notranslate"><span class="pre">members</span></code> 变量中可以重复使用其结果缓存。</li>
+<li>这一行代码 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">members:</span></code> 导致调用了 <code class="docutils literal notranslate"><span class="pre">QuerySet.__bool__()</span></code>，这将导致在数据库上运行 <code class="docutils literal notranslate"><span class="pre">group.members.all()</span></code> 查询。如果没有结果，它将返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>，否则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</li>
+<li>这一行代码 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">current_user</span> <span class="pre">in</span> <span class="pre">members:</span></code> 检查用户是否在结果缓存中，因此不会发出额外的数据库查询。</li>
+<li>使用 <code class="docutils literal notranslate"><span class="pre">len(members)</span></code> 调用了 <code class="docutils literal notranslate"><span class="pre">QuerySet.__len__()</span></code>，重复使用了结果缓存，因此再次不会发出数据库查询。</li>
+<li><code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">member</span></code> 循环遍历结果缓存。</li>
+</ol>
+<p>总的来说，这段代码只执行了一个或零个数据库查询。唯一明确的优化是使用了 <code class="docutils literal notranslate"><span class="pre">members</span></code> 变量。使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.exists()</span></code> 来进行 <code class="docutils literal notranslate"><span class="pre">if</span></code>、使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.contains()</span></code> 来进行 <code class="docutils literal notranslate"><span class="pre">in</span></code>，或者使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.count()</span></code> 来进行计数都会导致额外的查询。</p>
+</div>
+<div class="section" id="s-use-queryset-update-and-delete">
+<span id="use-queryset-update-and-delete"></span><h3>使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.update()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">delete()</span></code><a class="headerlink" href="#use-queryset-update-and-delete" title="永久链接至标题">¶</a></h3>
+<p>如果要设置一些值并单独保存它们，而不是检索对象，那么可以通过 <a class="reference internal" href="queries.html#topics-db-queries-update"><span class="std std-ref">QuerySet.update()</span></a> 使用批量 SQL UPDATE 语句。类似地，尽可能使用批量删除（ <a class="reference internal" href="queries.html#topics-db-queries-delete"><span class="std std-ref">bulk deletes</span></a>  ）。</p>
+<p>注意，尽管这些批量更新方法不会调用单独实例的 <code class="docutils literal notranslate"><span class="pre">save()</span></code> 或 <code class="docutils literal notranslate"><span class="pre">delete()</span></code> 方法，这意味着你为这些方法添加的任何自定义行为都不会执行，包括来自正常数据库对象信号（ <a class="reference internal" href="../../ref/signals.html"><span class="doc">signals</span></a> ）的任何内容。</p>
+</div>
+<div class="section" id="s-use-foreign-key-values-directly">
+<span id="use-foreign-key-values-directly"></span><h3>直接使用外键值<a class="headerlink" href="#use-foreign-key-values-directly" title="永久链接至标题">¶</a></h3>
+<p>如果只需要外键值，那么使用已有对象上的外键值，而不是获取所有相关对象并获取它的主键。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entry</span><span class="o">.</span><span class="n">blog_id</span>
+</pre></div>
+</div>
+<p>替换成：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entry</span><span class="o">.</span><span class="n">blog</span><span class="o">.</span><span class="n">id</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-don-t-order-results-if-you-don-t-care">
+<span id="don-t-order-results-if-you-don-t-care"></span><h3>如无需要，不要排序结果<a class="headerlink" href="#don-t-order-results-if-you-don-t-care" title="永久链接至标题">¶</a></h3>
+<p>排序是耗时的；对每个字段的排序是数据库必须执行的操作。如果模型有一个默认排序（ <a class="reference internal" href="../../ref/models/options.html#django.db.models.Options.ordering" title="django.db.models.Options.ordering"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.ordering</span></code></a> ）并且不需要它，那么可以通过调用没有参数的 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.order_by" title="django.db.models.query.QuerySet.order_by"><code class="xref py py-meth docutils literal notranslate"><span class="pre">order_by()</span></code></a> 在查询集上删除它。</p>
+<p>添加索引到你的数据库上可以帮助改进排序性能。</p>
+</div>
+</div>
+<div class="section" id="s-use-bulk-methods">
+<span id="use-bulk-methods"></span><h2>使用批量方法<a class="headerlink" href="#use-bulk-methods" title="永久链接至标题">¶</a></h2>
+<p>使用批量方法来减少 SQL 语句数量。</p>
+<div class="section" id="s-create-in-bulk">
+<span id="create-in-bulk"></span><h3>批量创建<a class="headerlink" href="#create-in-bulk" title="永久链接至标题">¶</a></h3>
+<p>当创建对象时，尽可能使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_create" title="django.db.models.query.QuerySet.bulk_create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bulk_create()</span></code></a> 方法来减少 SQL 查询数量。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">bulk_create</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">Entry</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;This is a test&quot;</span><span class="p">),</span>
+        <span class="n">Entry</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;This is only a test&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>要优于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;This is a test&quot;</span><span class="p">)</span>
+<span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;This is only a test&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>注意这个方法有一些注意事项（ <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_create" title="django.db.models.query.QuerySet.bulk_create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">caveats</span> <span class="pre">to</span> <span class="pre">this</span> <span class="pre">method</span></code></a> ），因此要确保它适用于你的情况。</p>
+</div>
+<div class="section" id="s-update-in-bulk">
+<span id="update-in-bulk"></span><h3>批量更新<a class="headerlink" href="#update-in-bulk" title="永久链接至标题">¶</a></h3>
+<p>当更新对象时，尽可能使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_update" title="django.db.models.query.QuerySet.bulk_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bulk_update()</span></code></a> 方法来减少 SQL 查询数。给定对象的列表或查询集：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entries</span> <span class="o">=</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">bulk_create</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">Entry</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;This is a test&quot;</span><span class="p">),</span>
+        <span class="n">Entry</span><span class="p">(</span><span class="n">headline</span><span class="o">=</span><span class="s2">&quot;This is only a test&quot;</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>下面示例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s2">&quot;This is not a test&quot;</span>
+<span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s2">&quot;This is no longer a test&quot;</span>
+<span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">bulk_update</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;headline&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>要优于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s2">&quot;This is not a test&quot;</span>
+<span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">headline</span> <span class="o">=</span> <span class="s2">&quot;This is no longer a test&quot;</span>
+<span class="n">entries</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>注意此方法有一些 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_update" title="django.db.models.query.QuerySet.bulk_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">注意事项</span></code></a> ，因此确保它适合你的案例。</p>
+</div>
+<div class="section" id="s-insert-in-bulk">
+<span id="insert-in-bulk"></span><h3>批量插入<a class="headerlink" href="#insert-in-bulk" title="永久链接至标题">¶</a></h3>
+<p>当插入对象到 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyFields</span></code></a> 时，使用带有多个对象的 <a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.add" title="django.db.models.fields.related.RelatedManager.add"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add()</span></code></a> 来减少 SQL 查询的数量。举例：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_band</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">me</span><span class="p">,</span> <span class="n">my_friend</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>要优于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_band</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">me</span><span class="p">)</span>
+<span class="n">my_band</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">my_friend</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>其中 <code class="docutils literal notranslate"><span class="pre">Bands</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Artists</span></code> 有多对多关系。</p>
+<p>当不同的对象对插入到 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a> 或者自定义的 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField.through" title="django.db.models.ManyToManyField.through"><code class="xref py py-attr docutils literal notranslate"><span class="pre">through</span></code></a> 表被定义时，可以使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_create" title="django.db.models.query.QuerySet.bulk_create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bulk_create()</span></code></a> 方法来减少 SQL 查询的数量。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PizzaToppingRelationship</span> <span class="o">=</span> <span class="n">Pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">through</span>
+<span class="n">PizzaToppingRelationship</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">bulk_create</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">PizzaToppingRelationship</span><span class="p">(</span><span class="n">pizza</span><span class="o">=</span><span class="n">my_pizza</span><span class="p">,</span> <span class="n">topping</span><span class="o">=</span><span class="n">pepperoni</span><span class="p">),</span>
+        <span class="n">PizzaToppingRelationship</span><span class="p">(</span><span class="n">pizza</span><span class="o">=</span><span class="n">your_pizza</span><span class="p">,</span> <span class="n">topping</span><span class="o">=</span><span class="n">pepperoni</span><span class="p">),</span>
+        <span class="n">PizzaToppingRelationship</span><span class="p">(</span><span class="n">pizza</span><span class="o">=</span><span class="n">your_pizza</span><span class="p">,</span> <span class="n">topping</span><span class="o">=</span><span class="n">mushroom</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">ignore_conflicts</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>要优于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pepperoni</span><span class="p">)</span>
+<span class="n">your_pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pepperoni</span><span class="p">,</span> <span class="n">mushroom</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>...其中 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 是多对多关系。注意这里有一些注意事项（ <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_create" title="django.db.models.query.QuerySet.bulk_create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">caveats</span> <span class="pre">to</span> <span class="pre">this</span> <span class="pre">method</span></code></a> ），因此要确保它适用于你的案例。</p>
+</div>
+<div class="section" id="s-remove-in-bulk">
+<span id="remove-in-bulk"></span><h3>批量删除<a class="headerlink" href="#remove-in-bulk" title="永久链接至标题">¶</a></h3>
+<p>当从 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyFields</span></code></a> 删除对象时，可以使用带有多个对象的 <a class="reference internal" href="../../ref/models/relations.html#django.db.models.fields.related.RelatedManager.remove" title="django.db.models.fields.related.RelatedManager.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove()</span></code></a> 来减少 SQL 查询的数量。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_band</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">me</span><span class="p">,</span> <span class="n">my_friend</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>要优于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_band</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">me</span><span class="p">)</span>
+<span class="n">my_band</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">my_friend</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>其中 <code class="docutils literal notranslate"><span class="pre">Bands</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Artists</span></code> 有多对多关系。</p>
+<p>当从 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyFields</span></code></a> 里删除不同的对象对时，可以在带有多种 <a class="reference internal" href="../../ref/models/fields.html#django.db.models.ManyToManyField.through" title="django.db.models.ManyToManyField.through"><code class="xref py py-attr docutils literal notranslate"><span class="pre">through</span></code></a> 模型实例的 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.Q" title="django.db.models.Q"><code class="xref py py-class docutils literal notranslate"><span class="pre">Q</span></code></a> 表达式上使用 <a class="reference internal" href="../../ref/models/querysets.html#django.db.models.query.QuerySet.delete" title="django.db.models.query.QuerySet.delete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete()</span></code></a> 来减少 SQL 查询的数量。比如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Q</span>
+
+<span class="n">PizzaToppingRelationship</span> <span class="o">=</span> <span class="n">Pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">through</span>
+<span class="n">PizzaToppingRelationship</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="n">Q</span><span class="p">(</span><span class="n">pizza</span><span class="o">=</span><span class="n">my_pizza</span><span class="p">,</span> <span class="n">topping</span><span class="o">=</span><span class="n">pepperoni</span><span class="p">)</span>
+    <span class="o">|</span> <span class="n">Q</span><span class="p">(</span><span class="n">pizza</span><span class="o">=</span><span class="n">your_pizza</span><span class="p">,</span> <span class="n">topping</span><span class="o">=</span><span class="n">pepperoni</span><span class="p">)</span>
+    <span class="o">|</span> <span class="n">Q</span><span class="p">(</span><span class="n">pizza</span><span class="o">=</span><span class="n">your_pizza</span><span class="p">,</span> <span class="n">topping</span><span class="o">=</span><span class="n">mushroom</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>要优于：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pepperoni</span><span class="p">)</span>
+<span class="n">your_pizza</span><span class="o">.</span><span class="n">toppings</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pepperoni</span><span class="p">,</span> <span class="n">mushroom</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>其中 <code class="docutils literal notranslate"><span class="pre">Pizza</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Topping</span></code> 有多对多关系。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">数据库访问优化</a><ul>
+<li><a class="reference internal" href="#profile-first">首先性能分析</a></li>
+<li><a class="reference internal" href="#use-standard-db-optimization-techniques">使用标准数据库优化技巧</a></li>
+<li><a class="reference internal" href="#understand-querysets">理解 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code></a><ul>
+<li><a class="reference internal" href="#understand-queryset-evaluation">理解 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 的执行过程</a></li>
+<li><a class="reference internal" href="#understand-cached-attributes">理解缓存属性</a></li>
+<li><a class="reference internal" href="#use-the-with-template-tag">使用 <code class="docutils literal notranslate"><span class="pre">with</span></code> 模板标签</a></li>
+<li><a class="reference internal" href="#use-iterator">使用 <code class="docutils literal notranslate"><span class="pre">iterator()</span></code></a></li>
+<li><a class="reference internal" href="#use-explain">使用 <code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#do-database-work-in-the-database-rather-than-in-python">在数据库中执行数据库操作，而不是在 Python 代码中</a><ul>
+<li><a class="reference internal" href="#use-rawsql">使用 <code class="docutils literal notranslate"><span class="pre">RawSQL</span></code></a></li>
+<li><a class="reference internal" href="#use-raw-sql">使用原生 SQL</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#retrieve-individual-objects-using-a-unique-indexed-column">使用唯一索引列来检索单个对象。</a></li>
+<li><a class="reference internal" href="#retrieve-everything-at-once-if-you-know-you-will-need-it">如果你明确需要它，那么立即检索所有内容。</a><ul>
+<li><a class="reference internal" href="#use-queryset-select-related-and-prefetch-related">使用  <code class="docutils literal notranslate"><span class="pre">QuerySet.select_related()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">prefetch_related()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#don-t-retrieve-things-you-don-t-need">不要检索你不需要的东西</a><ul>
+<li><a class="reference internal" href="#use-queryset-values-and-values-list">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.values()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">values_list()</span></code></a></li>
+<li><a class="reference internal" href="#use-queryset-defer-and-only">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.defer()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">only()</span></code></a></li>
+<li><a class="reference internal" href="#use-queryset-contains-obj">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.contains(obj)</span></code></a></li>
+<li><a class="reference internal" href="#use-queryset-count">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.count()</span></code></a></li>
+<li><a class="reference internal" href="#use-queryset-exists">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.exists()</span></code></a></li>
+<li><a class="reference internal" href="#don-t-overuse-contains-count-and-exists">不要滥用 <code class="docutils literal notranslate"><span class="pre">contains()</span></code>, <code class="docutils literal notranslate"><span class="pre">count()</span></code>, 和 <code class="docutils literal notranslate"><span class="pre">exists()</span></code>。</a></li>
+<li><a class="reference internal" href="#use-queryset-update-and-delete">使用 <code class="docutils literal notranslate"><span class="pre">QuerySet.update()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
+<li><a class="reference internal" href="#use-foreign-key-values-directly">直接使用外键值</a></li>
+<li><a class="reference internal" href="#don-t-order-results-if-you-don-t-care">如无需要，不要排序结果</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#use-bulk-methods">使用批量方法</a><ul>
+<li><a class="reference internal" href="#create-in-bulk">批量创建</a></li>
+<li><a class="reference internal" href="#update-in-bulk">批量更新</a></li>
+<li><a class="reference internal" href="#insert-in-bulk">批量插入</a></li>
+<li><a class="reference internal" href="#remove-in-bulk">批量删除</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="tablespaces.html"
+                          title="上一章">表空间（Tablespaces）</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="instrumentation.html"
+                          title="下一章">数据库工具</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/db/optimization.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="tablespaces.html" title="表空间（Tablespaces）">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="instrumentation.html" title="数据库工具">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

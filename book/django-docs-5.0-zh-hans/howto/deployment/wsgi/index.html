@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何使用 WSGI 进行部署 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="如何使用 Gunicorn 托管 Django" href="gunicorn.html" />
+    <link rel="prev" title="如何部署 Django" href="../index.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="../index.html" title="如何部署 Django">previous</a>
+     |
+    <a href="../../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="gunicorn.html" title="如何使用 Gunicorn 托管 Django">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-deployment-wsgi-index">
+            
+  <div class="section" id="s-how-to-deploy-with-wsgi">
+<span id="how-to-deploy-with-wsgi"></span><h1>如何使用 WSGI 进行部署<a class="headerlink" href="#how-to-deploy-with-wsgi" title="永久链接至标题">¶</a></h1>
+<p>Django 的主要部署平台是 <a class="reference external" href="https://wsgi.readthedocs.io/en/latest/">WSGI</a>，它是 Web 服务器和 Web 应用的 Python 标准。</p>
+<p>Django 的管理命令 <a class="reference internal" href="../../../ref/django-admin.html#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startproject</span></code></a> 生成了一个最小化的默认 WSGI 配置，你可以按照自己项目的需要去调整这个配置，任何兼容 WSGI 的应用程序服务器都可以直接使用。</p>
+<p>Django 提供了下面这些 WSGI 服务的入门文档：</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gunicorn.html">如何使用 Gunicorn 托管 Django</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uwsgi.html">如何用 uWSGI 托管 Django</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modwsgi.html">如何使用 Apache 和 <code class="docutils literal notranslate"><span class="pre">mod_wsgi</span></code> 托管 Django</a></li>
+<li class="toctree-l1"><a class="reference internal" href="apache-auth.html">如何从 Apache 对 Django 的用户数据库进行认证</a></li>
+</ul>
+</div>
+<div class="section" id="s-the-application-object">
+<span id="the-application-object"></span><h2><code class="docutils literal notranslate"><span class="pre">application</span></code> 对象<a class="headerlink" href="#the-application-object" title="永久链接至标题">¶</a></h2>
+<p>用 WSGI 部署的关键是 <code class="docutils literal notranslate"><span class="pre">application</span></code> callable，应用服务器用它与你的代码交互。 <code class="docutils literal notranslate"><span class="pre">application</span></code> callable 一般以一个位于 Python 模块中，名为 <code class="docutils literal notranslate"><span class="pre">application</span></code> 的对象的形式提供，且对服务器可见。</p>
+<p><a class="reference internal" href="../../../ref/django-admin.html#django-admin-startproject"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">startproject</span></code></a> 命令创建了文件 <code class="file docutils literal notranslate"><span class="pre">&lt;project_name&gt;/wsgi.py</span></code>，其中包含了 <code class="docutils literal notranslate"><span class="pre">application</span></code> callable。</p>
+<p>Django 开发服务器和生产环境的 WSGI 部署都用到了它。</p>
+<p>WSGI 服务器从其配置中获取 <code class="docutils literal notranslate"><span class="pre">application</span></code> callable 的路径。Django 的默认服务器（ <a class="reference internal" href="../../../ref/django-admin.html#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 命令），从配置项 <a class="reference internal" href="../../../ref/settings.html#std-setting-WSGI_APPLICATION"><code class="xref std std-setting docutils literal notranslate"><span class="pre">WSGI_APPLICATION</span></code></a> 中获取。默认值是 <code class="docutils literal notranslate"><span class="pre">&lt;project_name&gt;.wsgi.application</span></code>，指向 <code class="file docutils literal notranslate"><span class="pre">&lt;project_name&gt;/wsgi.py</span></code> 中的 <code class="docutils literal notranslate"><span class="pre">application</span></code> callable。</p>
+</div>
+<div class="section" id="s-configuring-the-settings-module">
+<span id="configuring-the-settings-module"></span><h2>配置 settings 模块<a class="headerlink" href="#configuring-the-settings-module" title="永久链接至标题">¶</a></h2>
+<p>当 WSGI 服务器加载应用时，Django 需要导入配置模块——完整定义应用的地方。</p>
+<p>Django 利用 <span class="target" id="index-3"></span><a class="reference internal" href="../../../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 环境变量来定位合适的配置模块。它必须包含到配置模块的点式路径。开发环境和生产环境可以配置不同值；这都取决于你是如何组织配置的。</p>
+<p>若未设置该变量， <code class="file docutils literal notranslate"><span class="pre">wsgi.py</span></code> 默认将其设置为 <code class="docutils literal notranslate"><span class="pre">mysite.settings</span></code>， <code class="docutils literal notranslate"><span class="pre">mysite</span></code> 即工程名字。这就是 <a class="reference internal" href="../../../ref/django-admin.html#django-admin-runserver"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">runserver</span></code></a> 默认的发现默认配置行为。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>由于环境变量是进程级的，所以如果在同一进程运行多个 Django 站点将出错。这在使用 mod_wsgi 时会出现。</p>
+<p class="last">要避免此问题，为每个站点在后台进程使用 mod_wsgi 的后台模式，或者在 <code class="file docutils literal notranslate"><span class="pre">wsgi.py</span></code> 中通过 <code class="docutils literal notranslate"><span class="pre">os.environ[&quot;DJANGO_SETTINGS_MODULE&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;mysite.settings&quot;</span></code> 重写来自环境变量的值。</p>
+</div>
+</div>
+<div class="section" id="s-applying-wsgi-middleware">
+<span id="applying-wsgi-middleware"></span><h2>应用 WSGI 中间件<a class="headerlink" href="#applying-wsgi-middleware" title="永久链接至标题">¶</a></h2>
+<p>要应用 WSGI 中间件 &lt;3333#middleware-components-that-play-both-sides&gt; ` 中间件组件，你只需简单包裹应用程序对象。举个例子，你可以在文件 :file:`wsgi.py 末尾添加以下代码:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">helloworld.wsgi</span> <span class="kn">import</span> <span class="n">HelloWorldApplication</span>
+
+<span class="n">application</span> <span class="o">=</span> <span class="n">HelloWorldApplication</span><span class="p">(</span><span class="n">application</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果你想将 Django 应用于一个 WSGI 应用或其它框架联合起来，可以用自定义 WSGI 应用替换 Django 的 WSGI 应用，前者会在稍晚时候将任务委托给 WSGI 应用。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何使用 WSGI 进行部署</a><ul>
+<li><a class="reference internal" href="#the-application-object"><code class="docutils literal notranslate"><span class="pre">application</span></code> 对象</a></li>
+<li><a class="reference internal" href="#configuring-the-settings-module">配置 settings 模块</a></li>
+<li><a class="reference internal" href="#applying-wsgi-middleware">应用 WSGI 中间件</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="../index.html"
+                          title="上一章">如何部署 Django</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="gunicorn.html"
+                          title="下一章">如何使用 Gunicorn 托管 Django</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/howto/deployment/wsgi/index.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="../index.html" title="如何部署 Django">previous</a>
+     |
+    <a href="../../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="gunicorn.html" title="如何使用 Gunicorn 托管 Django">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

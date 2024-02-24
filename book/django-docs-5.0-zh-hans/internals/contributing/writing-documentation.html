@@ -1,0 +1,590 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>编写文档 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="使 Django 本地化" href="localizing.html" />
+    <link rel="prev" title="JavaScript" href="writing-code/javascript.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="writing-code/javascript.html" title="JavaScript">previous</a>
+     |
+    <a href="../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="localizing.html" title="使 Django 本地化">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="internals-contributing-writing-documentation">
+            
+  <div class="section" id="s-writing-documentation">
+<span id="writing-documentation"></span><h1>编写文档<a class="headerlink" href="#writing-documentation" title="永久链接至标题">¶</a></h1>
+<p>我们非常重视文档的一致性和可读性。毕竟，Django 是在新闻环境中创建的！因此，我们像对待我们的代码一样对待我们的文档：我们努力在尽可能多的时间里改进它。</p>
+<p>一般来说，文档会在以下两种情况时更新：</p>
+<ul class="simple">
+<li>一般改进：通过更清晰的书写和更多示例，更正、修复文档错误，更好的解释功能。</li>
+<li>新特性：自上一个版本发布后，添加到框架中的功能文档。</li>
+</ul>
+<p>本节介绍文档作者如何以最有用和最不容易出错的方式修改文档。</p>
+<div class="section" id="s-the-django-documentation-process">
+<span id="the-django-documentation-process"></span><h2>Django 文档编写流程<a class="headerlink" href="#the-django-documentation-process" title="永久链接至标题">¶</a></h2>
+<p>尽管 Django 的文档旨在以 HTML 形式在 <a class="reference external" href="https://docs.djangoproject.com/">https://docs.djangoproject.com/</a> 上阅读，但我们将其编辑为一组纯文本文件，使用 reStructuredText 标记语言编写，以实现最大的灵活性。</p>
+<p>我们从存储库的开发版本中工作，因为它包含了最新的文档，就像它包含了最新的代码一样。</p>
+<p>我们还会根据合并者的判断，将文档修复和改进内容反向移植到上一个发布分支。这是因为让上一个版本的文档保持最新和正确是有好处的（参见 <a class="reference internal" href="../../intro/whatsnext.html#differences-between-doc-versions"><span class="std std-ref">版本之间的差异</span></a>）。</p>
+<p>Django  的文档使用 <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 文档系统——基于 <a class="reference external" href="https://docutils.sourceforge.io/">docutils</a>。基本思想是将轻量格式话的纯文本转化为 HTML，PDF 或其它任意输出格式。</p>
+<p>Sphinx 包括一个 <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> 命令，用于将 reStructuredText 转换为其他格式，例如 HTML 和 PDF。这个命令是可配置的，但 Django 文档包括一个 <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>，提供了一个更简短的 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> 命令。</p>
+</div>
+<div class="section" id="s-how-the-documentation-is-organized">
+<span id="how-the-documentation-is-organized"></span><h2>文档是如何组成<a class="headerlink" href="#how-the-documentation-is-organized" title="永久链接至标题">¶</a></h2>
+<p>文档被分为以下几个类别：</p>
+<ul>
+<li><p class="first"><a class="reference internal" href="../../intro/index.html"><span class="doc">教程</span></a> 通过几步手把手的教学帮助读者创建一个小玩意。</p>
+<p>教程的目的是帮助读者尽可能早地实现一些有用的东西，以便给他们带来信心。</p>
+<p>解释我们正在解决的问题的性质，以便读者理解我们试图实现什么。不必从事物如何工作的解释开始 - 重要的是读者做什么，而不是你解释什么。在完成操作后回顾并解释可以是有帮助的。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../../topics/index.html"><span class="doc">主题指引</span></a> 旨在在一个较高的层次介绍一个原则或主题。</p>
+<p>链接至参考资料而不要重复它。使用示例时，不要不情愿解释对您而言非常基本的事物——它对别人而言可能需要解释。</p>
+<p>提供背景信息有助于新人将主题和他们已知的东西联系起来。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../../ref/index.html"><span class="doc">参考指南</span></a> 包含 API 的技术参考。它们描述了 Django 内部机制的运作方式，并指导如何使用它。</p>
+<p>让参考资料紧紧围绕着主题。假设读者已经理解了所涉及的基本概念，但需要知道或被提醒 Django 是如何做到的。</p>
+<p>参考指南并不是进行一般性解释的地方。如果你发现自己在解释基本概念，你可能想把这些材料移到主题指南中。</p>
+</li>
+<li><p class="first"><a class="reference internal" href="../../howto/index.html"><span class="doc">操作指南</span></a> 是带领读者完成关键科目步骤的方法。</p>
+<p>在指南中最重要的是用户想要实现什么。一个指南应该始终以结果为导向，而不是专注于 Django 如何实现所讨论的内部细节。</p>
+<p>这些指南比教程更高级，并假定有一些关于 Django 如何工作的知识。假设读者已经学习了教程，并且毫不犹豫地让读者回到相应的教程，而不是重复同样的材料。</p>
+</li>
+</ul>
+</div>
+<div class="section" id="s-how-to-start-contributing-documentation">
+<span id="how-to-start-contributing-documentation"></span><h2>如何开始贡献文档<a class="headerlink" href="#how-to-start-contributing-documentation" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-clone-the-django-repository-to-your-local-machine">
+<span id="clone-the-django-repository-to-your-local-machine"></span><h3>克隆 Django 存储库到您的本地计算机<a class="headerlink" href="#clone-the-django-repository-to-your-local-machine" title="永久链接至标题">¶</a></h3>
+<p>如果你想开始为我们的文档做贡献，可以从源代码仓库获取 Django 的开发版本（参见：<a class="reference internal" href="../../topics/install.html#installing-development-version"><span class="std std-ref">安装开发版本</span></a>）：</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/django/django.git
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> git clone https://github.com/django/django.git
+</pre></div>
+</section>
+</div>
+<p>如果你计划提交这些更改，你可能会发现创建 Django 仓库的一个分支并克隆这个分支会很有用。</p>
+</div>
+<div class="section" id="s-set-up-a-virtual-environment-and-install-dependencies">
+<span id="set-up-a-virtual-environment-and-install-dependencies"></span><h3>建立一个虚拟环境并安装依赖项<a class="headerlink" href="#set-up-a-virtual-environment-and-install-dependencies" title="永久链接至标题">¶</a></h3>
+<p>创建并激活一个虚拟环境，然后安装依赖项：</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ python -m venv .venv
+$ <span class="nb">source</span> .venv/bin/activate
+$ python -m pip install -r docs/requirements.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-build-the-documentation-locally">
+<span id="build-the-documentation-locally"></span><h3>在本地构建文档<a class="headerlink" href="#build-the-documentation-locally" title="永久链接至标题">¶</a></h3>
+<p>我们可以从 <code class="docutils literal notranslate"><span class="pre">docs</span></code> 目录生成 HTML 输出：</p>
+<div class="console-block" id="console-block-1">
+<input class="c-tab-unix" id="c-tab-1-unix" type="radio" name="console-1" checked>
+<label for="c-tab-1-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-1-win" type="radio" name="console-1">
+<label for="c-tab-1-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-1-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> docs
+<span class="gp">$ </span>make html
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-1-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> <span class="k">cd</span> docs
+<span class="gp">...\&gt;</span> make.bat html
+</pre></div>
+</section>
+</div>
+<p>你在本地构建的文档可以在 <code class="docutils literal notranslate"><span class="pre">_build/html/index.html</span></code> 中访问，并且可以在任何网页浏览器中查看，尽管它的主题与 <a class="reference external" href="https://docs.djangoproject.com/">docs.djangoproject.com</a> 上的文档不同。这没关系！如果你的更改在本地看起来不错，它们在网站上也会看起来不错。</p>
+</div>
+<div class="section" id="s-making-edits-to-the-documentation">
+<span id="making-edits-to-the-documentation"></span><h3>对文档进行编辑<a class="headerlink" href="#making-edits-to-the-documentation" title="永久链接至标题">¶</a></h3>
+<p>源文件是位于 <code class="docutils literal notranslate"><span class="pre">docs/</span></code> 目录中的 <code class="docutils literal notranslate"><span class="pre">.txt</span></code> 文件。</p>
+<p>这些文件是用 reStructuredText 标记语言编写的。要了解这种标记语言，请参阅 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html#rst-index" title="(在 Sphinx v7.3.0)"><span class="xref std std-ref">reStructuredText 参考手册</span></a>。</p>
+<p>要编辑此页面，例如，我们会编辑文件 <a class="reference external" href="https://github.com/django/django/blob/main/docs/internals/contributing/writing-documentation.txt">docs/internals/contributing/writing-documentation.txt</a>，然后使用 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> 重新构建 HTML。</p>
+</div>
+<div class="section" id="s-spelling-check">
+<span id="s-documentation-spelling-check"></span><span id="spelling-check"></span><span id="documentation-spelling-check"></span><h3>拼写检查<a class="headerlink" href="#spelling-check" title="永久链接至标题">¶</a></h3>
+<p>在提交文档之前，最好运行拼写检查器。首先，你需要安装 <a class="reference external" href="https://pypi.org/project/sphinxcontrib-spelling/">sphinxcontrib-spelling</a>。然后从 <code class="docutils literal notranslate"><span class="pre">docs</span></code> 目录中运行 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">spelling</span></code>。错误的单词（如果有的话）以及它们出现的文件和行号将保存到 <code class="docutils literal notranslate"><span class="pre">_build/spelling/output.txt</span></code>。</p>
+<p>如果你遇到假阳性的情况（错误输出实际上是正确的），请采取以下措施之一：</p>
+<ul class="simple">
+<li>用双反引号（``）括起内联代码或品牌/技术名称。</li>
+<li>查找拼写检查程序发现的同义词。</li>
+<li>如果，只是如果，你确定你的单词拼写是正确的——将其加入 <code class="docutils literal notranslate"><span class="pre">docs/spelling_wordlist</span></code> （请保持这个列表以字母顺序排列）。</li>
+</ul>
+</div>
+<div class="section" id="s-link-check">
+<span id="s-documentation-link-check"></span><span id="link-check"></span><span id="documentation-link-check"></span><h3>链接检查<a class="headerlink" href="#link-check" title="永久链接至标题">¶</a></h3>
+<p>文档中的链接可能会损坏或更改，以至于它们不再是规范链接。Sphinx 提供了一个构建器，可以检查文档中的链接是否正常工作。从 <code class="docutils literal notranslate"><span class="pre">docs</span></code> 目录中运行 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">linkcheck</span></code>。输出将打印到终端，但也可以在 <code class="docutils literal notranslate"><span class="pre">_build/linkcheck/output.txt</span></code> 和 <code class="docutils literal notranslate"><span class="pre">_build/linkcheck/output.json</span></code> 中找到。</p>
+<p>状态为 &quot;working&quot; 的条目是正常的，而状态为 &quot;unchecked&quot; 或 &quot;ignored&quot; 的条目已被跳过，因为它们要么无法检查，要么与配置中的忽略规则匹配。</p>
+<p>状态为 &quot;broken&quot; 的条目需要修复。而状态为 &quot;redirected&quot; 的条目可能需要更新，以指向规范位置，例如，方案已更改为 <code class="docutils literal notranslate"><span class="pre">http://</span></code> → <code class="docutils literal notranslate"><span class="pre">https://</span></code>。在某些情况下，我们不希望更新 &quot;redirected&quot; 链接，例如，重定向始终指向文档的最新或稳定版本，例如，<code class="docutils literal notranslate"><span class="pre">/en/stable/</span></code> → <code class="docutils literal notranslate"><span class="pre">/en/3.2/</span></code>。</p>
+</div>
+</div>
+<div class="section" id="s-writing-style">
+<span id="writing-style"></span><h2>书写格式<a class="headerlink" href="#writing-style" title="永久链接至标题">¶</a></h2>
+<p>在提及假设的人时，例如 &quot;一个带有会话 cookie 的用户&quot;，应该使用性别中性的代词 (they/their/them)。而不是：</p>
+<ul class="simple">
+<li>he 或 she……使用 they。</li>
+<li>him 或 her... 使用 them。</li>
+<li>his 或 her……使用 their。</li>
+<li>his 或 hers... 使用 theirs。</li>
+<li>himself 或 herself... 使用 themselves。</li>
+</ul>
+<p>尽量避免使用将任务或操作的难度降到最低的词语，如 “easily”、“simply”、“just”、“merely”、“straightforward” 等等。人们的经验可能与你的期望不符，当他们发现某个步骤并不像暗示的那样 “straightforward” 或 “simple” 时，可能会感到沮丧。</p>
+</div>
+<div class="section" id="s-commonly-used-terms">
+<span id="commonly-used-terms"></span><h2>常用术语<a class="headerlink" href="#commonly-used-terms" title="永久链接至标题">¶</a></h2>
+<p>以下是整个文档中常用术语的一些格式指南：</p>
+<ul class="simple">
+<li><strong>Django</strong> -- 当提及该框架时，大写 Django。它仅在 Python 代码中和 djangoproject.com 徽标中使用小写字母。</li>
+<li><strong>email</strong> -- 无连字符。</li>
+<li><strong>HTTP</strong> -- 预期的发音是 &quot;Aitch Tee Tee Pee&quot;，因此应该用 &quot;an&quot; 而不是 &quot;a&quot;。</li>
+<li><strong>MySQL</strong>, <strong>PostgreSQL</strong>, <strong>SQLite</strong></li>
+<li><strong>SQL</strong> -- 当提及 SQL 时，预期的发音应该是 “Ess Queue Ell” 而不是 “sequel”。因此，在诸如 “Returns an SQL expression” 之类的短语中，“SQL” 前应该使用 “an” 而不是 “a”。</li>
+<li><strong>Python</strong> -- 当提及该语言时大写。</li>
+<li><strong>realize</strong>, <strong>customize</strong>, <strong>initialize</strong>, etc. -- 使用美式的 “ize” 后缀，而不是 “ise”。</li>
+<li><strong>subclass</strong> -- 它是一个没有连字符的单个单词，既作为动词（“子类模型”）又作为名词（“创建子类”）。</li>
+<li><strong>the web</strong>，<strong>web framework</strong> -- 不需要大写。</li>
+<li><strong>website</strong> -- 用一个单词表示，不大写。</li>
+</ul>
+</div>
+<div class="section" id="s-django-specific-terminology">
+<span id="django-specific-terminology"></span><h2>Django 专用术语<a class="headerlink" href="#django-specific-terminology" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li><strong>model</strong> -- 它不是大写的。</li>
+<li><strong>template</strong> -- 它不是大写的。</li>
+<li><strong>URLconf</strong> -- 使用了三个大写字母，在 “conf” 之前没有空格。</li>
+<li><strong>view</strong> -- 它不是大写的。</li>
+</ul>
+</div>
+<div class="section" id="s-guidelines-for-restructuredtext-files">
+<span id="guidelines-for-restructuredtext-files"></span><h2>reStructuredText 文件语法指南<a class="headerlink" href="#guidelines-for-restructuredtext-files" title="永久链接至标题">¶</a></h2>
+<p>这些准则规定了我们的 reST（reStructuredText）文档格式：</p>
+<ul>
+<li><p class="first">在部分标题中，仅将首字母和专有名词大写。</p>
+</li>
+<li><p class="first">将文档以 80 个字符宽换行，除非一个代码例子被分割成两行时可读性明显降低，或者有其他好的理由。</p>
+</li>
+<li><p class="first">在编写和编辑文档时要记住的主要事情是，你能添加的更多语义化标记越多越好。因此：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span>Add <span class="s">``django.contrib.auth``</span> to your <span class="s">``INSTALLED_APPS``</span>...
+</pre></div>
+</div>
+<p>远远不如：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span>Add <span class="na">:mod:</span><span class="nv">`django.contrib.auth`</span> to your <span class="na">:setting:</span><span class="nv">`INSTALLED_APPS`</span>...
+</pre></div>
+</div>
+<p>这是因为 Sphinx 将为后者生成适当的链接，这对读者有很大帮助。</p>
+<p>你可以在目标前加一个 <code class="docutils literal notranslate"><span class="pre">~</span></code> （那是一个波浪号）来获得该路径的 “最后一点”。所以 <code class="docutils literal notranslate"><span class="pre">:mod:`~django.contrib.auth</span></code> 将显示一个标题为 “auth” 的链接。</p>
+</li>
+<li><p class="first">所有 Python 代码块都应使用 <a class="reference external" href="https://pypi.org/project/blacken-docs/">blacken-docs</a> 自动格式化工具进行格式化。如果已配置 <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>，它将自动运行此工具。</p>
+</li>
+<li><p class="first">使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#module-sphinx.ext.intersphinx" title="(在 Sphinx v7.3.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">intersphinx</span></code></a> 来引用 Python 和 Sphinx 的文档。</p>
+</li>
+<li><p class="first">在文字块中加入 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">code-block::</span> <span class="pre">&lt;lang&gt;</span></code>，使其得到高亮。更倾向于使用 <code class="docutils literal notranslate"><span class="pre">::</span></code> （两个冒号）来自动突出显示。这样做的好处是，如果代码中包含一些无效的语法，它就不会被高亮显示。例如，添加 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">code-block::</span> <span class="pre">python</span></code>，就可以在无效的语法中强制高亮显示。</p>
+</li>
+<li><p class="first">为了提高可读性，使用 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">admonition::</span> <span class="pre">Descriptive</span> <span class="pre">title</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">note::</span></code>。尽量少使用这些方框。</p>
+</li>
+<li><p class="first">使用这些标题样式：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="gh">===</span>
+<span class="gh">One</span>
+<span class="gh">===</span>
+
+<span class="gh">Two</span>
+<span class="gh">===</span>
+
+<span class="gh">Three</span>
+<span class="gh">-----</span>
+
+<span class="gh">Four</span>
+<span class="gh">~~~~</span>
+
+<span class="gh">Five</span>
+<span class="gh">^^^^</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-rfc" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-role docutils literal notranslate"><span class="pre">:rfc:</span></code></a> 来引用 RFC，如果可能，尽量链接到相关章节。例如，使用 <code class="docutils literal notranslate"><span class="pre">:rfc:`2324#section-2.3.2`</span></code> 或 <code class="docutils literal notranslate"><span class="pre">:rfc:`Custom</span> <span class="pre">link</span> <span class="pre">text</span> <span class="pre">&lt;2324#section-2.3.2&gt;`</span></code>。</p>
+</li>
+<li><p class="first">使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-pep" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-role docutils literal notranslate"><span class="pre">:pep:</span></code></a> 来引用 Python 增强建议（PEP），如果可能的话，尽量链接到相关章节。例如，使用 <code class="docutils literal notranslate"><span class="pre">:pep:`20#easter-egg`</span></code> 或 <code class="docutils literal notranslate"><span class="pre">:pep:`Easter</span> <span class="pre">Egg</span> <span class="pre">&lt;20#easter-egg&gt;`</span></code>。</p>
+</li>
+<li><p class="first">使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-mimetype" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-role docutils literal notranslate"><span class="pre">:mimetype:</span></code></a> 来指代一个 MIME 类型，除非在代码示例中引用了这个值。</p>
+</li>
+<li><p class="first">使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/referencing.html#role-envvar" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-role docutils literal notranslate"><span class="pre">:envvar:</span></code></a> 来指代一个环境变量。你可能还需要使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/domains/standard.html#directive-envvar" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-dir docutils literal notranslate"><span class="pre">...envvar::</span></code></a> 来定义一个对该环境变量的文档的引用。</p>
+</li>
+</ul>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>Django 文档中的所有 Python 代码块都已使用 <a class="reference external" href="https://pypi.org/project/blacken-docs/">blacken-docs</a> 进行了重新格式化。</p>
+</div>
+</div>
+<div class="section" id="s-django-specific-markup">
+<span id="django-specific-markup"></span><h2>Django 特有的标记<a class="headerlink" href="#django-specific-markup" title="永久链接至标题">¶</a></h2>
+<p>除了 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html#rst-index" title="(在 Sphinx v7.3.0)"><span class="xref std std-ref">Sphinx 的内置标记</span></a>，Django 的文档定义了一些额外的描述单元：</p>
+<ul>
+<li><p class="first">配置：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">setting</span><span class="p">::</span> INSTALLED_APPS
+</pre></div>
+</div>
+<p>为了连接配置，请使用配置 <code class="docutils literal notranslate"><span class="pre">:setting:`INSTALLED_APPS`</span></code>。</p>
+</li>
+<li><p class="first">模板标签：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">templatetag</span><span class="p">::</span> regroup
+</pre></div>
+</div>
+<p>为了链接，请使用 <code class="docutils literal notranslate"><span class="pre">:ttag:`regroup`</span></code>。</p>
+</li>
+<li><p class="first">模板过滤器：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">templatefilter</span><span class="p">::</span> linebreaksbr
+</pre></div>
+</div>
+<p>为了链接，请使用 <code class="docutils literal notranslate"><span class="pre">:tfilter:`linebreaksbr`</span></code> 。</p>
+</li>
+<li><p class="first">字段查找（例如 <code class="docutils literal notranslate"><span class="pre">Foo.objects.filter(bar__exact=whatever)</span></code>）：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">fieldlookup</span><span class="p">::</span> exact
+</pre></div>
+</div>
+<p>为了链接，请使用 <code class="docutils literal notranslate"><span class="pre">:lookup:`exact`</span></code>。</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 命令：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">django-admin</span><span class="p">::</span> migrate
+</pre></div>
+</div>
+<p>为了链接，请使用 <code class="docutils literal notranslate"><span class="pre">:djadmin:`migrate`</span></code>。</p>
+</li>
+<li><p class="first"><a href="#id1"><span class="problematic" id="id2">``</span></a>django-admin`命令行选项：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">django-admin-option</span><span class="p">::</span> --traceback
+</pre></div>
+</div>
+<p>为了链接，请使用 <code class="docutils literal notranslate"><span class="pre">:option:`command_name</span> <span class="pre">--trackback</span></code> （或者省略 <code class="docutils literal notranslate"><span class="pre">command_name</span></code>，用于所有命令共享的选项，如 <code class="docutils literal notranslate"><span class="pre">--verbosity</span></code>）。</p>
+</li>
+<li><p class="first">Trac 问题的链接（通常用于补丁发布说明）：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="na">:ticket:</span><span class="nv">`12345`</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>Django 的文档使用一个自定义的 <code class="docutils literal notranslate"><span class="pre">console</span></code> 指令，用于记录涉及 <code class="docutils literal notranslate"><span class="pre">django-admin</span></code>、<code class="docutils literal notranslate"><span class="pre">manage.py</span></code>、<code class="docutils literal notranslate"><span class="pre">python</span></code> 等的命令行实例。在 HTML 文档中，它渲染了一个双选项卡 UI，其中一个选项卡显示 Unix 风格的命令提示符，第二个选项卡显示 Windows 提示符。</p>
+<p>例如，你可以替换这个片段：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span>use this command:
+
+<span class="p">..</span> <span class="ow">code-block</span><span class="p">::</span> console
+
+    $ python manage.py shell
+</pre></div>
+</div>
+<p>用这个替代：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span>use this command:
+
+<span class="p">..</span> <span class="ow">console</span><span class="p">::</span>
+
+    $ python manage.py shell
+</pre></div>
+</div>
+<p>请注意两件事：</p>
+<ul class="simple">
+<li>你通常会替换出现的 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">code-block::</span> <span class="pre">console</span></code> 指令。</li>
+<li>你不需要改变代码例子的实际内容。你仍然假设 Unix-y 环境来编写它（即一个 <code class="docutils literal notranslate"><span class="pre">'$'</span></code> 提示符号，<code class="docutils literal notranslate"><span class="pre">'/'</span></code> 作为文件系统路径组件分隔符等等）。</li>
+</ul>
+<p>上面的例子将呈现一个有两个选项卡的代码示例块。第一个将显示：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py shell
+</pre></div>
+</div>
+<p>与 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">code-block::</span> <span class="pre">console</span></code> 所呈现的内容相比没有变化）。</p>
+<p>第二个将显示：</p>
+<div class="highlight-doscon notranslate"><div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py shell
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-documenting-new-features">
+<span id="s-id3"></span><span id="documenting-new-features"></span><span id="id3"></span><h2>记录新功能<a class="headerlink" href="#documenting-new-features" title="永久链接至标题">¶</a></h2>
+<p>我们对新功能的政策是：</p>
+<blockquote>
+<div>所有新功能的文档应以一种明确指出这些功能仅在 Django 开发版本中可用的方式编写。假设文档读者使用的是最新发布版，而不是开发版本。</div></blockquote>
+<p>我们首选的标记新特性的方法是在特性的文档前加上。&quot;<code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">versionadded::</span> <span class="pre">X.Y</span></code>&quot;，后面是一个强制性的空行和一个可选的描述（缩进）。</p>
+<p>对 API 进行的一般改进或其他需要强调的更改应使用 &quot;<code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">versionchanged::</span> <span class="pre">X.Y</span></code>&quot; 指令（格式与上面提到的 <code class="docutils literal notranslate"><span class="pre">versionadded</span></code> 相同）。</p>
+<p>这些 <code class="docutils literal notranslate"><span class="pre">versionadded</span></code> 和 <code class="docutils literal notranslate"><span class="pre">versionchanged</span></code> 块应该是 &quot;自包含的&quot;。换句话说，由于我们只保留这些注释两个发布版，最好能够删除注释及其内容，而不必重新排列、重新缩进或编辑周围的文本。例如，不要将新功能或更改功能的整个描述放在一个块中，而是像这样做：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">class</span><span class="p">::</span> Author(first_name, last_name, middle_name=None)
+
+    A person who writes books.
+
+    <span class="s">``first_name``</span> is ...
+
+<span class="cp">    ...</span>
+
+<span class="cp">    ``middle_name`` is ...</span>
+
+<span class="cp">    .. versionchanged:: A.B</span>
+
+<span class="cp">        The ``middle_name`` argument was added.</span>
+</pre></div>
+</div>
+<p>把修改后的注解说明放在一个章节的底部，而不是顶部。</p>
+<p>另外，避免在 <code class="docutils literal notranslate"><span class="pre">versionadded</span></code> 或 <code class="docutils literal notranslate"><span class="pre">versionchanged</span></code> 块之外提及 Django 的特定版本。即使在代码块中，这样做也是多余的，因为这些注解分别呈现为 &quot;New in Django A.B:&quot; 和 &quot;Changed in Django A.B&quot;。</p>
+<p>如果添加了一个函数、属性等，也可以像这样使用 <code class="docutils literal notranslate"><span class="pre">versionadded</span></code> 注释：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">attribute</span><span class="p">::</span> Author.middle_name
+
+<span class="p">    ..</span> <span class="ow">versionadded</span><span class="p">::</span> A.B
+
+    An author&#39;s middle name.
+</pre></div>
+</div>
+<p>我们可以删除 <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">versionadded::</span> <span class="pre">A.B</span></code> 注解，而不需要在时间上做任何缩进的改变。</p>
+</div>
+<div class="section" id="s-minimizing-images">
+<span id="minimizing-images"></span><h2>最小化图像<a class="headerlink" href="#minimizing-images" title="永久链接至标题">¶</a></h2>
+<p>尽可能地优化图像压缩。对于 PNG 文件，使用 OptiPNG 和 AdvanceCOMP 的 <code class="docutils literal notranslate"><span class="pre">advpng</span></code>：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> docs
+<span class="gp">$ </span>optipng -o7 -zm1-9 -i0 -strip all <span class="sb">`</span>find . -type f -not -path <span class="s2">&quot;./_build/*&quot;</span> -name <span class="s2">&quot;*.png&quot;</span><span class="sb">`</span>
+<span class="gp">$ </span>advpng -z4 <span class="sb">`</span>find . -type f -not -path <span class="s2">&quot;./_build/*&quot;</span> -name <span class="s2">&quot;*.png&quot;</span><span class="sb">`</span>
+</pre></div>
+</div>
+<p>这是基于 OptiPNG 版本 0.7.5。旧版本可能会对 <code class="docutils literal notranslate"><span class="pre">-strip</span> <span class="pre">all</span></code> 选项进行丢失投诉。</p>
+</div>
+<div class="section" id="s-an-example">
+<span id="an-example"></span><h2>一个例子<a class="headerlink" href="#an-example" title="永久链接至标题">¶</a></h2>
+<p>有关如何将它们组合在一起的快速示例，请考虑以下假设示例：</p>
+<ul>
+<li><p class="first">首先， <code class="docutils literal notranslate"><span class="pre">ref/settings.txt</span></code> 配置文件可能具有如下总体布局：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="gh">========</span>
+<span class="gh">Settings</span>
+<span class="gh">========</span>
+
+<span class="cp">...</span>
+
+<span class="p">..</span> <span class="nt">_available-settings:</span>
+
+<span class="gh">Available settings</span>
+<span class="gh">==================</span>
+
+<span class="cp">...</span>
+
+<span class="p">..</span> <span class="nt">_deprecated-settings:</span>
+
+<span class="gh">Deprecated settings</span>
+<span class="gh">===================</span>
+
+<span class="cp">...</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">接下来， <code class="docutils literal notranslate"><span class="pre">topics/settings.txt</span></code> 配置文档可能包含以下内容：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span>You can access a :ref:`listing of all available settings
+<span class="nt">&lt;available-settings&gt;</span>`. For a list of deprecated settings see
+<span class="na">:ref:</span><span class="nv">`deprecated-settings`</span>.
+
+You can find both in the :doc:`settings reference document
+<span class="nt">&lt;/ref/settings&gt;</span>`.
+</pre></div>
+</div>
+<p>当我们想要链接到另一个文档的整体时，我们使用 Sphinx 的 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/referencing.html#role-doc" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-role docutils literal notranslate"><span class="pre">doc</span></code></a> 交叉引用元素，而当我们想要链接到文档中的任意位置时，我们使用 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/referencing.html#role-ref" title="(在 Sphinx v7.3.0)"><code class="xref rst rst-role docutils literal notranslate"><span class="pre">ref</span></code></a> 元素。</p>
+</li>
+<li><p class="first">接下来，请注意配置的注解方式：</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">setting</span><span class="p">::</span> ADMINS
+
+<span class="gh">ADMINS</span>
+<span class="gh">======</span>
+
+Default: <span class="s">``[]``</span> (Empty list)
+
+A list of all the people who get code error notifications. When
+<span class="s">``DEBUG=False``</span> and a view raises an exception, Django will email these people
+with the full exception information. Each member of the list should be a tuple
+of (Full name, email address). Example<span class="se">::</span>
+
+<span class="s">    [(&quot;John&quot;, &quot;john@example.com&quot;), (&quot;Mary&quot;, &quot;mary@example.com&quot;)]</span>
+
+Note that Django will email <span class="ge">*all*</span> of these people whenever an error happens.
+See <span class="na">:doc:</span><span class="nv">`/howto/error-reporting`</span> for more information.
+</pre></div>
+</div>
+<p>这标志着下面的标题是配置 <code class="docutils literal notranslate"><span class="pre">ADMINS</span></code> 的 “标准” 目标。这意味着当我谈到 <code class="docutils literal notranslate"><span class="pre">ADMINS</span></code> 时，我可以用 <code class="docutils literal notranslate"><span class="pre">:setting:`ADMINS`</span></code> 来引用它。</p>
+</li>
+</ul>
+<p>基本上，这就是所有东西融合在一起的方式。</p>
+</div>
+<div class="section" id="s-translating-documentation">
+<span id="translating-documentation"></span><h2>翻译文档<a class="headerlink" href="#translating-documentation" title="永久链接至标题">¶</a></h2>
+<p>查看 <a class="reference internal" href="localizing.html#translating-documentation"><span class="std std-ref">本地化 Django 文档</span></a>，如果你想帮助我们将文档翻译成其它语言。</p>
+</div>
+<div class="section" id="s-django-admin-man-page">
+<span id="s-django-admin-manpage"></span><span id="django-admin-man-page"></span><span id="django-admin-manpage"></span><h2><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 手册页面<a class="headerlink" href="#django-admin-man-page" title="永久链接至标题">¶</a></h2>
+<p>Sphinx 可以为 <a class="reference internal" href="../../ref/django-admin.html"><span class="doc">django-admin</span></a> 命令生成一个手册页。这是在 <code class="docutils literal notranslate"><span class="pre">docs/conf.py</span></code> 中配置的。与其他文档输出不同，这个手册页应该包含在 Django 仓库和版本中，作为 <code class="docutils literal notranslate"><span class="pre">docs/man/django-admin.1</span></code>。在更新文档时不需要更新这个文件，因为它作为发行过程的一部分被更新一次。</p>
+<p>要生成更新版本的手册，请在 <code class="docutils literal notranslate"><span class="pre">docs</span></code> 目录下运行 <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">man</span></code>。新的手册页将写在 <code class="docutils literal notranslate"><span class="pre">docs/_build/man/django-admin.1</span></code>。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">编写文档</a><ul>
+<li><a class="reference internal" href="#the-django-documentation-process">Django 文档编写流程</a></li>
+<li><a class="reference internal" href="#how-the-documentation-is-organized">文档是如何组成</a></li>
+<li><a class="reference internal" href="#how-to-start-contributing-documentation">如何开始贡献文档</a><ul>
+<li><a class="reference internal" href="#clone-the-django-repository-to-your-local-machine">克隆 Django 存储库到您的本地计算机</a></li>
+<li><a class="reference internal" href="#set-up-a-virtual-environment-and-install-dependencies">建立一个虚拟环境并安装依赖项</a></li>
+<li><a class="reference internal" href="#build-the-documentation-locally">在本地构建文档</a></li>
+<li><a class="reference internal" href="#making-edits-to-the-documentation">对文档进行编辑</a></li>
+<li><a class="reference internal" href="#spelling-check">拼写检查</a></li>
+<li><a class="reference internal" href="#link-check">链接检查</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-style">书写格式</a></li>
+<li><a class="reference internal" href="#commonly-used-terms">常用术语</a></li>
+<li><a class="reference internal" href="#django-specific-terminology">Django 专用术语</a></li>
+<li><a class="reference internal" href="#guidelines-for-restructuredtext-files">reStructuredText 文件语法指南</a></li>
+<li><a class="reference internal" href="#django-specific-markup">Django 特有的标记</a></li>
+<li><a class="reference internal" href="#documenting-new-features">记录新功能</a></li>
+<li><a class="reference internal" href="#minimizing-images">最小化图像</a></li>
+<li><a class="reference internal" href="#an-example">一个例子</a></li>
+<li><a class="reference internal" href="#translating-documentation">翻译文档</a></li>
+<li><a class="reference internal" href="#django-admin-man-page"><code class="docutils literal notranslate"><span class="pre">django-admin</span></code> 手册页面</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="writing-code/javascript.html"
+                          title="上一章">JavaScript</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="localizing.html"
+                          title="下一章">使 Django 本地化</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/internals/contributing/writing-documentation.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="writing-code/javascript.html" title="JavaScript">previous</a>
+     |
+    <a href="../index.html" title="Django内部" accesskey="U">up</a>
+   |
+    <a href="localizing.html" title="使 Django 本地化">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>条件视图处理 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="加密签名" href="signing.html" />
+    <link rel="prev" title="Django 缓存框架" href="cache.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="cache.html" title="Django 缓存框架">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="signing.html" title="加密签名">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-conditional-view-processing">
+            
+  <div class="section" id="s-conditional-view-processing">
+<span id="conditional-view-processing"></span><h1>条件视图处理<a class="headerlink" href="#conditional-view-processing" title="永久链接至标题">¶</a></h1>
+<p>HTTP 客户端可以发送一些头部信息，用来告诉服务器它们已经看过的资源的副本情况。这通常在检索网页（使用 HTTP 的 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求）时使用，以避免发送客户端已经检索过的内容数据。然而，这些相同的头部信息可以用于所有 HTTP 方法（<code class="docutils literal notranslate"><span class="pre">POST</span></code>，<code class="docutils literal notranslate"><span class="pre">PUT</span></code>，<code class="docutils literal notranslate"><span class="pre">DELETE</span></code> 等）。</p>
+<p>针对每个从 Django 视图返回的页面（响应），它可能提供了两种HTTP headers：<code class="docutils literal notranslate"><span class="pre">ETag</span></code> header 和  <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> header。这些 headers 是 HTTP 的可选项。他们可以在视图函数里设置，或者依赖 <a class="reference internal" href="../ref/middleware.html#django.middleware.http.ConditionalGetMiddleware" title="django.middleware.http.ConditionalGetMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConditionalGetMiddleware</span></code></a> 中间件来设置 <code class="docutils literal notranslate"><span class="pre">ETag</span></code> header 。</p>
+<p>当客户端下次请求相同资源时，它可能会发送一个类似 <span class="target" id="index-16"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-13.1.3"><strong>If-Modified-Since</strong></a> 或 <span class="target" id="index-17"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-13.1.4"><strong>If-Unmodified-Since</strong></a> 的头部，其中包含了上次发送的最后修改时间的日期，或者 <span class="target" id="index-18"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-13.1.1"><strong>If-Match</strong></a> 或 <span class="target" id="index-19"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-13.1.2"><strong>If-None-Match</strong></a>，其中包含了最后的 <code class="docutils literal notranslate"><span class="pre">ETag</span></code>。如果页面的当前版本与客户端发送的 <code class="docutils literal notranslate"><span class="pre">ETag</span></code> 匹配，或者资源没有被修改，可以发送一个 304 状态码，而不是一个完整的响应，告诉客户端没有变化。根据头部的不同，如果页面已经被修改或者与客户端发送的 <code class="docutils literal notranslate"><span class="pre">ETag</span></code> 不匹配，可能会返回一个 412 状态码（前提条件失败）。</p>
+<p>当你需要更多的控制，你可以使用针对每个视图的条件处理函数。</p>
+<div class="section" id="s-the-condition-decorator">
+<span id="s-conditional-decorators"></span><span id="the-condition-decorator"></span><span id="conditional-decorators"></span><h2>条件装饰器<a class="headerlink" href="#the-condition-decorator" title="永久链接至标题">¶</a></h2>
+<p>有时（事实上，相当经常），你可以创建函数来快速计算资源的 <span class="target" id="index-20"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-8.8.3"><strong>ETag</strong></a> 值或最后修改时间，<strong>而不需要</strong> 执行构建完整视图所需的所有计算。Django 可以使用这些函数来提供视图处理的“提前退出”选项。告诉客户端内容自上次请求以来没有被修改，也许是这样。</p>
+<p>这两个函数被当做参数传递到 <code class="docutils literal notranslate"><span class="pre">django.views.decorators.http.condition</span></code> 装饰器。这个装饰器使用两个函数（你只需要支持其中一个，如果你不能很快计算这两个数量）来判断 HTTP 请求的 headers 和这些资源是否匹配。如果它们没有匹配，会计算一份资源的副本，并调用视图。</p>
+<p>条件装饰器如下：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">condition</span><span class="p">(</span><span class="n">etag_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">last_modified_func</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>用于计算 ETag 和最后修改时间的两个函数将接收传入的 <code class="docutils literal notranslate"><span class="pre">request</span></code> 对象和与它们帮助包装的视图函数中的相同参数，以相同的顺序。传递给 <code class="docutils literal notranslate"><span class="pre">last_modified_func</span></code> 的函数应返回一个标准的日期时间值，指定资源上次修改的时间，如果资源不存在则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。传递给 <code class="docutils literal notranslate"><span class="pre">etag</span></code> 装饰器的函数应返回表示资源的 <span class="target" id="index-21"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-8.8.3"><strong>ETag</strong></a> 的字符串，如果资源不存在则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+<p>如果它们没有通过视图设置并且请求的方法是安全的(<code class="docutils literal notranslate"><span class="pre">GET</span></code> 和 <code class="docutils literal notranslate"><span class="pre">HEAD</span></code>)，那么装饰器就会在请求上设置 <code class="docutils literal notranslate"><span class="pre">ETag</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code> headers 。</p>
+<p>用一个例子来解释如何有效地使用这个功能。假设你已经有了这些模型，代表一个博客系统：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Blog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span> <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">blog</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Blog</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">)</span>
+    <span class="n">published</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>如果在首页正在显示最新的博客文章，只会在有新博客文章时改变，你可以很快地计算最后修改时间。你需要与该博客关联的每篇文章的最新发布时间。一种方法是这样做的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">latest_entry</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">blog_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">blog</span><span class="o">=</span><span class="n">blog_id</span><span class="p">)</span><span class="o">.</span><span class="n">latest</span><span class="p">(</span><span class="s2">&quot;published&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">published</span>
+</pre></div>
+</div>
+<p>然后你可以使用这个函数预先为首页视图提供未变动页面的检测：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.http</span> <span class="kn">import</span> <span class="n">condition</span>
+
+
+<span class="nd">@condition</span><span class="p">(</span><span class="n">last_modified_func</span><span class="o">=</span><span class="n">latest_entry</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">front_page</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">blog_id</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<div class="admonition-be-careful-with-the-order-of-decorators admonition">
+<p class="first admonition-title">小心装饰器的顺序</p>
+<p class="last">当 <code class="docutils literal notranslate"><span class="pre">condition()</span></code> 返回一个条件响应时，任何位于它下面的装饰器都会被跳过，不会应用于响应。因此，任何需要应用于常规视图响应和条件响应的装饰器必须位于 <code class="docutils literal notranslate"><span class="pre">condition()</span></code> 之上。特别是，<a class="reference internal" href="http/decorators.html#django.views.decorators.vary.vary_on_cookie" title="django.views.decorators.vary.vary_on_cookie"><code class="xref py py-func docutils literal notranslate"><span class="pre">vary_on_cookie()</span></code></a>、<a class="reference internal" href="http/decorators.html#django.views.decorators.vary.vary_on_headers" title="django.views.decorators.vary.vary_on_headers"><code class="xref py py-func docutils literal notranslate"><span class="pre">vary_on_headers()</span></code></a>  和 <a class="reference internal" href="http/decorators.html#django.views.decorators.cache.cache_control" title="django.views.decorators.cache.cache_control"><code class="xref py py-func docutils literal notranslate"><span class="pre">cache_control()</span></code></a> 应该放在前面，因为 <span class="target" id="index-22"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-15.4.5"><strong>RFC 9110</strong></a> 要求它们设置的标头在 304 响应中存在。</p>
+</div>
+</div>
+<div class="section" id="s-shortcuts-for-only-computing-one-value">
+<span id="shortcuts-for-only-computing-one-value"></span><h2>仅用于计算一个值的快捷方式<a class="headerlink" href="#shortcuts-for-only-computing-one-value" title="永久链接至标题">¶</a></h2>
+<p>作为常用规则，如果你可以提供函数去同时计算 ETag 和最后的修改时间，你应该这样做。你不知道任何给定的 HTTP 客户端将向你发送哪一个headers，因此需要同时处理这两个headers。然而，有时候只有一个值易于计算，Django 提供的装饰器处理只有 ETag 或 只有 last-modified 的计算。</p>
+<p><code class="docutils literal notranslate"><span class="pre">django.views.decorators.http.etag</span></code> 和 <code class="docutils literal notranslate"><span class="pre">django.views.decorators.http.last_modified</span></code> 装饰器和 <code class="docutils literal notranslate"><span class="pre">condition</span></code> 装饰器一样传递相同的函数类型。它们的签名是这样的：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">etag</span><span class="p">(</span><span class="n">etag_func</span><span class="p">)</span>
+<span class="n">last_modified</span><span class="p">(</span><span class="n">last_modified_func</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>我们可以使用其中一个装饰器来编写更早一些的那个只使用last-modified函数的例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@last_modified</span><span class="p">(</span><span class="n">latest_entry</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">front_page</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">blog_id</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>...或:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">front_page</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">blog_id</span><span class="p">):</span> <span class="o">...</span>
+
+
+<span class="n">front_page</span> <span class="o">=</span> <span class="n">last_modified</span><span class="p">(</span><span class="n">latest_entry</span><span class="p">)(</span><span class="n">front_page</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="s-use-condition-when-testing-both-conditions">
+<span id="use-condition-when-testing-both-conditions"></span><h3>测试两个条件时使用 <code class="docutils literal notranslate"><span class="pre">condition</span></code><a class="headerlink" href="#use-condition-when-testing-both-conditions" title="永久链接至标题">¶</a></h3>
+<p>如果你想测试两个先决条件，那么试着链接 <code class="docutils literal notranslate"><span class="pre">etag</span></code> 和 <code class="docutils literal notranslate"><span class="pre">last_modified</span></code> 装饰器可能看起来更好。然而，这会导致错误的行为。</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Bad code. Don&#39;t do this!</span>
+<span class="nd">@etag</span><span class="p">(</span><span class="n">etag_func</span><span class="p">)</span>
+<span class="nd">@last_modified</span><span class="p">(</span><span class="n">last_modified_func</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span> <span class="o">...</span>
+
+
+<span class="c1"># End of bad code.</span>
+</pre></div>
+</div>
+<p>第一个装饰器不知道关于第二个装饰器的任何信息，而且可能回答“这个响应没有被修改”，即使第二个装饰器确定不是那样。<code class="docutils literal notranslate"><span class="pre">condition</span></code> 装饰器同时使用两个回调函数来执行正确的动作。</p>
+</div>
+</div>
+<div class="section" id="s-using-the-decorators-with-other-http-methods">
+<span id="using-the-decorators-with-other-http-methods"></span><h2>将装饰器和其他 HTTP 方法一起使用<a class="headerlink" href="#using-the-decorators-with-other-http-methods" title="永久链接至标题">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">condition</span></code> 装饰器不仅仅用于 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 和 <code class="docutils literal notranslate"><span class="pre">HEAD</span></code> 请求（在这个解决方案里 <code class="docutils literal notranslate"><span class="pre">HEAD``请求和</span> <span class="pre">``GET</span></code> 类似）。它也可以被用于提供  <code class="docutils literal notranslate"><span class="pre">POST</span></code>, <code class="docutils literal notranslate"><span class="pre">PUT</span></code> 和 <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> 请求的检查。在这些情况下，不会返回一个“未修改”的响应，但会告诉客户端它们尝试修改的资源在这期间已被修改。</p>
+<p>例如，在客户端和服务端之间考虑下面的交换：</p>
+<ol class="arabic simple">
+<li>用户请求``/foo/<a href="#id1"><span class="problematic" id="id2">``</span></a>。</li>
+<li>服务端用一些带有 <code class="docutils literal notranslate"><span class="pre">&quot;abcd1234&quot;</span></code> 的 ETag 响应一些内容。</li>
+<li>客户端发送一个 HTTP <code class="docutils literal notranslate"><span class="pre">PUT</span></code> 请求到 <code class="docutils literal notranslate"><span class="pre">/foo/</span></code> 来更新一些资源。它也发送 <code class="docutils literal notranslate"><span class="pre">If-Match:</span> <span class="pre">&quot;abcd1234&quot;</span></code> header 来指定它准备更新的版本。</li>
+<li>服务端通过计算 ETag（与 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求计算的方式相同，使用相同的函数）来检查资源是否被修改。如果资源被改变，它将返回 412 状态码，意思是 &quot;先决条件失败&quot; 。</li>
+<li>客户端在收到一个412响应后会发送一个 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求到 <code class="docutils literal notranslate"><span class="pre">/foo/</span></code>，在更新它之前用来寻找内容更新的版本。</li>
+</ol>
+<p>重要的是这个例子显示的是相同函数在所有情形下可以被用来计算ETag和最后一次修改。事实上，你应该使用相同的函数，这样相同的值会被实时返回。</p>
+<div class="admonition-validator-headers-with-non-safe-request-methods admonition">
+<p class="first admonition-title">具有不安全请求方法的验证 headers</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">condition</span></code> 装饰器仅为安全的 HTTP 方法（即 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 和 <code class="docutils literal notranslate"><span class="pre">HEAD</span></code>）设置验证器标头（<code class="docutils literal notranslate"><span class="pre">ETag</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Last-Modified</span></code>）。如果您希望在其他情况下返回它们，请在视图中设置它们。请参阅 <span class="target" id="index-23"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9110.html#section-9.3.4"><strong>RFC 9110#section-9.3.4</strong></a> 了解在响应使用 <code class="docutils literal notranslate"><span class="pre">PUT</span></code> 与 <code class="docutils literal notranslate"><span class="pre">POST</span></code> 进行的请求时设置验证器标头的区别。</p>
+</div>
+</div>
+<div class="section" id="s-comparison-with-middleware-conditional-processing">
+<span id="comparison-with-middleware-conditional-processing"></span><h2>对比中间件的条件处理<a class="headerlink" href="#comparison-with-middleware-conditional-processing" title="永久链接至标题">¶</a></h2>
+<p>Django 通过 <a class="reference internal" href="../ref/middleware.html#django.middleware.http.ConditionalGetMiddleware" title="django.middleware.http.ConditionalGetMiddleware"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.middleware.http.ConditionalGetMiddleware</span></code></a> 提供了有条件的 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 处理。虽然易于使用，但是中间件在高级用法上是有限制的：</p>
+<ul class="simple">
+<li>它可被全局应用于项目的所有视图。</li>
+<li>它不会阻止你生成响应，这样代价可能很昂贵。</li>
+<li>它只适合HTTP 的 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 请求。</li>
+</ul>
+<p>你应该为你的特殊需求选择最合适的工具。如果你有方法可以很迅速地计算 ETags 和 修改时间，并且如果一些视图花了一些时间去生成内容，那么你应该在这个文档中考虑使用 <code class="docutils literal notranslate"><span class="pre">condition</span></code> 装饰器描述。如果所有事务都运行的非常快了，那么坚持使用中间件。如果视图没有变动，那么发送回客户端的网络流量将仍然会减少。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">条件视图处理</a><ul>
+<li><a class="reference internal" href="#the-condition-decorator">条件装饰器</a></li>
+<li><a class="reference internal" href="#shortcuts-for-only-computing-one-value">仅用于计算一个值的快捷方式</a><ul>
+<li><a class="reference internal" href="#use-condition-when-testing-both-conditions">测试两个条件时使用 <code class="docutils literal notranslate"><span class="pre">condition</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-decorators-with-other-http-methods">将装饰器和其他 HTTP 方法一起使用</a></li>
+<li><a class="reference internal" href="#comparison-with-middleware-conditional-processing">对比中间件的条件处理</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="cache.html"
+                          title="上一章">Django 缓存框架</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="signing.html"
+                          title="下一章">加密签名</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/topics/conditional-view-processing.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="cache.html" title="Django 缓存框架">previous</a>
+     |
+    <a href="index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="signing.html" title="加密签名">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

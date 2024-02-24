@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>约束参考 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="模型 _meta API" href="meta.html" />
+    <link rel="prev" title="模型索引参考" href="indexes.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="indexes.html" title="模型索引参考">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="meta.html" title="模型 &lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;_meta&lt;/span&gt;&lt;/code&gt; API">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-models-constraints">
+            
+  <div class="section" id="s-module-django.db.models.constraints">
+<span id="s-constraints-reference"></span><span id="module-django.db.models.constraints"></span><span id="constraints-reference"></span><h1>约束参考<a class="headerlink" href="#module-django.db.models.constraints" title="永久链接至标题">¶</a></h1>
+<p>本模块中定义的类可以创建数据库约束。它们被添加到模型中 <code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.constraints</span></code> 选项中。</p>
+<div class="admonition-referencing-built-in-constraints admonition">
+<p class="first admonition-title">引用内置约束</p>
+<p class="last">约束是在 <code class="docutils literal notranslate"><span class="pre">django.db.models.constraint</span></code> 中定义的，但为了方便，它们被导入到 <a class="reference internal" href="../../topics/db/models.html#module-django.db.models" title="django.db.models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.db.models</span></code></a> 中。标准的惯例是使用 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">django.db</span> <span class="pre">import</span> <span class="pre">models</span></code> 作为 <code class="docutils literal notranslate"><span class="pre">models.&lt;Foo&gt;Constraint</span></code>。</p>
+</div>
+<div class="admonition-constraints-in-abstract-base-classes admonition">
+<p class="first admonition-title">抽象基类中的约束</p>
+<p class="last">你必须始终为约束指定一个唯一的名称。因此，你通常不能在抽象基类上指定一个约束，因为 <code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.craces</span></code> 选项是由子类继承的，每次的属性值（包括 <code class="docutils literal notranslate"><span class="pre">name</span></code>）都完全相同。为了解决名称碰撞的问题，名称的一部分可能包含 <code class="docutils literal notranslate"><span class="pre">'%(app_label)s'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'%(class)s'</span></code>，它们分别被具体模型的小写应用标签和类名所代替。例如 <code class="docutils literal notranslate"><span class="pre">CheckConstraint(check=Q(age__gte=18)，name='%(app_label)s_%(class)s_is_adult')</span></code>。</p>
+</div>
+<div class="admonition-validation-of-constraints admonition">
+<p class="first admonition-title">约束的验证</p>
+<p class="last">约束在 <a class="reference internal" href="instances.html#validating-objects"><span class="std std-ref">模型验证</span></a> 过程中进行检查。</p>
+</div>
+<div class="admonition-validation-of-constraints-with-jsonfield admonition">
+<p class="first admonition-title">对于 <code class="docutils literal notranslate"><span class="pre">JSONField</span></code> 的约束验证</p>
+<p>包含 <a class="reference internal" href="fields.html#django.db.models.JSONField" title="django.db.models.JSONField"><code class="xref py py-class docutils literal notranslate"><span class="pre">JSONField</span></code></a> 的约束可能不会引发验证错误，因为键、索引和路径转换具有许多与数据库相关的注意事项。这个问题 <a class="reference external" href="https://code.djangoproject.com/ticket/34059">可能在以后被完全支持</a>。</p>
+<p class="last">您应该始终检查是否有来自 <code class="docutils literal notranslate"><span class="pre">django.db.models</span></code> 记录器的日志消息，例如 <em>&quot;在...上调用 check() 时出现了数据库错误&quot;</em>，以确认它已正确验证。</p>
+</div>
+<div class="section" id="s-baseconstraint">
+<span id="baseconstraint"></span><h2><code class="docutils literal notranslate"><span class="pre">BaseConstraint</span></code><a class="headerlink" href="#baseconstraint" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.models.BaseConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">BaseConstraint</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">violation_error_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">violation_error_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.models.BaseConstraint" title="永久链接至目标">¶</a></dt>
+<dd><p>所有约束的基类。子类必须实现 <code class="docutils literal notranslate"><span class="pre">constraint_sql()</span></code>, <code class="docutils literal notranslate"><span class="pre">create_sql()</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_sql()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">validate()</span></code> 方法。</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">5.0 版后已移除: </span>不再支持传递位置参数。</p>
+</div>
+</dd></dl>
+
+<p>所有约束都有以下共同的参数：</p>
+<div class="section" id="s-name">
+<span id="name"></span><h3><code class="docutils literal notranslate"><span class="pre">name</span></code><a class="headerlink" href="#name" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.BaseConstraint.name">
+<code class="sig-prename descclassname"><span class="pre">BaseConstraint.</span></code><code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#django.db.models.BaseConstraint.name" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>约束的名称。你必须始终为约束指定一个唯一的名称。</p>
+</div>
+<div class="section" id="s-violation-error-code">
+<span id="violation-error-code"></span><h3><code class="docutils literal notranslate"><span class="pre">violation_error_code</span></code><a class="headerlink" href="#violation-error-code" title="永久链接至标题">¶</a></h3>
+<div class="versionadded">
+<span class="title">New in Django 5.0.</span> </div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.BaseConstraint.violation_error_code">
+<code class="sig-prename descclassname"><span class="pre">BaseConstraint.</span></code><code class="sig-name descname"><span class="pre">violation_error_code</span></code><a class="headerlink" href="#django.db.models.BaseConstraint.violation_error_code" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在 <a class="reference internal" href="instances.html#validating-objects"><span class="std std-ref">模型验证</span></a> 过程中引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 时使用的错误代码。默认值为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</div>
+<div class="section" id="s-violation-error-message">
+<span id="violation-error-message"></span><h3><code class="docutils literal notranslate"><span class="pre">violation_error_message</span></code><a class="headerlink" href="#violation-error-message" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.BaseConstraint.violation_error_message">
+<code class="sig-prename descclassname"><span class="pre">BaseConstraint.</span></code><code class="sig-name descname"><span class="pre">violation_error_message</span></code><a class="headerlink" href="#django.db.models.BaseConstraint.violation_error_message" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在 <a class="reference internal" href="instances.html#validating-objects"><span class="std std-ref">模型验证</span></a> 过程中引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 时使用的错误消息。默认为 <code class="docutils literal notranslate"><span class="pre">&quot;违反了约束“%(name)s”&quot;</span></code>。</p>
+</div>
+<div class="section" id="s-validate">
+<span id="validate"></span><h3><code class="docutils literal notranslate"><span class="pre">validate()</span></code><a class="headerlink" href="#validate" title="永久链接至标题">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.db.models.BaseConstraint.validate">
+<code class="sig-prename descclassname"><span class="pre">BaseConstraint.</span></code><code class="sig-name descname"><span class="pre">validate</span></code>(<em><span class="n"><span class="pre">model</span></span></em>, <em><span class="n"><span class="pre">instance</span></span></em>, <em><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT_DB_ALIAS</span></span></em>)<a class="headerlink" href="#django.db.models.BaseConstraint.validate" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>验证在 <code class="docutils literal notranslate"><span class="pre">model</span></code> 上定义的约束是否在 <code class="docutils literal notranslate"><span class="pre">instance</span></code> 上被遵守。这将在数据库上执行一个查询，以确保该约束被遵守。如果需要使用 <code class="docutils literal notranslate"><span class="pre">exclude</span></code> 列表中的字段来验证约束，则会忽略该约束。</p>
+<p>如果违反了约束，则引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code>。</p>
+<p>这个方法必须由子类来实现。</p>
+</div>
+</div>
+<div class="section" id="s-checkconstraint">
+<span id="checkconstraint"></span><h2><code class="docutils literal notranslate"><span class="pre">CheckConstraint</span></code><a class="headerlink" href="#checkconstraint" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.models.CheckConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">CheckConstraint</span></code>(<em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">check</span></span></em>, <em><span class="n"><span class="pre">name</span></span></em>, <em><span class="n"><span class="pre">violation_error_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">violation_error_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.models.CheckConstraint" title="永久链接至目标">¶</a></dt>
+<dd><p>在数据库中创建一个检查约束</p>
+</dd></dl>
+
+<div class="section" id="s-check">
+<span id="check"></span><h3><code class="docutils literal notranslate"><span class="pre">check</span></code><a class="headerlink" href="#check" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.CheckConstraint.check">
+<code class="sig-prename descclassname"><span class="pre">CheckConstraint.</span></code><code class="sig-name descname"><span class="pre">check</span></code><a class="headerlink" href="#django.db.models.CheckConstraint.check" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>一个 <a class="reference internal" href="querysets.html#django.db.models.Q" title="django.db.models.Q"><code class="xref py py-class docutils literal notranslate"><span class="pre">Q</span></code></a> 对象或布尔值 <a class="reference internal" href="expressions.html#django.db.models.Expression" title="django.db.models.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a>，它指定了你要强制约束的检查。</p>
+<p>例如，<code class="docutils literal notranslate"><span class="pre">CheckConstraint(check=Q(age__gte=18),</span> <span class="pre">name='age_gte_18')</span></code> 确保年龄字段永远不小于 18。</p>
+<div class="admonition-oracle admonition">
+<p class="first admonition-title">Oracle</p>
+<p>在 Oracle 上对可空字段进行检查时，必须包含一个允许 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 值的条件，以使 <a class="reference internal" href="#django.db.models.BaseConstraint.validate" title="django.db.models.BaseConstraint.validate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">validate()</span></code></a> 的行为与检查约束验证相同。例如，如果 <code class="docutils literal notranslate"><span class="pre">age</span></code> 是可空字段：</p>
+<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CheckConstraint</span><span class="p">(</span><span class="n">check</span><span class="o">=</span><span class="n">Q</span><span class="p">(</span><span class="n">age__gte</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span> <span class="o">|</span> <span class="n">Q</span><span class="p">(</span><span class="n">age__isnull</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;age_gte_18&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-uniqueconstraint">
+<span id="uniqueconstraint"></span><h2><code class="docutils literal notranslate"><span class="pre">UniqueConstraint</span></code><a class="headerlink" href="#uniqueconstraint" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">UniqueConstraint</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">expressions</span></span></em>, <em><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">deferrable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">opclasses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em><span class="n"><span class="pre">nulls_distinct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">violation_error_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">violation_error_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.db.models.UniqueConstraint" title="永久链接至目标">¶</a></dt>
+<dd><p>在数据库中创建一个唯一约束。</p>
+</dd></dl>
+
+<div class="section" id="s-expressions">
+<span id="expressions"></span><h3><code class="docutils literal notranslate"><span class="pre">expressions</span></code><a class="headerlink" href="#expressions" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.expressions">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">expressions</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.expressions" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>位置参数 <code class="docutils literal notranslate"><span class="pre">*expressions</span></code> 允许在表达式和数据库函数上创建功能性唯一约束。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UniqueConstraint</span><span class="p">(</span><span class="n">Lower</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">desc</span><span class="p">(),</span> <span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;unique_lower_name_category&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>在降序中的 <code class="docutils literal notranslate"><span class="pre">name</span></code> 字段的小写值和默认升序中的 <code class="docutils literal notranslate"><span class="pre">category</span></code> 字段上创建了一个唯一约束。</p>
+<p>功能性唯一约束具有与 <a class="reference internal" href="indexes.html#django.db.models.Index.expressions" title="django.db.models.Index.expressions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.expressions</span></code></a> 相同的数据库限制。</p>
+</div>
+<div class="section" id="s-fields">
+<span id="fields"></span><h3><code class="docutils literal notranslate"><span class="pre">fields</span></code><a class="headerlink" href="#fields" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.fields">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">fields</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.fields" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>一个字段名的列表，它指定了你要强制约束的唯一列集。</p>
+<p>例如，<code class="docutils literal notranslate"><span class="pre">UniqueConstraint(field=['room',</span> <span class="pre">'date'],</span> <span class="pre">name='unique_booking')</span></code> 确保每个房间在每个日期只能被预订一次。</p>
+</div>
+<div class="section" id="s-condition">
+<span id="condition"></span><h3><code class="docutils literal notranslate"><span class="pre">condition</span></code><a class="headerlink" href="#condition" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.condition">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">condition</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.condition" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>一个 <a class="reference internal" href="querysets.html#django.db.models.Q" title="django.db.models.Q"><code class="xref py py-class docutils literal notranslate"><span class="pre">Q</span></code></a> 对象，用于指定你想要强制执行的约束条件。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UniqueConstraint</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">],</span> <span class="n">condition</span><span class="o">=</span><span class="n">Q</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s2">&quot;DRAFT&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;unique_draft_user&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>确保每个用户只有一份草稿。</p>
+<p>这些条件与 <a class="reference internal" href="indexes.html#django.db.models.Index.condition" title="django.db.models.Index.condition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.condition</span></code></a> 具有相同的数据库限制。</p>
+</div>
+<div class="section" id="s-deferrable">
+<span id="deferrable"></span><h3><code class="docutils literal notranslate"><span class="pre">deferrable</span></code><a class="headerlink" href="#deferrable" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.deferrable">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">deferrable</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.deferrable" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>设置该参数，可创建一个可推迟的唯一约束。接受的值是 <code class="docutils literal notranslate"><span class="pre">Deferrable.DEFERRED</span></code> 或 <code class="docutils literal notranslate"><span class="pre">Deferrable.IMMEDIATE</span></code>。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">Deferrable</span><span class="p">,</span> <span class="n">UniqueConstraint</span>
+
+<span class="n">UniqueConstraint</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;unique_order&quot;</span><span class="p">,</span>
+    <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;order&quot;</span><span class="p">],</span>
+    <span class="n">deferrable</span><span class="o">=</span><span class="n">Deferrable</span><span class="o">.</span><span class="n">DEFERRED</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>默认情况下，约束条件是不推迟的。推迟的约束条件在事务结束前不会被强制执行。即时约束将在每条命令后立即执行。</p>
+<div class="admonition-mysql-mariadb-and-sqlite admonition">
+<p class="first admonition-title">MySQL，MariaDB 和 SQLite。</p>
+<p class="last">在 MySQL、MariaDB 和 SQLite 上，可推迟的唯一约束被忽略，因为它们都不支持。</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">推迟的唯一约束可能导致 <a class="reference external" href="https://www.postgresql.org/docs/current/sql-createtable.html#id-1.9.3.85.9.4">性能惩罚</a> 。</p>
+</div>
+</div>
+<div class="section" id="s-include">
+<span id="include"></span><h3><code class="docutils literal notranslate"><span class="pre">include</span></code><a class="headerlink" href="#include" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.include">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">include</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.include" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>一个包含在覆盖的唯一索引中的字段名称的列表或元组，作为非键列。这允许只用索引扫描，用于只选择包含的字段（ <a class="reference internal" href="#django.db.models.UniqueConstraint.include" title="django.db.models.UniqueConstraint.include"><code class="xref py py-attr docutils literal notranslate"><span class="pre">include</span></code></a> ）和只过滤唯一字段（ <a class="reference internal" href="#django.db.models.UniqueConstraint.fields" title="django.db.models.UniqueConstraint.fields"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fields</span></code></a> ）的查询。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UniqueConstraint</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;unique_booking&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;room&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">],</span> <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;full_name&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>将允许对 <code class="docutils literal notranslate"><span class="pre">room</span></code> 和 <code class="docutils literal notranslate"><span class="pre">date</span></code> 进行过滤，也可以选择 <code class="docutils literal notranslate"><span class="pre">full_name</span></code>，同时只从索引中获取数据。</p>
+<p>Unique constraints with non-key columns are ignored for databases besides
+PostgreSQL.</p>
+<p>非关键列具有与 <a class="reference internal" href="indexes.html#django.db.models.Index.include" title="django.db.models.Index.include"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.include</span></code></a> 相同的数据库限制。</p>
+</div>
+<div class="section" id="s-opclasses">
+<span id="opclasses"></span><h3><code class="docutils literal notranslate"><span class="pre">opclasses</span></code><a class="headerlink" href="#opclasses" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.opclasses">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">opclasses</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.opclasses" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>用于此唯一索引的 <a class="reference external" href="https://www.postgresql.org/docs/current/indexes-opclass.html">PostgreSQL 操作符类别</a> 的名称。如果需要自定义操作符类别，必须为索引中的每个字段提供一个。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UniqueConstraint</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;unique_username&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span> <span class="n">opclasses</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;varchar_pattern_ops&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">varchar_pattern_ops</span></code> 在 <code class="docutils literal notranslate"><span class="pre">username</span></code> 上创建了一个唯一索引。</p>
+<p><code class="docutils literal notranslate"><span class="pre">opclasses</span></code> 对于 PostgreSQL 以外的数据库来说是被忽略的。</p>
+</div>
+<div class="section" id="s-nulls-distinct">
+<span id="nulls-distinct"></span><h3><code class="docutils literal notranslate"><span class="pre">nulls_distinct</span></code><a class="headerlink" href="#nulls-distinct" title="永久链接至标题">¶</a></h3>
+<div class="versionadded">
+<span class="title">New in Django 5.0.</span> </div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.nulls_distinct">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">nulls_distinct</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.nulls_distinct" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>是否应该将包含 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 值的行视为彼此不同，而不是唯一约束覆盖它们。默认值是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，它使用数据库默认值，在大多数后端上为 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>例子：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UniqueConstraint</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ordering&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ordering&quot;</span><span class="p">],</span> <span class="n">nulls_distinct</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>创建一个唯一约束，只允许一行在 <code class="docutils literal notranslate"><span class="pre">ordering</span></code> 列中存储一个 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 值。</p>
+<p>Unique constraints with <code class="docutils literal notranslate"><span class="pre">nulls_distinct</span></code> are ignored for databases besides
+PostgreSQL 15+.</p>
+</div>
+<div class="section" id="s-id1">
+<span id="id1"></span><h3><code class="docutils literal notranslate"><span class="pre">violation_error_code</span></code><a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h3>
+<div class="versionadded">
+<span class="title">New in Django 5.0.</span> </div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.violation_error_code">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">violation_error_code</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.violation_error_code" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在 <a class="reference internal" href="instances.html#validating-objects"><span class="std std-ref">模型验证</span></a> 过程中引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 时使用的错误代码。默认值为 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+<p>对于没有 <a class="reference internal" href="#django.db.models.UniqueConstraint.condition" title="django.db.models.UniqueConstraint.condition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">condition</span></code></a> 且具有 <a class="reference internal" href="#django.db.models.UniqueConstraint.fields" title="django.db.models.UniqueConstraint.fields"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fields</span></code></a> 的 <a class="reference internal" href="#django.db.models.UniqueConstraint" title="django.db.models.UniqueConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueConstraint</span></code></a>，此代码 <em>不会被使用</em>。这样的 <a class="reference internal" href="#django.db.models.UniqueConstraint" title="django.db.models.UniqueConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueConstraint</span></code></a> 具有与通过 <a class="reference internal" href="fields.html#django.db.models.Field.unique" title="django.db.models.Field.unique"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Field.unique</span></code></a> 定义的或者在 <a class="reference internal" href="options.html#django.db.models.Options.constraints" title="django.db.models.Options.constraints"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.unique_together</span></code></a> 中定义的约束相同的错误代码。</p>
+</div>
+<div class="section" id="s-id2">
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">violation_error_message</span></code><a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.db.models.UniqueConstraint.violation_error_message">
+<code class="sig-prename descclassname"><span class="pre">UniqueConstraint.</span></code><code class="sig-name descname"><span class="pre">violation_error_message</span></code><a class="headerlink" href="#django.db.models.UniqueConstraint.violation_error_message" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>在 <a class="reference internal" href="instances.html#validating-objects"><span class="std std-ref">模型验证</span></a> 期间引发 <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> 时使用的错误消息。默认为 <a class="reference internal" href="#django.db.models.BaseConstraint.violation_error_message" title="django.db.models.BaseConstraint.violation_error_message"><code class="xref py py-attr docutils literal notranslate"><span class="pre">BaseConstraint.violation_error_message</span></code></a>。</p>
+<p>这个消息 <em>不会</em> 用于没有 <a class="reference internal" href="#django.db.models.UniqueConstraint.condition" title="django.db.models.UniqueConstraint.condition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">condition</span></code></a> 且带有 <a class="reference internal" href="#django.db.models.UniqueConstraint.fields" title="django.db.models.UniqueConstraint.fields"><code class="xref py py-attr docutils literal notranslate"><span class="pre">fields</span></code></a> 的 <a class="reference internal" href="#django.db.models.UniqueConstraint" title="django.db.models.UniqueConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueConstraint</span></code></a>。这样的 <a class="reference internal" href="#django.db.models.UniqueConstraint" title="django.db.models.UniqueConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueConstraint</span></code></a> 显示与使用 <a class="reference internal" href="fields.html#django.db.models.Field.unique" title="django.db.models.Field.unique"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Field.unique</span></code></a> 或 <a class="reference internal" href="options.html#django.db.models.Options.constraints" title="django.db.models.Options.constraints"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Meta.unique_together</span></code></a> 定义的约束相同的消息。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">约束参考</a><ul>
+<li><a class="reference internal" href="#baseconstraint"><code class="docutils literal notranslate"><span class="pre">BaseConstraint</span></code></a><ul>
+<li><a class="reference internal" href="#name"><code class="docutils literal notranslate"><span class="pre">name</span></code></a></li>
+<li><a class="reference internal" href="#violation-error-code"><code class="docutils literal notranslate"><span class="pre">violation_error_code</span></code></a></li>
+<li><a class="reference internal" href="#violation-error-message"><code class="docutils literal notranslate"><span class="pre">violation_error_message</span></code></a></li>
+<li><a class="reference internal" href="#validate"><code class="docutils literal notranslate"><span class="pre">validate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#checkconstraint"><code class="docutils literal notranslate"><span class="pre">CheckConstraint</span></code></a><ul>
+<li><a class="reference internal" href="#check"><code class="docutils literal notranslate"><span class="pre">check</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uniqueconstraint"><code class="docutils literal notranslate"><span class="pre">UniqueConstraint</span></code></a><ul>
+<li><a class="reference internal" href="#expressions"><code class="docutils literal notranslate"><span class="pre">expressions</span></code></a></li>
+<li><a class="reference internal" href="#fields"><code class="docutils literal notranslate"><span class="pre">fields</span></code></a></li>
+<li><a class="reference internal" href="#condition"><code class="docutils literal notranslate"><span class="pre">condition</span></code></a></li>
+<li><a class="reference internal" href="#deferrable"><code class="docutils literal notranslate"><span class="pre">deferrable</span></code></a></li>
+<li><a class="reference internal" href="#include"><code class="docutils literal notranslate"><span class="pre">include</span></code></a></li>
+<li><a class="reference internal" href="#opclasses"><code class="docutils literal notranslate"><span class="pre">opclasses</span></code></a></li>
+<li><a class="reference internal" href="#nulls-distinct"><code class="docutils literal notranslate"><span class="pre">nulls_distinct</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">violation_error_code</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">violation_error_message</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="indexes.html"
+                          title="上一章">模型索引参考</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="meta.html"
+                          title="下一章">模型 <code class="docutils literal notranslate"><span class="pre">_meta</span></code> API</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/ref/models/constraints.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="indexes.html" title="模型索引参考">previous</a>
+     |
+    <a href="../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="meta.html" title="模型 &lt;code class=&#34;docutils literal notranslate&#34;&gt;&lt;span class=&#34;pre&#34;&gt;_meta&lt;/span&gt;&lt;/code&gt; API">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

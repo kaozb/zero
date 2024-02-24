@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.3.5 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.3.4 版本发行说明" href="1.3.4.html" />
+    <link rel="prev" title="Django 1.3.6 版本发行说明" href="1.3.6.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.3.6.html" title="Django 1.3.6 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.3.4.html" title="Django 1.3.4 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.3.5">
+            
+  <div class="section" id="s-django-1-3-5-release-notes">
+<span id="django-1-3-5-release-notes"></span><h1>Django 1.3.5 版本发行说明<a class="headerlink" href="#django-1-3-5-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2012 年 12 月 10 日</em></p>
+<p>Django 1.3.5 解决了 1.3 系列中之前 Django 版本存在的两个安全问题。</p>
+<p>请注意，这个安全发布与之前的发布略有不同。这里解决的两个问题都已在之前的 Django 安全更新中得到处理。在一个案例中，我们收到了持续的问题报告，另一个案例中，我们选择采取进一步措施来加强 Django 的代码，以应对来自多个来源的潜在问题的独立发现。</p>
+<div class="section" id="s-host-header-poisoning">
+<span id="host-header-poisoning"></span><h2>Host 头部中毒<a class="headerlink" href="#host-header-poisoning" title="永久链接至标题">¶</a></h2>
+<p>早期的几个 Django 安全发布主要关注 HTTP Host 头部被污染的问题，这会导致 Django 生成指向任意、可能恶意的域名的 URL 。</p>
+<p>为了回应收到的进一步意见以及在之前发布后持续出现的问题，我们正在采取额外措施来加强 Host 头部验证。与其试图适应 HTTP 支持的所有功能，Django 的 Host 头部验证试图支持一个更小但更常见的子集：</p>
+<ul class="simple">
+<li>主机名必须由字符 <code class="docutils literal notranslate"><span class="pre">[A-Za-z0-9]</span></code> 加上连字符（'-'）或点号（'.'）组成。</li>
+<li>允许使用 IP 地址 - 包括 IPv4 和 IPv6 。</li>
+<li>如果指定了端口，必须为数字。</li>
+</ul>
+<p>现在，任何与此不符的都将被拒绝，并引发异常 <a class="reference internal" href="../ref/exceptions.html#django.core.exceptions.SuspiciousOperation" title="django.core.exceptions.SuspiciousOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">django.core.exceptions.SuspiciousOperation</span></code></a>。</p>
+</div>
+<div class="section" id="s-redirect-poisoning">
+<span id="redirect-poisoning"></span><h2>重定向投毒<a class="headerlink" href="#redirect-poisoning" title="永久链接至标题">¶</a></h2>
+<p>同样是跟进之前的问题：今年 7 月，我们对 Django 的 HTTP 重定向类进行了修改，对要重定向到的 URL 的方案进行了额外验证（因为在 Django 自带的应用程序和许多第三方应用程序中，接受用户提供的重定向目标是一种常见的模式）。</p>
+<p>从那时起，对代码进行的两次独立审计发现了更多潜在问题。因此，与 Host-header 问题类似，我们正在采取措施提供更严格的验证，以应对报告的问题（主要是与第三方应用程序相关，但在一定程度上也涉及 Django 本身）。这分为两部分：</p>
+<p>1. A new utility function, <code class="docutils literal notranslate"><span class="pre">django.utils.http.is_safe_url</span></code>, is added; this
+function takes a URL and a hostname, and checks that the URL is either
+relative, or if absolute matches the supplied hostname. This function is
+intended for use whenever user-supplied redirect targets are accepted, to
+ensure that such redirects cannot lead to arbitrary third-party sites.</p>
+<p>2. All of Django's own built-in views -- primarily in the authentication system
+-- which allow user-supplied redirect targets now use <code class="docutils literal notranslate"><span class="pre">is_safe_url</span></code> to
+validate the supplied URL.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.3.5 版本发行说明</a><ul>
+<li><a class="reference internal" href="#host-header-poisoning">Host 头部中毒</a></li>
+<li><a class="reference internal" href="#redirect-poisoning">重定向投毒</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.3.6.html"
+                          title="上一章">Django 1.3.6 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.3.4.html"
+                          title="下一章">Django 1.3.4 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.3.5.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.3.6.html" title="Django 1.3.6 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.3.4.html" title="Django 1.3.4 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

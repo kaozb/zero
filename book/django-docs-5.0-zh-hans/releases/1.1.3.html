@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.1.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.1.2 版本发行说明" href="1.1.2.html" />
+    <link rel="prev" title="Django 1.1.4 版本发行说明" href="1.1.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.1.4.html" title="Django 1.1.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.1.2.html" title="Django 1.1.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.1.3">
+            
+  <div class="section" id="s-django-1-1-3-release-notes">
+<span id="django-1-1-3-release-notes"></span><h1>Django 1.1.3 版本发行说明<a class="headerlink" href="#django-1-1-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p>欢迎来到 Django 1.1.3 版本！</p>
+<p>这是 Django 1.1 系列的第三个“修复错误”版本，改进了 Django 1.1 代码库的稳定性和性能。</p>
+<p>除一个例外之外，Django 1.1.3 与 Django 1.1.2 保持向后兼容。它还包含了一些修复和其他改进。对于当前使用或针对 Django 1.1 的任何开发或部署，Django 1.1.2 是一个推荐的升级版本。</p>
+<p>有关 1.1 分支中新功能、向后不兼容性和已弃用功能的详细信息，请参阅 <a class="reference internal" href="1.1.html"><span class="doc">Django 1.1 版本发行说明</span></a>。</p>
+<div class="section" id="s-backwards-incompatible-changes">
+<span id="backwards-incompatible-changes"></span><h2>不向后兼容的变更<a class="headerlink" href="#backwards-incompatible-changes" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-restricted-filters-in-admin-interface">
+<span id="restricted-filters-in-admin-interface"></span><h3>在管理界面中的受限过滤器<a class="headerlink" href="#restricted-filters-in-admin-interface" title="永久链接至标题">¶</a></h3>
+<p>Django 的管理界面，<code class="docutils literal notranslate"><span class="pre">django.contrib.admin</span></code>，支持通过对应模型上的字段对显示的对象列表进行筛选，包括跨数据库级别的关系。这是通过在 URL 的查询字符串部分传递查找参数来实现的，ModelAdmin 类上的选项允许开发人员指定特定字段或关系，这将生成自动链接用于筛选。</p>
+<p>一个历史上未记录且非官方支持的功能是，用户如果对模型结构和查询参数的格式有足够的了解，可以通过操作查询字符串来动态创建有用的新过滤器。</p>
+<p>然而，已经证明这种方法可以被滥用来获取管理员用户权限之外的信息。例如，如果攻击者能够访问管理员权限并且对模型结构和关联关系有足够的了解，他们可以构造查询字符串，通过重复使用 Django 数据库 API 支持的正则表达式查询，来获取敏感信息，例如用户的密码哈希值。</p>
+<p>为了解决这个问题，<code class="docutils literal notranslate"><span class="pre">django.contrib.admin</span></code> 现在会验证查询字符串查找参数，要么只指定在正在查看的模型上的字段，要么跨关系，并且这些跨关系必须是应用程序开发人员使用上述现有机制明确允许的。对于依赖先前能力插入任意查找的用户来说，这是不兼容的。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.1.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#backwards-incompatible-changes">不向后兼容的变更</a><ul>
+<li><a class="reference internal" href="#restricted-filters-in-admin-interface">在管理界面中的受限过滤器</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.1.4.html"
+                          title="上一章">Django 1.1.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.1.2.html"
+                          title="下一章">Django 1.1.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.1.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.1.4.html" title="Django 1.1.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.1.2.html" title="Django 1.1.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

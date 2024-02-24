@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>搜索 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="管理器" href="managers.html" />
+    <link rel="prev" title="聚合" href="aggregation.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="aggregation.html" title="聚合">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="managers.html" title="管理器">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="topics-db-search">
+            
+  <div class="section" id="s-search">
+<span id="search"></span><h1>搜索<a class="headerlink" href="#search" title="永久链接至标题">¶</a></h1>
+<p>Web 应用的常见任务是根据用户输入查出数据库中的数据。在一个简单例子中，会是通过分类筛选一个对象列表。一个更复杂的用例可能会要求根据重量，分类，多语言等筛选对象。本文介绍了一些常见用例和你能使用的工具。</p>
+<p>我们会引用与 <a class="reference internal" href="queries.html"><span class="doc">执行查询</span></a> 中一样的模型。</p>
+<div class="section" id="s-use-cases">
+<span id="use-cases"></span><h2>用例<a class="headerlink" href="#use-cases" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-standard-textual-queries">
+<span id="standard-textual-queries"></span><h3>标准文本查询<a class="headerlink" href="#standard-textual-queries" title="永久链接至标题">¶</a></h3>
+<p>文本字段具有一些匹配操作的选项。例如，您可能希望允许按以下方式查找作者：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__contains</span><span class="o">=</span><span class="s2">&quot;Terry&quot;</span><span class="p">)</span>
+<span class="go">[&lt;Author: Terry Gilliam&gt;, &lt;Author: Terry Jones&gt;]</span>
+</pre></div>
+</div>
+<p>这是一种非常简陋的方案，因为它要求用户必须知道用户名中包含的字符串。大小写不敏感的匹配 (<a class="reference internal" href="../../ref/models/querysets.html#std-fieldlookup-icontains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">icontains</span></code></a>) 不失为一种更好的方案，但优化的程度有限。</p>
+</div>
+<div class="section" id="s-a-database-s-more-advanced-comparison-functions">
+<span id="a-database-s-more-advanced-comparison-functions"></span><h3>一个更高级的数据库比较函数<a class="headerlink" href="#a-database-s-more-advanced-comparison-functions" title="永久链接至标题">¶</a></h3>
+<p>若你使用的是 PostgreSQL，Django 提供了 <a class="reference internal" href="../../ref/contrib/postgres/search.html"><span class="doc">数据特殊筛选工具</span></a> 帮助你巧妙利用更复杂的查询条件。其它数据库也有不同的筛选工具，可能是通过插件或用户自定义函数实现的。Django 此时还没有为他们提供任何支持。我们会用来自 PostgreSQL 的实例来证明其包含的功能函数。</p>
+<div class="admonition-searching-in-other-databases admonition">
+<p class="first admonition-title">在其它数据库中搜索</p>
+<p class="last">所有由 <a class="reference internal" href="../../ref/contrib/postgres/index.html#module-django.contrib.postgres" title="django.contrib.postgres: PostgreSQL-specific fields and features"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.postgres</span></code></a> 提供的筛选工具均基于 <a class="reference internal" href="../../ref/models/lookups.html"><span class="doc">自定义查询</span></a> 和 <a class="reference internal" href="../../ref/models/database-functions.html"><span class="doc">数据库函数</span></a> 实现。根据你使用的数据库，你应该构建响应的查询，实现类似的 API。若有某个东西无法以这种方式实现，请新建一个工单。</p>
+</div>
+<p>在上面的示例中，我们确定不区分大小写的查找更有用。当处理非英语姓名时，进一步的改进是使用 <a class="reference internal" href="../../ref/contrib/postgres/lookups.html#std-fieldlookup-unaccent"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">非重音比较</span></code></a>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__unaccent__icontains</span><span class="o">=</span><span class="s2">&quot;Helen&quot;</span><span class="p">)</span>
+<span class="go">[&lt;Author: Helen Mirren&gt;, &lt;Author: Helena Bonham Carter&gt;, &lt;Author: Hélène Joy&gt;]</span>
+</pre></div>
+</div>
+<p>这展开了另一个关于通过名字的不同拼写进行比较的讨论。但这种比较是不对称的 —— 筛选 <code class="docutils literal notranslate"><span class="pre">Helen</span></code> 能拿到 <code class="docutils literal notranslate"><span class="pre">Helena</span></code> 或 <code class="docutils literal notranslate"><span class="pre">Hélène</span></code>，但反着来却不行。还有一个选项允许使用 <a class="reference internal" href="../../ref/contrib/postgres/lookups.html#std-fieldlookup-trigram_similar"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">trigram_similar</span></code></a> 比较，这回比较字母的序列。</p>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">name__unaccent__lower__trigram_similar</span><span class="o">=</span><span class="s2">&quot;Hélène&quot;</span><span class="p">)</span>
+<span class="go">[&lt;Author: Helen Mirren&gt;, &lt;Author: Hélène Joy&gt;]</span>
+</pre></div>
+</div>
+<p>现在还有一个问题 —— 名字 &quot;Helena Bonham Carter&quot; 有点太长了，以至于没有显示。三元搜索综合考虑了三种字母的所有组合形式，并同时再查询和源字符串中比较了出现的次数。对于长名字，源字符串中包含了更多的组合方式，所以其不再被认为是一种近似匹配。</p>
+<p>要基于你提供的特定数据集合选择一个合适的比较函数，例如依据使用的语言和待搜索的文本。我们见过的所有例子都是关于短字符串的，这使得用户可以输入与源数据关联较大（根据不同的定义）的内容。</p>
+</div>
+<div class="section" id="s-document-based-search">
+<span id="document-based-search"></span><h3>文档搜索<a class="headerlink" href="#document-based-search" title="永久链接至标题">¶</a></h3>
+<p>标准数据库操作对于大量文本搜索来说太过简陋了。虽然上面的示例可以看作是对字符串的操作，但是全文搜索查看的是实际的单词。依据所使用的系统，可以采用下面的某些方法：</p>
+<ul class="simple">
+<li>忽略 “停止单词”，例如 &quot;a&quot;，&quot;the&quot;，&quot;and&quot;。</li>
+<li>词干化，这样 &quot;pony&quot; 和 &quot;ponies&quot; 会被认为是一样的。</li>
+<li>根据不同的标准为单词设置权重，例如其在文本中出现的频率，或所属字段（如标题或关键字）的重要性。</li>
+</ul>
+<p>使用搜索软件有很多选项，最常见的有 <a class="reference external" href="https://www.elastic.co/">Elastic</a> 和 <a class="reference external" href="https://solr.apache.org/">Solr</a>。它们都是基于全文搜索的解决方案。要用它们搜索来自 Django 模型的数据，你需要一个抽象层，将数据（包括对数据库 id 的指针）转换为文本文档。当使用该引擎的某次搜索返回了一份文档，你可以在数据库中查看它。有很多第三方库被设计为处理这种问题。</p>
+<div class="section" id="s-postgresql-support">
+<span id="postgresql-support"></span><h4>PostgreSQL 支持<a class="headerlink" href="#postgresql-support" title="永久链接至标题">¶</a></h4>
+<p>PostgreSQL 内置了其专属的全文本搜索实现。虽然并不像其它搜索引擎那样强大，但它的优点是内置在数据库中，所以它能很方便的与其它关联查询条件进行联合查询，如按分类查询。</p>
+<p><a class="reference internal" href="../../ref/contrib/postgres/index.html#module-django.contrib.postgres" title="django.contrib.postgres: PostgreSQL-specific fields and features"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.postgres</span></code></a> 模块提供了一些辅助工具来执行这些查询。例如，一个查询可以选择所有提到 &quot;cheese&quot; 的博客条目：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">body_text__search</span><span class="o">=</span><span class="s2">&quot;cheese&quot;</span><span class="p">)</span>
+<span class="go">[&lt;Entry: Cheese on Toast recipes&gt;, &lt;Entry: Pizza recipes&gt;]</span>
+</pre></div>
+</div>
+<p>您还可以根据字段的组合和相关模型进行筛选：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Entry</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">search</span><span class="o">=</span><span class="n">SearchVector</span><span class="p">(</span><span class="s2">&quot;blog__tagline&quot;</span><span class="p">,</span> <span class="s2">&quot;body_text&quot;</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">search</span><span class="o">=</span><span class="s2">&quot;cheese&quot;</span><span class="p">)</span>
+<span class="go">[</span>
+<span class="go">    &lt;Entry: Cheese on Toast recipes&gt;,</span>
+<span class="go">    &lt;Entry: Pizza Recipes&gt;,</span>
+<span class="go">    &lt;Entry: Dairy farming in Argentina&gt;,</span>
+<span class="go">]</span>
+</pre></div>
+</div>
+<p>参阅 <code class="docutils literal notranslate"><span class="pre">contrib.postgres</span></code> <a class="reference internal" href="../../ref/contrib/postgres/search.html"><span class="doc">全文搜索</span></a> 文档获取全部细节。</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">搜索</a><ul>
+<li><a class="reference internal" href="#use-cases">用例</a><ul>
+<li><a class="reference internal" href="#standard-textual-queries">标准文本查询</a></li>
+<li><a class="reference internal" href="#a-database-s-more-advanced-comparison-functions">一个更高级的数据库比较函数</a></li>
+<li><a class="reference internal" href="#document-based-search">文档搜索</a><ul>
+<li><a class="reference internal" href="#postgresql-support">PostgreSQL 支持</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="aggregation.html"
+                          title="上一章">聚合</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="managers.html"
+                          title="下一章">管理器</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/topics/db/search.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="aggregation.html" title="聚合">previous</a>
+     |
+    <a href="../index.html" title="使用 Django" accesskey="U">up</a>
+   |
+    <a href="managers.html" title="管理器">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

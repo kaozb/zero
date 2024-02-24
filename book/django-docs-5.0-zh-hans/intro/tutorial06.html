@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>编写你的第一个 Django 应用，第 6 部分 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="编写你的第一个 Django 应用，第 7 部分" href="tutorial07.html" />
+    <link rel="prev" title="编写你的第一个 Django 应用，第 5 部分" href="tutorial05.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);(function($) {
+    $(document).ready(function() {
+        $(".c-tab-unix").on("click", function() {
+            $("section.c-content-unix").show();
+            $("section.c-content-win").hide();
+            $(".c-tab-unix").prop("checked", true);
+        });
+        $(".c-tab-win").on("click", function() {
+            $("section.c-content-win").show();
+            $("section.c-content-unix").hide();
+            $(".c-tab-win").prop("checked", true);
+        });
+    });
+})(jQuery);</script>
+<link rel="stylesheet" href="../_static/console-tabs.css">
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="tutorial05.html" title="编写你的第一个 Django 应用，第 5 部分">previous</a>
+     |
+    <a href="index.html" title="开始" accesskey="U">up</a>
+   |
+    <a href="tutorial07.html" title="编写你的第一个 Django 应用，第 7 部分">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="intro-tutorial06">
+            
+  <div class="section" id="s-writing-your-first-django-app-part-6">
+<span id="writing-your-first-django-app-part-6"></span><h1>编写你的第一个 Django 应用，第 6 部分<a class="headerlink" href="#writing-your-first-django-app-part-6" title="永久链接至标题">¶</a></h1>
+<p>本教程从 <a class="reference internal" href="tutorial05.html"><span class="doc">教程第 5 部分</span></a> 结束的地方开始。我们已经建立了一个经过测试的网络投票应用程序，现在我们将添加一个样式表和一个图像。</p>
+<p>除了服务端生成的 HTML 以外，网络应用通常需要一些额外的文件——比如图片，脚本和样式表——来帮助渲染网络页面。在 Django 中，我们把这些文件统称为“静态文件”。</p>
+<p>对于小项目来说，这个问题没什么大不了的，因为你可以把这些静态文件随便放在哪，只要服务程序能够找到它们就行。然而在大项目——特别是由好几个应用组成的大项目——中，处理不同应用所需要的静态文件的工作就显得有点麻烦了。</p>
+<p>这就是 <code class="docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code> 存在的意义：它将各个应用的静态文件（和一些你指明的目录里的文件）统一收集起来，这样一来，在生产环境中，这些文件就会集中在一个便于分发的地方。</p>
+<div class="admonition-where-to-get-help admonition">
+<p class="first admonition-title">从哪里获得帮助：</p>
+<p class="last">如果你在阅读本教程的过程中有任何疑问，可以前往 FAQ 的 <a class="reference internal" href="../faq/help.html"><span class="doc">获取帮助</span></a> 的版块。</p>
+</div>
+<div class="section" id="s-customize-your-app-s-look-and-feel">
+<span id="customize-your-app-s-look-and-feel"></span><h2>自定义 <em>应用</em> 的界面和风格<a class="headerlink" href="#customize-your-app-s-look-and-feel" title="永久链接至标题">¶</a></h2>
+<p>首先，在你的 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 目录下创建一个名为 <code class="docutils literal notranslate"><span class="pre">static</span></code> 的目录。Django 将在该目录下查找静态文件，这种方式和 Diango 在 <code class="docutils literal notranslate"><span class="pre">polls/templates/</span></code> 目录下查找 template 的方式类似。</p>
+<p>Django 的 <a class="reference internal" href="../ref/settings.html#std-setting-STATICFILES_FINDERS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATICFILES_FINDERS</span></code></a> 设置包含了一系列的查找器，它们知道去哪里找到 static 文件。<code class="docutils literal notranslate"><span class="pre">AppDirectoriesFinder</span></code> 是默认查找器中的一个，它会在每个 <a class="reference internal" href="../ref/settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中指定的应用的子文件中寻找名称为 <code class="docutils literal notranslate"><span class="pre">static</span></code> 的特定文件夹，就像我们在 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 中刚创建的那个一样。管理后台采用相同的目录结构管理它的静态文件。</p>
+<p>在你刚创建的 <code class="docutils literal notranslate"><span class="pre">static</span></code> 文件夹中创建一个名为 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 的文件夹，再在 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 文件夹中创建一个名为 <code class="docutils literal notranslate"><span class="pre">style.css</span></code> 的文件。换句话说，你的样式表路径应是 <code class="docutils literal notranslate"><span class="pre">polls/static/polls/style.css</span></code>。因为 <code class="docutils literal notranslate"><span class="pre">AppDirectoriesFinder</span></code> 的存在，你可以在 Django 中以 <code class="docutils literal notranslate"><span class="pre">polls/style.css</span></code> 的形式引用此文件，类似你引用模板路径的方式。</p>
+<div class="admonition-static-file-namespacing admonition">
+<p class="first admonition-title">静态文件命名空间</p>
+<p class="last">虽然我们 <em>可以</em> 像管理模板文件一样，把 static 文件直接放入 <code class="docutils literal notranslate"><span class="pre">polls/static</span></code> （而不是创建另一个名为 <code class="docutils literal notranslate"><span class="pre">polls</span></code> 的子文件夹），不过这实际上是一个很蠢的做法。Django 只会使用第一个找到的静态文件。如果你在 <em>其它</em> 应用中有一个相同名字的静态文件，Django 将无法区分它们。我们需要指引 Django 选择正确的静态文件，而最好的方式就是把它们放入各自的 <em>命名空间</em> 。也就是把这些静态文件放入 <em>另一个</em> 与应用名相同的目录中。</p>
+</div>
+<p>将以下代码放入样式表(<code class="docutils literal notranslate"><span class="pre">polls/static/polls/style.css</span></code>)：</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">polls/static/polls/style.css</span></code></span><a class="headerlink" href="#id1" title="永久链接至代码">¶</a></div>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="nt">li</span><span class="w"> </span><span class="nt">a</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="kc">green</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<p>下一步，在 <code class="docutils literal notranslate"><span class="pre">polls/templates/polls/index.html</span></code> 的文件头添加以下内容：</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">polls/templates/polls/index.html</span></code></span><a class="headerlink" href="#id2" title="永久链接至代码">¶</a></div>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">static</span> <span class="cp">%}</span>
+
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">static</span> <span class="s1">&#39;polls/style.css&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">static</span> <span class="pre">%}</span></code> 模板标签会生成静态文件的绝对路径。</p>
+<p>这就是你开发所需要做的所有事情了。</p>
+<p>启动服务器(如果它正在运行中，重新启动一次):</p>
+<div class="console-block" id="console-block-0">
+<input class="c-tab-unix" id="c-tab-0-unix" type="radio" name="console-0" checked>
+<label for="c-tab-0-unix" title="Linux/macOS">&#xf17c/&#xf179</label>
+<input class="c-tab-win" id="c-tab-0-win" type="radio" name="console-0">
+<label for="c-tab-0-win" title="Windows">&#xf17a</label>
+<section class="c-content-unix" id="c-content-0-unix">
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python manage.py runserver
+</pre></div>
+</div>
+</section>
+<section class="c-content-win" id="c-content-0-win">
+<div class="highlight"><pre><span></span><span class="gp">...\&gt;</span> py manage.py runserver
+</pre></div>
+</section>
+</div>
+<p>重新载入 <code class="docutils literal notranslate"><span class="pre">http://localhost:8000/polls/</span></code> ，你会发现有问题的链接是绿色的 （这是 Django 自己的问题标注方式），这意味着你追加的样式表起作用了。</p>
+</div>
+<div class="section" id="s-adding-a-background-image">
+<span id="adding-a-background-image"></span><h2>添加一个背景图<a class="headerlink" href="#adding-a-background-image" title="永久链接至标题">¶</a></h2>
+<p>接下来，我们将为图像创建一个子目录。 在 <code class="docutils literal notranslate"><span class="pre">polls/static/polls/</span></code> 目录中创建 <code class="docutils literal notranslate"><span class="pre">images</span></code> 子目录。 在此目录中，添加您想用作背景的任何图像文件。 出于本教程的目的，我们使用了一个名为“background.png”的文件，它的完整路径为“polls/static/polls/images/background.png”。</p>
+<p>然后，在样式表中添加对图像的引用（<code class="docutils literal notranslate"><span class="pre">polls/static/polls/style.css</span></code>）：</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">polls/static/polls/style.css</span></code></span><a class="headerlink" href="#id3" title="永久链接至代码">¶</a></div>
+<div class="highlight-css notranslate"><div class="highlight"><pre><span></span><span class="nt">body</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="kc">white</span><span class="w"> </span><span class="nb">url</span><span class="p">(</span><span class="s2">&quot;images/background.png&quot;</span><span class="p">)</span><span class="w"> </span><span class="kc">no-repeat</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<p>浏览器重载 <code class="docutils literal notranslate"><span class="pre">http://localhost:8000/polls/</span></code>，你将在屏幕的左上角见到这张背景图。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">static</span> <span class="pre">%}</span></code> 模板标签在静态文件（例如样式表）中是不可用的，因为它们不是由 Django 生成的。你应该始终使用 <strong>相对路径</strong> 在你的静态文件之间相互引用，因为这样你可以更改 <a class="reference internal" href="../ref/settings.html#std-setting-STATIC_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a> （由 <a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-static"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">static</span></code></a> 模板标签使用来生成 URL），而无需修改大量的静态文件。</p>
+</div>
+<p>这些只是 <strong>基础</strong> 。更多关于设置和框架的资料，参考 <a class="reference internal" href="../howto/static-files/index.html"><span class="doc">静态文件解惑</span></a> 和 <a class="reference internal" href="../ref/contrib/staticfiles.html"><span class="doc">静态文件指南</span></a>。<a class="reference internal" href="../howto/static-files/deployment.html"><span class="doc">部署静态文件</span></a> 介绍了如何在真实服务器上使用静态文件。</p>
+<p>当你熟悉静态文件后，阅读 <a class="reference internal" href="tutorial07.html"><span class="doc">此教程的第 7 部分</span></a> 来学习如何自定义 Django 自动生成后台网页的过程。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">编写你的第一个 Django 应用，第 6 部分</a><ul>
+<li><a class="reference internal" href="#customize-your-app-s-look-and-feel">自定义 <em>应用</em> 的界面和风格</a></li>
+<li><a class="reference internal" href="#adding-a-background-image">添加一个背景图</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="tutorial05.html"
+                          title="上一章">编写你的第一个 Django 应用，第 5 部分</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="tutorial07.html"
+                          title="下一章">编写你的第一个 Django 应用，第 7 部分</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/intro/tutorial06.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="tutorial05.html" title="编写你的第一个 Django 应用，第 5 部分">previous</a>
+     |
+    <a href="index.html" title="开始" accesskey="U">up</a>
+   |
+    <a href="tutorial07.html" title="编写你的第一个 Django 应用，第 7 部分">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

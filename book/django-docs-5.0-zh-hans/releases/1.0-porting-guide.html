@@ -1,0 +1,937 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>将你的应用从 Django 0.96 移植到 1.0 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 0.96 版本发行说明" href="0.96.html" />
+    <link rel="prev" title="Django 1.0 版本发行说明" href="1.0.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.0.html" title="Django 1.0 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="0.96.html" title="Django 0.96 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.0-porting-guide">
+            
+  <div class="section" id="s-porting-your-apps-from-django-0-96-to-1-0">
+<span id="porting-your-apps-from-django-0-96-to-1-0"></span><h1>将你的应用从 Django 0.96 移植到 1.0<a class="headerlink" href="#porting-your-apps-from-django-0-96-to-1-0" title="永久链接至标题">¶</a></h1>
+<p>Django 1.0 在某些地方与 0.96 版本是不兼容的。</p>
+<p>这个指南会帮助你把 0.96 的项目和应用移植到 1.0 版本。本文档的第一部分包含了需要运行在 1.0上的常见变更。如果通过了第一部分的变更，你的代码依然无法运行，那么请检查 <a class="reference internal" href="#less-common-changes">Less-common Changes</a> 不常见的变更部分中列出的兼容问题。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">文档 <a class="reference internal" href="1.0.html"><span class="doc">1.0 版本注意事项</span></a>。这份文档更深入地解释了 1.0 中新的特性；移植指南更多考虑了帮助你快速更新你的代码。</p>
+</div>
+<div class="section" id="s-common-changes">
+<span id="common-changes"></span><h2>常见变更<a class="headerlink" href="#common-changes" title="永久链接至标题">¶</a></h2>
+<p>本部分描述了 0.96 与 1.0 之间的变更，这些变更都是大部分用户会做的事情。</p>
+<div class="section" id="s-use-unicode">
+<span id="use-unicode"></span><h3>使用 Unicode 字符集<a class="headerlink" href="#use-unicode" title="永久链接至标题">¶</a></h3>
+<p>逐字地把字符串 (<code class="docutils literal notranslate"><span class="pre">'foo'</span></code>) 变成 Unicode 字符串 (<code class="docutils literal notranslate"><span class="pre">u'foo'</span></code>)。Django 目前从始至终贯穿地使用 Unicode 字符集字符串。在绝大多数地方，生食字符串会继续有效，但更新成 Unicode 字符串会防止某些含糊的问题出现。</p>
+<p>查阅 <a class="reference internal" href="../ref/unicode.html"><span class="doc">Unicode 数据</span></a> 文档了解细节。</p>
+</div>
+<div class="section" id="s-models">
+<span id="models"></span><h3>模型<a class="headerlink" href="#models" title="永久链接至标题">¶</a></h3>
+<p>对于你的模型文件中常见的变更：</p>
+<div class="section" id="s-rename-maxlength-to-max-length">
+<span id="rename-maxlength-to-max-length"></span><h4><code class="docutils literal notranslate"><span class="pre">maxlength</span></code> 重命名为 <code class="docutils literal notranslate"><span class="pre">max_length</span></code><a class="headerlink" href="#rename-maxlength-to-max-length" title="永久链接至标题">¶</a></h4>
+<p>把你的 <code class="docutils literal notranslate"><span class="pre">maxlength</span></code> 参数名变成 <code class="docutils literal notranslate"><span class="pre">max_length</span></code> (这次参数名的变更是为了与表单区域保持一致)：</p>
+</div>
+<div class="section" id="s-replace-str-with-unicode">
+<span id="replace-str-with-unicode"></span><h4>用 <code class="docutils literal notranslate"><span class="pre">__unicode__</span></code> 代替 <code class="docutils literal notranslate"><span class="pre">__str__</span></code><a class="headerlink" href="#replace-str-with-unicode" title="永久链接至标题">¶</a></h4>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">__unicode__</span></code> 方法替换你的模型中的 <code class="docutils literal notranslate"><span class="pre">__str__</span></code> 函数，然后才能确保你使用 <a class="reference internal" href="#use-unicode">使用 Unicode 字符集</a> (<code class="docutils literal notranslate"><span class="pre">u'foo'</span></code>) 中所介绍的方法。</p>
+</div>
+<div class="section" id="s-remove-prepopulated-from">
+<span id="remove-prepopulated-from"></span><h4>移除 <code class="docutils literal notranslate"><span class="pre">prepopulated_from</span></code><a class="headerlink" href="#remove-prepopulated-from" title="永久链接至标题">¶</a></h4>
+<p>删除模型区域中 <code class="docutils literal notranslate"><span class="pre">prepopulated_from</span></code> 参数。这个参数不再合法，而且已经转移到管理员 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 模块里的 <code class="docutils literal notranslate"><span class="pre">ModelAdmin</span></code> 类中去了。查阅 <a href="#id1"><span class="problematic" id="id2">`</span></a>管理员`_内容了解更多对管理员变更的细节。</p>
+</div>
+<div class="section" id="s-remove-core">
+<span id="remove-core"></span><h4>移除 <code class="docutils literal notranslate"><span class="pre">core</span></code><a class="headerlink" href="#remove-core" title="永久链接至标题">¶</a></h4>
+<p>删除你的模型区域里的 <code class="docutils literal notranslate"><span class="pre">core</span></code> 参数。这个参数不再需要了，因为相同功能 (参考 <a class="reference internal" href="../ref/contrib/admin/index.html#admin-inlines"><span class="std std-ref">行内编辑</span></a>) 目前已经由后台接口做出不同地处理。你不用再担心行内编辑，除非你在 <a class="reference internal" href="#the-admin">管理员</a> 部分才考虑行内编辑。目前，删除所有对 <code class="docutils literal notranslate"><span class="pre">core</span></code> 参数的指向。</p>
+</div>
+<div class="section" id="s-replace-class-admin-with-admin-py">
+<span id="replace-class-admin-with-admin-py"></span><h4>用 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 替换  <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Admin:</span></code><a class="headerlink" href="#replace-class-admin-with-admin-py" title="永久链接至标题">¶</a></h4>
+<p>从你的模型里移除所有嵌入 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Admin</span></code> 管理员类声明。如果你保留这种类的话，不会对任何有影响，但也不会起任何作用。要注册应用程序管理员，你要把这种类的声明移到 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 管理员模块文件里；查看 <a class="reference internal" href="#the-admin">管理员</a> 内容了解更多细节。</p>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">对 <a class="reference external" href="https://djangosnippets.org/">djangosnippets</a> 做出的贡献者已经写了一个脚本会 <a class="reference external" href="https://djangosnippets.org/snippets/603/">扫描你的 models.py 模型模块后生成一个相应的 admin.py 管理员模块</a>。</p>
+</div>
+</div>
+<div class="section" id="s-example">
+<span id="example"></span><h4>例如<a class="headerlink" href="#example" title="永久链接至标题">¶</a></h4>
+<p>下面的一个例子 <code class="docutils literal notranslate"><span class="pre">models.py</span></code> 模型文件含有所有你需要做出的变更：</p>
+<p>老版本 (0.96) <code class="docutils literal notranslate"><span class="pre">models.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">maxlength</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">maxlength</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">slug</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">maxlength</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">prepopulate_from</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;first_name&quot;</span><span class="p">,</span> <span class="s2">&quot;last_name&quot;</span><span class="p">))</span>
+
+    <span class="k">class</span> <span class="nc">Admin</span><span class="p">:</span>
+        <span class="n">list_display</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;first_name&quot;</span><span class="p">,</span> <span class="s2">&quot;last_name&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>新版本 (1.0) <code class="docutils literal notranslate"><span class="pre">models.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">slug</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_name</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>新版本 (1.0) <a href="#id1"><span class="problematic" id="id2">``</span></a>admin.py``管理员模块:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+<span class="kn">from</span> <span class="nn">models</span> <span class="kn">import</span> <span class="n">Author</span>
+
+
+<span class="k">class</span> <span class="nc">AuthorAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;first_name&quot;</span><span class="p">,</span> <span class="s2">&quot;last_name&quot;</span><span class="p">]</span>
+    <span class="n">prepopulated_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;slug&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;first_name&quot;</span><span class="p">,</span> <span class="s2">&quot;last_name&quot;</span><span class="p">)}</span>
+
+
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Author</span><span class="p">,</span> <span class="n">AuthorAdmin</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-the-admin">
+<span id="the-admin"></span><h3>管理员<a class="headerlink" href="#the-admin" title="永久链接至标题">¶</a></h3>
+<p>在 1.0 版本中最具挑战性的新管理员功能问题之一。Django 管理接口 (<code class="docutils literal notranslate"><span class="pre">django.contrib.admin</span></code>) 管理员功能已经完全重构了；许多管理员定义目前都完全从许多模型定义中解构出来，许多框架都重写后使用 Django 的新表单处理库，而且重新设计成具有扩展和自定义能力。</p>
+<p>实际中，意味着你要重写所有你的 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Admin</span></code> 管理员类声明。你已经在上面的 <a class="reference internal" href="#models">models</a> 中见过了如何替换你的 <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Admin</span></code> 管理员类，就是在 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 管理员模块文件中用一个 <code class="docutils literal notranslate"><span class="pre">admin.site.register()</span></code> 管理员网页注册调用来替代。下面这些都是一些更详细的如何重写 <code class="docutils literal notranslate"><span class="pre">Admin</span></code> 管理员声明类的新句法。</p>
+<div class="section" id="s-use-new-inline-syntax">
+<span id="use-new-inline-syntax"></span><h4>使用新的行内句法<a class="headerlink" href="#use-new-inline-syntax" title="永久链接至标题">¶</a></h4>
+<p>新的 <code class="docutils literal notranslate"><span class="pre">edit_inline</span></code> 行内编辑选项都已经移到 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 管理员模块中了。下面有一个例子：</p>
+<p>老版本 (0.96):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Parent</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span> <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">Child</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">edit_inline</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">STACKED</span><span class="p">,</span> <span class="n">num_in_admin</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>新版本 (1.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ChildInline</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">StackedInline</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Child</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<span class="k">class</span> <span class="nc">ParentAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Parent</span>
+    <span class="n">inlines</span> <span class="o">=</span> <span class="p">[</span><span class="n">ChildInline</span><span class="p">]</span>
+
+
+<span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">ParentAdmin</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>查阅 <a class="reference internal" href="../ref/contrib/admin/index.html#admin-inlines"><span class="std std-ref">InlineModelAdmin 对象</span></a> 管理员行内文档了解更多细节。</p>
+</div>
+<div class="section" id="s-simplify-fields-or-use-fieldsets">
+<span id="simplify-fields-or-use-fieldsets"></span><h4>简化 <code class="docutils literal notranslate"><span class="pre">fields</span></code>，或使用 <code class="docutils literal notranslate"><span class="pre">fieldsets</span></code><a class="headerlink" href="#simplify-fields-or-use-fieldsets" title="永久链接至标题">¶</a></h4>
+<p>老的 <code class="docutils literal notranslate"><span class="pre">fields</span></code> 句法是非常迷糊的，而且已经被简化过。老的句法依然有效，但你要使用 <code class="docutils literal notranslate"><span class="pre">fieldsets</span></code> 来代替老旧句法。</p>
+<p>老版本 (0.96):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ModelOne</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+
+    <span class="k">class</span> <span class="nc">Admin</span><span class="p">:</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;bar&quot;</span><span class="p">)}),)</span>
+
+
+<span class="k">class</span> <span class="nc">ModelTwo</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+
+    <span class="k">class</span> <span class="nc">Admin</span><span class="p">:</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">&quot;group1&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;bar&quot;</span><span class="p">),</span> <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="s2">&quot;collapse&quot;</span><span class="p">}),</span>
+            <span class="p">(</span><span class="s2">&quot;group2&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;spam&quot;</span><span class="p">,</span> <span class="s2">&quot;eggs&quot;</span><span class="p">),</span> <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="s2">&quot;collapse wide&quot;</span><span class="p">}),</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>新版本 (1.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ModelOneAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ModelTwoAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
+    <span class="n">fieldsets</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;group1&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;bar&quot;</span><span class="p">),</span> <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="s2">&quot;collapse&quot;</span><span class="p">}),</span>
+        <span class="p">(</span><span class="s2">&quot;group2&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;spam&quot;</span><span class="p">,</span> <span class="s2">&quot;eggs&quot;</span><span class="p">),</span> <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="s2">&quot;collapse wide&quot;</span><span class="p">}),</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<ul class="last simple">
+<li>更多关于变更的详细信息以及背后的原因都可以在 <a class="reference external" href="https://code.djangoproject.com/wiki/NewformsAdminBranch">NewformsAdminBranch wiki page</a> 新表单管理分支维基百科页面找到</li>
+<li>新的管理员功能伴随着许多新特性；你可以在 <a class="reference internal" href="../ref/contrib/admin/index.html"><span class="doc">管理员文档</span></a> 中来阅读有关内容。</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="s-urls">
+<span id="urls"></span><h3>URLs<a class="headerlink" href="#urls" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-update-your-root-urls-py">
+<span id="update-your-root-urls-py"></span><h4>更新你的根路径 <code class="docutils literal notranslate"><span class="pre">urls.py</span></code> 模块<a class="headerlink" href="#update-your-root-urls-py" title="永久链接至标题">¶</a></h4>
+<p>如果你正在使用后台界面，你需要更新你的根路径``urls.py`` 模块。</p>
+<p>老版本 (0.96) <code class="docutils literal notranslate"><span class="pre">urls.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf.urls.defaults</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span>
+    <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^admin/&quot;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s2">&quot;django.contrib.admin.urls&quot;</span><span class="p">)),</span>
+    <span class="c1"># ... the rest of your URLs here ...</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>新版本 (1.0) <code class="docutils literal notranslate"><span class="pre">urls.py</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.conf.urls.defaults</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># The next two lines enable the admin and load each admin.py file:</span>
+<span class="kn">from</span> <span class="nn">django.contrib</span> <span class="kn">import</span> <span class="n">admin</span>
+
+<span class="n">admin</span><span class="o">.</span><span class="n">autodiscover</span><span class="p">()</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="n">patterns</span><span class="p">(</span>
+    <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^admin/(.*)&quot;</span><span class="p">,</span> <span class="n">admin</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">root</span><span class="p">),</span>
+    <span class="c1"># ... the rest of your URLs here ...</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-views">
+<span id="views"></span><h3>视图<a class="headerlink" href="#views" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-use-django-forms-instead-of-newforms">
+<span id="use-django-forms-instead-of-newforms"></span><h4>使用 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 来代替 <code class="docutils literal notranslate"><span class="pre">newforms</span></code> 用法<a class="headerlink" href="#use-django-forms-instead-of-newforms" title="永久链接至标题">¶</a></h4>
+<p>用 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 来替换 <code class="docutils literal notranslate"><span class="pre">django.newforms</span></code> 用法 -- Django 1.0 版本重命名了 <code class="docutils literal notranslate"><span class="pre">newforms</span></code> 模块名 (曾用在 0.96 版本的名字) 采用以前用过的 <code class="docutils literal notranslate"><span class="pre">forms</span></code> 名字。而 <code class="docutils literal notranslate"><span class="pre">oldforms</span></code> 模块也会被移除。</p>
+<p>如果你已经使用 <code class="docutils literal notranslate"><span class="pre">newforms</span></code> 库的话，而且你采用了我们所建议的 <code class="docutils literal notranslate"><span class="pre">import</span></code> 导入语句句法，那么所有你要做的就是改变一下你的导入依据即可。</p>
+<p>老版本:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">newforms</span> <span class="k">as</span> <span class="n">forms</span>
+</pre></div>
+</div>
+<p>新版本:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django</span> <span class="kn">import</span> <span class="n">forms</span>
+</pre></div>
+</div>
+<p>如果你正在使用老的表单系统 (正规的名字是 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 和 <code class="docutils literal notranslate"><span class="pre">django.oldforms</span></code>)，那么你要重写你的表单。良好地开始就是从阅读 <a class="reference internal" href="../topics/forms/index.html"><span class="doc">表单文档</span></a> 内容</p>
+</div>
+<div class="section" id="s-handle-uploaded-files-using-the-new-api">
+<span id="handle-uploaded-files-using-the-new-api"></span><h4>处理上传文件使用新的 API<a class="headerlink" href="#handle-uploaded-files-using-the-new-api" title="永久链接至标题">¶</a></h4>
+<p>代替上传文件的用法 -- 那就是，采用 <code class="docutils literal notranslate"><span class="pre">request.FILES</span></code> 文件请求入口 -- 与含有 <a class="reference internal" href="../ref/files/uploads.html#django.core.files.uploadedfile.UploadedFile" title="django.core.files.uploadedfile.UploadedFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">UploadedFile</span></code></a> 文件上传类的简单字典一样。老的字典句法不再有效了。</p>
+<p>因此，看起来就像:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">FILES</span><span class="p">[</span><span class="s2">&quot;file_field_name&quot;</span><span class="p">]</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>...你需要做出如下变更：</p>
+<table class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">老版本 (0.96)</th>
+<th class="head">新版本 (1.0)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">f['content']</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">f.read()</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">f['filename']</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">f.name</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">f['content-type']</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">f.content_type</span></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="s-work-with-file-fields-using-the-new-api">
+<span id="work-with-file-fields-using-the-new-api"></span><h4>文件字段使用新API处理<a class="headerlink" href="#work-with-file-fields-using-the-new-api" title="永久链接至标题">¶</a></h4>
+<p>class:django.db.models.FileField 的内部实现已更改。一个明显的结果是您访问特殊属性(URL, filename, image size, 等等)的方式发生了变化。您需要进行以下更改，假设您的模型: class:~django.db.models.FileField 调用``myfile``:</p>
+<table class="docutils">
+<colgroup>
+<col width="58%" />
+<col width="42%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">老版本 (0.96)</th>
+<th class="head">新版本 (1.0)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">myfile.get_content_filename()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">myfile.content.path</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">myfile.get_content_url()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">myfile.content.url</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">myfile.get_content_size()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">myfile.content.size</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">myfile.save_content_file()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">myfile.content.save()</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">myfile.get_content_width()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">myfile.content.width</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">myfile.get_content_height()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">myfile.content.height</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>请注意``width``和``height``属性仅对: class:~django.db.models.ImageField 字段有意义。更多详细信息可以在: doc:model API&lt;/ref/models/fields&gt; documentation 文档中找到。</p>
+</div>
+<div class="section" id="s-use-paginator-instead-of-objectpaginator">
+<span id="use-paginator-instead-of-objectpaginator"></span><h4>使用 <code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">ObjectPaginator</span></code><a class="headerlink" href="#use-paginator-instead-of-objectpaginator" title="永久链接至标题">¶</a></h4>
+<p>0.96版本中的``ObjectPaginator`` 已被删除，并替换为一个改进版本: class:django.core.paginator.Paginator。</p>
+</div>
+</div>
+<div class="section" id="s-templates">
+<span id="templates"></span><h3>模板<a class="headerlink" href="#templates" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-learn-to-love-autoescaping">
+<span id="learn-to-love-autoescaping"></span><h4>学会爱上自动转义<a class="headerlink" href="#learn-to-love-autoescaping" title="永久链接至标题">¶</a></h4>
+<p>默认情况下，模板系统现在会自动对每个变量的输出进行HTML转义。要了解更多信息，请参阅 <a class="reference internal" href="../ref/templates/language.html#automatic-html-escaping"><span class="std std-ref">自动 HTML 转义</span></a>。</p>
+<p>要禁用单个变量的自动转义，请使用:tfilter:safe filter:</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span>This will be escaped: <span class="cp">{{</span> <span class="nv">data</span> <span class="cp">}}</span>
+This will not be escaped: <span class="cp">{{</span> <span class="nv">data</span><span class="o">|</span><span class="nf">safe</span> <span class="cp">}}</span>
+</pre></div>
+</div>
+<p>要禁用整个模板的自动转义，请将模板（或模板的特定部分）包装在:ttag:autoescape tag:</p>
+<div class="highlight-html+django notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">autoescape</span> <span class="nv">off</span> <span class="cp">%}</span>
+   ... unescaped template content here ...
+<span class="cp">{%</span> <span class="k">endautoescape</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-less-common-changes">
+<span id="less-common-changes"></span><h2>不常见的变化<a class="headerlink" href="#less-common-changes" title="永久链接至标题">¶</a></h2>
+<p>以下更改是较小的、更本地化的更改。它们应该只影响更高级的用户，但是通读列表并检查代码中的这些东西可能是值得的。</p>
+<div class="section" id="s-signals">
+<span id="signals"></span><h3>信号<a class="headerlink" href="#signals" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>将``**kwargs``添加到任何注册的信号处理程序中。</li>
+<li>通过:class:<a href="#id1"><span class="problematic" id="id2">`</span></a>~django.dispatch.Signal`对象上的方法连接、断开连接和发送信号，而不是通过``django.dispatch.dispatcher``中的模块方法。</li>
+<li>移除任何对 <code class="docutils literal notranslate"><span class="pre">Anonymous</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Any</span></code> 发送者选项的使用；它们不再存在。你仍然可以通过使用 <code class="docutils literal notranslate"><span class="pre">sender=None</span></code> 接收来自任何发送者的信号。</li>
+<li>将你声明的任何自定义信号转换为 <a class="reference internal" href="../topics/signals.html#django.dispatch.Signal" title="django.dispatch.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.dispatch.Signal</span></code></a> 的实例，而不是匿名对象。</li>
+</ul>
+<p>以下是你需要进行的代码更改的快速摘要：</p>
+<table class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">老版本 (0.96)</th>
+<th class="head">新版本 (1.0)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">callback(sender)</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">def</span> <span class="pre">callback(sender,</span> <span class="pre">**kwargs)</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">sig</span> <span class="pre">=</span> <span class="pre">object()</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">sig</span> <span class="pre">=</span> <span class="pre">django.dispatch.Signal()</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dispatcher.connect(callback,</span> <span class="pre">sig)</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">sig.connect(callback)</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">dispatcher.send(sig,</span> <span class="pre">sender)</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">sig.send(sender)</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">dispatcher.connect(callback,</span> <span class="pre">sig,</span> <span class="pre">sender=Any)</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">sig.connect(callback,</span> <span class="pre">sender=None)</span></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="s-comments">
+<span id="comments"></span><h3>评论<a class="headerlink" href="#comments" title="永久链接至标题">¶</a></h3>
+<p>如果你使用的是Django 0.96版的` Django .contrib.comments`应用程序，你需要升级到1.0版引入的新评论应用程序。详细信息请参见升级指导书。</p>
+</div>
+<div class="section" id="s-template-tags">
+<span id="template-tags"></span><h3>模板标签<a class="headerlink" href="#template-tags" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-spaceless-tag">
+<span id="spaceless-tag"></span><h4><a class="reference internal" href="../ref/templates/builtins.html#std-templatetag-spaceless"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">spaceless</span></code></a> 标签<a class="headerlink" href="#spaceless-tag" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">spaceless</span></code> 模板标签现在会移除 HTML 标签之间的 <em>所有</em> 空格，而不再保留单个空格。</p>
+</div>
+</div>
+<div class="section" id="s-local-flavors">
+<span id="local-flavors"></span><h3>本地风味<a class="headerlink" href="#local-flavors" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-u-s-local-flavor">
+<span id="u-s-local-flavor"></span><h4>美国本地风味<a class="headerlink" href="#u-s-local-flavor" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">django.contrib.localflavor.usa</span></code> 已重命名为 <code class="docutils literal notranslate"><span class="pre">django.contrib.localflavor.us</span></code>。此更改是为了与其他本地化风格的命名方案匹配。要迁移你的代码，你只需要更改导入语句。</p>
+</div>
+</div>
+<div class="section" id="s-sessions">
+<span id="sessions"></span><h3>会话<a class="headerlink" href="#sessions" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-getting-a-new-session-key">
+<span id="getting-a-new-session-key"></span><h4>获取新的会话密钥<a class="headerlink" href="#getting-a-new-session-key" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">SessionBase.get_new_session_key()</span></code> 已重命名为 <code class="docutils literal notranslate"><span class="pre">_get_new_session_key()</span></code>。<code class="docutils literal notranslate"><span class="pre">get_new_session_object()</span></code> 不再存在。</p>
+</div>
+</div>
+<div class="section" id="s-fixtures">
+<span id="fixtures"></span><h3>辅助工具<a class="headerlink" href="#fixtures" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-loading-a-row-no-longer-calls-save">
+<span id="loading-a-row-no-longer-calls-save"></span><h4>加载一行不再调用&quot;save()&quot;<a class="headerlink" href="#loading-a-row-no-longer-calls-save" title="永久链接至标题">¶</a></h4>
+<p>以前加载一行数据会自动运行模型的`save()`方法。现在情况不再是这样了，所以任何由``save()``自动填充的字段(例如:时间戳)现在都需要在任何fixture中显示值。</p>
+</div>
+</div>
+<div class="section" id="s-settings">
+<span id="settings"></span><h3>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-better-exceptions">
+<span id="better-exceptions"></span><h4>更好的异常处理<a class="headerlink" href="#better-exceptions" title="永久链接至标题">¶</a></h4>
+<p>旧的 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#EnvironmentError" title="(在 Python v3.12)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">EnvironmentError</span></code></a> 现已拆分为 :exc:<a href="#id1"><span class="problematic" id="id2">`</span></a>ImportError`（当 Django 无法找到设置模块时）和 :exc:<a href="#id3"><span class="problematic" id="id4">`</span></a>RuntimeError`（当您尝试在已经使用过设置之后重新配置它们时）。</p>
+</div>
+<div class="section" id="s-login-url-has-moved">
+<span id="login-url-has-moved"></span><h4><a class="reference internal" href="../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGIN_URL</span></code></a> has moved<a class="headerlink" href="#login-url-has-moved" title="永久链接至标题">¶</a></h4>
+<p><a class="reference internal" href="../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGIN_URL</span></code></a> 常量已从 <code class="docutils literal notranslate"><span class="pre">django.contrib.auth</span></code> 移动到 <code class="docutils literal notranslate"><span class="pre">settings</span></code> 模块。不再使用 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">django.contrib.auth</span> <span class="pre">import</span> <span class="pre">LOGIN_URL</span></code>，请改用 <a class="reference internal" href="../ref/settings.html#std-setting-LOGIN_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">settings.LOGIN_URL</span></code></a>。</p>
+</div>
+<div class="section" id="s-append-slash-behavior-has-been-updated">
+<span id="append-slash-behavior-has-been-updated"></span><h4><a class="reference internal" href="../ref/settings.html#std-setting-APPEND_SLASH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APPEND_SLASH</span></code></a> 的行为已更新。<a class="headerlink" href="#append-slash-behavior-has-been-updated" title="永久链接至标题">¶</a></h4>
+<p>在 0.96 版本中，如果一个 URL 不以斜杠结尾，或者其路径的最后一个组件中没有句点，并且 <a class="reference internal" href="../ref/settings.html#std-setting-APPEND_SLASH"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APPEND_SLASH</span></code></a> 为 True，Django 会重定向到相同的 URL，但在末尾添加斜杠。现在，Django 会检查去掉尾部斜杠的模式是否与你的 URL 模式中的某些内容匹配。如果匹配成功，不会进行重定向，因为假定你是有意捕获该模式的。</p>
+<p>对大多数人来说，这不需要进行任何更改。然而，有些人的 URL 模式看起来像这样：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sa">r</span><span class="s2">&quot;/some_prefix/(.*)$&quot;</span>
+</pre></div>
+</div>
+<p>以前，这些模式会被重定向以添加尾部斜杠。如果你希望这些 URL 始终带有斜杠，请将模式改写为：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sa">r</span><span class="s2">&quot;/some_prefix/(.*/)$&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-smaller-model-changes">
+<span id="smaller-model-changes"></span><h3>较小的模型更改<a class="headerlink" href="#smaller-model-changes" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-different-exception-from-get">
+<span id="different-exception-from-get"></span><h4>与``get()``不同的异常<a class="headerlink" href="#different-exception-from-get" title="永久链接至标题">¶</a></h4>
+<p>现在，管理器返回 <a class="reference internal" href="../ref/exceptions.html#django.core.exceptions.MultipleObjectsReturned" title="django.core.exceptions.MultipleObjectsReturned"><code class="xref py py-exc docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></a> 异常，而不再返回 <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#AssertionError" title="(在 Python v3.12)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AssertionError</span></code></a> 异常：</p>
+<p>老版本 (0.96):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">Model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+    <span class="n">handle_the_error</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>新版本 (1.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">Model</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">Model</span><span class="o">.</span><span class="n">MultipleObjectsReturned</span><span class="p">:</span>
+    <span class="n">handle_the_error</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-lazydate-has-been-fired">
+<span id="lazydate-has-been-fired"></span><h4><code class="docutils literal notranslate"><span class="pre">LazyDate</span></code> 已删除。<a class="headerlink" href="#lazydate-has-been-fired" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">LazyDate</span></code> 帮助类不再存在。</p>
+<p>默认字段值和查询参数都可以是可调用对象，因此可以将 <code class="docutils literal notranslate"><span class="pre">LazyDate</span></code> 的实例替换为对 <code class="docutils literal notranslate"><span class="pre">datetime.datetime.now</span></code> 的引用：</p>
+<p>老版本 (0.96):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">maxlength</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">published</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">LazyDate</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>新版本 (1.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">datetime</span>
+
+
+<span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">published</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-decimalfield-is-new-and-floatfield-is-now-a-proper-float">
+<span id="decimalfield-is-new-and-floatfield-is-now-a-proper-float"></span><h4><code class="docutils literal notranslate"><span class="pre">DecimalField</span></code> 是新的，而 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 现在是真正的浮点数字段。<a class="headerlink" href="#decimalfield-is-new-and-floatfield-is-now-a-proper-float" title="永久链接至标题">¶</a></h4>
+<p>老版本 (0.96):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">field_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">FloatField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>新版本 (1.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">field_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>如果你忘记进行这个更改，你会看到关于 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 在 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 中不接受 <code class="docutils literal notranslate"><span class="pre">max_digits</span></code> 属性的错误，因为新的 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 不接受与精度相关的参数。</p>
+<p>如果你使用的是 MySQL 或 PostgreSQL，不需要进一步的更改。对于 <code class="docutils literal notranslate"><span class="pre">DecimalField</span></code>，数据库列类型与旧的 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 相同。</p>
+<p>如果你使用的是 SQLite，你需要强制数据库将相应的列视为十进制类型，而不是浮点数。要做到这一点，你需要在对代码进行更改并更新 Django 代码后重新加载数据。</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p><strong>首先备份你的数据库!!!!</strong></p>
+<p class="last">对于SQLite，这意味着要复制存储数据库的单个文件(该文件的名称是``settings.py``文件中的``DATABASE_NAME``)。</p>
+</div>
+<p>要升级每个应用程序以使用 <code class="docutils literal notranslate"><span class="pre">DecimalField</span></code>，你可以按照以下代码进行操作，将代码中的 <code class="docutils literal notranslate"><span class="pre">&lt;app&gt;</span></code> 替换为每个应用程序的名称：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>./manage.py dumpdata --format<span class="o">=</span>xml &lt;app&gt; &gt; data-dump.xml
+<span class="gp">$ </span>./manage.py reset &lt;app&gt;
+<span class="gp">$ </span>./manage.py loaddata data-dump.xml
+</pre></div>
+</div>
+<p>注意：</p>
+<ol class="arabic simple">
+<li>在这个过程的第一步中，重要的是记住要使用 XML 格式。我们利用了 XML 数据转储的一个特性，使得将浮点数转换为 SQLite 中的十进制数成为可能。</li>
+<li>在第二步中，你将被要求确认你是否准备好丢失相关应用程序的数据。选择是；我们将在第三步中恢复这些数据。</li>
+<li>在这个更改之前，Django 附带的应用程序中没有使用 <code class="docutils literal notranslate"><span class="pre">DecimalField</span></code>，所以你不需要担心为任何标准的 Django 模型执行此过程。</li>
+</ol>
+<p>如果上述过程出现问题，只需将备份的数据库文件复制到原始文件上，然后重新开始。</p>
+</div>
+</div>
+<div class="section" id="s-internationalization">
+<span id="internationalization"></span><h3>国际化<a class="headerlink" href="#internationalization" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-django-views-i18n-set-language-now-requires-a-post-request">
+<span id="django-views-i18n-set-language-now-requires-a-post-request"></span><h4><a class="reference internal" href="../topics/i18n/translation.html#django.views.i18n.set_language" title="django.views.i18n.set_language"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.views.i18n.set_language()</span></code></a> 现在要求使用 POST 请求。<a class="headerlink" href="#django-views-i18n-set-language-now-requires-a-post-request" title="永久链接至标题">¶</a></h4>
+<p>以前使用的是 GET 请求。旧的行为意味着可以通过 GET 请求更改状态（用于显示站点的区域设置），这违反了 HTTP 规范的建议。调用此视图的代码必须确保现在进行的是 POST 请求，而不是 GET 请求。这意味着你不能再使用链接来访问视图，而是必须使用某种表单提交方式（例如按钮）。</p>
+</div>
+<div class="section" id="s-is-no-longer-in-builtins">
+<span id="is-no-longer-in-builtins"></span><h4><code class="docutils literal notranslate"><span class="pre">_()</span></code> 不再位于内置函数中<a class="headerlink" href="#is-no-longer-in-builtins" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">_()</span></code> （其名称为单个下划线的可调用对象）不再被自动添加到内置函数中，也就是说，它不再在每个模块中自动可用。</p>
+<p>如果你之前依赖于 <code class="docutils literal notranslate"><span class="pre">_()</span></code> 总是存在，现在应该显式导入 <code class="docutils literal notranslate"><span class="pre">ugettext</span></code> 或 <code class="docutils literal notranslate"><span class="pre">ugettext_lazy</span></code> （如果适用），并自己将其别名为 <code class="docutils literal notranslate"><span class="pre">_</span></code>：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.utils.translation</span> <span class="kn">import</span> <span class="n">ugettext</span> <span class="k">as</span> <span class="n">_</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-http-request-response-objects">
+<span id="http-request-response-objects"></span><h3>HTTP 请求/响应对象<a class="headerlink" href="#http-request-response-objects" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-dictionary-access-to-httprequest">
+<span id="dictionary-access-to-httprequest"></span><h4>对于 <code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code> 的字典访问：<a class="headerlink" href="#dictionary-access-to-httprequest" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code> 对象不再直接支持字典风格的访问；以前，<code class="docutils literal notranslate"><span class="pre">GET</span></code> 和 <code class="docutils literal notranslate"><span class="pre">POST</span></code> 数据都可以直接在 <code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code> 对象上使用（例如，你可以通过 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">'some_form_key'</span> <span class="pre">in</span> <span class="pre">request</span></code> 或读取 <code class="docutils literal notranslate"><span class="pre">request['some_form_key']</span></code> 来检查表单数据。不再支持这种方式；如果你需要访问组合的 <code class="docutils literal notranslate"><span class="pre">GET</span></code> 和 <code class="docutils literal notranslate"><span class="pre">POST</span></code> 数据，请使用 <code class="docutils literal notranslate"><span class="pre">request.REQUEST</span></code>。</p>
+<p>然而，强烈建议你始终明确查找你期望接收的请求类型的字典（<code class="docutils literal notranslate"><span class="pre">request.GET</span></code> 或 <code class="docutils literal notranslate"><span class="pre">request.POST</span></code>）；依赖于组合的 <code class="docutils literal notranslate"><span class="pre">request.REQUEST</span></code> 字典可能会掩盖传入数据的来源。</p>
+</div>
+<div class="section" id="s-accessing-httpresponse-headers">
+<span id="accessing-httpresponse-headers"></span><h4>访问``HTTPResponse`` headers<a class="headerlink" href="#accessing-httpresponse-headers" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">django.http.HttpResponse.headers</span></code> 已重命名为 <code class="docutils literal notranslate"><span class="pre">_headers</span></code>，并且 <a class="reference internal" href="../ref/request-response.html#django.http.HttpResponse" title="django.http.HttpResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">HttpResponse</span></code></a> 现在直接支持包含检查。所以使用 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">header</span> <span class="pre">in</span> <span class="pre">response:</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">header</span> <span class="pre">in</span> <span class="pre">response.headers:</span></code>。</p>
+</div>
+</div>
+<div class="section" id="s-generic-relations">
+<span id="generic-relations"></span><h3>通用关系<a class="headerlink" href="#generic-relations" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-generic-relations-have-been-moved-out-of-core">
+<span id="generic-relations-have-been-moved-out-of-core"></span><h4>通用关系已从核心中移出。<a class="headerlink" href="#generic-relations-have-been-moved-out-of-core" title="永久链接至标题">¶</a></h4>
+<p>通用关联类 -- <code class="docutils literal notranslate"><span class="pre">GenericForeignKey</span></code> 和 <code class="docutils literal notranslate"><span class="pre">GenericRelation</span></code> -- 已移动到 <a class="reference internal" href="../ref/contrib/contenttypes.html#module-django.contrib.contenttypes" title="django.contrib.contenttypes: Provides generic interface to installed models."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.contenttypes</span></code></a> 模块。</p>
+</div>
+</div>
+<div class="section" id="s-testing">
+<span id="testing"></span><h3>测试中<a class="headerlink" href="#testing" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-django-test-client-login-has-changed">
+<span id="django-test-client-login-has-changed"></span><h4><a class="reference internal" href="../topics/testing/tools.html#django.test.Client.login" title="django.test.Client.login"><code class="xref py py-meth docutils literal notranslate"><span class="pre">django.test.Client.login()</span></code></a> 发生了变化<a class="headerlink" href="#django-test-client-login-has-changed" title="永久链接至标题">¶</a></h4>
+<p>老版本 (0.96):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.test</span> <span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+<span class="n">c</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="s2">&quot;/path/to/login&quot;</span><span class="p">,</span> <span class="s2">&quot;myuser&quot;</span><span class="p">,</span> <span class="s2">&quot;mypassword&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>新版本 (1.0):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># ... same as above, but then:</span>
+<span class="n">c</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;myuser&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;mypassword&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-management-commands">
+<span id="management-commands"></span><h3>管理命令<a class="headerlink" href="#management-commands" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-running-management-commands-from-your-code">
+<span id="running-management-commands-from-your-code"></span><h4>从你的代码中运行管理命令<a class="headerlink" href="#running-management-commands-from-your-code" title="永久链接至标题">¶</a></h4>
+<p><a class="reference internal" href="../howto/custom-management-commands.html#module-django.core.management" title="django.core.management"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.core.management</span></code></a> 已经进行了大规模的重构。</p>
+<p>你的代码中对管理服务的调用现在需要使用 <code class="docutils literal notranslate"><span class="pre">call_command</span></code>。例如，如果你有一些调用 flush 和 load_data 的测试代码：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core</span> <span class="kn">import</span> <span class="n">management</span>
+
+<span class="n">management</span><span class="o">.</span><span class="n">flush</span><span class="p">(</span><span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">management</span><span class="o">.</span><span class="n">load_data</span><span class="p">([</span><span class="s2">&quot;test_data&quot;</span><span class="p">],</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>...你需要更改这段代码为：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core</span> <span class="kn">import</span> <span class="n">management</span>
+
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;flush&quot;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">management</span><span class="o">.</span><span class="n">call_command</span><span class="p">(</span><span class="s2">&quot;loaddata&quot;</span><span class="p">,</span> <span class="s2">&quot;test_data&quot;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-subcommands-must-now-precede-options">
+<span id="subcommands-must-now-precede-options"></span><h4>现在子命令必须在选项之前。<a class="headerlink" href="#subcommands-must-now-precede-options" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">django-admin.py</span></code> 和 <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> 现在要求子命令必须在选项之前。因此：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin.py --settings<span class="o">=</span>foo.bar runserver
+</pre></div>
+</div>
+<p>...不再起作用，应该改为：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>django-admin.py runserver --settings<span class="o">=</span>foo.bar
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-syndication">
+<span id="syndication"></span><h3>联合<a class="headerlink" href="#syndication" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-feed-init-has-changed">
+<span id="feed-init-has-changed"></span><h4><code class="docutils literal notranslate"><span class="pre">Feed.__init__</span></code> 发生了变化<a class="headerlink" href="#feed-init-has-changed" title="永久链接至标题">¶</a></h4>
+<p>syndication 框架的 <code class="docutils literal notranslate"><span class="pre">Feed</span></code> 类的 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 方法现在将 <code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code> 对象作为其第二个参数，而不是 feed 的 URL。这允许 syndication 框架在不需要 sites 框架的情况下工作。这只影响到子类化 <code class="docutils literal notranslate"><span class="pre">Feed</span></code> 并覆盖 <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> 方法的代码，以及直接调用 <code class="docutils literal notranslate"><span class="pre">Feed.__init__()</span></code> 的代码。</p>
+</div>
+</div>
+<div class="section" id="s-data-structures">
+<span id="data-structures"></span><h3>数据结构<a class="headerlink" href="#data-structures" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-sorteddictfromlist-is-gone">
+<span id="sorteddictfromlist-is-gone"></span><h4><code class="docutils literal notranslate"><span class="pre">SortedDictFromList</span></code> 已被移除<a class="headerlink" href="#sorteddictfromlist-is-gone" title="永久链接至标题">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">django.newforms.forms.SortedDictFromList</span></code> 已被移除。<code class="docutils literal notranslate"><span class="pre">django.utils.datastructures.SortedDict</span></code> 现在可以通过元组序列进行实例化。</p>
+<p>要更新你的代码：</p>
+<ol class="arabic simple">
+<li>在原先使用 <code class="docutils literal notranslate"><span class="pre">django.newforms.forms.SortedDictFromList</span></code> 的地方，现在应该使用 <code class="docutils literal notranslate"><span class="pre">django.utils.datastructures.SortedDict</span></code>。</li>
+<li>因为 <code class="docutils literal notranslate"><span class="pre">django.utils.datastructures.SortedDict.copy</span></code> 不像 <code class="docutils literal notranslate"><span class="pre">SortedDictFromList.copy()</span></code> 那样返回深拷贝，如果你依赖于深拷贝，你需要更新你的代码。通过直接使用 <code class="docutils literal notranslate"><span class="pre">copy.deepcopy</span></code> 来实现这一点。</li>
+</ol>
+</div>
+</div>
+<div class="section" id="s-database-backend-functions">
+<span id="database-backend-functions"></span><h3>数据库后端函数<a class="headerlink" href="#database-backend-functions" title="永久链接至标题">¶</a></h3>
+<div class="section" id="s-database-backend-functions-have-been-renamed">
+<span id="database-backend-functions-have-been-renamed"></span><h4>数据库后端函数已经改名。<a class="headerlink" href="#database-backend-functions-have-been-renamed" title="永久链接至标题">¶</a></h4>
+<p>几乎所有数据库后端级别的函数都已被重命名和/或移动。虽然这些函数没有被文档化，但如果你使用了其中的任何一个函数，你需要修改你的代码，所有这些函数都在 <a class="reference internal" href="../topics/db/index.html#module-django.db" title="django.db"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.db</span></code></a> 中：</p>
+<table class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">老版本 (0.96)</th>
+<th class="head">新版本 (1.0)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_autoinc_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.autoinc_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_date_extract_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.date_extract_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_date_trunc_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.date_trunc_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_datetime_cast_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.datetime_cast_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_deferrable_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.deferrable_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_drop_foreignkey_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.drop_foreignkey_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_fulltext_search_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.fulltext_search_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_last_insert_id</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.last_insert_id</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_limit_offset_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.limit_offset_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_max_name_length</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.max_name_length</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_pk_default_value</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.pk_default_value</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_random_function_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.random_function_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_sql_flush</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.sql_flush</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_sql_sequence_reset</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.sequence_reset_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_start_transaction_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.start_transaction_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_tablespace_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.tablespace_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.quote_name</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.quote_name</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_query_set_class</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.query_set_class</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.get_field_cast_sql</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.field_cast_sql</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.get_drop_sequence</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.ops.drop_sequence_sql</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.OPERATOR_MAPPING</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.operators</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.allows_group_by_ordinal</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.allows_group_by_ordinal</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.allows_unique_and_pk</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.allows_unique_and_pk</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.autoindexes_primary_keys</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.autoindexes_primary_keys</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.needs_datetime_string_cast</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.needs_datetime_string_cast</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.needs_upper_for_iops</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.needs_upper_for_iops</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.supports_constraints</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.supports_constraints</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.supports_tablespaces</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.supports_tablespaces</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">backend.uses_case_insensitive_names</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.uses_case_insensitive_names</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">backend.uses_custom_queryset</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">connection.features.uses_custom_queryset</span></code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">将你的应用从 Django 0.96 移植到 1.0</a><ul>
+<li><a class="reference internal" href="#common-changes">常见变更</a><ul>
+<li><a class="reference internal" href="#use-unicode">使用 Unicode 字符集</a></li>
+<li><a class="reference internal" href="#models">模型</a><ul>
+<li><a class="reference internal" href="#rename-maxlength-to-max-length"><code class="docutils literal notranslate"><span class="pre">maxlength</span></code> 重命名为 <code class="docutils literal notranslate"><span class="pre">max_length</span></code></a></li>
+<li><a class="reference internal" href="#replace-str-with-unicode">用 <code class="docutils literal notranslate"><span class="pre">__unicode__</span></code> 代替 <code class="docutils literal notranslate"><span class="pre">__str__</span></code></a></li>
+<li><a class="reference internal" href="#remove-prepopulated-from">移除 <code class="docutils literal notranslate"><span class="pre">prepopulated_from</span></code></a></li>
+<li><a class="reference internal" href="#remove-core">移除 <code class="docutils literal notranslate"><span class="pre">core</span></code></a></li>
+<li><a class="reference internal" href="#replace-class-admin-with-admin-py">用 <code class="docutils literal notranslate"><span class="pre">admin.py</span></code> 替换  <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Admin:</span></code></a></li>
+<li><a class="reference internal" href="#example">例如</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-admin">管理员</a><ul>
+<li><a class="reference internal" href="#use-new-inline-syntax">使用新的行内句法</a></li>
+<li><a class="reference internal" href="#simplify-fields-or-use-fieldsets">简化 <code class="docutils literal notranslate"><span class="pre">fields</span></code>，或使用 <code class="docutils literal notranslate"><span class="pre">fieldsets</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#urls">URLs</a><ul>
+<li><a class="reference internal" href="#update-your-root-urls-py">更新你的根路径 <code class="docutils literal notranslate"><span class="pre">urls.py</span></code> 模块</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#views">视图</a><ul>
+<li><a class="reference internal" href="#use-django-forms-instead-of-newforms">使用 <code class="docutils literal notranslate"><span class="pre">django.forms</span></code> 来代替 <code class="docutils literal notranslate"><span class="pre">newforms</span></code> 用法</a></li>
+<li><a class="reference internal" href="#handle-uploaded-files-using-the-new-api">处理上传文件使用新的 API</a></li>
+<li><a class="reference internal" href="#work-with-file-fields-using-the-new-api">文件字段使用新API处理</a></li>
+<li><a class="reference internal" href="#use-paginator-instead-of-objectpaginator">使用 <code class="docutils literal notranslate"><span class="pre">Paginator</span></code> 而不是 <code class="docutils literal notranslate"><span class="pre">ObjectPaginator</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#templates">模板</a><ul>
+<li><a class="reference internal" href="#learn-to-love-autoescaping">学会爱上自动转义</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#less-common-changes">不常见的变化</a><ul>
+<li><a class="reference internal" href="#signals">信号</a></li>
+<li><a class="reference internal" href="#comments">评论</a></li>
+<li><a class="reference internal" href="#template-tags">模板标签</a><ul>
+<li><a class="reference internal" href="#spaceless-tag"><code class="xref std std-ttag docutils literal notranslate"><span class="pre">spaceless</span></code> 标签</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#local-flavors">本地风味</a><ul>
+<li><a class="reference internal" href="#u-s-local-flavor">美国本地风味</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sessions">会话</a><ul>
+<li><a class="reference internal" href="#getting-a-new-session-key">获取新的会话密钥</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fixtures">辅助工具</a><ul>
+<li><a class="reference internal" href="#loading-a-row-no-longer-calls-save">加载一行不再调用&quot;save()&quot;</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#settings">配置</a><ul>
+<li><a class="reference internal" href="#better-exceptions">更好的异常处理</a></li>
+<li><a class="reference internal" href="#login-url-has-moved"><code class="xref std std-setting docutils literal notranslate"><span class="pre">LOGIN_URL</span></code> has moved</a></li>
+<li><a class="reference internal" href="#append-slash-behavior-has-been-updated"><code class="xref std std-setting docutils literal notranslate"><span class="pre">APPEND_SLASH</span></code> 的行为已更新。</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#smaller-model-changes">较小的模型更改</a><ul>
+<li><a class="reference internal" href="#different-exception-from-get">与``get()``不同的异常</a></li>
+<li><a class="reference internal" href="#lazydate-has-been-fired"><code class="docutils literal notranslate"><span class="pre">LazyDate</span></code> 已删除。</a></li>
+<li><a class="reference internal" href="#decimalfield-is-new-and-floatfield-is-now-a-proper-float"><code class="docutils literal notranslate"><span class="pre">DecimalField</span></code> 是新的，而 <code class="docutils literal notranslate"><span class="pre">FloatField</span></code> 现在是真正的浮点数字段。</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#internationalization">国际化</a><ul>
+<li><a class="reference internal" href="#django-views-i18n-set-language-now-requires-a-post-request"><code class="xref py py-func docutils literal notranslate"><span class="pre">django.views.i18n.set_language()</span></code> 现在要求使用 POST 请求。</a></li>
+<li><a class="reference internal" href="#is-no-longer-in-builtins"><code class="docutils literal notranslate"><span class="pre">_()</span></code> 不再位于内置函数中</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#http-request-response-objects">HTTP 请求/响应对象</a><ul>
+<li><a class="reference internal" href="#dictionary-access-to-httprequest">对于 <code class="docutils literal notranslate"><span class="pre">HttpRequest</span></code> 的字典访问：</a></li>
+<li><a class="reference internal" href="#accessing-httpresponse-headers">访问``HTTPResponse`` headers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#generic-relations">通用关系</a><ul>
+<li><a class="reference internal" href="#generic-relations-have-been-moved-out-of-core">通用关系已从核心中移出。</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#testing">测试中</a><ul>
+<li><a class="reference internal" href="#django-test-client-login-has-changed"><code class="xref py py-meth docutils literal notranslate"><span class="pre">django.test.Client.login()</span></code> 发生了变化</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#management-commands">管理命令</a><ul>
+<li><a class="reference internal" href="#running-management-commands-from-your-code">从你的代码中运行管理命令</a></li>
+<li><a class="reference internal" href="#subcommands-must-now-precede-options">现在子命令必须在选项之前。</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#syndication">联合</a><ul>
+<li><a class="reference internal" href="#feed-init-has-changed"><code class="docutils literal notranslate"><span class="pre">Feed.__init__</span></code> 发生了变化</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#data-structures">数据结构</a><ul>
+<li><a class="reference internal" href="#sorteddictfromlist-is-gone"><code class="docutils literal notranslate"><span class="pre">SortedDictFromList</span></code> 已被移除</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#database-backend-functions">数据库后端函数</a><ul>
+<li><a class="reference internal" href="#database-backend-functions-have-been-renamed">数据库后端函数已经改名。</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.0.html"
+                          title="上一章">Django 1.0 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="0.96.html"
+                          title="下一章">Django 0.96 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.0-porting-guide.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.0.html" title="Django 1.0 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="0.96.html" title="Django 0.96 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

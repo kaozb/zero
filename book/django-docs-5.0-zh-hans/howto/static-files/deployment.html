@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>如何部署静态文件 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/default.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+    <link rel="next" title="如何在 Windows 上安装 Django" href="../windows.html" />
+    <link rel="prev" title="如何管理静态文件（如图片、JavaScript、CSS）" href="index.html" />
+
+
+
+ 
+<script src="../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="index.html" title="如何管理静态文件（如图片、JavaScript、CSS）">previous</a>
+     |
+    <a href="../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="../windows.html" title="如何在 Windows 上安装 Django">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="howto-static-files-deployment">
+            
+  <div class="section" id="s-how-to-deploy-static-files">
+<span id="how-to-deploy-static-files"></span><h1>如何部署静态文件<a class="headerlink" href="#how-to-deploy-static-files" title="永久链接至标题">¶</a></h1>
+<div class="admonition seealso">
+<p class="first admonition-title">参见</p>
+<p class="last">想要 <a class="reference internal" href="../../ref/contrib/staticfiles.html#module-django.contrib.staticfiles" title="django.contrib.staticfiles: An app for handling static files."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code></a> 的使用指南，请参考 <a class="reference internal" href="index.html"><span class="doc">如何管理静态文件（如图片、JavaScript、CSS）</span></a>。</p>
+</div>
+<div class="section" id="s-serving-static-files-in-production">
+<span id="s-staticfiles-production"></span><span id="serving-static-files-in-production"></span><span id="staticfiles-production"></span><h2>在生产环境提供静态文件服务<a class="headerlink" href="#serving-static-files-in-production" title="永久链接至标题">¶</a></h2>
+<p>将静态文件投入生产中的基本步骤包括两个步骤：当静态文件更改时运行 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">collectstatic</span></code></a> 命令，然后安排将已收集的静态文件目录（<a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a>）移动到静态文件服务器并提供服务。根据 <code class="docutils literal notranslate"><span class="pre">staticfiles</span></code> <a class="reference internal" href="../../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 别名，文件可能需要手动移动到新位置，或者 <code class="docutils literal notranslate"><span class="pre">Storage</span></code> 类的 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django.contrib.staticfiles.storage.StaticFilesStorage.post_process" title="django.contrib.staticfiles.storage.StaticFilesStorage.post_process"><code class="xref py py-func docutils literal notranslate"><span class="pre">post_process</span></code></a> 方法可能会处理这个问题。</p>
+<p>像所有的部署任务一样，细节决定成败。每个生成环境的配置可能都有点不同个，所以，需要调整基础配置以满足你的需求。以下是常见模式，可能对你有所帮助。</p>
+<div class="section" id="s-serving-the-site-and-your-static-files-from-the-same-server">
+<span id="serving-the-site-and-your-static-files-from-the-same-server"></span><h3>在同一服务器提供站点和静态文件服务<a class="headerlink" href="#serving-the-site-and-your-static-files-from-the-same-server" title="永久链接至标题">¶</a></h3>
+<p>如果你想在早已提供站点服务器服务器上同时提供静态文件服务，操作步骤类似这样：</p>
+<ul class="simple">
+<li>将代码推送至部署服务器。</li>
+<li>在服务器上运行 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">collectstatic</span></code></a>，将所有的静态文件拷贝至 <a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a>。</li>
+<li>配置 Web 服务器，使其在 <a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_URL"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_URL</span></code></a> 下为 <a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a> 目录下的文件提供静态文件服务。例如， <a class="reference internal" href="../deployment/wsgi/modwsgi.html#serving-files"><span class="std std-ref">这里是如何以 Apache 配合 mod_wsgi 开始</span></a>。</li>
+</ul>
+<p>你可能期望将该流程自动化，特别是在你有好几个 web 服务器的时候。</p>
+</div>
+<div class="section" id="s-serving-static-files-from-a-dedicated-server">
+<span id="serving-static-files-from-a-dedicated-server"></span><h3>专用服务器提供静态文件服务<a class="headerlink" href="#serving-static-files-from-a-dedicated-server" title="永久链接至标题">¶</a></h3>
+<p>大多数大型 Django 网站使用一个单独的 Web 服务器——即一个不同时运行 Django 的服务器——来提供静态文件。这台服务器通常运行不同类型的网络服务器——速度更快，但功能不全。一些常见的选择是：</p>
+<ul class="simple">
+<li><a class="reference external" href="https://nginx.org/en/">Nginx</a></li>
+<li>一个 <a class="reference external" href="https://httpd.apache.org/">Apache</a> 的朴素版本</li>
+</ul>
+<p>如何配置这些服务器超出了本文范围；查阅这些服务器各自的文档获取介绍。</p>
+<p>由于静态文件服务器并不运行 Django，你需要将部署策略改成这样：</p>
+<ul class="simple">
+<li>当静态文件改变时，本地运行 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">collectstatic</span></code></a>。</li>
+<li>将本地 <a class="reference internal" href="../../ref/settings.html#std-setting-STATIC_ROOT"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STATIC_ROOT</span></code></a> 推送到静态文件服务器提供服务的目录。 <a class="reference external" href="https://rsync.samba.org/">rsync</a> 是一个常见选项，因为这种配置只会传输文件修改部分的数据流。</li>
+</ul>
+</div>
+<div class="section" id="s-serving-static-files-from-a-cloud-service-or-cdn">
+<span id="s-staticfiles-from-cdn"></span><span id="serving-static-files-from-a-cloud-service-or-cdn"></span><span id="staticfiles-from-cdn"></span><h3>从云服务或 CDN 提供静态文件服务<a class="headerlink" href="#serving-static-files-from-a-cloud-service-or-cdn" title="永久链接至标题">¶</a></h3>
+<p>另一个常见的策略是从云存储供应商，如亚马逊的 S3 和/或 CDN（内容交付网络）中提供静态文件。这可以让你忽略提供静态文件的问题，而且通常可以使网页的加载速度更快（特别是在使用 CDN 时）。</p>
+<p>使用这些服务时，基本的工作流程与上面类似，除了要将静态文件传输给存储服务商或 CDN，而不是用 <code class="docutils literal notranslate"><span class="pre">rsync</span></code> 将静态文件传输给服务器。</p>
+<p>有许多方法可以做到这一点，但如果提供商有一个 API，你可以使用一个 <a class="reference internal" href="../custom-file-storage.html"><span class="doc">自定义文件存储后端</span></a> 来将 CDN 集成到你的 Django 项目中。如果你编写了或正在使用第三方的自定义存储后端，可以通过在 <a class="reference internal" href="../../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 中设置 <code class="docutils literal notranslate"><span class="pre">staticfiles</span></code> 来告诉 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">collectstatic</span></code></a> 使用它。</p>
+<p>例如，若你已在 <code class="docutils literal notranslate"><span class="pre">myproject.storage.S3Storage</span></code> 中写了一个 S3 存储后端，可以这么用:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STORAGES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="s2">&quot;staticfiles&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;myproject.storage.S3Storage&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>一旦完成了这些步骤，你只需运行 <a class="reference internal" href="../../ref/contrib/staticfiles.html#django-admin-collectstatic"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">collectstatic</span></code></a>，你的静态文件将通过存储包上传到 S3。如果以后需要切换到不同的存储提供商，你可能只需更改 <a class="reference internal" href="../../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 设置中的 <code class="docutils literal notranslate"><span class="pre">staticfiles</span></code>。</p>
+<p>关于如何编写这些后端的细节，参考 <a class="reference internal" href="../custom-file-storage.html"><span class="doc">如何编写一个自定义的文件存储类</span></a>。有很多可用的第三方应用提供了针对常见文件存储 API 的存储后端。 <a class="reference external" href="https://djangopackages.org/grids/g/storage-backends/">djangopackages.org 入门</a> 是个不错的起点。</p>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p><a class="reference internal" href="../../ref/settings.html#std-setting-STORAGES"><code class="xref std std-setting docutils literal notranslate"><span class="pre">STORAGES</span></code></a> 配置已添加。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-learn-more">
+<span id="learn-more"></span><h2>了解更多<a class="headerlink" href="#learn-more" title="永久链接至标题">¶</a></h2>
+<p>想要了解所有配置项，命令，模板标签和 <a class="reference internal" href="../../ref/contrib/staticfiles.html#module-django.contrib.staticfiles" title="django.contrib.staticfiles: An app for handling static files."><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.staticfiles</span></code></a> 包含的其它零碎的完整细节，参考 <a class="reference internal" href="../../ref/contrib/staticfiles.html"><span class="doc">staticfiles 参考</span></a>。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">如何部署静态文件</a><ul>
+<li><a class="reference internal" href="#serving-static-files-in-production">在生产环境提供静态文件服务</a><ul>
+<li><a class="reference internal" href="#serving-the-site-and-your-static-files-from-the-same-server">在同一服务器提供站点和静态文件服务</a></li>
+<li><a class="reference internal" href="#serving-static-files-from-a-dedicated-server">专用服务器提供静态文件服务</a></li>
+<li><a class="reference internal" href="#serving-static-files-from-a-cloud-service-or-cdn">从云服务或 CDN 提供静态文件服务</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#learn-more">了解更多</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="index.html"
+                          title="上一章">如何管理静态文件（如图片、JavaScript、CSS）</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="../windows.html"
+                          title="下一章">如何在 Windows 上安装 Django</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/howto/static-files/deployment.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="index.html" title="如何管理静态文件（如图片、JavaScript、CSS）">previous</a>
+     |
+    <a href="../index.html" title="操作指南" accesskey="U">up</a>
+   |
+    <a href="../windows.html" title="如何在 Windows 上安装 Django">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1435 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GEOS API &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="GDAL API" href="gdal.html" />
+    <link rel="prev" title="测量对象" href="measure.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="measure.html" title="测量对象">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="gdal.html" title="GDAL API">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-gis-geos">
+            
+  <div class="section" id="s-module-django.contrib.gis.geos">
+<span id="s-geos-api"></span><span id="module-django.contrib.gis.geos"></span><span id="geos-api"></span><h1>GEOS API<a class="headerlink" href="#module-django.contrib.gis.geos" title="永久链接至标题">¶</a></h1>
+<div class="section" id="s-background">
+<span id="background"></span><h2>背景<a class="headerlink" href="#background" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-what-is-geos">
+<span id="what-is-geos"></span><h3>什么是 GEOS?<a class="headerlink" href="#what-is-geos" title="永久链接至标题">¶</a></h3>
+<p><a class="reference external" href="https://libgeos.org/">GEOS</a> 代表 <strong>Geometry Engine - Open Source</strong>，是一个 C++ 库，从 <a class="reference external" href="https://sourceforge.net/projects/jts-topo-suite/">Java Topology Suite</a> 移植而来。GEOS 实现了 OpenGIS <a class="reference external" href="https://www.ogc.org/standards/sfs">Simple Features for SQL</a> 空间谓词函数和空间操作符。GEOS，现在是一个 OSGeo 项目，最初由加拿大维多利亚的 <a class="reference external" href="http://www.refractions.net/">Refractions Research</a> 开发和维护。</p>
+</div>
+<div class="section" id="s-features">
+<span id="features"></span><h3>特性<a class="headerlink" href="#features" title="永久链接至标题">¶</a></h3>
+<p>GeoDjango 实现了一个高级的 Python 封装，用于 GEOS 库，其特点包括：</p>
+<ul class="simple">
+<li>一个使用 <code class="docutils literal notranslate"><span class="pre">ctypes</span></code> 纯粹在 Python 中实现的，对 GEOS 几何例程提供的 BSD 许可接口。</li>
+<li>与 GeoDjango 松散耦合。例如，可以在 Django 项目/应用程序之外使用 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象。换句话说，无需设置 <span class="target" id="index-3"></span><a class="reference internal" href="../../../topics/settings.html#envvar-DJANGO_SETTINGS_MODULE"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">DJANGO_SETTINGS_MODULE</span></code></a> 或使用数据库等。</li>
+<li>可变性：<a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象可以被修改。</li>
+<li>跨平台并经过测试；兼容 Windows、Linux、Solaris 和 macOS 平台。</li>
+</ul>
+</div>
+</div>
+<div class="section" id="s-tutorial">
+<span id="s-geos-tutorial"></span><span id="tutorial"></span><span id="geos-tutorial"></span><h2>教程<a class="headerlink" href="#tutorial" title="永久链接至标题">¶</a></h2>
+<p>这个部分包含了使用 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象的简要介绍和教程。</p>
+<div class="section" id="s-creating-a-geometry">
+<span id="creating-a-geometry"></span><h3>创建几何对象<a class="headerlink" href="#creating-a-geometry" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象可以以几种方式创建。首先，可以简单地在某些空间输入上实例化对象，以下是从 WKT、HEX、WKB 和 GeoJSON 创建相同几何的示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">GEOSGeometry</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;POINT(5 23)&quot;</span><span class="p">)</span>  <span class="c1"># WKT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;010100000000000000000014400000000000003740&quot;</span><span class="p">)</span>  <span class="c1"># HEX</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">GEOSGeometry</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="nb">memoryview</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x14</span><span class="s2">@</span><span class="se">\x00\x00\x00\x00\x00\x00</span><span class="s2">7@&quot;</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>  <span class="c1"># WKB</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">GEOSGeometry</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">&#39;{ &quot;type&quot;: &quot;Point&quot;, &quot;coordinates&quot;: [ 5.000000, 23.000000 ] }&#39;</span>
+<span class="gp">... </span><span class="p">)</span>  <span class="c1"># GeoJSON</span>
+</pre></div>
+</div>
+<p>另一个选项是使用特定几何类型的构造函数来创建您希望创建的几何对象。例如，可以通过将 X 和 Y 坐标传递到其构造函数中来创建一个 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>所有这些构造函数都接受关键字参数 <code class="docutils literal notranslate"><span class="pre">srid</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">GEOSGeometry</span><span class="p">,</span> <span class="n">LineString</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;POINT (0 0)&quot;</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">))</span>
+<span class="go">SRID=4326;POINT (0 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">LineString</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">))</span>
+<span class="go">SRID=4326;LINESTRING (0 0, 1 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">32140</span><span class="p">))</span>
+<span class="go">SRID=32140;POINT (0 0)</span>
+</pre></div>
+</div>
+<p>最后，还有一个 <a class="reference internal" href="#django.contrib.gis.geos.fromfile" title="django.contrib.gis.geos.fromfile"><code class="xref py py-func docutils literal notranslate"><span class="pre">fromfile()</span></code></a> 工厂方法，它可以从文件返回一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">fromfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">fromfile</span><span class="p">(</span><span class="s2">&quot;/path/to/pnt.wkt&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">fromfile</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;/path/to/pnt.wkt&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition-my-logs-are-filled-with-geos-related-errors admonition" id="geos-exceptions-in-logfile">
+<p class="first admonition-title">我的日志中充满了与 GEOS 相关的错误。</p>
+<p class="last">你在 Web 服务器的日志文件中发现了许多 <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> 或 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> 异常。这通常意味着你在一些 Python 模块的顶层创建了 GEOS 对象。然后，由于垃圾收集器中的竞态条件，你的模块在 GEOS 对象之前被垃圾回收。为了防止这种情况发生，请在你的函数/方法的局部范围内创建 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象。</p>
+</div>
+</div>
+<div class="section" id="s-geometries-are-pythonic">
+<span id="geometries-are-pythonic"></span><h3>几何对象是符合 Python 风格的<a class="headerlink" href="#geometries-are-pythonic" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象是 'Pythonic' 的，换句话说，可以使用标准的 Python 惯例访问、修改和迭代其组件。例如，你可以迭代 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 中的坐标：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">coord</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">pnt</span><span class="p">]</span>
+<span class="go">[5.0, 23.0]</span>
+</pre></div>
+</div>
+<p>对于任何几何对象，可以使用 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.coords" title="django.contrib.gis.geos.GEOSGeometry.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GEOSGeometry.coords</span></code></a> 属性将几何坐标作为 Python 元组获取：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span><span class="o">.</span><span class="n">coords</span>
+<span class="go">(5.0, 23.0)</span>
+</pre></div>
+</div>
+<p>可以使用标准的 Python 索引技术来获取/设置几何组件。但是，返回的内容取决于对象的几何类型。例如，在 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 上进行索引返回一个坐标元组：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">LineString</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">(0.0, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">(50.0, 0.0)</span>
+</pre></div>
+</div>
+<p>而在 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 上进行索引将返回与索引对应的环（一个 <a class="reference internal" href="#django.contrib.gis.geos.LinearRing" title="django.contrib.gis.geos.LinearRing"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRing</span></code></a> 对象）：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Polygon</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">50.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">50.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;LinearRing object at 0x1044395b0&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># second-to-last coordinate of external ring</span>
+<span class="go">(50.0, 0.0)</span>
+</pre></div>
+</div>
+<p>此外，几何的坐标/组件可以像 Python 列表一样添加或修改：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<span class="go">(0.0, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span><span class="o">.</span><span class="n">coords</span>
+<span class="go">((1.0, 1.0), (0.0, 50.0), (50.0, 50.0), (50.0, 0.0), (1.0, 1.0))</span>
+</pre></div>
+</div>
+<p>几何对象支持类似集合的运算符：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">LineString</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls1</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls2</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ls1</span> <span class="o">|</span> <span class="n">ls2</span><span class="p">)</span>  <span class="c1"># equivalent to `ls1.union(ls2)`</span>
+<span class="go">MULTILINESTRING ((0 0, 1 1), (1 1, 2 2), (2 2, 3 3))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ls1</span> <span class="o">&amp;</span> <span class="n">ls2</span><span class="p">)</span>  <span class="c1"># equivalent to `ls1.intersection(ls2)`</span>
+<span class="go">LINESTRING (1 1, 2 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ls1</span> <span class="o">-</span> <span class="n">ls2</span><span class="p">)</span>  <span class="c1"># equivalent to `ls1.difference(ls2)`</span>
+<span class="go">LINESTRING(0 0, 1 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ls1</span> <span class="o">^</span> <span class="n">ls2</span><span class="p">)</span>  <span class="c1"># equivalent to `ls1.sym_difference(ls2)`</span>
+<span class="go">MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))</span>
+</pre></div>
+</div>
+<div class="admonition-equality-operator-doesn-t-check-spatial-equality admonition">
+<p class="first admonition-title">等号运算符不检查空间相等性</p>
+<p><a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 的等号运算符使用的是 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.equals_exact" title="django.contrib.gis.geos.GEOSGeometry.equals_exact"><code class="xref py py-meth docutils literal notranslate"><span class="pre">equals_exact()</span></code></a>，而不是 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.equals" title="django.contrib.gis.geos.GEOSGeometry.equals"><code class="xref py py-meth docutils literal notranslate"><span class="pre">equals()</span></code></a>，也就是说，它要求比较的几何对象在相同的位置具有相同的坐标和相同的 SRID：</p>
+<div class="last highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">LineString</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls1</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls2</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls3</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls1</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">ls2</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls1</span> <span class="o">==</span> <span class="n">ls2</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls3</span> <span class="o">==</span> <span class="n">ls2</span>  <span class="c1"># different SRIDs</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-geometry-objects">
+<span id="geometry-objects"></span><h2>几何对象<a class="headerlink" href="#geometry-objects" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-geosgeometry">
+<span id="geosgeometry"></span><h3><code class="docutils literal notranslate"><span class="pre">GEOSGeometry</span></code><a class="headerlink" href="#geosgeometry" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GEOSGeometry</span></code>(<em><span class="n"><span class="pre">geo_input</span></span></em>, <em><span class="n"><span class="pre">srid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry" title="永久链接至目标">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first last simple">
+<li><strong>geo_input</strong> -- 几何输入值（字符串或 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#memoryview" title="(在 Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a>）</li>
+<li><strong>srid</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(在 Python v3.12)"><em>int</em></a>) -- 空间参考标识符（SRID）</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>这是所有 GEOS 几何对象的基类。它根据给定的 <code class="docutils literal notranslate"><span class="pre">geo_input</span></code> 参数进行初始化，然后假定适当的几何子类（例如，<code class="docutils literal notranslate"><span class="pre">GEOSGeometry('POINT(1</span> <span class="pre">1)')</span></code> 将创建一个 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象）。</p>
+<p>如果提供了 <code class="docutils literal notranslate"><span class="pre">srid</span></code> 参数，并且 <code class="docutils literal notranslate"><span class="pre">geo_input</span></code> 没有 SRID，则将其设置为创建的几何对象的 SRID。如果通过 <code class="docutils literal notranslate"><span class="pre">geo_input</span></code> 和 <code class="docutils literal notranslate"><span class="pre">srid</span></code> 参数提供了不同的 SRID，则会引发 <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">GEOSGeometry</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;POINT EMPTY&quot;</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span><span class="o">.</span><span class="n">ewkt</span>
+<span class="go">&#39;SRID=4326;POINT EMPTY&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;SRID=4326;POINT EMPTY&quot;</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span><span class="o">.</span><span class="n">ewkt</span>
+<span class="go">&#39;SRID=4326;POINT EMPTY&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;SRID=1;POINT EMPTY&quot;</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">Input geometry already has SRID: 1.</span>
+</pre></div>
+</div>
+<p>以下输入格式以及它们对应的 Python 类型被接受：</p>
+<table class="docutils">
+<colgroup>
+<col width="62%" />
+<col width="38%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">格式</th>
+<th class="head">输入类型</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>WKT / EWKT</td>
+<td><code class="docutils literal notranslate"><span class="pre">str</span></code></td>
+</tr>
+<tr class="row-odd"><td>HEX / HEXEWKB</td>
+<td><code class="docutils literal notranslate"><span class="pre">str</span></code></td>
+</tr>
+<tr class="row-even"><td>WKB / EWKB</td>
+<td><code class="docutils literal notranslate"><span class="pre">memoryview</span></code></td>
+</tr>
+<tr class="row-odd"><td><span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc7946.html"><strong>GeoJSON</strong></a></td>
+<td><code class="docutils literal notranslate"><span class="pre">str</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>对于 GeoJSON 格式，SRID 是根据 <code class="docutils literal notranslate"><span class="pre">crs</span></code> 成员设置的。如果没有提供 <code class="docutils literal notranslate"><span class="pre">crs</span></code>，SRID 默认为 4326。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.from_gml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">from_gml</span></code>(<em><span class="n"><span class="pre">gml_string</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.from_gml" title="永久链接至目标">¶</a></dt>
+<dd><p>从给定的 GML 字符串构造一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>。</p>
+</dd></dl>
+
+<div class="section" id="s-properties">
+<span id="properties"></span><h4>属性<a class="headerlink" href="#properties" title="永久链接至标题">¶</a></h4>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.coords">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">coords</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.coords" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何的坐标作为一个元组。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.dims">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">dims</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.dims" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何的维度：</p>
+<ul class="simple">
+<li>对于 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.geos.MultiPoint" title="django.contrib.gis.geos.MultiPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPoint</span></code></a>，返回值为 <code class="docutils literal notranslate"><span class="pre">0</span></code></li>
+<li>对于 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.geos.MultiLineString" title="django.contrib.gis.geos.MultiLineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiLineString</span></code></a>，返回值为 <code class="docutils literal notranslate"><span class="pre">1</span></code></li>
+<li>对于 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.geos.MultiPolygon" title="django.contrib.gis.geos.MultiPolygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPolygon</span></code></a>，返回值为 <code class="docutils literal notranslate"><span class="pre">2</span></code></li>
+<li>对于空的 <a class="reference internal" href="#django.contrib.gis.geos.GeometryCollection" title="django.contrib.gis.geos.GeometryCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryCollection</span></code></a>，返回值为 <code class="docutils literal notranslate"><span class="pre">-1</span></code></li>
+<li>对于非空的 <a class="reference internal" href="#django.contrib.gis.geos.GeometryCollection" title="django.contrib.gis.geos.GeometryCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryCollection</span></code></a>，返回其元素的最大维度。</li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.empty">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">empty</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.empty" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何中的点集是否为空。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.geom_type">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">geom_type</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.geom_type" title="永久链接至目标">¶</a></dt>
+<dd><p>返回与几何类型相对应的字符串。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">GEOSGeometry</span><span class="p">(</span><span class="s2">&quot;POINT(5 23)&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span><span class="o">.</span><span class="n">geom_type</span>
+<span class="go">&#39;Point&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.geom_typeid">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">geom_typeid</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.geom_typeid" title="永久链接至目标">¶</a></dt>
+<dd><p>返回 GEOS 几何类型的识别号码。以下表格显示了每种几何类型的值：</p>
+<table class="docutils">
+<colgroup>
+<col width="77%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">几何</th>
+<th class="head">ID</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a></td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a></td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#django.contrib.gis.geos.LinearRing" title="django.contrib.gis.geos.LinearRing"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRing</span></code></a></td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a></td>
+<td>3</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#django.contrib.gis.geos.MultiPoint" title="django.contrib.gis.geos.MultiPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPoint</span></code></a></td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#django.contrib.gis.geos.MultiLineString" title="django.contrib.gis.geos.MultiLineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiLineString</span></code></a></td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#django.contrib.gis.geos.MultiPolygon" title="django.contrib.gis.geos.MultiPolygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPolygon</span></code></a></td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#django.contrib.gis.geos.GeometryCollection" title="django.contrib.gis.geos.GeometryCollection"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryCollection</span></code></a></td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.num_coords">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">num_coords</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.num_coords" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何中坐标的数量。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.num_geom">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">num_geom</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.num_geom" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此几何中的几何数量。换句话说，在几何集合之外的任何几何对象上都会返回 1。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.hasz">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">hasz</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.hasz" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个布尔值，指示几何是否是三维的。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.ring">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">ring</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.ring" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个布尔值，指示几何是否是 <code class="docutils literal notranslate"><span class="pre">LinearRing</span></code>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.simple">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">simple</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.simple" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个布尔值，指示几何是否是 'simple'。只有当几何不与自身相交（除了边界点）时，几何才被认为是 simple。例如，如果 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 对象与自身相交，则它不是 simple。因此，<a class="reference internal" href="#django.contrib.gis.geos.LinearRing" title="django.contrib.gis.geos.LinearRing"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRing</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 对象总是 simple，因为根据定义它们不能与自身相交。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.valid">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">valid</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.valid" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个布尔值，指示几何是否有效。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.valid_reason">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">valid_reason</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.valid_reason" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个描述几何无效的原因的字符串。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.srid">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">srid</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.srid" title="永久链接至目标">¶</a></dt>
+<dd><p>用于检索或设置与几何相关联的 SRID 的属性。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnt</span><span class="o">.</span><span class="n">srid</span><span class="p">)</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span><span class="o">.</span><span class="n">srid</span> <span class="o">=</span> <span class="mi">4326</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span><span class="o">.</span><span class="n">srid</span>
+<span class="go">4326</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-output-properties">
+<span id="output-properties"></span><h4>输出属性<a class="headerlink" href="#output-properties" title="永久链接至标题">¶</a></h4>
+<p>此部分中的属性将 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象导出为不同的格式。输出可以是字符串、缓冲区，甚至是另一个对象的形式。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.ewkt">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">ewkt</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.ewkt" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何的 &quot;扩展&quot; Well-Known Text（WKT）。此表示形式特定于 PostGIS，并且是 OGC WKT 标准的超集。<a class="footnote-reference" href="#fnogc" id="id5">[1]</a> 基本上，SRID 被添加到 WKT 表示中，例如 <code class="docutils literal notranslate"><span class="pre">SRID=4326;POINT(5</span> <span class="pre">23)</span></code>。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">此属性的输出不包括 PostGIS 在其 EWKT 表示中支持的 3dm、3dz 和 4d 信息。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.hex">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">hex</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.hex" title="永久链接至目标">¶</a></dt>
+<dd><p>以十六进制形式返回此几何的 WKB。请注意，SRID 值不包括在此表示中，因为它不是 OGC 规范的一部分（请使用 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.hexewkb" title="django.contrib.gis.geos.GEOSGeometry.hexewkb"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GEOSGeometry.hexewkb</span></code></a> 属性）。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.hexewkb">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">hexewkb</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.hexewkb" title="永久链接至目标">¶</a></dt>
+<dd><p>以十六进制形式返回此几何的 EWKB。这是 WKB 规范的扩展，包括与此几何对象相关的 SRID 值。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.json">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">json</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.json" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何的 GeoJSON 表示。请注意，结果不是完整的 GeoJSON 结构，而只是 GeoJSON 结构中 <code class="docutils literal notranslate"><span class="pre">geometry</span></code> 键的内容。还请参阅 <a class="reference internal" href="serializers.html"><span class="doc">GeoJSON 序列化器</span></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.geojson">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">geojson</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.geojson" title="永久链接至目标">¶</a></dt>
+<dd><p>是 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.json" title="django.contrib.gis.geos.GEOSGeometry.json"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GEOSGeometry.json</span></code></a> 的别名。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.kml">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">kml</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.kml" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何的 <a class="reference external" href="https://developers.google.com/kml/documentation/">KML</a> （Keyhole Markup Language）表示。这应该仅用于具有 SRID 4326（WGS84）的几何对象，但此限制不受强制执行。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.ogr">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">ogr</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.ogr" title="永久链接至目标">¶</a></dt>
+<dd><p>返回与 GEOS 几何对应的 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.OGRGeometry" title="django.contrib.gis.gdal.OGRGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">OGRGeometry</span></code></a> 对象。</p>
+</dd></dl>
+
+<span class="target" id="wkb"></span><dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.wkb">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">wkb</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.wkb" title="永久链接至目标">¶</a></dt>
+<dd><p>以 Python 缓冲区的形式返回此几何的 WKB（Well-Known Binary）表示。不包括 SRID 值，请使用 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.ewkb" title="django.contrib.gis.geos.GEOSGeometry.ewkb"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GEOSGeometry.ewkb</span></code></a> 属性代替。</p>
+</dd></dl>
+
+<span class="target" id="ewkb"></span><dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.ewkb">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">ewkb</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.ewkb" title="永久链接至目标">¶</a></dt>
+<dd><p>以 Python 缓冲区的形式返回此几何的 EWKB 表示。这是 WKB 规范的扩展，包括与此几何对象相关的任何 SRID 值。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.wkt">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">wkt</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.wkt" title="永久链接至目标">¶</a></dt>
+<dd><p>返回几何的 Well-Known Text（OGC 标准）。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-spatial-predicate-methods">
+<span id="spatial-predicate-methods"></span><h4>空间谓词方法<a class="headerlink" href="#spatial-predicate-methods" title="永久链接至标题">¶</a></h4>
+<p>以下所有的空间谓词方法都以另一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 实例（<code class="docutils literal notranslate"><span class="pre">other</span></code>）作为参数，并返回一个布尔值。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.contains">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">contains</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.contains" title="永久链接至目标">¶</a></dt>
+<dd><p>如果 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.within" title="django.contrib.gis.geos.GEOSGeometry.within"><code class="xref py py-meth docutils literal notranslate"><span class="pre">other.within(this)</span></code></a> 返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.covers">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">covers</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.covers" title="永久链接至目标">¶</a></dt>
+<dd><p>如果此几何覆盖指定的几何，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">covers</span></code> 谓词具有以下等价定义：</p>
+<ul class="simple">
+<li>其他几何的每个点都是此几何的点。</li>
+<li>两个几何对象的 <a class="reference external" href="https://en.wikipedia.org/wiki/DE-9IM">DE-9IM</a> 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">T*****FF*</span></code>, <code class="docutils literal notranslate"><span class="pre">*T****FF*</span></code>, <code class="docutils literal notranslate"><span class="pre">***T**FF*</span></code>, 或 <code class="docutils literal notranslate"><span class="pre">****T*FF*</span></code>。</li>
+</ul>
+<p>如果其中一个几何为空，则返回 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+<p>此谓词类似于 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.contains" title="django.contrib.gis.geos.GEOSGeometry.contains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GEOSGeometry.contains()</span></code></a>，但更加包容性（即对更多情况返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>）。特别地，与 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.contains" title="django.contrib.gis.geos.GEOSGeometry.contains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">contains()</span></code></a> 不同，它不区分边界和几何内部的点。在大多数情况下，应该首选使用 <code class="docutils literal notranslate"><span class="pre">covers()</span></code> 而不是 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.contains" title="django.contrib.gis.geos.GEOSGeometry.contains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">contains()</span></code></a>。作为额外的好处，<code class="docutils literal notranslate"><span class="pre">covers()</span></code> 更容易进行优化，因此应该优于 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.contains" title="django.contrib.gis.geos.GEOSGeometry.contains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">contains()</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.crosses">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">crosses</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.crosses" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象的 DE-9IM 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">T*T******</span></code> （对于点和曲线、点和区域或线和区域）或 <code class="docutils literal notranslate"><span class="pre">0********</span></code> （对于两个曲线），则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.disjoint">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">disjoint</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.disjoint" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象的 DE-9IM 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">FF*FF****</span></code>，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.equals">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">equals</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.equals" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象的 DE-9IM 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">T*F**FFF*</span></code>，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.equals_exact">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">equals_exact</span></code>(<em><span class="n"><span class="pre">other</span></span></em>, <em><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.equals_exact" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象在指定的容差范围内完全相等，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。<code class="docutils literal notranslate"><span class="pre">tolerance</span></code> 值应该是一个浮点数，表示比较中的误差容差，例如，<code class="docutils literal notranslate"><span class="pre">poly1.equals_exact(poly2,</span> <span class="pre">0.001)</span></code> 将在千分之一的单位内进行比较相等。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.equals_identical">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">equals_identical</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.equals_identical" title="永久链接至目标">¶</a></dt>
+<dd><div class="versionadded">
+<span class="title">New in Django 5.0.</span> </div>
+<p>如果两个几何图形在所有维度中的结构、顺序和顶点的值都完全相同，返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。<code class="docutils literal notranslate"><span class="pre">NaN</span></code> 值被视为与其他 <code class="docutils literal notranslate"><span class="pre">NaN</span></code> 值相等。需要 GEOS 3.12。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.intersects">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">intersects</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.intersects" title="永久链接至目标">¶</a></dt>
+<dd><p>如果 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.disjoint" title="django.contrib.gis.geos.GEOSGeometry.disjoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GEOSGeometry.disjoint()</span></code></a> 为 <code class="docutils literal notranslate"><span class="pre">False</span></code>，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.overlaps">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">overlaps</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.overlaps" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象的 DE-9IM 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">T*T***T**</span></code> （对于两个点或两个表面）或 <code class="docutils literal notranslate"><span class="pre">1*T***T**</span></code> （对于两个曲线），则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.relate_pattern">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">relate_pattern</span></code>(<em><span class="n"><span class="pre">other</span></span></em>, <em><span class="n"><span class="pre">pattern</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.relate_pattern" title="永久链接至目标">¶</a></dt>
+<dd><p>如果此几何对象和其他几何对象的 DE-9IM 交集矩阵中的元素与给定的 <code class="docutils literal notranslate"><span class="pre">pattern</span></code> 匹配（一个由字母 {<code class="docutils literal notranslate"><span class="pre">T</span></code>, <code class="docutils literal notranslate"><span class="pre">F</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>} 组成的九个字符的字符串），则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.touches">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">touches</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.touches" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象的 DE-9IM 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">FT*******</span></code>、<code class="docutils literal notranslate"><span class="pre">F**T*****</span></code> 或 <code class="docutils literal notranslate"><span class="pre">F***T****</span></code>，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.within">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">within</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.within" title="永久链接至目标">¶</a></dt>
+<dd><p>如果两个几何对象的 DE-9IM 交集矩阵为 <code class="docutils literal notranslate"><span class="pre">T*F**F***</span></code>，则返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-topological-methods">
+<span id="topological-methods"></span><h4>拓扑方法<a class="headerlink" href="#topological-methods" title="永久链接至标题">¶</a></h4>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.buffer">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">buffer</span></code>(<em><span class="n"><span class="pre">width</span></span></em>, <em><span class="n"><span class="pre">quadsegs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.buffer" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>，表示距离此几何对象小于或等于给定的 <code class="docutils literal notranslate"><span class="pre">width</span></code> 的所有点。可选的 <code class="docutils literal notranslate"><span class="pre">quadsegs</span></code> 关键字设置用于近似一个四分之一圆的段数（默认值为 8）。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.buffer_with_style">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">buffer_with_style</span></code>(<em><span class="n"><span class="pre">width</span></span></em>, <em><span class="n"><span class="pre">quadsegs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em><span class="n"><span class="pre">end_cap_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">join_style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">mitre_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.buffer_with_style" title="永久链接至目标">¶</a></dt>
+<dd><p>与 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.buffer" title="django.contrib.gis.geos.GEOSGeometry.buffer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">buffer()</span></code></a> 相同，但允许自定义缓冲区的样式。</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">end_cap_style</span></code> 可以是 round（<code class="docutils literal notranslate"><span class="pre">1</span></code>）、flat（<code class="docutils literal notranslate"><span class="pre">2</span></code>）或 square（<code class="docutils literal notranslate"><span class="pre">3</span></code>）。</li>
+<li><code class="docutils literal notranslate"><span class="pre">join_style</span></code> 可以是 round（<code class="docutils literal notranslate"><span class="pre">1</span></code>）、mitre（<code class="docutils literal notranslate"><span class="pre">2</span></code>）或 bevel（<code class="docutils literal notranslate"><span class="pre">3</span></code>）。</li>
+<li>Mitre ratio limit（<code class="docutils literal notranslate"><span class="pre">mitre_limit</span></code>）仅影响 mitred join style。</li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.difference">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">difference</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.difference" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个表示构成此几何的点但不构成其他几何的 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.interpolate">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">interpolate</span></code>(<em><span class="n"><span class="pre">distance</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.interpolate" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.interpolate_normalized">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">interpolate_normalized</span></code>(<em><span class="n"><span class="pre">distance</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.interpolate_normalized" title="永久链接至目标">¶</a></dt>
+<dd><p>给定一个距离（浮点数），返回几何对象（<a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 或 <a class="reference internal" href="#django.contrib.gis.geos.MultiLineString" title="django.contrib.gis.geos.MultiLineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiLineString</span></code></a>）中距离最近的点（或最近的点）。标准化版本将距离作为介于 0（起点）和 1（终点）之间的浮点数。</p>
+<p>与 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.project" title="django.contrib.gis.geos.GEOSGeometry.project"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GEOSGeometry.project()</span></code></a> 的相反操作。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.intersection">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">intersection</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.intersection" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个表示此几何对象和其他几何对象共享的点的 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.project">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">project</span></code>(<em><span class="n"><span class="pre">point</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.project" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.project_normalized">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">project_normalized</span></code>(<em><span class="n"><span class="pre">point</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.project_normalized" title="永久链接至目标">¶</a></dt>
+<dd><p>返回从几何对象（<a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 或 <a class="reference internal" href="#django.contrib.gis.geos.MultiLineString" title="django.contrib.gis.geos.MultiLineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiLineString</span></code></a>）的起点到在几何对象上投影的点（即距离给定点最近的线上的点）的距离（浮点数）。标准化版本将距离作为介于 0（起点）和 1（终点）之间的浮点数返回。</p>
+<p>与 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.interpolate" title="django.contrib.gis.geos.GEOSGeometry.interpolate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GEOSGeometry.interpolate()</span></code></a> 的相反操作。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.relate">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">relate</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.relate" title="永久链接至目标">¶</a></dt>
+<dd><p>返回表示此几何对象与其他几何对象之间拓扑关系的 DE-9IM 交集矩阵（字符串）。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.simplify">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">simplify</span></code>(<em><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em><span class="n"><span class="pre">preserve_topology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.simplify" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个新的 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>，使用 Douglas-Peucker 算法简化到指定的容差。较高的容差值意味着输出中的点较少。如果没有提供容差，则默认为 0。</p>
+<p>默认情况下，此函数不保持拓扑关系。例如，<a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 对象可以被分割，折叠成线，或消失。<a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 的孔可以被创建或消失，线可能会相交。通过指定 <code class="docutils literal notranslate"><span class="pre">preserve_topology=True</span></code>，结果将具有与输入相同的维度和组件数量；然而，这会显著减慢处理速度。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.sym_difference">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">sym_difference</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.sym_difference" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>，其中包含此几何对象中不在其他几何中的点以及其他几何中不在此几何中的点。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.union">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">union</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.union" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>，表示此几何对象和其他几何对象中的所有点。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-topological-properties">
+<span id="topological-properties"></span><h4>拓扑属性<a class="headerlink" href="#topological-properties" title="永久链接至标题">¶</a></h4>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.boundary">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">boundary</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.boundary" title="永久链接至目标">¶</a></dt>
+<dd><p>返回边界作为一个新分配的几何对象。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.centroid">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">centroid</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.centroid" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象，表示几何对象的几何中心。不能保证该点位于几何对象的内部。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.convex_hull">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">convex_hull</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.convex_hull" title="永久链接至目标">¶</a></dt>
+<dd><p>返回包含几何中所有点的最小 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.envelope">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">envelope</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.envelope" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个表示此几何的边界包围框的 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a>。请注意，如果输入几何对象是一个点，它也可以返回一个 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.point_on_surface">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">point_on_surface</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.point_on_surface" title="永久链接至目标">¶</a></dt>
+<dd><p>计算并返回一个保证位于此几何对象内部的 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.unary_union">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">unary_union</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.unary_union" title="永久链接至目标">¶</a></dt>
+<dd><p>计算此几何对象的所有元素的并集。</p>
+<p>结果遵循以下约定：</p>
+<ul class="simple">
+<li>对一组 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 进行并集操作将完全节点化和融合线段。</li>
+<li>对一组 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 进行并集操作将始终返回一个 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 或 <a class="reference internal" href="#django.contrib.gis.geos.MultiPolygon" title="django.contrib.gis.geos.MultiPolygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPolygon</span></code></a> 几何对象（与 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.union" title="django.contrib.gis.geos.GEOSGeometry.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GEOSGeometry.union()</span></code></a> 不同，如果拓扑崩溃发生，可能返回较低维度的几何对象）。</li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="s-other-properties-methods">
+<span id="other-properties-methods"></span><h4>其他属性和方法<a class="headerlink" href="#other-properties-methods" title="永久链接至标题">¶</a></h4>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.area">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">area</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.area" title="永久链接至目标">¶</a></dt>
+<dd><p>此属性返回几何对象的面积。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.extent">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">extent</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.extent" title="永久链接至目标">¶</a></dt>
+<dd><p>此属性返回几何对象的范围，以 4 元组形式表示，包括 <code class="docutils literal notranslate"><span class="pre">(xmin,</span> <span class="pre">ymin,</span> <span class="pre">xmax,</span> <span class="pre">ymax)</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.clone">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">clone</span></code>()<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.clone" title="永久链接至目标">¶</a></dt>
+<dd><p>此方法返回原始几何对象的克隆 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.distance">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">distance</span></code>(<em><span class="n"><span class="pre">geom</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.distance" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此几何对象与给定的 <code class="docutils literal notranslate"><span class="pre">geom</span></code> （另一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象）之间的最近点之间的距离。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">GEOS 距离计算是线性的，换句话说，即使 SRID 指定地理坐标系，GEOS 不会执行球面计算。</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.length">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">length</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.length" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此几何对象的长度（例如，对于 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a>，长度为 0，对于 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a>，长度为线段的长度，对于 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a>，长度为多边形的周长）。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.prepared">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">prepared</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.prepared" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此几何对象内容的 GEOS <code class="docutils literal notranslate"><span class="pre">PreparedGeometry</span></code>。<code class="docutils literal notranslate"><span class="pre">PreparedGeometry</span></code> 对象针对 contains、intersects、covers、crosses、disjoint、overlaps、touches 和 within 操作进行了优化。有关更多信息，请参阅 <a class="reference internal" href="#prepared-geometries"><span class="std std-ref">准备好的几何对象</span></a> 文档。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.srs">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">srs</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.srs" title="永久链接至目标">¶</a></dt>
+<dd><p>返回与几何对象的 SRID 对应的 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.SpatialReference" title="django.contrib.gis.gdal.SpatialReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpatialReference</span></code></a> 对象，如果没有则返回 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.transform">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">transform</span></code>(<em><span class="n"><span class="pre">ct</span></span></em>, <em><span class="n"><span class="pre">clone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.transform" title="永久链接至目标">¶</a></dt>
+<dd><p>根据给定的坐标转换参数（<code class="docutils literal notranslate"><span class="pre">ct</span></code>）来转换几何对象，参数可以是整数 SRID、空间参考 WKT 字符串、PROJ 字符串、<a class="reference internal" href="gdal.html#django.contrib.gis.gdal.SpatialReference" title="django.contrib.gis.gdal.SpatialReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpatialReference</span></code></a> 对象或 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.CoordTransform" title="django.contrib.gis.gdal.CoordTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">CoordTransform</span></code></a> 对象。默认情况下，几何对象会原地转换，不返回任何内容。但是如果设置了 <code class="docutils literal notranslate"><span class="pre">clone</span></code> 关键字参数，则不会修改几何对象，而是返回一个经过转换的几何对象的克隆。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">如果没有安装 GDAL，或者几何对象的 SRID 为 <code class="docutils literal notranslate"><span class="pre">None</span></code> 或小于 0，则会引发 <a class="reference internal" href="#django.contrib.gis.geos.GEOSException" title="django.contrib.gis.geos.GEOSException"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSException</span></code></a>。如果使用 <a class="reference internal" href="gdal.html#django.contrib.gis.gdal.CoordTransform" title="django.contrib.gis.gdal.CoordTransform"><code class="xref py py-class docutils literal notranslate"><span class="pre">CoordTransform</span></code></a> 对象调用，则不会对几何对象的 SRID 强加任何约束。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.make_valid">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">make_valid</span></code>()<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.make_valid" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个有效的 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 等效对象，尽量不丢失输入的顶点。如果几何对象已经有效，则原样返回。这类似于数据库函数 <a class="reference internal" href="functions.html#django.contrib.gis.db.models.functions.MakeValid" title="django.contrib.gis.db.models.functions.MakeValid"><code class="xref py py-class docutils literal notranslate"><span class="pre">MakeValid</span></code></a>。需要 GEOS 3.8。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSGeometry.normalize">
+<code class="sig-prename descclassname"><span class="pre">GEOSGeometry.</span></code><code class="sig-name descname"><span class="pre">normalize</span></code>(<em><span class="n"><span class="pre">clone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GEOSGeometry.normalize" title="永久链接至目标">¶</a></dt>
+<dd><p>将此几何对象转换为规范形式。如果设置了 <code class="docutils literal notranslate"><span class="pre">clone</span></code> 关键字参数，则不会修改几何对象，而是返回一个规范化的几何对象的克隆：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">MultiPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">MULTIPOINT (0 0, 2 2, 1 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">MULTIPOINT (2 2, 1 1, 0 0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-point">
+<span id="point"></span><h3><code class="docutils literal notranslate"><span class="pre">Point</span></code><a class="headerlink" href="#point" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Point</span></code>(<em><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">srid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.Point" title="永久链接至目标">¶</a></dt>
+<dd><p>可以使用表示点的组件坐标或单个坐标序列来实例化 <code class="docutils literal notranslate"><span class="pre">Point</span></code> 对象。例如，以下方式是等效的：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">23</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>可以通过不传递参数或传递一个空序列来实例化空的 <code class="docutils literal notranslate"><span class="pre">Point</span></code> 对象。以下方式是等效的：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">([])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-linestring">
+<span id="linestring"></span><h3><code class="docutils literal notranslate"><span class="pre">LineString</span></code><a class="headerlink" href="#linestring" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.LineString">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LineString</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.LineString" title="永久链接至目标">¶</a></dt>
+<dd><p>可以使用坐标序列或 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象作为参数来实例化 <code class="docutils literal notranslate"><span class="pre">LineString</span></code> 对象。例如，以下方式是等效的：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>此外，还可以通过传递单个坐标序列或 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象的序列来创建 <code class="docutils literal notranslate"><span class="pre">LineString</span></code> 对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">(((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">([</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>可以通过不传递参数或传递一个空序列来实例化空的 <code class="docutils literal notranslate"><span class="pre">LineString</span></code> 对象。以下方式是等效的：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">([])</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.LineString.closed">
+<code class="sig-name descname"><span class="pre">closed</span></code><a class="headerlink" href="#django.contrib.gis.geos.LineString.closed" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此 <code class="docutils literal notranslate"><span class="pre">LineString</span></code> 是否闭合。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-linearring">
+<span id="linearring"></span><h3><code class="docutils literal notranslate"><span class="pre">LinearRing</span></code><a class="headerlink" href="#linearring" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.LinearRing">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">LinearRing</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.LinearRing" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">LinearRing</span></code> 对象的构造方式与 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 对象完全相同，但坐标必须是 <em>闭合</em> 的，也就是说，第一个坐标必须与最后一个坐标相同。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="n">LinearRing</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>请注意，<code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0)</span></code> 是第一个和最后一个坐标 -- 如果它们不相等，就会引发错误。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.LinearRing.is_counterclockwise">
+<code class="sig-name descname"><span class="pre">is_counterclockwise</span></code><a class="headerlink" href="#django.contrib.gis.geos.LinearRing.is_counterclockwise" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此 <code class="docutils literal notranslate"><span class="pre">LinearRing</span></code> 是否为逆时针方向。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-polygon">
+<span id="polygon"></span><h3><code class="docutils literal notranslate"><span class="pre">Polygon</span></code><a class="headerlink" href="#polygon" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.Polygon">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">Polygon</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.Polygon" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">Polygon</span></code> 对象可以通过传入代表多边形环的参数来实例化。这些参数必须要么是 <a class="reference internal" href="#django.contrib.gis.geos.LinearRing" title="django.contrib.gis.geos.LinearRing"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRing</span></code></a> 实例，要么是用于构建 <a class="reference internal" href="#django.contrib.gis.geos.LinearRing" title="django.contrib.gis.geos.LinearRing"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearRing</span></code></a> 的序列：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ext_coords</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">int_coords</span> <span class="o">=</span> <span class="p">((</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">ext_coords</span><span class="p">,</span> <span class="n">int_coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">LinearRing</span><span class="p">(</span><span class="n">ext_coords</span><span class="p">),</span> <span class="n">LinearRing</span><span class="p">(</span><span class="n">int_coords</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.Polygon.from_bbox">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">from_bbox</span></code>(<em><span class="n"><span class="pre">bbox</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.Polygon.from_bbox" title="永久链接至目标">¶</a></dt>
+<dd><p>从给定的边界框返回一个多边形对象，边界框是由 <code class="docutils literal notranslate"><span class="pre">(xmin,</span> <span class="pre">ymin,</span> <span class="pre">xmax,</span> <span class="pre">ymax)</span></code> 组成的 4 元组。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.Polygon.num_interior_rings">
+<code class="sig-name descname"><span class="pre">num_interior_rings</span></code><a class="headerlink" href="#django.contrib.gis.geos.Polygon.num_interior_rings" title="永久链接至目标">¶</a></dt>
+<dd><p>返回此几何对象中内部环的数量。</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="admonition-comparing-polygons admonition">
+<p class="first admonition-title">比较多边形</p>
+<p>请注意，可以直接使用 <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> 或 <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> 比较 <code class="docutils literal notranslate"><span class="pre">Polygon</span></code> 对象，但由于比较是通过多边形的 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 进行的，所以意义不大（但是一致且快速）。您始终可以使用 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.area" title="django.contrib.gis.geos.GEOSGeometry.area"><code class="xref py py-attr docutils literal notranslate"><span class="pre">area</span></code></a> 属性强制进行比较：</p>
+<div class="last highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">poly_1</span><span class="o">.</span><span class="n">area</span> <span class="o">&gt;</span> <span class="n">poly_2</span><span class="o">.</span><span class="n">area</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-geometry-collections">
+<span id="s-geos-geometry-collections"></span><span id="geometry-collections"></span><span id="geos-geometry-collections"></span><h2>几何集合<a class="headerlink" href="#geometry-collections" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-multipoint">
+<span id="multipoint"></span><h3><code class="docutils literal notranslate"><span class="pre">MultiPoint</span></code><a class="headerlink" href="#multipoint" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.MultiPoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MultiPoint</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.MultiPoint" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">MultiPoint</span></code> 对象可以通过传入 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象作为参数，或者传入包含 <a class="reference internal" href="#django.contrib.gis.geos.Point" title="django.contrib.gis.geos.Point"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code></a> 对象的单个序列来实例化：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span> <span class="o">=</span> <span class="n">MultiPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span> <span class="o">=</span> <span class="n">MultiPoint</span><span class="p">((</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-multilinestring">
+<span id="multilinestring"></span><h3><code class="docutils literal notranslate"><span class="pre">MultiLineString</span></code><a class="headerlink" href="#multilinestring" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.MultiLineString">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MultiLineString</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.MultiLineString" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">MultiLineString</span></code> 对象可以通过传入 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 对象作为参数，或者传入包含 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a> 对象的单个序列来实例化：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ls1</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ls2</span> <span class="o">=</span> <span class="n">LineString</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mls</span> <span class="o">=</span> <span class="n">MultiLineString</span><span class="p">(</span><span class="n">ls1</span><span class="p">,</span> <span class="n">ls2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mls</span> <span class="o">=</span> <span class="n">MultiLineString</span><span class="p">([</span><span class="n">ls1</span><span class="p">,</span> <span class="n">ls2</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.MultiLineString.merged">
+<code class="sig-name descname"><span class="pre">merged</span></code><a class="headerlink" href="#django.contrib.gis.geos.MultiLineString.merged" title="永久链接至目标">¶</a></dt>
+<dd><p>返回一个代表此 <code class="docutils literal notranslate"><span class="pre">MultiLineString</span></code> 中所有组件线合并的 <a class="reference internal" href="#django.contrib.gis.geos.LineString" title="django.contrib.gis.geos.LineString"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineString</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.MultiLineString.closed">
+<code class="sig-name descname"><span class="pre">closed</span></code><a class="headerlink" href="#django.contrib.gis.geos.MultiLineString.closed" title="永久链接至目标">¶</a></dt>
+<dd><p>只有当所有元素都闭合时返回 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-multipolygon">
+<span id="multipolygon"></span><h3><code class="docutils literal notranslate"><span class="pre">MultiPolygon</span></code><a class="headerlink" href="#multipolygon" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.MultiPolygon">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">MultiPolygon</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.MultiPolygon" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">MultiPolygon</span></code> 对象可以通过传入 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 对象作为参数，或者传入包含 <a class="reference internal" href="#django.contrib.gis.geos.Polygon" title="django.contrib.gis.geos.Polygon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Polygon</span></code></a> 对象的单个序列来实例化：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span> <span class="o">=</span> <span class="n">MultiPolygon</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-geometrycollection">
+<span id="geometrycollection"></span><h3><code class="docutils literal notranslate"><span class="pre">GeometryCollection</span></code><a class="headerlink" href="#geometrycollection" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GeometryCollection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GeometryCollection</span></code>(<em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.GeometryCollection" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">GeometryCollection</span></code> 对象可以通过传入其他 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 作为参数，或者传入包含 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 对象的单个序列来实例化：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gc</span> <span class="o">=</span> <span class="n">GeometryCollection</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">MultiPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">poly</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gc</span> <span class="o">=</span> <span class="n">GeometryCollection</span><span class="p">((</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">MultiPoint</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">poly</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-prepared-geometries">
+<span id="s-id7"></span><span id="prepared-geometries"></span><span id="id7"></span><h2>准备好的几何对象<a class="headerlink" href="#prepared-geometries" title="永久链接至标题">¶</a></h2>
+<p>要获得一个准备好的几何对象，请访问 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry.prepared" title="django.contrib.gis.geos.GEOSGeometry.prepared"><code class="xref py py-attr docutils literal notranslate"><span class="pre">GEOSGeometry.prepared</span></code></a> 属性。一旦您有了一个 <code class="docutils literal notranslate"><span class="pre">PreparedGeometry</span></code> 实例，它下面列出的空间谓词方法可以与其他 <code class="docutils literal notranslate"><span class="pre">GEOSGeometry</span></code> 对象一起使用。使用准备好的几何对象进行操作可以快几个数量级 -- 准备的几何越复杂，操作的速度提升就越大。有关更多信息，请参考 <a class="reference external" href="https://trac.osgeo.org/geos/wiki/PreparedGeometry">GEOS 准备好的几何页面</a>。</p>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Polygon</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">poly</span> <span class="o">=</span> <span class="n">Polygon</span><span class="o">.</span><span class="n">from_bbox</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prep_poly</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">prepared</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prep_poly</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="section" id="s-preparedgeometry">
+<span id="preparedgeometry"></span><h3><code class="docutils literal notranslate"><span class="pre">PreparedGeometry</span></code><a class="headerlink" href="#preparedgeometry" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">PreparedGeometry</span></code><a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">PreparedGeometry</span></code> 上的所有方法都接受一个 <code class="docutils literal notranslate"><span class="pre">other</span></code> 参数，该参数必须是一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 实例。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.contains">
+<code class="sig-name descname"><span class="pre">contains</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.contains" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.contains_properly">
+<code class="sig-name descname"><span class="pre">contains_properly</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.contains_properly" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.covers">
+<code class="sig-name descname"><span class="pre">covers</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.covers" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.crosses">
+<code class="sig-name descname"><span class="pre">crosses</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.crosses" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.disjoint">
+<code class="sig-name descname"><span class="pre">disjoint</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.disjoint" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.intersects">
+<code class="sig-name descname"><span class="pre">intersects</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.intersects" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.overlaps">
+<code class="sig-name descname"><span class="pre">overlaps</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.overlaps" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.touches">
+<code class="sig-name descname"><span class="pre">touches</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.touches" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.PreparedGeometry.within">
+<code class="sig-name descname"><span class="pre">within</span></code>(<em><span class="n"><span class="pre">other</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.PreparedGeometry.within" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="s-geometry-factories">
+<span id="geometry-factories"></span><h2>几何工厂<a class="headerlink" href="#geometry-factories" title="永久链接至标题">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.fromfile">
+<code class="sig-name descname"><span class="pre">fromfile</span></code>(<em><span class="n"><span class="pre">file_h</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.fromfile" title="永久链接至目标">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><strong>file_h</strong> (a Python <code class="docutils literal notranslate"><span class="pre">file</span></code> object or a string path to the file) -- 包含空间数据的输入文件</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回类型:</th><td class="field-body">一个对应于文件中空间数据的 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">fromfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">fromfile</span><span class="p">(</span><span class="s2">&quot;/home/bob/geom.wkt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.fromstr">
+<code class="sig-name descname"><span class="pre">fromstr</span></code>(<em><span class="n"><span class="pre">string</span></span></em>, <em><span class="n"><span class="pre">srid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.fromstr" title="永久链接至目标">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first simple">
+<li><strong>string</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(在 Python v3.12)"><em>str</em></a>) -- 包含空间数据的字符串</li>
+<li><strong>srid</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(在 Python v3.12)"><em>int</em></a>) -- 空间参考标识符（SRID）</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回类型:</th><td class="field-body"><p class="first last">一个对应于字符串中空间数据的 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">fromstr(string,</span> <span class="pre">srid)</span></code> 等价于 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry(string,</span> <span class="pre">srid)</span></code></a>。</p>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">fromstr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">fromstr</span><span class="p">(</span><span class="s2">&quot;POINT(-90.5 29.5)&quot;</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-i-o-objects">
+<span id="i-o-objects"></span><h2>I/O 对象<a class="headerlink" href="#i-o-objects" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-reader-objects">
+<span id="reader-objects"></span><h3>读取器对象<a class="headerlink" href="#reader-objects" title="永久链接至标题">¶</a></h3>
+<p>读取器 I/O 类从给定给它们的 WKB 和/或 WKT 输入中的 <code class="docutils literal notranslate"><span class="pre">read(geom)</span></code> 方法返回一个 <a class="reference internal" href="#django.contrib.gis.geos.GEOSGeometry" title="django.contrib.gis.geos.GEOSGeometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a> 实例。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">WKBReader</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKBReader" title="永久链接至目标">¶</a></dt>
+<dd><p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">WKBReader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_r</span> <span class="o">=</span> <span class="n">WKBReader</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_r</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;0101000000000000000000F03F000000000000F03F&quot;</span><span class="p">)</span>
+<span class="go">&lt;Point object at 0x103a88910&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKTReader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">WKTReader</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKTReader" title="永久链接至目标">¶</a></dt>
+<dd><p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">WKTReader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_r</span> <span class="o">=</span> <span class="n">WKTReader</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_r</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;POINT(1 1)&quot;</span><span class="p">)</span>
+<span class="go">&lt;Point object at 0x103a88b50&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="s-writer-objects">
+<span id="writer-objects"></span><h3>写入器对象<a class="headerlink" href="#writer-objects" title="永久链接至标题">¶</a></h3>
+<p>所有写入器对象都具有一个 <code class="docutils literal notranslate"><span class="pre">write(geom)</span></code> 方法，该方法返回给定几何对象的 WKB 或 WKT。此外，<a class="reference internal" href="#django.contrib.gis.geos.WKBWriter" title="django.contrib.gis.geos.WKBWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">WKBWriter</span></code></a> 对象还具有可用于更改字节顺序或包括 SRID 值的属性（即 EWKB）。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBWriter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">WKBWriter</span></code>(<em><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.WKBWriter" title="永久链接至目标">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">WKBWriter</span></code> 提供对其输出的最大控制。默认情况下，当调用其 <code class="docutils literal notranslate"><span class="pre">write</span></code> 方法时，它返回符合 OGC 标准的 WKB。然而，它具有允许创建 EWKB 的属性，这是 WKB 标准的一个超集，包含附加信息。有关 <code class="docutils literal notranslate"><span class="pre">dim</span></code> 参数的更多详细信息，请参阅 <a class="reference internal" href="#django.contrib.gis.geos.WKBWriter.outdim" title="django.contrib.gis.geos.WKBWriter.outdim"><code class="xref py py-attr docutils literal notranslate"><span class="pre">WKBWriter.outdim</span></code></a> 文档。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBWriter.write">
+<code class="sig-name descname"><span class="pre">write</span></code>(<em><span class="n"><span class="pre">geom</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.WKBWriter.write" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将给定几何对象的 WKB 返回为 Python 的 <code class="docutils literal notranslate"><span class="pre">buffer</span></code> 对象。示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKBWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span> <span class="o">=</span> <span class="n">WKBWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&lt;read-only buffer for 0x103a898f0, size -1, offset 0 at 0x103a89930&gt;</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBWriter.write_hex">
+<code class="sig-name descname"><span class="pre">write_hex</span></code>(<em><span class="n"><span class="pre">geom</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.WKBWriter.write_hex" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>以十六进制返回几何对象的 WKB。示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKBWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span> <span class="o">=</span> <span class="n">WKBWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;0101000000000000000000F03F000000000000F03F&#39;</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBWriter.byteorder">
+<code class="sig-name descname"><span class="pre">byteorder</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKBWriter.byteorder" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>这个属性可以设置来改变几何表示的字节顺序。</p>
+<table class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">字节顺序值</th>
+<th class="head">描述</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>大端字节序（例如，与 RISC 系统兼容）</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>小端字节序（例如，与 x86 系统兼容）</td>
+</tr>
+</tbody>
+</table>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKBWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span> <span class="o">=</span> <span class="n">WKBWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;0101000000000000000000F03F000000000000F03F&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">byteorder</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="go">&#39;00000000013FF00000000000003FF0000000000000&#39;</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBWriter.outdim">
+<code class="sig-name descname"><span class="pre">outdim</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKBWriter.outdim" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>此属性可以设置为更改几何表示的输出维度。换句话说，如果您有一个三维几何对象，可以将其设置为 3，以便在 WKB 中包含 Z 值。</p>
+<table class="docutils">
+<colgroup>
+<col width="31%" />
+<col width="69%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Outdim 值</th>
+<th class="head">描述</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>2</td>
+<td>默认情况下，输出 2D WKB。</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>输出 3D WKB。</td>
+</tr>
+</tbody>
+</table>
+<p>例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKBWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span> <span class="o">=</span> <span class="n">WKBWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">outdim</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>  <span class="c1"># By default, no Z value included:</span>
+<span class="go">&#39;0101000000000000000000F03F000000000000F03F&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">outdim</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># Tell writer to include Z values</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;0101000080000000000000F03F000000000000F03F000000000000F03F&#39;</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKBWriter.srid">
+<code class="sig-name descname"><span class="pre">srid</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKBWriter.srid" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>将此属性设置为布尔值，以指示几何对象的 SRID 是否应包含在 WKB 表示中。示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKBWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span> <span class="o">=</span> <span class="n">WKBWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">srid</span><span class="o">=</span><span class="mi">4326</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>  <span class="c1"># By default, no SRID included:</span>
+<span class="go">&#39;0101000000000000000000F03F000000000000F03F&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">srid</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Tell writer to include SRID</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkb_w</span><span class="o">.</span><span class="n">write_hex</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;0101000020E6100000000000000000F03F000000000000F03F&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKTWriter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">WKTWriter</span></code>(<em><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em><span class="n"><span class="pre">trim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.WKTWriter" title="永久链接至目标">¶</a></dt>
+<dd><p>这个类允许输出几何对象的 WKT 表示。有关构造函数参数的详细信息，请参阅 <a class="reference internal" href="#django.contrib.gis.geos.WKBWriter.outdim" title="django.contrib.gis.geos.WKBWriter.outdim"><code class="xref py py-attr docutils literal notranslate"><span class="pre">WKBWriter.outdim</span></code></a>、<a class="reference internal" href="#django.contrib.gis.geos.WKTWriter.trim" title="django.contrib.gis.geos.WKTWriter.trim"><code class="xref py py-attr docutils literal notranslate"><span class="pre">trim</span></code></a> 和 <a class="reference internal" href="#django.contrib.gis.geos.WKTWriter.precision" title="django.contrib.gis.geos.WKTWriter.precision"><code class="xref py py-attr docutils literal notranslate"><span class="pre">precision</span></code></a> 属性。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKTWriter.write">
+<code class="sig-name descname"><span class="pre">write</span></code>(<em><span class="n"><span class="pre">geom</span></span></em>)<a class="headerlink" href="#django.contrib.gis.geos.WKTWriter.write" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>返回给定几何对象的 WKT。示例：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKTWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span> <span class="o">=</span> <span class="n">WKTWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;POINT (1.0000000000000000 1.0000000000000000)&#39;</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKTWriter.outdim">
+<code class="sig-name descname"><span class="pre">outdim</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKTWriter.outdim" title="永久链接至目标">¶</a></dt>
+<dd><p>查看 <a class="reference internal" href="#django.contrib.gis.geos.WKBWriter.outdim" title="django.contrib.gis.geos.WKBWriter.outdim"><code class="xref py py-attr docutils literal notranslate"><span class="pre">WKBWriter.outdim</span></code></a> 。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKTWriter.trim">
+<code class="sig-name descname"><span class="pre">trim</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKTWriter.trim" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>此属性用于启用或禁用修剪不必要的小数位。</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKTWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span> <span class="o">=</span> <span class="n">WKTWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">trim</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;POINT (1.0000000000000000 1.0000000000000000)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">trim</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;POINT (1 1)&#39;</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.WKTWriter.precision">
+<code class="sig-name descname"><span class="pre">precision</span></code><a class="headerlink" href="#django.contrib.gis.geos.WKTWriter.precision" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>此属性控制坐标的四舍五入精度；如果设置为 <code class="docutils literal notranslate"><span class="pre">None</span></code>，则禁用四舍五入。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.contrib.gis.geos</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">WKTWriter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pnt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mf">1.44</span><span class="p">,</span> <span class="mf">1.66</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span> <span class="o">=</span> <span class="n">WKTWriter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">wkt_w</span><span class="o">.</span><span class="n">precision</span><span class="p">)</span>
+<span class="go">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;POINT (1.4399999999999999 1.6599999999999999)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;POINT (1 2)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wkt_w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+<span class="go">&#39;POINT (1.4 1.7)&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="fnogc" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[1]</a></td><td>请参阅 <a class="reference external" href="https://postgis.net/docs/using_postgis_dbmanagement.html#EWKB_EWKT">PostGIS EWKB、EWKT 和规范形式</a>，PostGIS 文档第 4.1.2 章。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="s-settings">
+<span id="settings"></span><h2>配置<a class="headerlink" href="#settings" title="永久链接至标题">¶</a></h2>
+<div class="section" id="s-geos-library-path">
+<span id="s-std-setting-GEOS_LIBRARY_PATH"></span><span id="s-std:setting-GEOS_LIBRARY_PATH"></span><span id="geos-library-path"></span><span id="std-setting-GEOS_LIBRARY_PATH"></span><span id="std:setting-GEOS_LIBRARY_PATH"></span><h3><code class="docutils literal notranslate"><span class="pre">GEOS_LIBRARY_PATH</span></code><a class="headerlink" href="#geos-library-path" title="永久链接至标题">¶</a></h3>
+<p>一个字符串，指定 GEOS C 库的位置。通常情况下，只有在 GEOS C 库位于非标准位置时才使用此设置（例如，<code class="docutils literal notranslate"><span class="pre">/home/bob/lib/libgeos_c.so</span></code>）。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">这个配置必须是 <strong>C</strong> 共享库的 <em>完整</em> 路径；换句话说，你要使用 <code class="docutils literal notranslate"><span class="pre">libgeos_c.so</span></code>，而不是 <code class="docutils literal notranslate"><span class="pre">libgeos.so</span></code>。</p>
+</div>
+</div>
+</div>
+<div class="section" id="s-exceptions">
+<span id="exceptions"></span><h2>异常<a class="headerlink" href="#exceptions" title="永久链接至标题">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="django.contrib.gis.geos.GEOSException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">GEOSException</span></code><a class="headerlink" href="#django.contrib.gis.geos.GEOSException" title="永久链接至目标">¶</a></dt>
+<dd><p>基本的 GEOS 异常，表示与 GEOS 相关的错误。</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GEOS API</a><ul>
+<li><a class="reference internal" href="#background">背景</a><ul>
+<li><a class="reference internal" href="#what-is-geos">什么是 GEOS?</a></li>
+<li><a class="reference internal" href="#features">特性</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tutorial">教程</a><ul>
+<li><a class="reference internal" href="#creating-a-geometry">创建几何对象</a></li>
+<li><a class="reference internal" href="#geometries-are-pythonic">几何对象是符合 Python 风格的</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geometry-objects">几何对象</a><ul>
+<li><a class="reference internal" href="#geosgeometry"><code class="docutils literal notranslate"><span class="pre">GEOSGeometry</span></code></a><ul>
+<li><a class="reference internal" href="#properties">属性</a></li>
+<li><a class="reference internal" href="#output-properties">输出属性</a></li>
+<li><a class="reference internal" href="#spatial-predicate-methods">空间谓词方法</a></li>
+<li><a class="reference internal" href="#topological-methods">拓扑方法</a></li>
+<li><a class="reference internal" href="#topological-properties">拓扑属性</a></li>
+<li><a class="reference internal" href="#other-properties-methods">其他属性和方法</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#point"><code class="docutils literal notranslate"><span class="pre">Point</span></code></a></li>
+<li><a class="reference internal" href="#linestring"><code class="docutils literal notranslate"><span class="pre">LineString</span></code></a></li>
+<li><a class="reference internal" href="#linearring"><code class="docutils literal notranslate"><span class="pre">LinearRing</span></code></a></li>
+<li><a class="reference internal" href="#polygon"><code class="docutils literal notranslate"><span class="pre">Polygon</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geometry-collections">几何集合</a><ul>
+<li><a class="reference internal" href="#multipoint"><code class="docutils literal notranslate"><span class="pre">MultiPoint</span></code></a></li>
+<li><a class="reference internal" href="#multilinestring"><code class="docutils literal notranslate"><span class="pre">MultiLineString</span></code></a></li>
+<li><a class="reference internal" href="#multipolygon"><code class="docutils literal notranslate"><span class="pre">MultiPolygon</span></code></a></li>
+<li><a class="reference internal" href="#geometrycollection"><code class="docutils literal notranslate"><span class="pre">GeometryCollection</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prepared-geometries">准备好的几何对象</a><ul>
+<li><a class="reference internal" href="#preparedgeometry"><code class="docutils literal notranslate"><span class="pre">PreparedGeometry</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#geometry-factories">几何工厂</a></li>
+<li><a class="reference internal" href="#i-o-objects">I/O 对象</a><ul>
+<li><a class="reference internal" href="#reader-objects">读取器对象</a></li>
+<li><a class="reference internal" href="#writer-objects">写入器对象</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#settings">配置</a><ul>
+<li><a class="reference internal" href="#geos-library-path"><code class="docutils literal notranslate"><span class="pre">GEOS_LIBRARY_PATH</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#exceptions">异常</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="measure.html"
+                          title="上一章">测量对象</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="gdal.html"
+                          title="下一章">GDAL API</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/gis/geos.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="measure.html" title="测量对象">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="gdal.html" title="GDAL API">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

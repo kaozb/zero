@@ -1,0 +1,943 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PostgreSQL 特有模型字段 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/default.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../../../genindex.html" />
+    <link rel="search" title="搜索" href="../../../search.html" />
+    <link rel="next" title="PostgreSQL 特有表单字段和部件" href="forms.html" />
+    <link rel="prev" title="PostgreSQL 特有查询表达式" href="expressions.html" />
+
+
+
+ 
+<script src="../../../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../../templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../../../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../../../index.html">Home</a>  |
+        <a title="Table of contents" href="../../../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../../../genindex.html">Index</a>  |
+        <a title="Module index" href="../../../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="expressions.html" title="PostgreSQL 特有查询表达式">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="forms.html" title="PostgreSQL 特有表单字段和部件">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="ref-contrib-postgres-fields">
+            
+  <div class="section" id="s-postgresql-specific-model-fields">
+<span id="postgresql-specific-model-fields"></span><h1>PostgreSQL 特有模型字段<a class="headerlink" href="#postgresql-specific-model-fields" title="永久链接至标题">¶</a></h1>
+<p>所有这些字段都可以从 <code class="docutils literal notranslate"><span class="pre">django.contrib.postgres.field</span></code> 模块中获得。</p>
+<div class="section" id="s-indexing-these-fields">
+<span id="indexing-these-fields"></span><h2>对这些字段进行索引<a class="headerlink" href="#indexing-these-fields" title="永久链接至标题">¶</a></h2>
+<p><a class="reference internal" href="../../models/indexes.html#django.db.models.Index" title="django.db.models.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> 和 <a class="reference internal" href="../../models/fields.html#django.db.models.Field.db_index" title="django.db.models.Field.db_index"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Field.db_index</span></code></a> 都创建了一个 B 树索引，在查询复杂的数据类型时并不是特别有用。像 <a class="reference internal" href="indexes.html#django.contrib.postgres.indexes.GinIndex" title="django.contrib.postgres.indexes.GinIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">GinIndex</span></code></a> 和 <a class="reference internal" href="indexes.html#django.contrib.postgres.indexes.GistIndex" title="django.contrib.postgres.indexes.GistIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">GistIndex</span></code></a> 这样的索引比较适合，不过索引的选择取决于你使用的查询。一般来说，GiST 可能是 <a class="reference internal" href="#range-fields"><span class="std std-ref">range 字段</span></a> 和 <a class="reference internal" href="#django.contrib.postgres.fields.HStoreField" title="django.contrib.postgres.fields.HStoreField"><code class="xref py py-class docutils literal notranslate"><span class="pre">HStoreField</span></code></a> 的好选择，而 GIN 可能对 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 有帮助。</p>
+</div>
+<div class="section" id="s-arrayfield">
+<span id="arrayfield"></span><h2><code class="docutils literal notranslate"><span class="pre">ArrayField</span></code><a class="headerlink" href="#arrayfield" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.ArrayField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">ArrayField</span></code>(<em><span class="n"><span class="pre">base_field</span></span></em>, <em><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.ArrayField" title="永久链接至目标">¶</a></dt>
+<dd><p>一个用于存储数据列表的字段。大多数字段类型都可以使用，你可以通过另一个字段实例作为 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField.base_field" title="django.contrib.postgres.fields.ArrayField.base_field"><code class="xref py py-attr docutils literal notranslate"><span class="pre">base_field</span></code></a>。你也可以指定一个 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField.size" title="django.contrib.postgres.fields.ArrayField.size"><code class="xref py py-attr docutils literal notranslate"><span class="pre">size</span></code></a>。<code class="docutils literal notranslate"><span class="pre">ArrayField</span></code> 可以嵌套来存储多维数组。</p>
+<p>如果你给字段一个 <a class="reference internal" href="../../models/fields.html#django.db.models.Field.default" title="django.db.models.Field.default"><code class="xref py py-attr docutils literal notranslate"><span class="pre">default</span></code></a>，确保它是一个可调用对象，比如 <code class="docutils literal notranslate"><span class="pre">list</span></code> （对于一个空的默认值），或者一个返回一个列表的可调用对象（比如一个函数）。错误地使用 <code class="docutils literal notranslate"><span class="pre">default=[]</span></code> 会创建一个可变的默认值，这个默认值在 <code class="docutils literal notranslate"><span class="pre">ArrayField</span></code> 的所有实例之间共享。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.ArrayField.base_field">
+<code class="sig-name descname"><span class="pre">base_field</span></code><a class="headerlink" href="#django.contrib.postgres.fields.ArrayField.base_field" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个必要的参数。</p>
+<p>指定数组的底层数据类型和行为。它应该是 <a class="reference internal" href="../../models/fields.html#django.db.models.Field" title="django.db.models.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a> 子类的实例。例如，它可以是一个 <a class="reference internal" href="../../models/fields.html#django.db.models.IntegerField" title="django.db.models.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a> 或一个 <a class="reference internal" href="../../models/fields.html#django.db.models.CharField" title="django.db.models.CharField"><code class="xref py py-class docutils literal notranslate"><span class="pre">CharField</span></code></a>。大多数字段类型都是允许的，但不包括处理关系数据的字段（<a class="reference internal" href="../../models/fields.html#django.db.models.ForeignKey" title="django.db.models.ForeignKey"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForeignKey</span></code></a>、<a class="reference internal" href="../../models/fields.html#django.db.models.OneToOneField" title="django.db.models.OneToOneField"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneToOneField</span></code></a> 和 <a class="reference internal" href="../../models/fields.html#django.db.models.ManyToManyField" title="django.db.models.ManyToManyField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ManyToManyField</span></code></a>）以及文件字段（<a class="reference internal" href="../../models/fields.html#django.db.models.FileField" title="django.db.models.FileField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileField</span></code></a> 和 <a class="reference internal" href="../../models/fields.html#django.db.models.ImageField" title="django.db.models.ImageField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageField</span></code></a>）。</p>
+<p>可以嵌套数组字段——你可以指定一个 <code class="docutils literal notranslate"><span class="pre">ArrayField</span></code> 的实例作为 <code class="docutils literal notranslate"><span class="pre">base_field</span></code>。例如：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.postgres.fields</span> <span class="kn">import</span> <span class="n">ArrayField</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">ChessBoard</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">board</span> <span class="o">=</span> <span class="n">ArrayField</span><span class="p">(</span>
+        <span class="n">ArrayField</span><span class="p">(</span>
+            <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>数据库和模型之间的值的转换、数据和配置的验证以及序列化都是委托给底层基础字段的。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.ArrayField.size">
+<code class="sig-name descname"><span class="pre">size</span></code><a class="headerlink" href="#django.contrib.postgres.fields.ArrayField.size" title="永久链接至目标">¶</a></dt>
+<dd><p>这是一个可选的参数。</p>
+<p>如果传入，数组将有一个指定的最大大小。这将被传递给数据库，尽管 PostgreSQL 目前并没有强制执行这个限制。</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p>嵌套 <code class="docutils literal notranslate"><span class="pre">ArrayField</span></code> 时，无论是否使用 <code class="docutils literal notranslate"><span class="pre">size</span></code> 参数，PostgreSQL 都要求数组为矩形：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.postgres.fields</span> <span class="kn">import</span> <span class="n">ArrayField</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Board</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">pieces</span> <span class="o">=</span> <span class="n">ArrayField</span><span class="p">(</span><span class="n">ArrayField</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">()))</span>
+
+
+<span class="c1"># Valid</span>
+<span class="n">Board</span><span class="p">(</span>
+    <span class="n">pieces</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Not valid</span>
+<span class="n">Board</span><span class="p">(</span>
+    <span class="n">pieces</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+        <span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p class="last">如果需要不规则的形状，则应将底层字段设为 null，并将值用 <code class="docutils literal notranslate"><span class="pre">None</span></code> 填充。</p>
+</div>
+<div class="section" id="s-querying-arrayfield">
+<span id="querying-arrayfield"></span><h3>查询 <code class="docutils literal notranslate"><span class="pre">ArrayField</span></code><a class="headerlink" href="#querying-arrayfield" title="永久链接至标题">¶</a></h3>
+<p><a class="reference internal" href="#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 有许多自定义的查找和转换。我们将使用下面的示例模型：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.postgres.fields</span> <span class="kn">import</span> <span class="n">ArrayField</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Post</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">ArrayField</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">),</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<div class="section" id="s-contains">
+<span id="s-std-fieldlookup-arrayfield.contains"></span><span id="s-std:fieldlookup-arrayfield.contains"></span><span id="contains"></span><span id="std-fieldlookup-arrayfield.contains"></span><span id="std:fieldlookup-arrayfield.contains"></span><h4><code class="docutils literal notranslate"><span class="pre">contains</span></code><a class="headerlink" href="#contains" title="永久链接至标题">¶</a></h4>
+<p><a class="reference internal" href="#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 上重写了 <a class="reference internal" href="../../models/querysets.html#std-fieldlookup-contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">contains</span></code></a> 查询。返回的对象将是那些传递的值是数据的子集的对象。它使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">&#64;&gt;</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;First post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Third post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tutorial&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__contains</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__contains</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Third post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__contains</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;django&quot;</span><span class="p">,</span> <span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-contained-by">
+<span id="s-std-fieldlookup-arrayfield.contained_by"></span><span id="s-std:fieldlookup-arrayfield.contained_by"></span><span id="contained-by"></span><span id="std-fieldlookup-arrayfield.contained_by"></span><span id="std:fieldlookup-arrayfield.contained_by"></span><h4><code class="docutils literal notranslate"><span class="pre">contained_by</span></code><a class="headerlink" href="#contained-by" title="永久链接至标题">¶</a></h4>
+<p>这是 <a class="reference internal" href="#std-fieldlookup-arrayfield.contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">contains</span></code></a> 查询的反向操作 - 返回的对象将是那些数据是传递的值的子集的对象。它使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">&lt;&#64;</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;First post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Third post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tutorial&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__contained_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__contained_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">,</span> <span class="s2">&quot;tutorial&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;, &lt;Post: Third post&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-overlap">
+<span id="s-std-fieldlookup-arrayfield.overlap"></span><span id="s-std:fieldlookup-arrayfield.overlap"></span><span id="overlap"></span><span id="std-fieldlookup-arrayfield.overlap"></span><span id="std:fieldlookup-arrayfield.overlap"></span><h4><code class="docutils literal notranslate"><span class="pre">overlap</span></code><a class="headerlink" href="#overlap" title="永久链接至标题">¶</a></h4>
+<p>返回数据与传递的值共享任何结果的对象。使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;First post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;tutorial&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Third post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tutorial&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__overlap</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__overlap</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;tutorial&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;, &lt;Post: Third post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__overlap</span><span class="o">=</span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s2">&quot;tags&quot;</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;, &lt;Post: Third post&gt;]&gt;</span>
+</pre></div>
+</div>
+<div class="versionchanged">
+<span class="title">Changed in Django 4.2:</span> <p>添加了 <code class="docutils literal notranslate"><span class="pre">QuerySet.values()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">values_list()</span></code> 作为右操作数的支持。</p>
+</div>
+</div>
+<div class="section" id="s-len">
+<span id="s-std-fieldlookup-arrayfield.len"></span><span id="s-std:fieldlookup-arrayfield.len"></span><span id="len"></span><span id="std-fieldlookup-arrayfield.len"></span><span id="std:fieldlookup-arrayfield.len"></span><h4><code class="docutils literal notranslate"><span class="pre">len</span></code><a class="headerlink" href="#len" title="永久链接至标题">¶</a></h4>
+<p>返回数组的长度。之后可用的查询与 <a class="reference internal" href="../../models/fields.html#django.db.models.IntegerField" title="django.db.models.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a> 相同。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;First post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__len</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Post: Second post&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-index-transforms">
+<span id="s-std-fieldlookup-arrayfield.index"></span><span id="s-std:fieldlookup-arrayfield.index"></span><span id="index-transforms"></span><span id="std-fieldlookup-arrayfield.index"></span><span id="std:fieldlookup-arrayfield.index"></span><h4>索引转换<a class="headerlink" href="#index-transforms" title="永久链接至标题">¶</a></h4>
+<p>Index 转换将索引转换为数组。可以使用任何非负整数。如果超过数组的 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField.size" title="django.contrib.postgres.fields.ArrayField.size"><code class="xref py py-attr docutils literal notranslate"><span class="pre">size</span></code></a>，则不会出现错误。转换后可用的查询是来自 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField.base_field" title="django.contrib.postgres.fields.ArrayField.base_field"><code class="xref py py-attr docutils literal notranslate"><span class="pre">base_field</span></code></a> 的查询。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;First post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__0</span><span class="o">=</span><span class="s2">&quot;thoughts&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__1__iexact</span><span class="o">=</span><span class="s2">&quot;Django&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__276</span><span class="o">=</span><span class="s2">&quot;javascript&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet []&gt;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">PostgreSQL 在编写原始 SQL 时，对数组字段使用基于 1 的索引。然而这些索引和 <a class="reference internal" href="#std-fieldlookup-arrayfield.slice"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">slices</span></code></a> 中使用的索引使用基于 0 的索引，以与 Python 保持一致。</p>
+</div>
+</div>
+<div class="section" id="s-slice-transforms">
+<span id="s-std-fieldlookup-arrayfield.slice"></span><span id="s-std:fieldlookup-arrayfield.slice"></span><span id="slice-transforms"></span><span id="std-fieldlookup-arrayfield.slice"></span><span id="std:fieldlookup-arrayfield.slice"></span><h4>切片转换<a class="headerlink" href="#slice-transforms" title="永久链接至标题">¶</a></h4>
+<p>Slice 转换获取数组的一个切片。可以使用两个非负整数，用一个下划线分隔。转换后可用的查询不会改变。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;First post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">,</span> <span class="s2">&quot;django&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Second post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Third post&quot;</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;django&quot;</span><span class="p">,</span> <span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__0_1</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__0_2__contains</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thoughts&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Post: First post&gt;, &lt;Post: Second post&gt;]&gt;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">PostgreSQL 在编写原始 SQL 时，对数组字段使用基于 1 的索引。然而这些分片和 <a class="reference internal" href="#std-fieldlookup-arrayfield.index"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">indexes</span></code></a> 中使用的分片使用基于 0 的索引，以与 Python 保持一致。</p>
+</div>
+<div class="admonition-multidimensional-arrays-with-indexes-and-slices admonition">
+<p class="first admonition-title">带索引和切片的多维数组</p>
+<p class="last">PostgreSQL 在多维数组上使用索引和切片时，有一些相当神秘的行为。使用索引向下到达最终的底层数据总是可行的，但是大多数其他的切片在数据库层面的行为很奇怪，不能被 Django 以逻辑的、一致的方式支持。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-citext-fields">
+<span id="citext-fields"></span><h2><code class="docutils literal notranslate"><span class="pre">CIText</span></code> 字段<a class="headerlink" href="#citext-fields" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.CIText">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">CIText</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.CIText" title="永久链接至目标">¶</a></dt>
+<dd><div class="deprecated">
+<p><span class="versionmodified deprecated">4.2 版后已移除.</span></p>
+</div>
+<p>一个用于创建由 <a class="reference external" href="https://www.postgresql.org/docs/current/citext.html">citext</a> 类型支持的不区分大小写的文本字段的混入。在使用它之前，请阅读 <a class="reference external" href="https://www.postgresql.org/docs/current/citext.html#id-1.11.7.19.9">性能考虑因素</a> 。</p>
+<p>要使用 <code class="docutils literal notranslate"><span class="pre">citext</span></code>，使用 <code class="xref py py-class docutils literal notranslate"><span class="pre">CITextExtension</span> <span class="pre">`</span> <span class="pre">操作，在第一次</span> <span class="pre">``CreateModel`</span></code> 迁移操作之前，在 PostgreSQL 中 <a class="reference internal" href="operations.html#create-postgresql-extensions"><span class="std std-ref">安装 citext 扩展</span></a>。</p>
+<p>如果你使用的是 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 的 <code class="docutils literal notranslate"><span class="pre">CIText</span></code> 字段，你必须在你的 <a class="reference internal" href="../../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中添加 <code class="docutils literal notranslate"><span class="pre">'django.contrib.postgres'</span></code>，否则字段值会以字符串形式出现，比如 <code class="docutils literal notranslate"><span class="pre">'{thoughts,django}'</span></code>。</p>
+<p>提供了几个使用混入的字段：</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.CICharField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">CICharField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.CICharField" title="永久链接至目标">¶</a></dt>
+<dd><div class="deprecated">
+<p><span class="versionmodified deprecated">4.2 版后已移除: </span><code class="docutils literal notranslate"><span class="pre">CICharField</span></code> 已被弃用，推荐使用 <code class="docutils literal notranslate"><span class="pre">CharField(db_collation=&quot;…&quot;)</span></code> 并使用不区分大小写的非确定性排序规则。</p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.CIEmailField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">CIEmailField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.CIEmailField" title="永久链接至目标">¶</a></dt>
+<dd><div class="deprecated">
+<p><span class="versionmodified deprecated">4.2 版后已移除: </span><code class="docutils literal notranslate"><span class="pre">CIEmailField</span></code> 已被弃用，推荐使用 <code class="docutils literal notranslate"><span class="pre">EmailField(db_collation=&quot;…&quot;)</span></code> 并使用不区分大小写的非确定性排序规则。</p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.CITextField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">CITextField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.CITextField" title="永久链接至目标">¶</a></dt>
+<dd><div class="deprecated">
+<p><span class="versionmodified deprecated">4.2 版后已移除: </span><code class="docutils literal notranslate"><span class="pre">CITextField</span></code> 已被弃用，推荐使用 <code class="docutils literal notranslate"><span class="pre">TextField(db_collation=&quot;…&quot;)</span></code> 并使用不区分大小写的非确定性排序规则。</p>
+</div>
+<p>这些字段分别是 <a class="reference internal" href="../../models/fields.html#django.db.models.CharField" title="django.db.models.CharField"><code class="xref py py-class docutils literal notranslate"><span class="pre">CharField</span></code></a>、<a class="reference internal" href="../../models/fields.html#django.db.models.EmailField" title="django.db.models.EmailField"><code class="xref py py-class docutils literal notranslate"><span class="pre">EmailField</span></code></a> 和 <a class="reference internal" href="../../models/fields.html#django.db.models.TextField" title="django.db.models.TextField"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextField</span></code></a> 的子类。</p>
+<p><code class="docutils literal notranslate"><span class="pre">max_length</span></code> 不会在数据库中强制执行，因为 <code class="docutils literal notranslate"><span class="pre">citext</span></code> 与 PostgreSQL 的 <code class="docutils literal notranslate"><span class="pre">text</span></code> 类型相似。</p>
+</dd></dl>
+
+<div class="admonition-case-insensitive-collations admonition">
+<p class="first admonition-title">不区分大小写的字节序</p>
+<p class="last">最好使用非确定性排序规则而不是 <code class="docutils literal notranslate"><span class="pre">citext</span></code> 扩展。您可以使用 <a class="reference internal" href="operations.html#django.contrib.postgres.operations.CreateCollation" title="django.contrib.postgres.operations.CreateCollation"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateCollation</span></code></a> 迁移操作来创建它们。有关更多详细信息，请参阅 <a class="reference internal" href="operations.html#manage-postgresql-collations"><span class="std std-ref">使用迁移来管理整理</span></a> 和 PostgreSQL 文档中关于 <a class="reference external" href="https://www.postgresql.org/docs/current/collation.html#COLLATION-NONDETERMINISTIC">非确定性排序规则</a> 的部分。</p>
+</div>
+</div>
+<div class="section" id="s-hstorefield">
+<span id="hstorefield"></span><h2><code class="docutils literal notranslate"><span class="pre">HStoreField</span></code><a class="headerlink" href="#hstorefield" title="永久链接至标题">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.HStoreField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">HStoreField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.HStoreField" title="永久链接至目标">¶</a></dt>
+<dd><p>一个用于存储键值对的字段。使用的 Python 数据类型是 <code class="docutils literal notranslate"><span class="pre">dict</span></code>。键必须是字符串，值可以是字符串或空值（Python 中的 <code class="docutils literal notranslate"><span class="pre">None</span></code>）。</p>
+<p>要使用该字段，你需要：</p>
+<ol class="arabic simple">
+<li>在你的 <a class="reference internal" href="../../settings.html#std-setting-INSTALLED_APPS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">INSTALLED_APPS</span></code></a> 中增加 <code class="docutils literal notranslate"><span class="pre">'django.contrib.postgres'</span></code>。</li>
+<li>在 PostgreSQL 中 <a class="reference internal" href="operations.html#create-postgresql-extensions"><span class="std std-ref">安装 hstore 扩展</span></a>。</li>
+</ol>
+<p>如果你跳过第一步，你会看到一个错误，比如 <code class="docutils literal notranslate"><span class="pre">can't</span> <span class="pre">adapt</span> <span class="pre">type</span> <span class="pre">'dict'</span></code>，如果你跳过第二步，你会看到 <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">&quot;hstore&quot;</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">exist</span></code>。</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">在某些情况下，可能需要要求或限制对某个字段有效的键。这可以使用 <a class="reference internal" href="validators.html#django.contrib.postgres.validators.KeysValidator" title="django.contrib.postgres.validators.KeysValidator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KeysValidator</span></code></a> 来完成。</p>
+</div>
+<div class="section" id="s-querying-hstorefield">
+<span id="querying-hstorefield"></span><h3>查询 <code class="docutils literal notranslate"><span class="pre">HStoreField</span></code><a class="headerlink" href="#querying-hstorefield" title="永久链接至标题">¶</a></h3>
+<p>除了按键查询的功能外，<code class="docutils literal notranslate"><span class="pre">HStoreField</span></code> 还有一些自定义查询功能。</p>
+<p>我们将使用以下示例模型：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.postgres.fields</span> <span class="kn">import</span> <span class="n">HStoreField</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Dog</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">HStoreField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<div class="section" id="s-key-lookups">
+<span id="s-std-fieldlookup-hstorefield.key"></span><span id="s-std:fieldlookup-hstorefield.key"></span><span id="key-lookups"></span><span id="std-fieldlookup-hstorefield.key"></span><span id="std:fieldlookup-hstorefield.key"></span><h4>键查找<a class="headerlink" href="#key-lookups" title="永久链接至标题">¶</a></h4>
+<p>要根据给定的键查询，您可以将该键用作查找名称：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;labrador&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__breed</span><span class="o">=</span><span class="s2">&quot;collie&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+<p>您可以在键查找后链接其他查询：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__breed__contains</span><span class="o">=</span><span class="s2">&quot;l&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Rufus&gt;, &lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+<p>或者使用 <code class="docutils literal notranslate"><span class="pre">F()</span></code> 表达式来注释一个键值。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.models</span> <span class="kn">import</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rufus</span> <span class="o">=</span> <span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">breed</span><span class="o">=</span><span class="n">F</span><span class="p">(</span><span class="s2">&quot;data__breed&quot;</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rufus</span><span class="o">.</span><span class="n">breed</span>
+<span class="go">&#39;labrador&#39;</span>
+</pre></div>
+</div>
+<p>如果你想查询的键与另一个查找的名称冲突，你需要使用 <a class="reference internal" href="#std-fieldlookup-hstorefield.contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">hstorefield.contains</span></code></a> 查找来代替。</p>
+<div class="admonition note">
+<p class="first admonition-title">备注</p>
+<p class="last">关键词转换也可以与以下链式进行： <a class="reference internal" href="../../models/querysets.html#std-fieldlookup-contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">contains</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-icontains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">icontains</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-endswith"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">endswith</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-iendswith"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">iendswith</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-iexact"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">iexact</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-regex"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">regex</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-iregex"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">iregex</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-startswith"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">startswith</span></code></a> 和 <a class="reference internal" href="../../models/querysets.html#std-fieldlookup-istartswith"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">istartswith</span></code></a> 查询。</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">由于任何字符串都可能是 hstore 值中的一个键，因此除了下面列出的以外的任何查询都将被解释为键查询。不会出现任何错误。要格外小心输入错误，并始终检查你的查询是否按照你的意图工作。</p>
+</div>
+</div>
+<div class="section" id="s-std-fieldlookup-hstorefield.contains">
+<span id="s-std:fieldlookup-hstorefield.contains"></span><span id="s-id1"></span><span id="std-fieldlookup-hstorefield.contains"></span><span id="std:fieldlookup-hstorefield.contains"></span><span id="id1"></span><h4><code class="docutils literal notranslate"><span class="pre">contains</span></code><a class="headerlink" href="#std-fieldlookup-hstorefield.contains" title="永久链接至标题">¶</a></h4>
+<p><a class="reference internal" href="#django.contrib.postgres.fields.HStoreField" title="django.contrib.postgres.fields.HStoreField"><code class="xref py py-class docutils literal notranslate"><span class="pre">HStoreField</span></code></a> 上重写了 <a class="reference internal" href="../../models/querysets.html#std-fieldlookup-contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">contains</span></code></a> 查询。返回的对象是那些给定的键值对字典都包含在字段中的对象。它使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">&#64;&gt;</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;labrador&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Fred&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__contains</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Rufus&gt;, &lt;Dog: Meg&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__contains</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">})</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-std-fieldlookup-hstorefield.contained_by">
+<span id="s-std:fieldlookup-hstorefield.contained_by"></span><span id="s-id2"></span><span id="std-fieldlookup-hstorefield.contained_by"></span><span id="std:fieldlookup-hstorefield.contained_by"></span><span id="id2"></span><h4><code class="docutils literal notranslate"><span class="pre">contained_by</span></code><a class="headerlink" href="#std-fieldlookup-hstorefield.contained_by" title="永久链接至标题">¶</a></h4>
+<p>这是 <a class="reference internal" href="#std-fieldlookup-hstorefield.contains"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">contains</span></code></a> 查询的反向操作 - 返回的对象将是那些对象的键值对是传递值中的子集。它使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">&lt;&#64;</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;labrador&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Fred&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__contained_by</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Meg&gt;, &lt;Dog: Fred&gt;]&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__contained_by</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">})</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Fred&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-has-key">
+<span id="s-std-fieldlookup-hstorefield.has_key"></span><span id="s-std:fieldlookup-hstorefield.has_key"></span><span id="has-key"></span><span id="std-fieldlookup-hstorefield.has_key"></span><span id="std:fieldlookup-hstorefield.has_key"></span><h4><code class="docutils literal notranslate"><span class="pre">has_key</span></code><a class="headerlink" href="#has-key" title="永久链接至标题">¶</a></h4>
+<p>返回包含给定键的数据的对象。使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">?</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;labrador&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__has_key</span><span class="o">=</span><span class="s2">&quot;owner&quot;</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-has-any-keys">
+<span id="s-std-fieldlookup-hstorefield.has_any_keys"></span><span id="s-std:fieldlookup-hstorefield.has_any_keys"></span><span id="has-any-keys"></span><span id="std-fieldlookup-hstorefield.has_any_keys"></span><span id="std:fieldlookup-hstorefield.has_any_keys"></span><h4><code class="docutils literal notranslate"><span class="pre">has_any_keys</span></code><a class="headerlink" href="#has-any-keys" title="永久链接至标题">¶</a></h4>
+<p>返回其中任何给定键存在于数据中的对象。使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">?|</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;labrador&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Fred&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__has_any_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;owner&quot;</span><span class="p">,</span> <span class="s2">&quot;breed&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Rufus&gt;, &lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-has-keys">
+<span id="s-std-fieldlookup-hstorefield.has_keys"></span><span id="s-std:fieldlookup-hstorefield.has_keys"></span><span id="has-keys"></span><span id="std-fieldlookup-hstorefield.has_keys"></span><span id="std:fieldlookup-hstorefield.has_keys"></span><h4><code class="docutils literal notranslate"><span class="pre">has_keys</span></code><a class="headerlink" href="#has-keys" title="永久链接至标题">¶</a></h4>
+<p>返回其中所有给定键都存在于数据中的对象。使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">?&amp;</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__has_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;breed&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-keys">
+<span id="s-std-fieldlookup-hstorefield.keys"></span><span id="s-std:fieldlookup-hstorefield.keys"></span><span id="keys"></span><span id="std-fieldlookup-hstorefield.keys"></span><span id="std:fieldlookup-hstorefield.keys"></span><h4><code class="docutils literal notranslate"><span class="pre">keys</span></code><a class="headerlink" href="#keys" title="永久链接至标题">¶</a></h4>
+<p>返回键数组与给定值相等的对象。请注意，顺序不能保证可靠，因此此转换主要用于与 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 上的查找一起使用。使用 SQL 函数 <code class="docutils literal notranslate"><span class="pre">akeys()</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;toy&quot;</span><span class="p">:</span> <span class="s2">&quot;bone&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__keys__overlap</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;breed&quot;</span><span class="p">,</span> <span class="s2">&quot;toy&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Rufus&gt;, &lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-values">
+<span id="s-std-fieldlookup-hstorefield.values"></span><span id="s-std:fieldlookup-hstorefield.values"></span><span id="values"></span><span id="std-fieldlookup-hstorefield.values"></span><span id="std:fieldlookup-hstorefield.values"></span><h4><code class="docutils literal notranslate"><span class="pre">values</span></code><a class="headerlink" href="#values" title="永久链接至标题">¶</a></h4>
+<p>返回值数组与给定值相等的对象。请注意，顺序不能保证可靠，因此此转换主要用于与 <a class="reference internal" href="#django.contrib.postgres.fields.ArrayField" title="django.contrib.postgres.fields.ArrayField"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayField</span></code></a> 上的查找一起使用。使用 SQL 函数 <code class="docutils literal notranslate"><span class="pre">avals()</span></code>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Rufus&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;labrador&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Meg&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;breed&quot;</span><span class="p">:</span> <span class="s2">&quot;collie&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">})</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dog</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">data__values__contains</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;collie&quot;</span><span class="p">])</span>
+<span class="go">&lt;QuerySet [&lt;Dog: Meg&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-range-fields">
+<span id="s-id3"></span><span id="range-fields"></span><span id="id3"></span><h2>范围字段<a class="headerlink" href="#range-fields" title="永久链接至标题">¶</a></h2>
+<p>有五种范围字段类型，对应 PostgreSQL 中内置的范围类型。这些字段用来存储一个范围的值，例如一个事件的开始和结束时间戳，或者一个活动适合的年龄范围。</p>
+<p>所有的范围字段在 Python 中都会翻译成 <a class="reference external" href="https://www.psycopg.org/psycopg3/docs/basic/pgtypes.html#adapt-range" title="(在 psycopg)"><span class="xref std std-ref">psycopg Range 对象</span></a>，但如果不需要边界信息，也可以接受元组作为输入。默认是包含下界，不包含上界，即 <code class="docutils literal notranslate"><span class="pre">[)</span></code> （有关 <a class="reference external" href="https://www.postgresql.org/docs/current/rangetypes.html#RANGETYPES-IO">不同边界</a> 的详细信息，请参阅 PostgreSQL 文档）。对于非离散范围字段（例如 <a class="reference internal" href="#django.contrib.postgres.fields.DateTimeRangeField" title="django.contrib.postgres.fields.DateTimeRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeRangeField</span></code></a> 和 <a class="reference internal" href="#django.contrib.postgres.fields.DecimalRangeField" title="django.contrib.postgres.fields.DecimalRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecimalRangeField</span></code></a>），可以使用 <code class="docutils literal notranslate"><span class="pre">default_bounds</span></code> 参数更改默认边界。</p>
+<div class="section" id="s-integerrangefield">
+<span id="integerrangefield"></span><h3><code class="docutils literal notranslate"><span class="pre">IntegerRangeField</span></code><a class="headerlink" href="#integerrangefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.IntegerRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">IntegerRangeField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.IntegerRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>存储一组整数范围。基于 <a class="reference internal" href="../../models/fields.html#django.db.models.IntegerField" title="django.db.models.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a>。在数据库中由 <code class="docutils literal notranslate"><span class="pre">int4range</span></code> 表示，在 Python 中由 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.NumericRange</span></code> 表示。</p>
+<p>无论在保存数据时指定的边界是什么，PostgreSQL 总是以规范的形式返回一个包括下限和排除上限的范围，即 <code class="docutils literal notranslate"><span class="pre">[)</span></code>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-bigintegerrangefield">
+<span id="bigintegerrangefield"></span><h3><code class="docutils literal notranslate"><span class="pre">BigIntegerRangeField</span></code><a class="headerlink" href="#bigintegerrangefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.BigIntegerRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">BigIntegerRangeField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.BigIntegerRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>存储一组大整数范围。基于 <a class="reference internal" href="../../models/fields.html#django.db.models.BigIntegerField" title="django.db.models.BigIntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BigIntegerField</span></code></a>。在数据库中由 <code class="docutils literal notranslate"><span class="pre">int8range</span></code> 表示，在 Python 中由 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.NumericRange</span></code> 表示。</p>
+<p>无论在保存数据时指定的边界是什么，PostgreSQL 总是以规范的形式返回一个包括下限和排除上限的范围，即 <code class="docutils literal notranslate"><span class="pre">[)</span></code>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-decimalrangefield">
+<span id="decimalrangefield"></span><h3><code class="docutils literal notranslate"><span class="pre">DecimalRangeField</span></code><a class="headerlink" href="#decimalrangefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.DecimalRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DecimalRangeField</span></code>(<em><span class="n"><span class="pre">default_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[)'</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.DecimalRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>存储一组浮点数值范围。基于 <a class="reference internal" href="../../models/fields.html#django.db.models.DecimalField" title="django.db.models.DecimalField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecimalField</span></code></a>。在数据库中由 <code class="docutils literal notranslate"><span class="pre">numrange</span></code> 表示，在 Python 中由 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.NumericRange</span></code> 表示。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.DecimalRangeField.default_bounds">
+<code class="sig-name descname"><span class="pre">default_bounds</span></code><a class="headerlink" href="#django.contrib.postgres.fields.DecimalRangeField.default_bounds" title="永久链接至目标">¶</a></dt>
+<dd><p>可选。列表和元组输入的 <code class="docutils literal notranslate"><span class="pre">bounds</span></code> 值。默认为包含下界，不包含上界，即 <code class="docutils literal notranslate"><span class="pre">[)</span></code> （有关 <a class="reference external" href="https://www.postgresql.org/docs/current/rangetypes.html#RANGETYPES-IO">不同边界</a> 的详细信息，请参阅 PostgreSQL 文档）。<code class="docutils literal notranslate"><span class="pre">default_bounds</span></code> 不用于 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.NumericRange</span></code> 输入。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-datetimerangefield">
+<span id="datetimerangefield"></span><h3><code class="docutils literal notranslate"><span class="pre">DateTimeRangeField</span></code><a class="headerlink" href="#datetimerangefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.DateTimeRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DateTimeRangeField</span></code>(<em><span class="n"><span class="pre">default_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[)'</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.DateTimeRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>存储一组时间戳范围。基于 <a class="reference internal" href="../../models/fields.html#django.db.models.DateTimeField" title="django.db.models.DateTimeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeField</span></code></a>。在数据库中由 <code class="docutils literal notranslate"><span class="pre">tstzrange</span></code> 表示，在 Python 中由 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.DateTimeTZRange</span></code> 表示。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.DateTimeRangeField.default_bounds">
+<code class="sig-name descname"><span class="pre">default_bounds</span></code><a class="headerlink" href="#django.contrib.postgres.fields.DateTimeRangeField.default_bounds" title="永久链接至目标">¶</a></dt>
+<dd><p>可选。列表和元组输入的 <code class="docutils literal notranslate"><span class="pre">bounds</span></code> 值。默认为包含下界，不包含上界，即 <code class="docutils literal notranslate"><span class="pre">[)</span></code> （有关 <a class="reference external" href="https://www.postgresql.org/docs/current/rangetypes.html#RANGETYPES-IO">不同边界</a> 的详细信息，请参阅 PostgreSQL 文档）。<code class="docutils literal notranslate"><span class="pre">default_bounds</span></code> 不用于 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.DateTimeTZRange</span></code> 输入。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-daterangefield">
+<span id="daterangefield"></span><h3><code class="docutils literal notranslate"><span class="pre">DateRangeField</span></code><a class="headerlink" href="#daterangefield" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.DateRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">DateRangeField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.DateRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>存储一组日期范围。基于 <a class="reference internal" href="../../models/fields.html#django.db.models.DateField" title="django.db.models.DateField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateField</span></code></a>。在数据库中由 <code class="docutils literal notranslate"><span class="pre">daterange</span></code> 表示，在 Python 中由 <code class="docutils literal notranslate"><span class="pre">django.db.backends.postgresql.psycopg_any.DateRange</span></code> 表示。</p>
+<p>无论在保存数据时指定的边界是什么，PostgreSQL 总是以规范的形式返回一个包括下限和排除上限的范围，即 <code class="docutils literal notranslate"><span class="pre">[)</span></code>。</p>
+</dd></dl>
+
+</div>
+<div class="section" id="s-querying-range-fields">
+<span id="querying-range-fields"></span><h3>查询范围字段<a class="headerlink" href="#querying-range-fields" title="永久链接至标题">¶</a></h3>
+<p>对于范围字段，有许多自定义查找和转换。它们适用于所有上述字段，但我们将使用以下示例模型：</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.contrib.postgres.fields</span> <span class="kn">import</span> <span class="n">IntegerRangeField</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Event</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">ages</span> <span class="o">=</span> <span class="n">IntegerRangeField</span><span class="p">()</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</pre></div>
+</div>
+<p>我们还将使用以下示例对象：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.utils</span> <span class="kn">import</span> <span class="n">timezone</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">now</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Soft play&quot;</span><span class="p">,</span> <span class="n">ages</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="n">now</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Pub trip&quot;</span><span class="p">,</span> <span class="n">ages</span><span class="o">=</span><span class="p">(</span><span class="mi">21</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="n">now</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>和 <code class="docutils literal notranslate"><span class="pre">NumericRange</span></code>：</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.backends.postgresql.psycopg_any</span> <span class="kn">import</span> <span class="n">NumericRange</span>
+</pre></div>
+</div>
+<div class="section" id="s-containment-functions">
+<span id="containment-functions"></span><h4>包含函数<a class="headerlink" href="#containment-functions" title="永久链接至标题">¶</a></h4>
+<p>与其他 PostgreSQL 字段一样，有三个标准的包含运算符。<code class="docutils literal notranslate"><span class="pre">contains</span></code>、<code class="docutils literal notranslate"><span class="pre">contained_by</span></code> 和 <code class="docutils literal notranslate"><span class="pre">overlap</span></code>，分别使用 SQL 运算符 <code class="docutils literal notranslate"><span class="pre">&#64;&gt;</span></code>、<code class="docutils literal notranslate"><span class="pre">&lt;&#64;</span></code> 和 <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>。</p>
+<div class="section" id="s-std-fieldlookup-rangefield.contains">
+<span id="s-std:fieldlookup-rangefield.contains"></span><span id="s-id4"></span><span id="std-fieldlookup-rangefield.contains"></span><span id="std:fieldlookup-rangefield.contains"></span><span id="id4"></span><h5><code class="docutils literal notranslate"><span class="pre">contains</span></code><a class="headerlink" href="#std-fieldlookup-rangefield.contains" title="永久链接至标题">¶</a></h5>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__contains</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-std-fieldlookup-rangefield.contained_by">
+<span id="s-std:fieldlookup-rangefield.contained_by"></span><span id="s-id5"></span><span id="std-fieldlookup-rangefield.contained_by"></span><span id="std:fieldlookup-rangefield.contained_by"></span><span id="id5"></span><h5><code class="docutils literal notranslate"><span class="pre">contained_by</span></code><a class="headerlink" href="#std-fieldlookup-rangefield.contained_by" title="永久链接至标题">¶</a></h5>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__contained_by</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">contained_by</span></code> 查询也适用于非范围字段类型： <a class="reference internal" href="../../models/fields.html#django.db.models.SmallAutoField" title="django.db.models.SmallAutoField"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmallAutoField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.AutoField" title="django.db.models.AutoField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.BigAutoField" title="django.db.models.BigAutoField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BigAutoField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.SmallIntegerField" title="django.db.models.SmallIntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmallIntegerField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.IntegerField" title="django.db.models.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.BigIntegerField" title="django.db.models.BigIntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BigIntegerField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.DecimalField" title="django.db.models.DecimalField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DecimalField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.FloatField" title="django.db.models.FloatField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatField</span></code></a>, <a class="reference internal" href="../../models/fields.html#django.db.models.DateField" title="django.db.models.DateField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateField</span></code></a>, 和 <a class="reference internal" href="../../models/fields.html#django.db.models.DateTimeField" title="django.db.models.DateTimeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateTimeField</span></code></a>。例如：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">django.db.backends.postgresql.psycopg_any</span> <span class="kn">import</span> <span class="n">DateTimeTZRange</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">start__contained_by</span><span class="o">=</span><span class="n">DateTimeTZRange</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-std-fieldlookup-rangefield.overlap">
+<span id="s-std:fieldlookup-rangefield.overlap"></span><span id="s-id6"></span><span id="std-fieldlookup-rangefield.overlap"></span><span id="std:fieldlookup-rangefield.overlap"></span><span id="id6"></span><h5><code class="docutils literal notranslate"><span class="pre">overlap</span></code><a class="headerlink" href="#std-fieldlookup-rangefield.overlap" title="永久链接至标题">¶</a></h5>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__overlap</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-comparison-functions">
+<span id="comparison-functions"></span><h4>比较函数<a class="headerlink" href="#comparison-functions" title="永久链接至标题">¶</a></h4>
+<p>范围字段支持标准查询：<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-lt"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">lt</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-gt"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">gt</span></code></a>、<a class="reference internal" href="../../models/querysets.html#std-fieldlookup-lte"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">lte</span></code></a> 和 <a class="reference internal" href="../../models/querysets.html#std-fieldlookup-gte"><code class="xref std std-lookup docutils literal notranslate"><span class="pre">gte</span></code></a>。这些并没有特别大的帮助——它们先比较下界，然后在必要时才比较上界。这也是用于按范围字段排序的策略。最好是使用特定的范围比较运算符。</p>
+<div class="section" id="s-fully-lt">
+<span id="s-std-fieldlookup-rangefield.fully_lt"></span><span id="s-std:fieldlookup-rangefield.fully_lt"></span><span id="fully-lt"></span><span id="std-fieldlookup-rangefield.fully_lt"></span><span id="std:fieldlookup-rangefield.fully_lt"></span><h5><code class="docutils literal notranslate"><span class="pre">fully_lt</span></code><a class="headerlink" href="#fully-lt" title="永久链接至标题">¶</a></h5>
+<p>返回的范围严格小于传入的范围。换句话说，返回范围内的所有点都小于传入范围内的所有点。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__fully_lt</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-fully-gt">
+<span id="s-std-fieldlookup-rangefield.fully_gt"></span><span id="s-std:fieldlookup-rangefield.fully_gt"></span><span id="fully-gt"></span><span id="std-fieldlookup-rangefield.fully_gt"></span><span id="std:fieldlookup-rangefield.fully_gt"></span><h5><code class="docutils literal notranslate"><span class="pre">fully_gt</span></code><a class="headerlink" href="#fully-gt" title="永久链接至标题">¶</a></h5>
+<p>返回的范围严格大于传入的范围。换句话说，返回范围内的所有点都大于传入范围内的所有点。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__fully_gt</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Pub trip&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-not-lt">
+<span id="s-std-fieldlookup-rangefield.not_lt"></span><span id="s-std:fieldlookup-rangefield.not_lt"></span><span id="not-lt"></span><span id="std-fieldlookup-rangefield.not_lt"></span><span id="std:fieldlookup-rangefield.not_lt"></span><h5><code class="docutils literal notranslate"><span class="pre">not_lt</span></code><a class="headerlink" href="#not-lt" title="永久链接至标题">¶</a></h5>
+<p>返回的范围不包含任何小于传入范围的点，即返回范围的下界至少是传入范围的下界。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__not_lt</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;, &lt;Event: Pub trip&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-not-gt">
+<span id="s-std-fieldlookup-rangefield.not_gt"></span><span id="s-std:fieldlookup-rangefield.not_gt"></span><span id="not-gt"></span><span id="std-fieldlookup-rangefield.not_gt"></span><span id="std:fieldlookup-rangefield.not_gt"></span><h5><code class="docutils literal notranslate"><span class="pre">not_gt</span></code><a class="headerlink" href="#not-gt" title="永久链接至标题">¶</a></h5>
+<p>返回的范围不包含任何大于传入范围的点，也就是说，返回的范围的上界最多就是传入范围的上界。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__not_gt</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-adjacent-to">
+<span id="s-std-fieldlookup-rangefield.adjacent_to"></span><span id="s-std:fieldlookup-rangefield.adjacent_to"></span><span id="adjacent-to"></span><span id="std-fieldlookup-rangefield.adjacent_to"></span><span id="std:fieldlookup-rangefield.adjacent_to"></span><h5><code class="docutils literal notranslate"><span class="pre">adjacent_to</span></code><a class="headerlink" href="#adjacent-to" title="永久链接至标题">¶</a></h5>
+<p>返回的范围与传入的范围共享一个边界。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__adjacent_to</span><span class="o">=</span><span class="n">NumericRange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">21</span><span class="p">))</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;, &lt;Event: Pub trip&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="s-querying-using-the-bounds">
+<span id="querying-using-the-bounds"></span><h4>使用边界进行查询<a class="headerlink" href="#querying-using-the-bounds" title="永久链接至标题">¶</a></h4>
+<p>范围字段支持几个额外的查找。</p>
+<div class="section" id="s-startswith">
+<span id="s-std-fieldlookup-rangefield.startswith"></span><span id="s-std:fieldlookup-rangefield.startswith"></span><span id="startswith"></span><span id="std-fieldlookup-rangefield.startswith"></span><span id="std:fieldlookup-rangefield.startswith"></span><h5><code class="docutils literal notranslate"><span class="pre">startswith</span></code><a class="headerlink" href="#startswith" title="永久链接至标题">¶</a></h5>
+<p>返回的对象具有给定的下界。可以链入基础字段的有效查找。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__startswith</span><span class="o">=</span><span class="mi">21</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Event: Pub trip&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-endswith">
+<span id="s-std-fieldlookup-rangefield.endswith"></span><span id="s-std:fieldlookup-rangefield.endswith"></span><span id="endswith"></span><span id="std-fieldlookup-rangefield.endswith"></span><span id="std:fieldlookup-rangefield.endswith"></span><h5><code class="docutils literal notranslate"><span class="pre">endswith</span></code><a class="headerlink" href="#endswith" title="永久链接至标题">¶</a></h5>
+<p>返回的对象具有给定的上界。可以链入基础字段的有效查找。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__endswith</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-isempty">
+<span id="s-std-fieldlookup-rangefield.isempty"></span><span id="s-std:fieldlookup-rangefield.isempty"></span><span id="isempty"></span><span id="std-fieldlookup-rangefield.isempty"></span><span id="std:fieldlookup-rangefield.isempty"></span><h5><code class="docutils literal notranslate"><span class="pre">isempty</span></code><a class="headerlink" href="#isempty" title="永久链接至标题">¶</a></h5>
+<p>返回的对象是空的范围。可以链到有效的查找 <a class="reference internal" href="../../models/fields.html#django.db.models.BooleanField" title="django.db.models.BooleanField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanField</span></code></a>。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__isempty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;QuerySet []&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-lower-inc">
+<span id="s-std-fieldlookup-rangefield.lower_inc"></span><span id="s-std:fieldlookup-rangefield.lower_inc"></span><span id="lower-inc"></span><span id="std-fieldlookup-rangefield.lower_inc"></span><span id="std:fieldlookup-rangefield.lower_inc"></span><h5><code class="docutils literal notranslate"><span class="pre">lower_inc</span></code><a class="headerlink" href="#lower-inc" title="永久链接至标题">¶</a></h5>
+<p>根据传递的布尔值，返回具有包含或不包含下界的对象。可以链到有效的查找 <a class="reference internal" href="../../models/fields.html#django.db.models.BooleanField" title="django.db.models.BooleanField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanField</span></code></a> 的对象。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__lower_inc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Event: Soft play&gt;, &lt;Event: Pub trip&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-lower-inf">
+<span id="s-std-fieldlookup-rangefield.lower_inf"></span><span id="s-std:fieldlookup-rangefield.lower_inf"></span><span id="lower-inf"></span><span id="std-fieldlookup-rangefield.lower_inf"></span><span id="std:fieldlookup-rangefield.lower_inf"></span><h5><code class="docutils literal notranslate"><span class="pre">lower_inf</span></code><a class="headerlink" href="#lower-inf" title="永久链接至标题">¶</a></h5>
+<p>根据传递的布尔值，返回具有无界（无限）或仅有下界的对象。可以链到有效的查找 <a class="reference internal" href="../../models/fields.html#django.db.models.BooleanField" title="django.db.models.BooleanField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanField</span></code></a>。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__lower_inf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;QuerySet []&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-upper-inc">
+<span id="s-std-fieldlookup-rangefield.upper_inc"></span><span id="s-std:fieldlookup-rangefield.upper_inc"></span><span id="upper-inc"></span><span id="std-fieldlookup-rangefield.upper_inc"></span><span id="std:fieldlookup-rangefield.upper_inc"></span><h5><code class="docutils literal notranslate"><span class="pre">upper_inc</span></code><a class="headerlink" href="#upper-inc" title="永久链接至标题">¶</a></h5>
+<p>根据传递的布尔值，返回具有包含或不包含上界的对象。可以链到有效的查找 <a class="reference internal" href="../../models/fields.html#django.db.models.BooleanField" title="django.db.models.BooleanField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanField</span></code></a> 的对象。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__upper_inc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;QuerySet []&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-upper-inf">
+<span id="s-std-fieldlookup-rangefield.upper_inf"></span><span id="s-std:fieldlookup-rangefield.upper_inf"></span><span id="upper-inf"></span><span id="std-fieldlookup-rangefield.upper_inf"></span><span id="std:fieldlookup-rangefield.upper_inf"></span><h5><code class="docutils literal notranslate"><span class="pre">upper_inf</span></code><a class="headerlink" href="#upper-inf" title="永久链接至标题">¶</a></h5>
+<p>根据传递的布尔值，返回具有无界（无限）或仅有上界的对象。可以链到有效的查找 <a class="reference internal" href="../../models/fields.html#django.db.models.BooleanField" title="django.db.models.BooleanField"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanField</span></code></a>。</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Event</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ages__upper_inf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;QuerySet [&lt;Event: Pub trip&gt;]&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="s-defining-your-own-range-types">
+<span id="defining-your-own-range-types"></span><h3>定义自己的范围类型<a class="headerlink" href="#defining-your-own-range-types" title="永久链接至标题">¶</a></h3>
+<p>PostgreSQL 允许定义自定义范围类型。Django 的模型和表单字段实现使用以下基类，并且 <code class="docutils literal notranslate"><span class="pre">psycopg</span></code> 提供了一个 <a class="reference external" href="https://www.psycopg.org/psycopg3/docs/basic/pgtypes.html#psycopg.types.range.register_range" title="(在 psycopg)"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_range()</span></code></a> 函数来允许使用自定义范围类型。</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RangeField</span></code>(<em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.RangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>模型范围字段的基类。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeField.base_field">
+<code class="sig-name descname"><span class="pre">base_field</span></code><a class="headerlink" href="#django.contrib.postgres.fields.RangeField.base_field" title="永久链接至目标">¶</a></dt>
+<dd><p>要使用的模型字段类。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeField.range_type">
+<code class="sig-name descname"><span class="pre">range_type</span></code><a class="headerlink" href="#django.contrib.postgres.fields.RangeField.range_type" title="永久链接至目标">¶</a></dt>
+<dd><p>要使用的范围类型。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeField.form_field">
+<code class="sig-name descname"><span class="pre">form_field</span></code><a class="headerlink" href="#django.contrib.postgres.fields.RangeField.form_field" title="永久链接至目标">¶</a></dt>
+<dd><p>要使用的表单字段类。应该是 <a class="reference internal" href="#django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField" title="django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField"><code class="xref py py-class docutils literal notranslate"><span class="pre">django.contrib.postgres.forms.BaseRangeField</span></code></a> 的子类。</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">django.contrib.postgres.forms.</span></code><code class="sig-name descname"><span class="pre">BaseRangeField</span></code><a class="headerlink" href="#django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField" title="永久链接至目标">¶</a></dt>
+<dd><p>表范围字段的基类。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField.base_field">
+<code class="sig-name descname"><span class="pre">base_field</span></code><a class="headerlink" href="#django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField.base_field" title="永久链接至目标">¶</a></dt>
+<dd><p>要使用的表字段。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField.range_type">
+<code class="sig-name descname"><span class="pre">range_type</span></code><a class="headerlink" href="#django.contrib.postgres.fields.django.contrib.postgres.forms.BaseRangeField.range_type" title="永久链接至目标">¶</a></dt>
+<dd><p>要使用的范围类型。</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="s-range-operators">
+<span id="range-operators"></span><h3>范围操作<a class="headerlink" href="#range-operators" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeOperators">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RangeOperators</span></code><a class="headerlink" href="#django.contrib.postgres.fields.RangeOperators" title="永久链接至目标">¶</a></dt>
+<dd></dd></dl>
+
+<p>PostgreSQL 提供了一组 SQL 运算符，这些运算符可以和范围数据类型一起使用（参见  <a href="#id1"><span class="problematic" id="id2">`</span></a>the PostgreSQL documentation for the full details of range operators <a href="#id3"><span class="problematic" id="id4">`</span></a>_ ）。这个类的目的是作为一种方便的方法，以避免排版错误。运算符名称与相应的查找名称重叠。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RangeOperators</span><span class="p">:</span>
+    <span class="n">EQUAL</span> <span class="o">=</span> <span class="s2">&quot;=&quot;</span>
+    <span class="n">NOT_EQUAL</span> <span class="o">=</span> <span class="s2">&quot;&lt;&gt;&quot;</span>
+    <span class="n">CONTAINS</span> <span class="o">=</span> <span class="s2">&quot;@&gt;&quot;</span>
+    <span class="n">CONTAINED_BY</span> <span class="o">=</span> <span class="s2">&quot;&lt;@&quot;</span>
+    <span class="n">OVERLAPS</span> <span class="o">=</span> <span class="s2">&quot;&amp;&amp;&quot;</span>
+    <span class="n">FULLY_LT</span> <span class="o">=</span> <span class="s2">&quot;&lt;&lt;&quot;</span>
+    <span class="n">FULLY_GT</span> <span class="o">=</span> <span class="s2">&quot;&gt;&gt;&quot;</span>
+    <span class="n">NOT_LT</span> <span class="o">=</span> <span class="s2">&quot;&amp;&gt;&quot;</span>
+    <span class="n">NOT_GT</span> <span class="o">=</span> <span class="s2">&quot;&amp;&lt;&quot;</span>
+    <span class="n">ADJACENT_TO</span> <span class="o">=</span> <span class="s2">&quot;-|-&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="s-rangeboundary-expressions">
+<span id="rangeboundary-expressions"></span><h3>RangeBoundary() 表达式<a class="headerlink" href="#rangeboundary-expressions" title="永久链接至标题">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeBoundary">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">RangeBoundary</span></code>(<em><span class="n"><span class="pre">inclusive_lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">inclusive_upper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>)<a class="headerlink" href="#django.contrib.postgres.fields.RangeBoundary" title="永久链接至目标">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeBoundary.inclusive_lower">
+<code class="sig-name descname"><span class="pre">inclusive_lower</span></code><a class="headerlink" href="#django.contrib.postgres.fields.RangeBoundary.inclusive_lower" title="永久链接至目标">¶</a></dt>
+<dd><p>如果 <code class="docutils literal notranslate"><span class="pre">True</span></code> （默认），则下界为包含 <code class="docutils literal notranslate"><span class="pre">'['</span></code>，否则为不包含 <code class="docutils literal notranslate"><span class="pre">'('</span></code>。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="django.contrib.postgres.fields.RangeBoundary.inclusive_upper">
+<code class="sig-name descname"><span class="pre">inclusive_upper</span></code><a class="headerlink" href="#django.contrib.postgres.fields.RangeBoundary.inclusive_upper" title="永久链接至目标">¶</a></dt>
+<dd><p>如果 <code class="docutils literal notranslate"><span class="pre">False</span></code> （默认），则上界为包含 <code class="docutils literal notranslate"><span class="pre">')'</span></code>，否则为不包含 <code class="docutils literal notranslate"><span class="pre">']'</span></code>。</p>
+</dd></dl>
+
+</dd></dl>
+
+<p><code class="docutils literal notranslate"><span class="pre">RangeBoundary()</span></code> 表达式表示范围边界。它可以与自定义的范围函数一起使用，预期边界，例如定义 <code class="xref py py-class docutils literal notranslate"><span class="pre">ExclusionConstraint</span></code>。参见 <a href="#id1"><span class="problematic" id="id2">`</span></a>the PostgreSQL documentation for the full details <a href="#id3"><span class="problematic" id="id4">`</span></a>_ 。</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">PostgreSQL 特有模型字段</a><ul>
+<li><a class="reference internal" href="#indexing-these-fields">对这些字段进行索引</a></li>
+<li><a class="reference internal" href="#arrayfield"><code class="docutils literal notranslate"><span class="pre">ArrayField</span></code></a><ul>
+<li><a class="reference internal" href="#querying-arrayfield">查询 <code class="docutils literal notranslate"><span class="pre">ArrayField</span></code></a><ul>
+<li><a class="reference internal" href="#contains"><code class="docutils literal notranslate"><span class="pre">contains</span></code></a></li>
+<li><a class="reference internal" href="#contained-by"><code class="docutils literal notranslate"><span class="pre">contained_by</span></code></a></li>
+<li><a class="reference internal" href="#overlap"><code class="docutils literal notranslate"><span class="pre">overlap</span></code></a></li>
+<li><a class="reference internal" href="#len"><code class="docutils literal notranslate"><span class="pre">len</span></code></a></li>
+<li><a class="reference internal" href="#index-transforms">索引转换</a></li>
+<li><a class="reference internal" href="#slice-transforms">切片转换</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#citext-fields"><code class="docutils literal notranslate"><span class="pre">CIText</span></code> 字段</a></li>
+<li><a class="reference internal" href="#hstorefield"><code class="docutils literal notranslate"><span class="pre">HStoreField</span></code></a><ul>
+<li><a class="reference internal" href="#querying-hstorefield">查询 <code class="docutils literal notranslate"><span class="pre">HStoreField</span></code></a><ul>
+<li><a class="reference internal" href="#key-lookups">键查找</a></li>
+<li><a class="reference internal" href="#std-fieldlookup-hstorefield.contains"><code class="docutils literal notranslate"><span class="pre">contains</span></code></a></li>
+<li><a class="reference internal" href="#std-fieldlookup-hstorefield.contained_by"><code class="docutils literal notranslate"><span class="pre">contained_by</span></code></a></li>
+<li><a class="reference internal" href="#has-key"><code class="docutils literal notranslate"><span class="pre">has_key</span></code></a></li>
+<li><a class="reference internal" href="#has-any-keys"><code class="docutils literal notranslate"><span class="pre">has_any_keys</span></code></a></li>
+<li><a class="reference internal" href="#has-keys"><code class="docutils literal notranslate"><span class="pre">has_keys</span></code></a></li>
+<li><a class="reference internal" href="#keys"><code class="docutils literal notranslate"><span class="pre">keys</span></code></a></li>
+<li><a class="reference internal" href="#values"><code class="docutils literal notranslate"><span class="pre">values</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#range-fields">范围字段</a><ul>
+<li><a class="reference internal" href="#integerrangefield"><code class="docutils literal notranslate"><span class="pre">IntegerRangeField</span></code></a></li>
+<li><a class="reference internal" href="#bigintegerrangefield"><code class="docutils literal notranslate"><span class="pre">BigIntegerRangeField</span></code></a></li>
+<li><a class="reference internal" href="#decimalrangefield"><code class="docutils literal notranslate"><span class="pre">DecimalRangeField</span></code></a></li>
+<li><a class="reference internal" href="#datetimerangefield"><code class="docutils literal notranslate"><span class="pre">DateTimeRangeField</span></code></a></li>
+<li><a class="reference internal" href="#daterangefield"><code class="docutils literal notranslate"><span class="pre">DateRangeField</span></code></a></li>
+<li><a class="reference internal" href="#querying-range-fields">查询范围字段</a><ul>
+<li><a class="reference internal" href="#containment-functions">包含函数</a><ul>
+<li><a class="reference internal" href="#std-fieldlookup-rangefield.contains"><code class="docutils literal notranslate"><span class="pre">contains</span></code></a></li>
+<li><a class="reference internal" href="#std-fieldlookup-rangefield.contained_by"><code class="docutils literal notranslate"><span class="pre">contained_by</span></code></a></li>
+<li><a class="reference internal" href="#std-fieldlookup-rangefield.overlap"><code class="docutils literal notranslate"><span class="pre">overlap</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#comparison-functions">比较函数</a><ul>
+<li><a class="reference internal" href="#fully-lt"><code class="docutils literal notranslate"><span class="pre">fully_lt</span></code></a></li>
+<li><a class="reference internal" href="#fully-gt"><code class="docutils literal notranslate"><span class="pre">fully_gt</span></code></a></li>
+<li><a class="reference internal" href="#not-lt"><code class="docutils literal notranslate"><span class="pre">not_lt</span></code></a></li>
+<li><a class="reference internal" href="#not-gt"><code class="docutils literal notranslate"><span class="pre">not_gt</span></code></a></li>
+<li><a class="reference internal" href="#adjacent-to"><code class="docutils literal notranslate"><span class="pre">adjacent_to</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#querying-using-the-bounds">使用边界进行查询</a><ul>
+<li><a class="reference internal" href="#startswith"><code class="docutils literal notranslate"><span class="pre">startswith</span></code></a></li>
+<li><a class="reference internal" href="#endswith"><code class="docutils literal notranslate"><span class="pre">endswith</span></code></a></li>
+<li><a class="reference internal" href="#isempty"><code class="docutils literal notranslate"><span class="pre">isempty</span></code></a></li>
+<li><a class="reference internal" href="#lower-inc"><code class="docutils literal notranslate"><span class="pre">lower_inc</span></code></a></li>
+<li><a class="reference internal" href="#lower-inf"><code class="docutils literal notranslate"><span class="pre">lower_inf</span></code></a></li>
+<li><a class="reference internal" href="#upper-inc"><code class="docutils literal notranslate"><span class="pre">upper_inc</span></code></a></li>
+<li><a class="reference internal" href="#upper-inf"><code class="docutils literal notranslate"><span class="pre">upper_inf</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#defining-your-own-range-types">定义自己的范围类型</a></li>
+<li><a class="reference internal" href="#range-operators">范围操作</a></li>
+<li><a class="reference internal" href="#rangeboundary-expressions">RangeBoundary() 表达式</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="expressions.html"
+                          title="上一章">PostgreSQL 特有查询表达式</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="forms.html"
+                          title="下一章">PostgreSQL 特有表单字段和部件</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/ref/contrib/postgres/fields.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="expressions.html" title="PostgreSQL 特有查询表达式">previous</a>
+     |
+    <a href="../../index.html" title="API 参考" accesskey="U">up</a>
+   |
+    <a href="forms.html" title="PostgreSQL 特有表单字段和部件">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

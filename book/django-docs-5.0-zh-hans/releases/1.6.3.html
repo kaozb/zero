@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+
+<html lang="zh_Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django 1.6.3 版本发行说明 &#8212; Django 5.0.3.dev20240221071519 文档</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/default.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Django 1.6.2 版本发行说明" href="1.6.2.html" />
+    <link rel="prev" title="Django 1.6.4 版本发行说明" href="1.6.4.html" />
+
+
+
+ 
+<script src="../templatebuiltins.js"></script>
+<script>
+(function($) {
+    if (!django_template_builtins) {
+       // templatebuiltins.js missing, do nothing.
+       return;
+    }
+    $(document).ready(function() {
+        // Hyperlink Django template tags and filters
+        var base = "../ref/templates/builtins.html";
+        if (base == "#") {
+            // Special case for builtins.html itself
+            base = "";
+        }
+        // Tags are keywords, class '.k'
+        $("div.highlight\\-html\\+django span.k").each(function(i, elem) {
+             var tagname = $(elem).text();
+             if ($.inArray(tagname, django_template_builtins.ttags) != -1) {
+                 var fragment = tagname.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + tagname + "</a>");
+             }
+        });
+        // Filters are functions, class '.nf'
+        $("div.highlight\\-html\\+django span.nf").each(function(i, elem) {
+             var filtername = $(elem).text();
+             if ($.inArray(filtername, django_template_builtins.tfilters) != -1) {
+                 var fragment = filtername.replace(/_/, '-');
+                 $(elem).html("<a href='" + base + "#" + fragment + "'>" + filtername + "</a>");
+             }
+        });
+    });
+})(jQuery);</script>
+
+  </head><body>
+
+    <div class="document">
+  <div id="custom-doc" class="yui-t6">
+    <div id="hd">
+      <h1><a href="../index.html">Django 5.0.3.dev20240221071519 文档</a></h1>
+      <div id="global-nav">
+        <a title="Home page" href="../index.html">Home</a>  |
+        <a title="Table of contents" href="../contents.html">Table of contents</a>  |
+        <a title="Global index" href="../genindex.html">Index</a>  |
+        <a title="Module index" href="../py-modindex.html">Modules</a>
+      </div>
+      <div class="nav">
+    &laquo; <a href="1.6.4.html" title="Django 1.6.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.6.2.html" title="Django 1.6.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+
+    <div id="bd">
+      <div id="yui-main">
+        <div class="yui-b">
+          <div class="yui-g" id="releases-1.6.3">
+            
+  <div class="section" id="s-django-1-6-3-release-notes">
+<span id="django-1-6-3-release-notes"></span><h1>Django 1.6.3 版本发行说明<a class="headerlink" href="#django-1-6-3-release-notes" title="永久链接至标题">¶</a></h1>
+<p><em>2014 年 4 月 21 日</em></p>
+<p>Django 1.6.3 修复了 1.6.2 版本中的一些错误，包括三个安全问题，并进行了一个不兼容的变更：</p>
+<div class="section" id="s-unexpected-code-execution-using-reverse">
+<span id="unexpected-code-execution-using-reverse"></span><h2>使用 <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 时出现意外的代码执行<a class="headerlink" href="#unexpected-code-execution-using-reverse" title="永久链接至标题">¶</a></h2>
+<p>Django 的 URL 处理基于正则表达式模式（表示 URL）到可调用视图的映射，而 Django 自身的处理包括将请求的 URL 与这些模式进行匹配，以确定要调用的适当视图。</p>
+<p>Django 还提供了一个方便的函数 -- <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> -- 用于执行与之相反的过程。<code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 函数接收有关视图的信息，并返回调用该视图的 URL。鼓励应用程序开发人员使用 <code class="docutils literal notranslate"><span class="pre">reverse()</span></code>，因为``reverse()`` 的输出总是基于当前的 URL 模式，这意味着开发人员在更改 URL 时不需要修改其他代码。</p>
+<p><code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 的一个参数签名是传递所需视图的点分 Python 路径。在这种情况下，Django 将导入由该点分路径指示的模块，作为生成结果 URL 的一部分。如果这样的模块在导入时具有副作用，那么这些副作用将会发生。</p>
+<p>因此，在满足以下条件时，攻击者可能导致意外的代码执行：</p>
+<ol class="arabic simple">
+<li>存在一个或多个视图，它们根据用户输入构建 URL（通常是查询字符串中的“next”参数，指示在操作成功完成后重定向到哪里）。</li>
+<li>攻击者知道服务器的 Python 导入路径上存在一个或多个模块，在导入时执行具有副作用的代码。</li>
+</ol>
+<p>为了解决这个问题，<code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 现在将只接受并导入基于项目的 <a class="reference internal" href="../topics/http/urls.html"><span class="doc">URL 模式配置</span></a> 中列出的包含视图的模块的点分路径，以确保只有开发人员打算以这种方式导入的模块才能被导入。</p>
+</div>
+<div class="section" id="s-caching-of-anonymous-pages-could-reveal-csrf-token">
+<span id="caching-of-anonymous-pages-could-reveal-csrf-token"></span><h2>缓存匿名页面可能会泄露 CSRF 令牌<a class="headerlink" href="#caching-of-anonymous-pages-could-reveal-csrf-token" title="永久链接至标题">¶</a></h2>
+<p>Django 包括了一个 <a class="reference internal" href="../topics/cache.html"><span class="doc">缓存框架</span></a> 和一个用于 <a class="reference internal" href="../ref/csrf.html"><span class="doc">防止跨站点请求伪造 (CSRF) 攻击</span></a> 的系统。CSRF 保护系统基于一个随机的 nonce，它会在 cookie 中发送给客户端，在将来的请求中客户端必须发送该 nonce，同时在表单中还有一个隐藏值，必须与表单一起提交。</p>
+<p>缓存框架包括一个选项，用于缓存对匿名（即未经认证的）客户端的响应。</p>
+<p>当第一个对指定页面的匿名请求来自没有 CSRF cookie 的客户端时，缓存框架还会缓存 CSRF cookie，并为没有 CSRF cookie 的其他匿名客户端提供相同的随机数。这可能使攻击者获得有效的 CSRF cookie 值，并执行绕过 cookie 检查的攻击。</p>
+<p>为了解决这个问题，缓存框架将不再缓存此类响应。启发式方法将是：</p>
+<ol class="arabic simple">
+<li>如果传入的请求没有提交任何 cookie，且</li>
+<li>如果响应发送了一个或多个 cookie，且</li>
+<li>如果在响应中设置了 <code class="docutils literal notranslate"><span class="pre">Vary:</span> <span class="pre">Cookie</span></code> 头，那么该响应将不会被缓存。</li>
+</ol>
+</div>
+<div class="section" id="s-mysql-typecasting">
+<span id="mysql-typecasting"></span><h2>MySQL 类型转换<a class="headerlink" href="#mysql-typecasting" title="永久链接至标题">¶</a></h2>
+<p>众所周知，MySQL 数据库会对某些查询进行“类型转换”；例如，在查询包含字符串值的表时，但使用基于整数值进行过滤的查询，MySQL 首先会默默地将字符串强制转换为整数，然后返回基于该整数的结果。</p>
+<p>如果在未先将值转换为适当类型的情况下执行查询，这可能产生意外的结果，类似于查询本身被操作时会发生的情况。</p>
+<p>Django 的模型字段类知道它们自己的类型，大多数此类字段在查询之前会将查询参数明确转换为正确的数据库级别类型。然而，有三个模型字段类没有正确地转换它们的参数：</p>
+<ul class="simple">
+<li><a class="reference internal" href="../ref/models/fields.html#django.db.models.FilePathField" title="django.db.models.FilePathField"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilePathField</span></code></a></li>
+<li><a class="reference internal" href="../ref/models/fields.html#django.db.models.GenericIPAddressField" title="django.db.models.GenericIPAddressField"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenericIPAddressField</span></code></a></li>
+<li><code class="docutils literal notranslate"><span class="pre">IPAddressField</span></code></li>
+</ul>
+<p>在查询之前，这三个字段已经更新为将参数转换为正确的类型。</p>
+<p>此外，自定义模型字段的开发人员现在通过文档受到警告，需要确保他们的自定义字段类能够执行适当的类型转换，以及使用 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.raw" title="django.db.models.query.QuerySet.raw"><code class="xref py py-meth docutils literal notranslate"><span class="pre">raw()</span></code></a> 和 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.extra" title="django.db.models.query.QuerySet.extra"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extra()</span></code></a> 查询方法的用户将被建议确保在执行查询之前进行适当的手动类型转换，因为这些方法允许开发人员提供原始 SQL 或 SQL 片段。</p>
+</div>
+<div class="section" id="s-select-for-update-requires-a-transaction">
+<span id="select-for-update-requires-a-transaction"></span><h2><code class="docutils literal notranslate"><span class="pre">select_for_update()</span></code> 需要在事务中使用<a class="headerlink" href="#select-for-update-requires-a-transaction" title="永久链接至标题">¶</a></h2>
+<p>在历史上，使用 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.select_for_update" title="django.db.models.query.QuerySet.select_for_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">select_for_update()</span></code></a> 的查询可以在自动提交模式下，在事务之外执行。在 Django 1.6 之前，Django 的自动事务模式允许使用这种方式锁定记录，直到下一次写操作。Django 1.6 引入了数据库级别的自动提交；自那时起，在这种上下文中执行将取消 <code class="docutils literal notranslate"><span class="pre">select_for_update()</span></code> 的效果。因此，现在假定这是一个错误并引发异常。</p>
+<p>这个更改是因为这样的错误可能是因为在不需要全局事务（例如，<a class="reference internal" href="../ref/settings.html#std-setting-DATABASE-ATOMIC_REQUESTS"><code class="xref std std-setting docutils literal notranslate"><span class="pre">ATOMIC_REQUESTS</span></code></a> 设置为 <code class="docutils literal notranslate"><span class="pre">True</span></code>）或 Django 的旧的自动提交行为的项目中包含一个期望全局事务的应用程序引起的；而且，这样的错误可能会表现为数据损坏的错误。</p>
+<p>如果您在测试类中使用 <code class="docutils literal notranslate"><span class="pre">select_for_update()</span></code> 并且该测试类是 <a class="reference internal" href="../topics/testing/tools.html#django.test.TransactionTestCase" title="django.test.TransactionTestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionTestCase</span></code></a> 的子类而不是 <a class="reference internal" href="../topics/testing/tools.html#django.test.TestCase" title="django.test.TestCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code></a>，则此更改可能导致测试失败。</p>
+</div>
+<div class="section" id="s-other-bugfixes-and-changes">
+<span id="other-bugfixes-and-changes"></span><h2>其他错误修复和更改<a class="headerlink" href="#other-bugfixes-and-changes" title="永久链接至标题">¶</a></h2>
+<ul class="simple">
+<li>从 GeoIP 库检索的内容现在已经正确解码为其默认的 <code class="docutils literal notranslate"><span class="pre">iso-8859-1</span></code> 编码（<a class="reference external" href="https://code.djangoproject.com/ticket/21996">#21996</a>）。</li>
+<li>在使用 <a class="reference internal" href="../ref/models/querysets.html#django.db.models.query.QuerySet.bulk_create" title="django.db.models.query.QuerySet.bulk_create"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bulk_create()</span></code></a> 与 <code class="docutils literal notranslate"><span class="pre">ForeignObject</span></code> 时，修复了 <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> 错误（<a class="reference external" href="https://code.djangoproject.com/ticket/21566">#21566</a>）。</li>
+<li>修复了在查询编译多次时，使用 <code class="docutils literal notranslate"><span class="pre">F()</span> <span class="pre">+</span> <span class="pre">timedelta()</span></code> 的 <code class="docutils literal notranslate"><span class="pre">QuerySet</span></code> 引发崩溃的问题（<a class="reference external" href="https://code.djangoproject.com/ticket/21643">#21643</a>）。</li>
+<li>防止了 <a class="reference internal" href="../ref/forms/fields.html#django.forms.IntegerField" title="django.forms.IntegerField"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegerField</span></code></a> 子类的自定义 <code class="docutils literal notranslate"><span class="pre">widget</span></code> 类属性被其 <code class="docutils literal notranslate"><span class="pre">__init__</span></code> 方法中的代码覆盖的问题（<a class="reference external" href="https://code.djangoproject.com/ticket/22245">#22245</a>）。</li>
+<li>提高了 <a class="reference internal" href="../ref/utils.html#django.utils.html.strip_tags" title="django.utils.html.strip_tags"><code class="xref py py-func docutils literal notranslate"><span class="pre">strip_tags()</span></code></a> 的准确性（但如文档中所述，它仍然不能保证产生 HTML 安全的结果）。</li>
+<li>修复了 <a class="reference internal" href="../ref/contrib/gis/index.html#module-django.contrib.gis" title="django.contrib.gis: Geographic Information System (GIS) extensions for Django"><code class="xref py py-mod docutils literal notranslate"><span class="pre">django.contrib.gis</span></code></a> 中 SQL 编译器的回归问题，针对非具体字段（<a class="reference external" href="https://code.djangoproject.com/ticket/22250">#22250</a>）。</li>
+<li>在带有 URL 前缀的站点中运行时修复了 <a class="reference internal" href="../ref/contrib/admin/index.html#django.contrib.admin.ModelAdmin.preserve_filters" title="django.contrib.admin.ModelAdmin.preserve_filters"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ModelAdmin.preserve_filters</span></code></a> （<a class="reference external" href="https://code.djangoproject.com/ticket/21795">#21795</a>）。</li>
+<li>修复了在没有设置 <code class="docutils literal notranslate"><span class="pre">PATH</span></code> 环境变量时管理实用程序中的 <code class="docutils literal notranslate"><span class="pre">find_command</span></code> 引发的崩溃（<a class="reference external" href="https://code.djangoproject.com/ticket/22256">#22256</a>）。</li>
+<li>在 Windows 上修复了 <a class="reference internal" href="../ref/django-admin.html#django-admin-changepassword"><code class="xref std std-djadmin docutils literal notranslate"><span class="pre">changepassword</span></code></a> （<a class="reference external" href="https://code.djangoproject.com/ticket/22364">#22364</a>）。</li>
+<li>避免在 MySQL 上遮蔽死锁异常（<a class="reference external" href="https://code.djangoproject.com/ticket/22291">#22291</a>）。</li>
+<li>在 <code class="docutils literal notranslate"><span class="pre">_set_autocommit</span></code> 中包装数据库异常（<a class="reference external" href="https://code.djangoproject.com/ticket/22321">#22321</a>）。</li>
+<li>修复了在关闭数据库连接或数据库服务器断开连接时的原子性问题（<a class="reference external" href="https://code.djangoproject.com/ticket/21239">#21239</a> 和 <a class="reference external" href="https://code.djangoproject.com/ticket/21202">#21202</a>）。</li>
+<li>修复了 <code class="docutils literal notranslate"><span class="pre">prefetch_related</span></code> 中的回归问题，导致相关对象查询包括不必要的连接（<a class="reference external" href="https://code.djangoproject.com/ticket/21760">#21760</a>）。</li>
+</ul>
+<p>此外，Django 内部的 six 版本，即 <code class="docutils literal notranslate"><span class="pre">django.utils.six</span></code>，已升级到最新版本（1.6.1）。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      
+        
+          <div class="yui-b" id="sidebar">
+            
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目录</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Django 1.6.3 版本发行说明</a><ul>
+<li><a class="reference internal" href="#unexpected-code-execution-using-reverse">使用 <code class="docutils literal notranslate"><span class="pre">reverse()</span></code> 时出现意外的代码执行</a></li>
+<li><a class="reference internal" href="#caching-of-anonymous-pages-could-reveal-csrf-token">缓存匿名页面可能会泄露 CSRF 令牌</a></li>
+<li><a class="reference internal" href="#mysql-typecasting">MySQL 类型转换</a></li>
+<li><a class="reference internal" href="#select-for-update-requires-a-transaction"><code class="docutils literal notranslate"><span class="pre">select_for_update()</span></code> 需要在事务中使用</a></li>
+<li><a class="reference internal" href="#other-bugfixes-and-changes">其他错误修复和更改</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上一个主题</h4>
+    <p class="topless"><a href="1.6.4.html"
+                          title="上一章">Django 1.6.4 版本发行说明</a></p>
+  </div>
+  <div>
+    <h4>下一个主题</h4>
+    <p class="topless"><a href="1.6.2.html"
+                          title="下一章">Django 1.6.2 版本发行说明</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/releases/1.6.3.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="转向" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+              <h3>Last update:</h3>
+              <p class="topless">2月 21, 2024</p>
+          </div>
+        
+      
+    </div>
+
+    <div id="ft">
+      <div class="nav">
+    &laquo; <a href="1.6.4.html" title="Django 1.6.4 版本发行说明">previous</a>
+     |
+    <a href="index.html" title="发行说明" accesskey="U">up</a>
+   |
+    <a href="1.6.2.html" title="Django 1.6.2 版本发行说明">next</a> &raquo;</div>
+    </div>
+  </div>
+
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>
