@@ -219,9 +219,10 @@ var comm_list = [{
     }, {
         tag: "服务-1",
         link: [ {
-            name: "天气云图",
-            url: "https://www.windy.com/"
+            name: "miku工具",
+            url: "https://miku.hoao.fun/"
         },
+
         ]
     }, {
         tag: "服务-2",
