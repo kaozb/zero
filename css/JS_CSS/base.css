@@ -1,0 +1,217 @@
+/* ---------------------------------------------------------------
+ * base.css — 设计令牌 + reset + 排版 + 表单控件
+ *
+ * 令牌集中在这里定义，颜色 / 圆角 / 阴影 / 间距 / 缓动都通过 var() 引用，
+ * 后续换主题只改这一处。必须在 nav.css、editor.css 之前引入。
+ * --------------------------------------------------------------- */
+
+/* ============================================================ 令牌 */
+
+:root {
+    /* ------------------------------------------------ 颜色 · 中性阶 */
+    --c-ink:#111318;          /* 标题 / 强调文字 */
+    --c-text:#3a3f47;         /* 正文 */
+    --c-text-2:#5a6169;       /* 次级正文 */
+    --c-muted:#878e97;        /* 弱化文字、图标 */
+    --c-muted-2:#a8aeb6;      /* 占位符、禁用 */
+    --c-line:#e6e8ec;         /* 描边 */
+    --c-line-2:#eef0f3;       /* 分隔线 */
+    /* 输入框专用描边：比 --c-line 明显更深，保证弱对比环境下也能一眼看到输入区。
+       取值是"一眼能看到"和"不显得像硬框"之间的折中。 */
+    --c-border:#9aa1ac;
+    --c-border-hover:#7d8590;
+    --c-fill:#f4f5f7;         /* 浅填充 */
+    --c-fill-2:#fafbfc;       /* 更浅的填充 */
+    --c-surface:#ffffff;      /* 卡片、弹窗表面 */
+    --c-surface-2:#fcfcfd;    /* 弹窗页脚等次级表面 */
+
+    /* ------------------------------------------------ 颜色 · 背景 */
+    --c-page:#eef0f3;
+    --c-page-top:#f5f6f8;
+    --c-page-bottom:#e9ebef;
+    --c-grid:rgba(17, 19, 24, .028);   /* 隐约网格线 */
+
+    /* ------------------------------------------------ 颜色 · 主色 */
+    --c-accent:#3f6ae0;
+    --c-accent-hover:#3459c4;
+    --c-accent-soft:rgba(63, 106, 224, .08);
+    --c-danger:#c0392b;
+
+    /* ------------------------------------------------ 圆角 */
+    --r-xs:4px;
+    --r-sm:6px;
+    --r-md:8px;
+    --r-lg:10px;
+    --r-xl:14px;
+    --r-pill:999px;
+
+    /* ------------------------------------------------ 阴影 */
+    /* 三档：悬停 / 浮层 / 弹窗，低透明多层叠加 */
+    --sh-2:0 2px 4px rgba(16, 24, 40, .05), 0 4px 10px rgba(16, 24, 40, .05);
+    --sh-3:0 4px 10px rgba(16, 24, 40, .06), 0 14px 34px rgba(16, 24, 40, .08);
+    --sh-4:0 8px 20px rgba(16, 24, 40, .1), 0 24px 64px rgba(16, 24, 40, .14);
+    /* 内描边：给卡片描一条极淡内边缘，模拟纸质厚度 */
+    --sh-hairline:inset 0 0 0 1px rgba(17, 19, 24, .035);
+
+    /* 聚焦环 */
+    --ring:0 0 0 3px rgba(63, 106, 224, .16);
+
+    /* ------------------------------------------------ 间距（8 的倍数） */
+    --sp-1:4px;
+    --sp-2:8px;
+    --sp-3:12px;
+    --sp-4:16px;
+
+    /* ------------------------------------------------ 缓动与时长 */
+    --ease:cubic-bezier(.2, .8, .2, 1);
+    --ease-out:cubic-bezier(.16, 1, .3, 1);
+    --ease-spring:cubic-bezier(.34, 1.4, .5, 1);
+    --t-fast:.15s;
+    --t-base:.22s;
+}
+
+/* ============================================================ reset */
+
+*, :after, :before {
+    margin:0;
+    padding:0;
+    outline:0;
+    border:0;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    box-sizing:border-box
+}
+
+html {
+    overflow-y:scroll
+}
+
+body {
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimSun, sans-serif;
+    color:var(--c-text-2);
+    line-height:1.8;
+    /* 三层纵深的最底层：极淡纵向渐变 + 隐约网格，避免大面积死灰 */
+    background-color:var(--c-page);
+    background-image:
+        linear-gradient(180deg, var(--c-page-top) 0%, var(--c-page) 42%, var(--c-page-bottom) 100%),
+        linear-gradient(var(--c-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--c-grid) 1px, transparent 1px);
+    background-size:100% 100%, 34px 34px, 34px 34px;
+    background-attachment:fixed, fixed, fixed;
+    -webkit-transition:background-color .5s;
+    transition:background-color .5s;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale
+}
+
+::selection {
+    color:#fff;
+    background:var(--c-accent)
+}
+::-moz-selection {
+    color:#fff;
+    background:var(--c-accent)
+}
+
+img, textarea {
+    max-width:100%
+}
+img {
+    vertical-align:middle
+}
+
+a {
+    text-decoration:none;
+    color:inherit;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent
+}
+
+ul, ol {
+    list-style:none
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight:400;
+    font-style:normal;
+    color:var(--c-ink);
+    margin-bottom:15px
+}
+
+label {
+    display:block;
+    font-family:inherit;
+    font-size:14px;
+    text-transform:uppercase;
+    font-weight:600;
+    margin-bottom:15px;
+    cursor:pointer
+}
+
+/* ========================================================= 布局工具 */
+
+.container {
+    width:90%;
+    margin:0 auto;
+    position:relative
+}
+.container::after {
+    content:'';
+    display:block;
+    clear:both
+}
+.float-left {
+    float:left
+}
+.float-right {
+    float:right
+}
+
+/* ========================================================== 表单控件 */
+
+input[type=email], input[type=number], input[type=password], input[type=search],
+input[type=tel], input[type=text], input[type=url], select {
+    width:100%;
+    height:46px;
+    line-height:26px;
+    font-family:inherit;
+    font-size:inherit;
+    padding:0 15px;
+    color:var(--c-text);
+    background:var(--c-surface);
+    border-radius:0;
+    -webkit-appearance:none
+}
+
+button, input[type=button], input[type=reset], input[type=submit] {
+    height:46px;
+    font-family:inherit;
+    font-size:inherit;
+    padding:0 15px;
+    border-radius:0;
+    -webkit-appearance:none;
+    text-transform:uppercase;
+    cursor:pointer;
+    color:#fff;
+    background:var(--c-text);
+    -webkit-transition:background-color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease)
+}
+button:hover, input[type=button]:hover, input[type=reset]:hover, input[type=submit]:hover {
+    background-color:var(--c-ink)
+}
+
+select {
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="#5e6c75" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>');
+    background-repeat:no-repeat;
+    background-position:right 1rem center
+}
+
+textarea {
+    width:100%;
+    line-height:26px;
+    background:var(--c-surface);
+    min-height:120px;
+    color:var(--c-text);
+    padding:15px
+}

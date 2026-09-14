@@ -1,0 +1,614 @@
+/* ---------------------------------------------------------------
+ * editor.css — 编辑模式的工具栏、弹窗、图标选择器、拖拽态、toast
+ * 配色统一走 base.css 里的设计令牌
+ * --------------------------------------------------------------- */
+
+/* ======================================================= 列表现状的改造 */
+
+.work-link .info li {
+    position:relative;
+    /* 覆盖 nav.css 的 overflow:hidden，否则拖拽落点指示线会被裁掉 */
+    overflow:visible
+}
+.work-link .info li.nv-item {
+    cursor:default
+}
+.work-link .info li.nv-dragging {
+    opacity:.35
+}
+
+/* 拖拽落点：给整项加底色 + 内侧描边，比只靠 1px 细线更容易看清 */
+.work-link .info li.nv-drop-before,
+.work-link .info li.nv-drop-after {
+    background:var(--c-accent-soft);
+    border-radius:var(--r-xs);
+    box-shadow:inset 0 0 0 1px rgba(63, 106, 224, .35)
+}
+.work-link .info li.nv-drop-before::before,
+.work-link .info li.nv-drop-after::after {
+    content:'';
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:3px;
+    z-index:2;
+    background:var(--c-accent);
+    border-radius:var(--r-pill)
+}
+.work-link .info li.nv-drop-before::before {
+    left:0
+}
+.work-link .info li.nv-drop-after::after {
+    right:0
+}
+
+.work-link .info .nv-name {
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap
+}
+.work-link .info .nv-icon-img {
+    width:1em;
+    height:1em;
+    object-fit:contain;
+    margin-right:6px;
+    vertical-align:-.125em
+}
+.work-link .info .nv-icon-emoji {
+    margin-right:6px
+}
+.work-link .info .nv-icon-text {
+    display:inline-block;
+    width:1em;
+    margin-right:6px;
+    text-align:center;
+    color:var(--c-muted)
+}
+
+/* 悬停时露出的编辑/删除按钮（网址与分类共用同一套右上角浮层样式） */
+.work-link .info .nv-tools,
+.work-link .info .nv-cat-tools {
+    position:absolute;
+    top:2px;
+    right:2px;
+    display:none;
+    align-items:center;
+    gap:2px;
+    padding:0 2px;
+    border-radius:var(--r-xs);
+    background:rgba(255, 255, 255, .92)
+}
+.work-link .info li.nv-item:hover .nv-tools,
+.work-link .info ul:hover .nv-cat-tools {
+    display:inline-flex
+}
+/* 进入编辑模式后常显，不必悬停 */
+body.nv-edit-mode .work-link .info .nv-tools,
+body.nv-edit-mode .work-link .info .nv-cat-tools {
+    display:inline-flex
+}
+/* 未进入编辑模式时，按钮不显示 */
+body:not(.nv-edit-mode) .work-link .info .nv-tools,
+body:not(.nv-edit-mode) .work-link .info .nv-cat-tools {
+    display:none!important
+}
+.work-link .info .nv-tool,
+.work-link .info .nv-cat-edit,
+.work-link .info .nv-cat-del {
+    display:inline-block;
+    width:18px;
+    height:18px;
+    line-height:18px;
+    padding:0;
+    text-align:center;
+    font-size:12px;
+    color:var(--c-muted);
+    border-radius:var(--r-xs)
+}
+.work-link .info .nv-tool:hover,
+.work-link .info .nv-cat-edit:hover {
+    color:var(--c-ink);
+    background:var(--c-line)
+}
+.work-link .info .nv-tool-del:hover,
+.work-link .info .nv-cat-del:hover {
+    color:var(--c-danger)
+}
+
+/* 分类名格子，同时作为右上角浮层的定位参照 */
+.work-link .info .nv-cat {
+    position:relative
+}
+/* 分类文字作为分节标题：略小、字距拉开、颜色压深，和链接项拉开层级 */
+.work-link .info li.nv-cat {
+    font-size:13px;
+    font-weight:600;
+    color:var(--c-text-2);
+    letter-spacing:.06em
+}
+
+/* 空分类占位行 */
+.work-link .info .nv-empty {
+    flex:1 1 auto!important;
+    max-width:none!important;
+    justify-content:flex-start
+}
+.work-link .info .nv-empty-hint {
+    font-size:13px;
+    color:var(--c-muted-2)
+}
+.work-link .info li.nv-empty.nv-drop-before {
+    background:var(--c-fill);
+    border-radius:var(--r-xs)
+}
+.work-link .info .nv-blank {
+    padding:60px 0;
+    text-align:center;
+    color:var(--c-muted-2);
+    font-size:14px
+}
+
+/* ============================================================ 工具栏 */
+
+#nav-toolbar {
+    position:fixed;
+    /* 与页头右边缘对齐（#site-main 左右各留 7.5%），展开在齿轮下方 */
+    right:7.5%;
+    /* 页面顶部 50px 外边距 + 齿轮偏移 60px + 齿轮高度 32px */
+    top:150px;
+    z-index:20;
+    display:none;
+    flex-direction:column;
+    align-items:stretch;
+    gap:var(--sp-1);
+    padding:7px;
+    background:rgba(255, 255, 255, .98);
+    border:1px solid var(--c-line-2);
+    border-radius:var(--r-lg);
+    box-shadow:var(--sh-3), var(--sh-hairline);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px)
+}
+/* 只有点击右上角齿轮进入编辑模式后才显示工具栏 */
+body.nv-edit-mode #nav-toolbar {
+    display:flex
+}
+.nv-sep {
+    width:auto;
+    height:1px;
+    background:var(--c-line-2)
+}
+.nv-btn {
+    height:32px;
+    padding:0 13px;
+    font-size:13px;
+    font-weight:500;
+    text-transform:none;
+    text-align:left;
+    white-space:nowrap;
+    color:var(--c-text);
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:var(--r-md);
+    cursor:pointer;
+    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)
+}
+.nv-btn:hover {
+    color:var(--c-ink);
+    background:var(--c-fill)
+}
+.nv-btn .fa {
+    margin-right:6px;
+    color:var(--c-muted)
+}
+.nv-btn:hover .fa {
+    color:var(--c-text-2)
+}
+.nv-btn-primary {
+    color:#fff;
+    background:var(--c-accent);
+    border-color:var(--c-accent)
+}
+.nv-btn-primary:hover {
+    color:#fff;
+    background:var(--c-accent-hover)
+}
+.nv-btn-ghost {
+    color:var(--c-muted)
+}
+.nv-btn-ghost:hover {
+    color:var(--c-ink);
+    background:var(--c-fill)
+}
+.nv-btn-danger {
+    color:var(--c-danger)
+}
+.nv-btn-danger:hover {
+    color:#fff;
+    background:var(--c-danger)
+}
+
+/* ============================================================== 弹窗 */
+
+body.nv-locked {
+    overflow:hidden
+}
+.nv-modal {
+    position:fixed;
+    inset:0;
+    z-index:30;
+    display:none
+}
+.nv-modal.open {
+    display:block
+}
+.nv-modal-mask {
+    position:absolute;
+    inset:0;
+    background:rgba(20, 21, 22, .45);
+    -webkit-backdrop-filter:blur(2px);
+    backdrop-filter:blur(2px)
+}
+.nv-modal-panel {
+    position:relative;
+    width:560px;
+    max-width:92vw;
+    max-height:88vh;
+    margin:6vh auto;
+    display:flex;
+    flex-direction:column;
+    background:var(--c-surface);
+    border-radius:var(--r-xl);
+    box-shadow:var(--sh-4), var(--sh-hairline);
+    overflow:hidden;
+    -webkit-animation:nv-pop .18s var(--ease-out);
+    animation:nv-pop .18s var(--ease-out)
+}
+@keyframes nv-pop {
+    from {
+        opacity:0;
+        -webkit-transform:translateY(10px) scale(.99);
+        transform:translateY(10px) scale(.99)
+    }
+    to {
+        opacity:1;
+        -webkit-transform:none;
+        transform:none
+    }
+}
+.nv-modal-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 22px;
+    border-bottom:1px solid var(--c-line-2)
+}
+.nv-modal-head h3 {
+    margin:0;
+    font-size:17px;
+    color:var(--c-ink)
+}
+.nv-close {
+    font-size:24px;
+    line-height:1;
+    color:var(--c-muted-2);
+    cursor:pointer;
+    -webkit-transition:color var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease)
+}
+.nv-close:hover {
+    color:var(--c-text)
+}
+.nv-modal-body {
+    padding:20px 22px;
+    overflow-y:auto
+}
+.nv-modal-foot {
+    display:flex;
+    justify-content:flex-end;
+    gap:var(--sp-2);
+    padding:14px 22px;
+    border-top:1px solid var(--c-line-2);
+    background:var(--c-surface-2)
+}
+
+/* ============================================================ 表单项 */
+
+.nv-field {
+    display:block;
+    margin-bottom:var(--sp-4)
+}
+.nv-field:last-child {
+    margin-bottom:0
+}
+.nv-label {
+    display:block;
+    margin-bottom:6px;
+    font-size:13px;
+    font-weight:600;
+    text-transform:none;
+    color:var(--c-text-2);
+    cursor:default
+}
+.nv-field input[type=text],
+.nv-field input[type=search] {
+    width:100%;
+    height:42px;
+    padding:0 12px;
+    font-size:14px;
+    color:var(--c-text);
+    background:var(--c-fill-2);
+    /* 用专门的深一档描边，保证任何对比度下都能看出这是个输入框 */
+    border:1px solid var(--c-border);
+    border-radius:var(--r-sm);
+    outline:0;
+    /* 只过渡边框与光环这类"交互反馈"属性。
+       背景色不在这里过渡：否则切主题时会和 .theme-anim 抢同一属性而慢半拍。 */
+    -webkit-transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
+}
+.nv-field input[type=text]:hover,
+.nv-field input[type=search]:hover {
+    border-color:var(--c-border-hover)
+}
+.nv-field input[type=text]::placeholder,
+.nv-field input[type=search]::placeholder {
+    color:var(--c-muted-2)
+}
+.nv-field input[type=text]:focus,
+.nv-field input[type=search]:focus {
+    background:var(--c-surface);
+    border-color:var(--c-accent);
+    box-shadow:var(--ring)
+}
+.nv-field select {
+    height:42px;
+    padding:0 12px;
+    font-size:14px;
+    color:var(--c-text);
+    background-color:var(--c-fill-2);
+    border:1px solid var(--c-border);
+    border-radius:var(--r-sm);
+    -webkit-transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
+}
+.nv-field select:hover {
+    border-color:var(--c-border-hover)
+}
+.nv-field select:focus {
+    border-color:var(--c-accent);
+    box-shadow:var(--ring)
+}
+
+/* ======================================================== 图标选择器 */
+
+.nv-icon-preview {
+    display:flex;
+    align-items:center;
+    gap:var(--sp-3);
+    min-height:42px;
+    padding:8px 12px;
+    margin-bottom:var(--sp-2);
+    font-size:13px;
+    color:var(--c-muted);
+    background:var(--c-fill-2);
+    border:1px dashed var(--c-border);
+    border-radius:var(--r-sm)
+}
+.nv-preview-icon {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:24px;
+    height:24px;
+    font-size:18px;
+    color:var(--c-text-2)
+}
+.nv-preview-icon .nv-icon-img {
+    width:20px;
+    height:20px;
+    object-fit:contain
+}
+.nv-preview-text {
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap
+}
+.nv-preview-none {
+    color:var(--c-muted-2)
+}
+
+.nv-icon-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:var(--sp-2)
+}
+.nv-mini {
+    height:28px;
+    padding:0 10px;
+    font-size:12px;
+    text-transform:none;
+    color:var(--c-text-2);
+    background:var(--c-fill);
+    border:1px solid var(--c-line);
+    border-radius:var(--r-xs);
+    cursor:pointer;
+    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+        border-color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+        border-color var(--t-fast) var(--ease)
+}
+.nv-mini:hover {
+    color:var(--c-ink);
+    background:var(--c-line-2)
+}
+.nv-mini.active {
+    color:#fff;
+    background:var(--c-accent);
+    border-color:var(--c-accent)
+}
+.nv-mini .fa {
+    margin-right:4px
+}
+
+.nv-icon-pane[hidden] {
+    display:none
+}
+.nv-icon-search,
+.nv-icon-custom {
+    margin-bottom:var(--sp-2)
+}
+/* 自定义 emoji 输入框：略大字号，方便看清输入/粘贴的符号 */
+.nv-icon-custom {
+    font-size:16px
+}
+.nv-icon-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(38px, 1fr));
+    gap:6px;
+    max-height:230px;
+    padding:var(--sp-2);
+    overflow-y:auto;
+    background:var(--c-fill-2);
+    border:1px solid var(--c-line-2);
+    border-radius:var(--r-sm)
+}
+.nv-icon-cell {
+    height:36px;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    color:var(--c-text-2);
+    background:var(--c-surface);
+    border:1px solid var(--c-line-2);
+    border-radius:var(--r-xs);
+    cursor:pointer;
+    -webkit-transition:color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+        -webkit-transform var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+        transform var(--t-fast) var(--ease)
+}
+.nv-icon-cell:hover {
+    color:var(--c-ink);
+    border-color:var(--c-muted-2);
+    -webkit-transform:translateY(-1px);
+    transform:translateY(-1px)
+}
+.nv-icon-cell.selected {
+    color:#fff;
+    background:var(--c-accent);
+    border-color:var(--c-accent)
+}
+.nv-icon-cell.used {
+    opacity:.45
+}
+.nv-emoji-cell {
+    font-size:19px
+}
+.nv-icon-none {
+    grid-column:1 / -1;
+    padding:var(--sp-4);
+    text-align:center;
+    font-size:13px;
+    color:var(--c-muted-2)
+}
+
+/* ============================================================== 提示 */
+
+#nv-toast {
+    position:fixed;
+    left:50%;
+    bottom:40px;
+    z-index:40;
+    max-width:80vw;
+    padding:10px 18px;
+    font-size:13px;
+    color:#fff;
+    background:rgba(24, 26, 31, .94);
+    border-radius:var(--r-sm);
+    box-shadow:var(--sh-3);
+    opacity:0;
+    visibility:hidden;
+    -webkit-transform:translate(-50%, 10px);
+    transform:translate(-50%, 10px);
+    -webkit-transition:opacity var(--t-base) var(--ease-out), visibility var(--t-base) var(--ease-out),
+        -webkit-transform var(--t-base) var(--ease-out);
+    transition:opacity var(--t-base) var(--ease-out), visibility var(--t-base) var(--ease-out),
+        transform var(--t-base) var(--ease-out)
+}
+#nv-toast.show {
+    opacity:1;
+    visibility:visible;
+    -webkit-transform:translate(-50%, 0);
+    transform:translate(-50%, 0)
+}
+
+/* ======================================================== 右上角齿轮 */
+
+#nav-gear {
+    cursor:pointer;
+    margin-top:60px;
+    /* 齿轮在最右，左边与主题按钮的间距由 #nav-theme 的 margin-left 负责 */
+    /* 加大可点击区域，避免误点到旁边 */
+    width:32px;
+    height:32px;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center;
+    -webkit-justify-content:center;
+    justify-content:center;
+    font-size:16px;
+    line-height:1;
+    color:var(--c-muted);
+    border-radius:50%;
+    -webkit-transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease)
+}
+#nav-gear:hover {
+    color:var(--c-ink);
+    background:var(--c-fill)
+}
+#nav-gear .fa {
+    display:block;
+    -webkit-transition:-webkit-transform var(--t-base) var(--ease);
+    transition:transform var(--t-base) var(--ease)
+}
+/* 编辑模式激活时齿轮高亮 + 旋转 */
+body.nv-edit-mode #nav-gear {
+    color:var(--c-accent)
+}
+body.nv-edit-mode #nav-gear .fa {
+    -webkit-transform:rotate(90deg);
+    transform:rotate(90deg)
+}
+
+/* ========================================================== 小屏适配 */
+
+@media screen and (max-width:768px) {
+    #nav-toolbar {
+        /* 小屏 #site-main 无外边距，容器 90% 宽 -> 右边缘约在 10% 处 */
+        right:10%;
+        top:74px;
+        padding:6px;
+        gap:5px
+    }
+    .nv-btn {
+        height:30px;
+        padding:0 10px;
+        font-size:12px
+    }
+    .nv-modal-panel {
+        width:92vw;
+        margin:4vh auto
+    }
+    #nav-gear {
+        margin-top:34px;
+        font-size:15px
+    }
+}

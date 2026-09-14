@@ -1,0 +1,294 @@
+/* ---------------------------------------------------------------
+ * nav.css — 页面外壳、页头、搜索区、链接列表、小屏适配
+ * --------------------------------------------------------------- */
+
+/* ========================================================== 页面外壳 */
+
+#site-main {
+    max-width:85%;
+    margin:50px auto;
+    position:relative;
+    background:var(--c-surface);
+    border-radius:var(--r-xl);
+    /* 卡片层：柔和多层阴影 + 极淡内描边，形成纸张厚度 */
+    box-shadow:var(--sh-3), var(--sh-hairline)
+}
+/* 卡片顶部一条渐隐高光，强化"浮起"的观感 */
+#site-main::before {
+    content:'';
+    position:absolute;
+    top:0;
+    left:6%;
+    right:6%;
+    height:1px;
+    z-index:2;
+    pointer-events:none;
+    background:linear-gradient(90deg, transparent, rgba(255, 255, 255, .9), transparent)
+}
+
+/* ============================================================== 页头 */
+
+#site-header {
+    height:150px
+}
+#header-logo {
+    margin-top:61px
+}
+
+/* ============================================================ 搜索区 */
+
+.headline {
+    text-align:center;
+    padding:130px 0
+}
+.headline-content {
+    max-width:650px;
+    margin:0 auto
+}
+.search-bar {
+    padding:24px 0 76px
+}
+
+/* 引擎标签：下划线用伪元素 + scaleX 做弹性展开，比改 border 更顺滑 */
+.search-tab {
+    max-width:470px;
+    height:33px;
+    margin:0 auto 24px;
+    display:flex;
+    align-items:center;
+    flex-direction:row;
+    justify-content:space-between;
+    border-bottom:1px solid var(--c-line-2);
+    -webkit-tap-highlight-color:transparent
+}
+.search-tab span {
+    position:relative;
+    height:32px;
+    padding:0 8px;
+    display:inline-block;
+    font-size:15px;
+    line-height:1;
+    opacity:.5;
+    color:var(--c-text);
+    cursor:pointer;
+    white-space:nowrap;
+    overflow:hidden;
+    -webkit-transition:opacity var(--t-base) var(--ease), color var(--t-base) var(--ease);
+    transition:opacity var(--t-base) var(--ease), color var(--t-base) var(--ease)
+}
+.search-tab span::after {
+    content:'';
+    position:absolute;
+    left:8px;
+    right:8px;
+    bottom:0;
+    height:2px;
+    border-radius:var(--r-pill);
+    background:var(--c-accent);
+    -webkit-transform:scaleX(0);
+    transform:scaleX(0);
+    -webkit-transform-origin:50% 100%;
+    transform-origin:50% 100%;
+    -webkit-transition:-webkit-transform var(--t-base) var(--ease-spring);
+    transition:transform var(--t-base) var(--ease-spring)
+}
+.search-tab span:hover {
+    opacity:.85
+}
+.search-tab span.active {
+    opacity:1;
+    color:var(--c-ink)
+}
+.search-tab span.active::after {
+    -webkit-transform:scaleX(1);
+    transform:scaleX(1)
+}
+
+/* 搜索表单：细描边 + 静置阴影，聚焦时叠加柔和光环并轻微放大 */
+.search-form {
+    position:relative;
+    max-width:470px;
+    margin:0 auto;
+    overflow:hidden;
+    border-radius:var(--r-md);
+    /* 用真实 border 而非 inset 阴影：线条更锐利，对比不足时也能看清输入框范围 */
+    border:1px solid var(--c-border);
+    -webkit-transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease),
+        -webkit-transform var(--t-base) var(--ease);
+    transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease),
+        transform var(--t-base) var(--ease)
+}
+.search-form:hover {
+    border-color:var(--c-border-hover)
+}
+.search-form:focus-within {
+    border-color:var(--c-accent);
+    box-shadow:var(--ring);
+    -webkit-transform:scale(1.012);
+    transform:scale(1.012)
+}
+.search-form input[type=search] {
+    max-width:470px;
+    width:74%;
+    background:var(--c-fill-2);
+    border-radius:var(--r-md) 0 0 var(--r-md);
+    overflow:hidden
+}
+/* 聚焦时的底色过渡只在这里声明。
+   如果挂在元素自身，切主题时会和 .theme-anim 的背景过渡抢同一属性，
+   导致搜索框比页面其他地方慢半拍。 */
+.search-form input[type=search]:focus {
+    background:var(--c-surface);
+    -webkit-transition:background-color var(--t-base) var(--ease);
+    transition:background-color var(--t-base) var(--ease)
+}
+.search-form input[type=search]::placeholder {
+    color:var(--c-muted-2)
+}
+.search-form input[type=submit] {
+    max-width:130px;
+    width:26%;
+    border-radius:0 var(--r-md) var(--r-md) 0;
+    letter-spacing:.04em
+}
+
+/* ========================================================== 链接列表 */
+
+.works {
+    background:var(--c-surface)
+}
+.work-link {
+    min-height:500px;
+    font-size:16px;
+    opacity:0;
+    padding:40px 0 45px;
+    -webkit-transition:opacity var(--t-base) var(--ease);
+    transition:opacity var(--t-base) var(--ease)
+}
+.work-link .container {
+    width:80%
+}
+
+.work-link .info ul {
+    line-height:32px;
+    display:flex;
+    flex-wrap:nowrap;
+    overflow:hidden;
+    /* 行内上下留白，让每一组链接有"呼吸感" */
+    padding:12px 14px;
+    margin:2px 0;
+    position:relative
+}
+
+/* 每行 8 列，首列留给分类名（占 11%） */
+.work-link .info li {
+    flex:0 0 calc((100% - 11%) / 8);
+    max-width:calc((100% - 11%) / 8);
+    min-width:0;
+    padding:5px 0;
+    display:inline-flex;
+    white-space:nowrap;
+    justify-content:center;
+    overflow:hidden
+}
+.work-link .info li:first-child {
+    flex:0 0 11%;
+    max-width:11%;
+    justify-content:flex-start;
+    color:var(--c-muted);
+    font-size:14px
+}
+
+.work-link .info a {
+    display:inline-block;
+    max-width:100%;
+    padding:5px 14px;
+    margin:1px 0;
+    border-radius:var(--r-sm);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+        -webkit-transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+        transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
+}
+/* 悬停：轻微上移 + 提亮底色 + 落下一点阴影，产生"可点击"的物理感 */
+.work-link .info a:hover {
+    background:var(--c-surface);
+    color:var(--c-ink);
+    -webkit-transform:translateY(-1px);
+    transform:translateY(-1px);
+    box-shadow:var(--sh-2), var(--sh-hairline)
+}
+.work-link .info a .fa {
+    margin-right:6px;
+    width:1em;
+    text-align:center;
+    color:var(--c-muted);
+    -webkit-transition:color var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease)
+}
+.work-link .info a:hover .fa {
+    color:var(--c-accent)
+}
+.work-link .info a .nv-icon-text {
+    color:var(--c-muted)
+}
+
+/* ========================================================== 小屏适配 */
+
+@media screen and (max-width:1024px) {
+    .container {
+        width:90%
+    }
+    #site-main {
+        margin:0
+    }
+}
+
+@media screen and (max-width:768px) {
+    .container {
+        width:70%
+    }
+    #site-header {
+        height:90px
+    }
+    #header-logo {
+        margin-top:36px
+    }
+    .headline-content {
+        max-width:100%
+    }
+    .search-bar {
+        padding-bottom:60px
+    }
+    .search-tab span {
+        font-size:15px
+    }
+    .work-link {
+        padding:30px 0;
+        font-size:14px
+    }
+    .work-link .container {
+        width:85%
+    }
+}
+
+/* 窄屏改为每行 4 个，分类名单独占满一行 */
+@media screen and (max-width:480px) {
+    .container {
+        width:90%
+    }
+    .work-link .info ul {
+        padding:10px;
+        flex-wrap:wrap
+    }
+    .work-link .info li {
+        flex:0 0 25%;
+        padding:0
+    }
+    .work-link .info li:first-child {
+        flex:0 0 100%;
+        max-width:100%
+    }
+}

@@ -1,0 +1,180 @@
+/* ---------------------------------------------------------------
+ * theme.css — 夜间（深色）模式 + 页头主题切换按钮
+ *
+ * 通过 <html class="dark"> 切换。所有颜色覆盖只改令牌，不动具体组件，
+ * 这样 nav.css / editor.css 里的规则在两种主题下共用一套。
+ *
+ * 令牌必须在 :root 上重新赋值（而非 body），否则 body 自身的
+ * background 声明会失去变量来源。
+ * --------------------------------------------------------------- */
+
+/* ==================================================== 主题切换按钮 */
+
+#nav-theme {
+    cursor:pointer;
+    margin-top:60px;
+    /* 与右侧 #nav-gear 的间距 */
+    margin-left:10px;
+    width:32px;
+    height:32px;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center;
+    -webkit-justify-content:center;
+    justify-content:center;
+    font-size:16px;
+    line-height:1;
+    color:var(--c-muted);
+    border-radius:50%;
+    -webkit-transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+        -webkit-transform var(--t-base) var(--ease);
+    transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+        transform var(--t-base) var(--ease)
+}
+#nav-theme:hover {
+    color:var(--c-ink);
+    background:var(--c-fill)
+}
+#nav-theme .fa {
+    display:block
+}
+/* 图标切换时轻轻转一下，给一点反馈 */
+#nav-theme.switching .fa {
+    -webkit-transform:rotate(-30deg) scale(.85);
+    transform:rotate(-30deg) scale(.85)
+}
+
+/* ===================================================== 深色模式令牌 */
+
+html.dark {
+    /* ------------------------------------------------ 中性阶反转 */
+    --c-ink:#f2f4f7;
+    --c-text:#d5d9e0;
+    --c-text-2:#a8aeb8;
+    --c-muted:#7d8590;
+    --c-muted-2:#606770;
+    --c-line:#33383f;
+    --c-line-2:#2a2e35;
+    /* 深色下同样把输入框描边提亮，保证能看清输入区边界 */
+    --c-border:#5f6772;
+    --c-border-hover:#7d8590;
+    --c-fill:#24282e;
+    --c-fill-2:#1b1e23;
+    --c-surface:#1c1f24;
+    --c-surface-2:#21252a;
+
+    /* ------------------------------------------------ 背景 */
+    /* 深色下网格要更弱，否则会显得脏 */
+    --c-page:#15181c;
+    --c-page-top:#191d22;
+    --c-page-bottom:#111417;
+    --c-grid:rgba(255, 255, 255, .022);
+
+    /* ------------------------------------------------ 主色 */
+    /* 深色底上把强调色提亮一点，保证对比度 */
+    --c-accent:#6a8dff;
+    --c-accent-hover:#829fff;
+    --c-accent-soft:rgba(106, 141, 255, .14);
+    --c-danger:#e05a4a;
+
+    /* ------------------------------------------------ 阴影 */
+    /* 深色下投影几乎看不见，改用更深的黑 + 更强的内描边来分层 */
+    --sh-2:0 2px 4px rgba(0, 0, 0, .34), 0 4px 10px rgba(0, 0, 0, .26);
+    --sh-3:0 4px 10px rgba(0, 0, 0, .36), 0 14px 34px rgba(0, 0, 0, .3);
+    --sh-4:0 8px 20px rgba(0, 0, 0, .44), 0 24px 64px rgba(0, 0, 0, .5);
+    --sh-hairline:inset 0 0 0 1px rgba(255, 255, 255, .055);
+
+    --ring:0 0 0 3px rgba(106, 141, 255, .22)
+}
+
+/* 深色模式下的细节补偿：这些地方用了写死的白色/浅色，令牌覆盖不到 */
+
+/* 卡片顶部高光：亮色是白色渐隐，深色下会很突兀 */
+html.dark #site-main::before {
+    background:linear-gradient(90deg, transparent, rgba(255, 255, 255, .07), transparent)
+}
+
+/* 链接悬停的白底在深色下要改为微亮表面 */
+html.dark .work-link .info a:hover {
+    background:var(--c-fill)
+}
+
+/* 编辑/删除按钮的浮层底色 */
+html.dark .work-link .info .nv-tools,
+html.dark .work-link .info .nv-cat-tools {
+    background:rgba(28, 31, 36, .92)
+}
+
+/* 工具栏与弹窗的毛玻璃底 */
+html.dark #nav-toolbar {
+    background:rgba(28, 31, 36, .98);
+    border-color:var(--c-line-2)
+}
+
+/* 搜索框提交按钮：深色下用主色更像"操作"，中性灰会糊住 */
+html.dark .search-form input[type=submit] {
+    background:var(--c-accent)
+}
+html.dark .search-form input[type=submit]:hover {
+    background:var(--c-accent-hover)
+}
+
+/* 弹窗遮罩加深，深色下才有层次 */
+html.dark .nv-modal-mask {
+    background:rgba(0, 0, 0, .62)
+}
+html.dark .nv-modal-panel {
+    border:1px solid var(--c-line-2)
+}
+
+/* toast 在深色下要略微提亮，否则和背景分不开 */
+html.dark #nv-toast {
+    background:rgba(52, 57, 64, .96);
+    color:#f2f4f7
+}
+
+/* select 的下拉箭头是写死在 base.css 里的深灰 SVG，深色底上会看不见 */
+html.dark .nv-field select {
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="%23a8aeb8" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>')
+}
+
+/* 图标选择器的格子：亮色是白底，深色下改用稍亮表面以便区分 */
+html.dark .nv-icon-cell {
+    background:var(--c-fill)
+}
+
+/* 切换主题时整页颜色过渡，避免生硬闪变。
+   只在切换的瞬间由 JS 加 .theme-anim，避免这条规则常驻后覆盖
+   nav.css / editor.css 里更深的选择器（如行悬停的交互反馈）。 */
+/* 切换主题时整页颜色过渡，避免生硬闪变。
+   只在切换瞬间由 JS 挂 .theme-anim，避免常驻后覆盖交互反馈。
+   注意：只过渡"背景与文字色"，不碰 border-color / box-shadow ——
+   那两项属于聚焦态反馈，若在这里抢过渡，点击主题按钮导致搜索框失焦时
+   会出现"边框与光环同时在动"的闪烁。 */
+html.theme-anim body,
+html.theme-anim #site-main,
+html.theme-anim #site-main::before,
+html.theme-anim .work-link .info a,
+html.theme-anim .search-form input[type=search],
+html.theme-anim #nav-toolbar,
+html.theme-anim .nv-modal-panel,
+html.theme-anim #nv-toast,
+html.theme-anim .nv-field input[type=text],
+html.theme-anim .nv-field input[type=search],
+html.theme-anim .nv-field select,
+html.theme-anim .nv-icon-cell {
+    -webkit-transition:background-color .28s var(--ease), color .28s var(--ease) !important;
+    transition:background-color .28s var(--ease), color .28s var(--ease) !important
+}
+
+/* ======================================================= 小屏适配 */
+
+@media screen and (max-width:768px) {
+    #nav-theme {
+        margin-top:34px;
+        margin-left:8px;
+        font-size:15px
+    }
+}

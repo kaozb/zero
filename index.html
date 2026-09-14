@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>烤鱼</title>
+        <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport">
+        <link rel="shortcut icon" href="./css/1f.png" type="image/x-icon">
+        <link href="./css/font-awesome.min.css" rel="stylesheet">
+        <link href="./css/JS_CSS/base.css" rel="stylesheet">
+        <link href="./css/JS_CSS/nav.css" rel="stylesheet">
+        <link href="./css/JS_CSS/editor.css" rel="stylesheet">
+        <link href="./css/JS_CSS/theme.css" rel="stylesheet">
+        <!-- 尽早应用已保存的主题，避免深色用户看到一瞬白屏。
+             这段必须留在 head 且不能 defer。 -->
+        <script>
+            try {
+                if (localStorage.getItem("nav_theme_v1") === "dark") {
+                    document.documentElement.className += " dark";
+                }
+            } catch (e) {
+            }
+        </script>
+    </head>
+    
+    <body>
+        <div id="site-main">
+            <header id="site-header">
+                <div class="container">
+                    <div class="float-left" id="header-logo"></div>
+                    <div class="float-right" id="nav-gear" title="设置"><i class="fa fa-cog"></i></div>
+                    <div class="float-right" id="nav-theme" title="夜间模式"><i class="fa fa-moon-o"></i></div>
+                </div>
+            </header>
+            <div class="headline search-bar">
+                <div class="container">
+                    <div class="headline-content">
+                        <div class="search-tab"><span class="bing">必应</span>  <span class="baidu">百度</span>  <span class="google">谷歌</span>  <span class="lookao">维基百科</span>  <span class="scholar">学术</span>  <span class="image">图片</span>  <span class="torrent">shodan</span>
+                        </div>
+                        <form class="search-form" target="_blank" action="https://cn.bing.com/search">
+                            <input class="float-left search-keyword" type="search" autocomplete="off" autofocus="" name="q" placeholder="必应 搜索">
+                            <input class="float-right" type="submit" value="搜索">
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="works">
+                <div class="work-link">
+                    <div class="container">
+                        <div class="info">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="nav-toolbar">
+            <button type="button" class="nv-btn" id="nv-add-url"><i class="fa fa-plus"></i> 新增网址</button>
+            <button type="button" class="nv-btn" id="nv-add-cat"><i class="fa fa-folder-o"></i> 新增分类</button>
+            <span class="nv-sep"></span>
+            <button type="button" class="nv-btn" id="nv-export"><i class="fa fa-download"></i> 导出</button>
+            <button type="button" class="nv-btn" id="nv-import"><i class="fa fa-upload"></i> 导入</button>
+            <span class="nv-sep"></span>
+            <button type="button" class="nv-btn nv-btn-danger" id="nv-reset"><i class="fa fa-undo"></i> 恢复默认设置</button>
+            <input type="file" id="nv-import-file" accept=".json,application/json" hidden>
+        </div>
+
+        <div id="nv-modal" class="nv-modal" aria-hidden="true">
+            <div class="nv-modal-mask" data-nv-close></div>
+            <div class="nv-modal-panel" role="dialog" aria-modal="true" aria-labelledby="nv-modal-title">
+                <header class="nv-modal-head">
+                    <h3 id="nv-modal-title">新增网址</h3>
+                    <span class="nv-close" data-nv-close>&times;</span>
+                </header>
+
+                <div class="nv-modal-body" id="nv-form-link">
+                    <label class="nv-field">
+                        <span class="nv-label">名称</span>
+                        <input type="text" id="nv-name" placeholder="例如：GitHub" autocomplete="off">
+                    </label>
+                    <label class="nv-field">
+                        <span class="nv-label">网址</span>
+                        <input type="text" id="nv-url" placeholder="例如：https://github.com" autocomplete="off">
+                    </label>
+                    <label class="nv-field">
+                        <span class="nv-label">分类</span>
+                        <select id="nv-category"></select>
+                    </label>
+                    <div class="nv-field">
+                        <span class="nv-label">图标</span>
+                        <div class="nv-icon-preview" id="nv-icon-preview"></div>
+                        <div class="nv-icon-actions">
+                            <button type="button" class="nv-mini active" data-nv-tab="fa">Font Awesome</button>
+                            <button type="button" class="nv-mini" data-nv-tab="emoji">Emoji</button>
+                            <button type="button" class="nv-mini" data-nv-tab="img">图片 URL</button>
+                            <button type="button" class="nv-mini" id="nv-icon-random"><i class="fa fa-random"></i> 随机</button>
+                        </div>
+                        <div class="nv-icon-pane" data-nv-pane="fa">
+                            <input type="search" class="nv-icon-search" id="nv-icon-search" placeholder="搜索图标，如 github / 购物 / 视频" autocomplete="off">
+                            <div class="nv-icon-grid" id="nv-icon-grid"></div>
+                        </div>
+                        <div class="nv-icon-pane" data-nv-pane="emoji" hidden>
+                            <input type="text" class="nv-icon-custom" id="nv-emoji-input" placeholder="输入或粘贴任意 Emoji，例如 🚀" autocomplete="off">
+                            <div class="nv-icon-grid nv-emoji-grid" id="nv-emoji-grid"></div>
+                        </div>
+                        <div class="nv-icon-pane" data-nv-pane="img" hidden>
+                            <input type="text" id="nv-icon-url" placeholder="https://example.com/favicon.ico" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nv-modal-body" id="nv-form-cat" hidden>
+                    <label class="nv-field">
+                        <span class="nv-label">分类名称</span>
+                        <input type="text" id="nv-cat-name" placeholder="例如：常用工具" autocomplete="off">
+                    </label>
+                </div>
+
+                <footer class="nv-modal-foot">
+                    <button type="button" class="nv-btn nv-btn-ghost" data-nv-close>取消</button>
+                    <button type="button" class="nv-btn nv-btn-primary" id="nv-save">保存</button>
+                </footer>
+            </div>
+        </div>
+
+        <div id="nv-toast"></div>
+
+        <script defer src="./css/JS_CSS/store.js"></script>
+        <script defer src="./css/JS_CSS/icons.js"></script>
+        <script defer src="./css/JS_CSS/app.js"></script>
+    </body>
+
+</html>

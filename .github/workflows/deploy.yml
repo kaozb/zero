@@ -1,0 +1,59 @@
+# 部署静态站点到 GitHub Pages
+name: 自动部署
+
+on:
+  # push 到 master 时部署
+  push:
+    branches: [ master ]
+  # 定时重建：UTC 17:00 = 北京时间每月 1 日凌晨 1 点
+  schedule:
+    - cron: '0 17 1 * *'
+  # 允许手动触发
+  workflow_dispatch:
+
+# 默认只读，按 job 需要单独提权
+permissions:
+  contents: read
+
+# 同一时间只保留一个 Pages 部署，但不打断进行中的生产部署
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 只上传站点内容，避免把 .github 等无关文件发布到公开站点
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  triggers:
+    name: 触发 Cloudflare 重建
+    # 只在定时任务时触发外部重建，push 时无需重复调用
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 触发 nav 站点重建
+        run: curl -fsS -X POST "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/75fee29d-6dba-4caa-ad46-4ac788569fd3"
+
+      - name: 触发 note 站点重建
+        run: curl -fsS -X POST "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/677edc1d-2646-457f-a397-aa4dbb40fafe"
