@@ -1,5 +1,10 @@
 /* ---------------------------------------------------------------
  * nav.css — 页面外壳、页头、搜索区、链接列表、小屏适配
+ *
+ * 视觉对齐 codebuddy2api 的风格：
+ *   · 主卡片是玻璃材质（半透明渐变 + 白高光描边 + backdrop blur）
+ *   · 搜索引擎切换是胶囊分段控件（selected 底色滑动，不是下划线）
+ *   · 链接悬停只用半透明白底提亮，不做位移和投影
  * --------------------------------------------------------------- */
 
 /* ========================================================== 页面外壳 */
@@ -8,10 +13,15 @@
     max-width:85%;
     margin:50px auto;
     position:relative;
-    background:var(--c-surface);
-    border-radius:var(--r-xl);
-    /* 卡片层：柔和多层阴影 + 极淡内描边，形成纸张厚度 */
-    box-shadow:var(--sh-3), var(--sh-hairline)
+    /* 玻璃卡片：亮面在左上，暗端在右下，叠在页面的光晕底色上 */
+    background:linear-gradient(135deg,
+        color-mix(in srgb, var(--c-surface) 70%, transparent),
+        color-mix(in srgb, var(--c-surface-tint) 52%, transparent));
+    border:1px solid var(--c-highlight);
+    border-radius:26px;
+    box-shadow:var(--sh-3), var(--sh-hairline);
+    -webkit-backdrop-filter:blur(22px) saturate(155%);
+    backdrop-filter:blur(22px) saturate(155%)
 }
 /* 卡片顶部一条渐隐高光，强化"浮起"的观感 */
 #site-main::before {
@@ -23,7 +33,7 @@
     height:1px;
     z-index:2;
     pointer-events:none;
-    background:linear-gradient(90deg, transparent, rgba(255, 255, 255, .9), transparent)
+    background:linear-gradient(90deg, transparent, var(--c-highlight), transparent)
 }
 
 /* ============================================================== 页头 */
@@ -49,62 +59,50 @@
     padding:24px 0 76px
 }
 
-/* 引擎标签：下划线用伪元素 + scaleX 做弹性展开，比改 border 更顺滑 */
+/* 引擎标签：胶囊分段控件。外层是凹槽轨道，选中项垫一块 selected 底色 */
 .search-tab {
     max-width:470px;
-    height:33px;
     margin:0 auto 24px;
     display:flex;
+    flex-wrap:wrap;
     align-items:center;
     flex-direction:row;
-    justify-content:space-between;
-    border-bottom:1px solid var(--c-line-2);
+    justify-content:center;
+    gap:2px;
+    padding:3px;
+    border-radius:var(--r-pill);
+    background:var(--c-card);
+    border:1px solid var(--c-highlight);
+    box-shadow:inset 0 1px 3px rgba(24, 37, 26, .07), inset 0 -1px 0 var(--c-highlight);
     -webkit-tap-highlight-color:transparent
 }
 .search-tab span {
-    position:relative;
-    height:32px;
-    padding:0 8px;
-    display:inline-block;
-    font-size:15px;
+    height:28px;
+    padding:0 12px;
+    display:inline-flex;
+    align-items:center;
+    font-size:12px;
     line-height:1;
-    opacity:.5;
-    color:var(--c-text);
+    color:var(--c-text-2);
+    border-radius:var(--r-pill);
     cursor:pointer;
     white-space:nowrap;
     overflow:hidden;
-    -webkit-transition:opacity var(--t-base) var(--ease), color var(--t-base) var(--ease);
-    transition:opacity var(--t-base) var(--ease), color var(--t-base) var(--ease)
-}
-.search-tab span::after {
-    content:'';
-    position:absolute;
-    left:8px;
-    right:8px;
-    bottom:0;
-    height:2px;
-    border-radius:var(--r-pill);
-    background:var(--c-accent);
-    -webkit-transform:scaleX(0);
-    transform:scaleX(0);
-    -webkit-transform-origin:50% 100%;
-    transform-origin:50% 100%;
-    -webkit-transition:-webkit-transform var(--t-base) var(--ease-spring);
-    transition:transform var(--t-base) var(--ease-spring)
+    -webkit-transition:background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
+    transition:background-color var(--t-base) var(--ease), color var(--t-base) var(--ease)
 }
 .search-tab span:hover {
-    opacity:.85
-}
-.search-tab span.active {
-    opacity:1;
+    background:var(--c-hover-fill);
     color:var(--c-ink)
 }
-.search-tab span.active::after {
-    -webkit-transform:scaleX(1);
-    transform:scaleX(1)
+.search-tab span.active {
+    background:var(--c-selected);
+    color:var(--c-strong);
+    font-weight:600;
+    box-shadow:inset 0 1px 0 var(--c-highlight)
 }
 
-/* 搜索表单：细描边 + 静置阴影，聚焦时叠加柔和光环并轻微放大 */
+/* 搜索表单：白底 + 细描边，聚焦时叠绿色光环 */
 .search-form {
     position:relative;
     max-width:470px;
@@ -113,34 +111,24 @@
     border-radius:var(--r-md);
     /* 用真实 border 而非 inset 阴影：线条更锐利，对比不足时也能看清输入框范围 */
     border:1px solid var(--c-border);
-    -webkit-transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease),
-        -webkit-transform var(--t-base) var(--ease);
-    transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease),
-        transform var(--t-base) var(--ease)
+    -webkit-transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
+    transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease)
 }
 .search-form:hover {
     border-color:var(--c-border-hover)
 }
 .search-form:focus-within {
     border-color:var(--c-accent);
-    box-shadow:var(--ring);
-    -webkit-transform:scale(1.012);
-    transform:scale(1.012)
+    box-shadow:var(--ring)
 }
 .search-form input[type=search] {
     max-width:470px;
     width:74%;
-    background:var(--c-fill-2);
+    height:46px;
+    background:var(--c-surface);
+    border:0;
     border-radius:var(--r-md) 0 0 var(--r-md);
     overflow:hidden
-}
-/* 聚焦时的底色过渡只在这里声明。
-   如果挂在元素自身，切主题时会和 .theme-anim 的背景过渡抢同一属性，
-   导致搜索框比页面其他地方慢半拍。 */
-.search-form input[type=search]:focus {
-    background:var(--c-surface);
-    -webkit-transition:background-color var(--t-base) var(--ease);
-    transition:background-color var(--t-base) var(--ease)
 }
 .search-form input[type=search]::placeholder {
     color:var(--c-muted-2)
@@ -148,14 +136,24 @@
 .search-form input[type=submit] {
     max-width:130px;
     width:26%;
+    height:46px;
+    border:0;
     border-radius:0 var(--r-md) var(--r-md) 0;
-    letter-spacing:.04em
+    letter-spacing:.04em;
+    color:var(--c-on-primary);
+    background:linear-gradient(140deg, var(--c-primary), var(--c-primary-hover));
+    box-shadow:inset 0 1px 0 rgba(255, 255, 255, .33), 0 5px 14px rgba(55, 108, 51, .15)
+}
+.search-form input[type=submit]:hover {
+    color:var(--c-on-primary);
+    background:var(--c-primary-hover);
+    border-color:var(--c-primary-hover)
 }
 
 /* ========================================================== 链接列表 */
 
 .works {
-    background:var(--c-surface)
+    background:transparent
 }
 .work-link {
     min-height:500px;
@@ -204,35 +202,16 @@
     max-width:100%;
     padding:5px 14px;
     margin:1px 0;
-    border-radius:var(--r-sm);
+    border-radius:var(--r-md);
     overflow:hidden;
     text-overflow:ellipsis;
-    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
-        -webkit-transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
-    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
-        transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
+    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)
 }
-/* 悬停：轻微上移 + 提亮底色 + 落下一点阴影，产生"可点击"的物理感 */
+/* 悬停：半透明白底提亮 + 文字转深绿，与参考站的导航项一致的"轻反馈" */
 .work-link .info a:hover {
-    background:var(--c-surface);
-    color:var(--c-ink);
-    -webkit-transform:translateY(-1px);
-    transform:translateY(-1px);
-    box-shadow:var(--sh-2), var(--sh-hairline)
-}
-.work-link .info a .fa {
-    margin-right:6px;
-    width:1em;
-    text-align:center;
-    color:var(--c-muted);
-    -webkit-transition:color var(--t-fast) var(--ease);
-    transition:color var(--t-fast) var(--ease)
-}
-.work-link .info a:hover .fa {
-    color:var(--c-accent)
-}
-.work-link .info a .nv-icon-text {
-    color:var(--c-muted)
+    background:var(--c-hover-fill);
+    color:var(--c-strong)
 }
 
 /* ========================================================== 小屏适配 */
@@ -244,7 +223,8 @@
     #site-main {
         margin:0;
         /* 解除桌面版 85% 宽度上限并保持通栏，否则卡片会靠左留出一条死白 */
-        max-width:100%
+        max-width:100%;
+        border-radius:0
     }
     /* 平板及以下每行只放 4 个，分类名占第一格。
        8 列布局在窄屏会把格子压到几十像素，链接文字会被整体裁没。
@@ -273,14 +253,14 @@
     #header-logo {
         margin-top:36px
     }
+    .headline {
+        padding:80px 0
+    }
     .headline-content {
         max-width:100%
     }
     .search-bar {
         padding-bottom:60px
-    }
-    .search-tab span {
-        font-size:15px
     }
     .work-link {
         padding:30px 0;
@@ -291,14 +271,10 @@
     }
 }
 
-/* 更窄的屏幕维持每行 4 个、分类名单独占满一行；搜索标签缩字防裁切 */
+/* 更窄的屏幕维持每行 4 个、分类名单独占满一行 */
 @media screen and (max-width:480px) {
     .container {
         width:90%
-    }
-    .search-tab span {
-        font-size:13px;
-        padding:0 5px
     }
     .work-link .info ul {
         padding:10px;

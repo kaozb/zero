@@ -4,19 +4,17 @@
  *   1. 搜索引擎切换（记住上次选择）
  *   2. 链接列表渲染
  *   3. 编辑模式：网址 / 分类的增删改
- *   4. 图标选择器（Font Awesome / Emoji / 图片 URL）
- *   5. 拖拽排序（含跨分类）
- *   6. 导入导出、恢复默认
+ *   4. 拖拽排序（含跨分类）
+ *   5. 导入导出、恢复默认
  *
- * 依赖：store.js（NavStore）、icons.js（NavIconCatalog）
+ * 依赖：store.js（NavStore）
  * 已用原生 DOM API 重写，不再依赖 jQuery。
  * --------------------------------------------------------------- */
 (function () {
     "use strict"
 
     var Store = window.NavStore
-    var Catalog = window.NavIconCatalog
-    if (!Store || !Catalog) return
+    if (!Store) return
 
     /* 每行放多少个链接；超出后新起一行且不再重复分类名 */
     var PER_ROW = 8
@@ -142,7 +140,6 @@
         return '<li class="nv-item" draggable="true" data-g="' + g + '" data-i="' + i + '">' +
             '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" title="' +
             esc(item.name + " — " + item.url) + '">' +
-            Store.iconHtml(item.icon, item.name) +
             '<span class="nv-name">' + esc(item.name) + "</span></a>" +
             '<span class="nv-tools">' +
             '<a href="javascript:;" class="nv-tool" data-act="edit" data-g="' + g + '" data-i="' + i +
@@ -358,228 +355,6 @@
         })
     }
 
-    /* ------------------------------------------------- 4. 图标选择器 */
-
-    var pickedIcon = null
-    var usedIcons = {}
-
-    /* 已被其他链接占用的 FA 图标置灰，避免重复 */
-    function rebuildUsedIcons() {
-        usedIcons = {}
-        Store.all().forEach(function (group) {
-            group.link.forEach(function (item) {
-                if (item.icon && item.icon.type === "fa") usedIcons[item.icon.value] = true
-            })
-        })
-    }
-
-    var iconGrid = $("#nv-icon-grid")
-    var emojiGrid = $("#nv-emoji-grid")
-
-    /* 中文关键词命中优先，其次图标名子串匹配 */
-    function searchIcons(keyword) {
-        var all = Catalog.FA_ICONS
-        var kw = String(keyword || "").trim().toLowerCase()
-        if (!kw) return all
-
-        var hits = {}
-        var order = []
-        function add(name) {
-            if (hits[name]) return
-            hits[name] = true
-            order.push(name)
-        }
-
-        if (Catalog.KEYWORDS[kw]) Catalog.KEYWORDS[kw].forEach(add)
-        Object.keys(Catalog.KEYWORDS).forEach(function (key) {
-            if (key.indexOf(kw) > -1 || kw.indexOf(key) > -1) {
-                Catalog.KEYWORDS[key].forEach(add)
-            }
-        })
-        all.forEach(function (name) {
-            if (name.indexOf(kw) > -1) add(name)
-        })
-
-        /* 保持与 FA_ICONS 的原有顺序，避免搜索结果跳动 */
-        return all.filter(function (name) {
-            return hits[name]
-        })
-    }
-
-    function renderIconGrid(keyword) {
-        if (!iconGrid) return
-        var result = searchIcons(keyword)
-        if (!result.length) {
-            iconGrid.innerHTML = '<div class="nv-icon-none">没有匹配的图标，试试 Emoji 或图片 URL</div>'
-            return
-        }
-        iconGrid.innerHTML = result.map(function (name) {
-            var cls = "nv-icon-cell" + (usedIcons[name] ? " used" : "")
-            return '<button type="button" class="' + cls + '" data-icon="fa:' + esc(name) +
-                '" title="fa-' + esc(name) + '"><i class="fa fa-' + esc(name) + '"></i></button>'
-        }).join("")
-    }
-
-    function renderEmojiGrid() {
-        if (!emojiGrid) return
-        emojiGrid.innerHTML = Catalog.EMOJIS.map(function (ch) {
-            return '<button type="button" class="nv-icon-cell nv-emoji-cell" data-icon="emoji:' +
-                esc(ch) + '">' + ch + "</button>"
-        }).join("")
-    }
-
-    function describeIcon(icon) {
-        if (!icon) return ""
-        if (icon.type === "fa") return "Font Awesome · fa-" + icon.value
-        if (icon.type === "emoji") return "Emoji · " + icon.value
-        if (icon.type === "img") return "图片 · " + icon.value
-        return icon.value
-    }
-
-    function renderPreview() {
-        var box = $("#nv-icon-preview")
-        if (!box) return
-        if (!pickedIcon) {
-            box.innerHTML = '<span class="nv-preview-none">未选择（保存时自动匹配 favicon，匹配不到则随机）</span>'
-            return
-        }
-        var name = ($("#nv-name") || {}).value || "?"
-        box.innerHTML = '<span class="nv-preview-icon">' + Store.iconHtml(pickedIcon, name) + "</span>" +
-            '<span class="nv-preview-text">' + esc(describeIcon(pickedIcon)) + "</span>"
-    }
-
-    function setIconTab(tab) {
-        $all(".nv-icon-actions .nv-mini[data-nv-tab]").forEach(function (btn) {
-            btn.classList.toggle("active", btn.getAttribute("data-nv-tab") === tab)
-        })
-        $all(".nv-icon-pane").forEach(function (pane) {
-            var on = pane.getAttribute("data-nv-pane") === tab
-            if (on) pane.removeAttribute("hidden")
-            else pane.setAttribute("hidden", "hidden")
-        })
-        if (tab === "img") {
-            var urlInput = $("#nv-icon-url")
-            if (urlInput) urlInput.focus()
-        }
-    }
-
-    function pickIcon(token) {
-        pickedIcon = Store.normalizeIcon(token)
-        $all(".nv-icon-cell").forEach(function (cell) {
-            cell.classList.toggle("selected", cell.getAttribute("data-icon") === token)
-        })
-        /* 选了预设 emoji 就清掉自定义输入，避免两边状态不一致 */
-        if (pickedIcon && pickedIcon.type === "emoji" &&
-            Catalog.EMOJIS.indexOf(pickedIcon.value) > -1) {
-            var emojiInput = $("#nv-emoji-input")
-            if (emojiInput) emojiInput.value = ""
-        }
-        renderPreview()
-    }
-
-    var iconActions = $(".nv-icon-actions")
-    if (iconActions) {
-        iconActions.addEventListener("click", function (e) {
-            var tab = e.target.closest(".nv-mini[data-nv-tab]")
-            if (!tab) return
-            setIconTab(tab.getAttribute("data-nv-tab"))
-        })
-    }
-
-    var randomBtn = $("#nv-icon-random")
-    if (randomBtn) {
-        randomBtn.addEventListener("click", function () {
-            pickedIcon = Store.randomIcon()
-            $all(".nv-icon-cell").forEach(function (cell) {
-                cell.classList.remove("selected")
-            })
-            renderPreview()
-            toast("已随机选择图标：" + describeIcon(pickedIcon))
-        })
-    }
-
-    if (iconGrid) {
-        iconGrid.addEventListener("click", function (e) {
-            var cell = e.target.closest(".nv-icon-cell")
-            if (cell) pickIcon(cell.getAttribute("data-icon"))
-        })
-    }
-
-    if (emojiGrid) {
-        emojiGrid.addEventListener("click", function (e) {
-            var cell = e.target.closest(".nv-emoji-cell")
-            if (cell) pickIcon(cell.getAttribute("data-icon"))
-        })
-    }
-
-    /* 取第一个字素簇：emoji 常由多码点组成（变体选择符 / 肤色 / ZWJ 组合）。
-       支持时用 Intl.Segmenter 精确切分，否则退回按码点切分。 */
-    function firstGrapheme(text) {
-        if (!text) return ""
-        try {
-            if (typeof Intl !== "undefined" && Intl.Segmenter) {
-                var seg = new Intl.Segmenter(undefined, { granularity: "grapheme" })
-                var first = seg.segment(text)[Symbol.iterator]().next()
-                if (first && !first.done && first.value) return first.value.segment
-            }
-        } catch (e) {
-        }
-        return Array.from(text)[0] || ""
-    }
-
-    function applyCustomEmoji(raw) {
-        var text = String(raw == null ? "" : raw).trim()
-        var picked = firstGrapheme(text)
-        if (!picked) {
-            if (text === "") {
-                pickedIcon = null
-                renderPreview()
-            }
-            return
-        }
-        var input = $("#nv-emoji-input")
-        if (input) input.value = picked
-        pickedIcon = { type: "emoji", value: picked }
-        $all(".nv-icon-cell").forEach(function (cell) {
-            cell.classList.remove("selected")
-        })
-        renderPreview()
-    }
-
-    var emojiInput = $("#nv-emoji-input")
-    if (emojiInput) {
-        emojiInput.addEventListener("input", function () {
-            applyCustomEmoji(this.value)
-        })
-        /* 粘贴时只取第一个字符，避免把多余文本带进来 */
-        emojiInput.addEventListener("paste", function (e) {
-            var dt = e.clipboardData
-            if (!dt) return
-            e.preventDefault()
-            applyCustomEmoji(dt.getData("text"))
-        })
-    }
-
-    var iconSearch = $("#nv-icon-search")
-    if (iconSearch) {
-        iconSearch.addEventListener("input", function () {
-            renderIconGrid(this.value)
-        })
-    }
-
-    var iconUrl = $("#nv-icon-url")
-    if (iconUrl) {
-        iconUrl.addEventListener("input", function () {
-            var v = this.value.trim()
-            if (!v) return
-            pickedIcon = { type: "img", value: v }
-            renderPreview()
-        })
-    }
-
-    var nameInput = $("#nv-name")
-    if (nameInput) nameInput.addEventListener("input", renderPreview)
-
     /* ------------------------------------------------------- 弹窗逻辑 */
 
     var modal = $("#nv-modal")
@@ -628,24 +403,9 @@
         var current = editing ? Store.all()[editing.g] : null
         select.value = current ? current.tag : cats[cats.length - 1]
 
-        pickedIcon = item && item.icon ? Store.normalizeIcon(item.icon) : null
-        var urlField = $("#nv-icon-url")
-        urlField.value = pickedIcon && pickedIcon.type === "img" ? pickedIcon.value : ""
-        /* 预设 emoji 不需要回填输入框，只有自定义的需要 */
-        emojiInput.value = pickedIcon && pickedIcon.type === "emoji" &&
-            Catalog.EMOJIS.indexOf(pickedIcon.value) < 0 ? pickedIcon.value : ""
-
-        rebuildUsedIcons()
-        iconSearch.value = ""
-        renderIconGrid("")
-        renderEmojiGrid()
-        setIconTab(pickedIcon && pickedIcon.type === "emoji" ? "emoji" :
-            pickedIcon && pickedIcon.type === "img" ? "img" : "fa")
-        renderPreview()
-
         openModal()
         setTimeout(function () {
-            nameInput.focus()
+            $("#nv-name").focus()
         }, 50)
     }
 
@@ -688,7 +448,6 @@
             name: $("#nv-name").value,
             url: $("#nv-url").value,
             tag: $("#nv-category").value,
-            icon: pickedIcon,
             g: editing ? editing.g : undefined,
             i: editing ? editing.i : undefined
         })

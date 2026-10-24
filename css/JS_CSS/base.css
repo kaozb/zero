@@ -1,60 +1,77 @@
 /* ---------------------------------------------------------------
  * base.css — 设计令牌 + reset + 排版 + 表单控件
  *
- * 令牌集中在这里定义，颜色 / 圆角 / 阴影 / 间距 / 缓动都通过 var() 引用，
- * 后续换主题只改这一处。必须在 nav.css、editor.css 之前引入。
+ * 配色与质感整体对齐 codebuddy2api 的界面风格：
+ *   · 绿色系（hue 108）的中性阶与主色，深色模式切到 hue 151
+ *   · 页面底色是纯色 + 三团径向光晕（不再用线性渐变 + 网格）
+ *   · 卡片是"玻璃"材质：半透明渐变 + 白色高光描边 + 大圆角
+ * 令牌集中在这里定义，颜色 / 圆角 / 阴影 / 间距 / 缓动都通过 var() 引用。
+ * 必须在 nav.css、editor.css 之前引入。
  * --------------------------------------------------------------- */
 
 /* ============================================================ 令牌 */
 
 :root {
+    color-scheme: light;
+    --hue: 108;
+
     /* ------------------------------------------------ 颜色 · 中性阶 */
-    --c-ink:#111318;          /* 标题 / 强调文字 */
-    --c-text:#3a3f47;         /* 正文 */
-    --c-text-2:#5a6169;       /* 次级正文 */
-    --c-muted:#878e97;        /* 弱化文字、图标 */
-    --c-muted-2:#a8aeb6;      /* 占位符、禁用 */
-    --c-line:#e6e8ec;         /* 描边 */
-    --c-line-2:#eef0f3;       /* 分隔线 */
-    /* 输入框专用描边：比 --c-line 明显更深，保证弱对比环境下也能一眼看到输入区。
-       取值是"一眼能看到"和"不显得像硬框"之间的折中。 */
-    --c-border:#9aa1ac;
-    --c-border-hover:#7d8590;
-    --c-fill:#f4f5f7;         /* 浅填充 */
-    --c-fill-2:#fafbfc;       /* 更浅的填充 */
-    --c-surface:#ffffff;      /* 卡片、弹窗表面 */
-    --c-surface-2:#fcfcfd;    /* 弹窗页脚等次级表面 */
+    --c-ink:hsl(var(--hue) 21% 19%);        /* 标题 / 强调文字 */
+    --c-strong:hsl(var(--hue) 32% 29%);     /* 深绿：激活态文字、链接悬停 */
+    --c-text:hsl(var(--hue) 16% 26%);       /* 正文 */
+    --c-text-2:hsl(var(--hue) 12% 34%);     /* 次级正文 */
+    --c-muted:hsl(var(--hue) 12% 40%);      /* 弱化文字、图标 */
+    --c-muted-2:#929b8c;                    /* 占位符、禁用 */
+    --c-line:hsl(var(--hue) 19% 80%);       /* 描边 */
+    --c-line-2:#dce4d5;                     /* 分隔线、浅描边 */
+    /* 输入框专用描边：比分隔线深一档，保证弱对比环境下也能看清输入区 */
+    --c-border:#d2dcc7;
+    --c-border-hover:#afc497;
+    --c-fill:#f0f5e9;                       /* 浅填充（按钮/项悬停） */
+    --c-fill-2:#f8faf5;                     /* 更浅的填充 */
+    --c-surface:hsl(var(--hue) 22% 99%);    /* 卡片、弹窗表面 */
+    --c-surface-2:#f8faf5;                  /* 弹窗页脚等次级表面 */
+    --c-surface-tint:hsl(var(--hue) 30% 91%);   /* 玻璃渐变的暗端 */
+    --c-card:color-mix(in srgb, var(--c-surface) 55%, transparent);  /* 玻璃内嵌的凹陷块 */
+    --c-selected:hsl(var(--hue) 34% 85% / .72);  /* 分段控件选中底 */
+    --c-highlight:rgba(255, 255, 255, .75); /* 玻璃高光描边 */
+    --c-hover-fill:rgba(255, 255, 255, .56);/* 列表项悬停的半透明白 */
+    --c-pop-bg:rgba(255, 255, 255, .92);    /* 悬停浮层（编辑/删除按钮）底色 */
 
     /* ------------------------------------------------ 颜色 · 背景 */
-    --c-page:#eef0f3;
-    --c-page-top:#f5f6f8;
-    --c-page-bottom:#e9ebef;
-    --c-grid:rgba(17, 19, 24, .028);   /* 隐约网格线 */
+    --c-page:hsl(var(--hue) 25% 93%);
+    --c-glow:hsl(var(--hue) 43% 78% / .72);             /* 光晕主色 */
+    --c-glow-alt:hsl(calc(var(--hue) + 38) 35% 79% / .65); /* 光晕辅色 */
+    --c-veil:rgba(20, 40, 28, .33);         /* 弹窗遮罩 */
 
     /* ------------------------------------------------ 颜色 · 主色 */
-    --c-accent:#3f6ae0;
-    --c-accent-hover:#3459c4;
-    --c-accent-soft:rgba(63, 106, 224, .08);
-    --c-danger:#c0392b;
+    --c-accent:hsl(var(--hue) 38% 43%);     /* 焦点描边、落点指示 */
+    --c-accent-hover:hsl(var(--hue) 32% 29%);
+    --c-accent-soft:#e4eed9;                /* 选中/拖拽高亮的实底 */
+    --c-primary:#568a3c;                    /* 主按钮渐变亮端 */
+    --c-primary-hover:#3c6232;
+    --c-on-primary:#fff;
+    --c-danger:#a74436;
+    --c-danger-hover:#90382c;
 
     /* ------------------------------------------------ 圆角 */
-    --r-xs:4px;
-    --r-sm:6px;
-    --r-md:8px;
-    --r-lg:10px;
-    --r-xl:14px;
+    --r-xs:6px;
+    --r-sm:8px;
+    --r-md:12px;
+    --r-lg:16px;
+    --r-xl:22px;
     --r-pill:999px;
 
     /* ------------------------------------------------ 阴影 */
-    /* 三档：悬停 / 浮层 / 弹窗，低透明多层叠加 */
-    --sh-2:0 2px 4px rgba(16, 24, 40, .05), 0 4px 10px rgba(16, 24, 40, .05);
-    --sh-3:0 4px 10px rgba(16, 24, 40, .06), 0 14px 34px rgba(16, 24, 40, .08);
-    --sh-4:0 8px 20px rgba(16, 24, 40, .1), 0 24px 64px rgba(16, 24, 40, .14);
-    /* 内描边：给卡片描一条极淡内边缘，模拟纸质厚度 */
-    --sh-hairline:inset 0 0 0 1px rgba(17, 19, 24, .035);
+    /* 玻璃材质的低透明投影；内高光由 --sh-hairline 提供 */
+    --sh-2:0 4px 14px rgba(24, 37, 26, .08);
+    --sh-3:0 12px 36px rgba(24, 37, 26, .1);
+    --sh-4:0 18px 50px rgba(24, 37, 26, .16);
+    /* 内高光：模拟玻璃上缘受光 */
+    --sh-hairline:inset 0 1px 0 var(--c-highlight), inset 1px 0 0 var(--c-highlight);
 
     /* 聚焦环 */
-    --ring:0 0 0 3px rgba(63, 106, 224, .16);
+    --ring:0 0 0 3px rgba(120, 173, 72, .3);
 
     /* ------------------------------------------------ 间距（8 的倍数） */
     --sp-1:4px;
@@ -87,17 +104,16 @@ html {
 }
 
 body {
-    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimSun, sans-serif;
-    color:var(--c-text-2);
-    line-height:1.8;
-    /* 三层纵深的最底层：极淡纵向渐变 + 隐约网格，避免大面积死灰 */
-    background-color:var(--c-page);
-    background-image:
-        linear-gradient(180deg, var(--c-page-top) 0%, var(--c-page) 42%, var(--c-page-bottom) 100%),
-        linear-gradient(var(--c-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--c-grid) 1px, transparent 1px);
-    background-size:100% 100%, 34px 34px, 34px 34px;
-    background-attachment:fixed, fixed, fixed;
+    font-family:Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color:var(--c-text);
+    line-height:1.65;
+    /* 纯色页面底 + 三团固定的径向光晕，玻璃卡片浮在上面 */
+    background:
+        radial-gradient(ellipse at 7% 8%, var(--c-glow) 0, transparent 36%),
+        radial-gradient(ellipse at 92% 16%, var(--c-glow-alt) 0, transparent 34%),
+        radial-gradient(ellipse at 78% 85%, var(--c-glow-alt) 0, transparent 42%),
+        var(--c-page);
+    background-attachment:fixed;
     -webkit-transition:background-color .5s;
     transition:background-color .5s;
     -webkit-font-smoothing:antialiased;
@@ -142,7 +158,6 @@ label {
     display:block;
     font-family:inherit;
     font-size:14px;
-    text-transform:uppercase;
     font-weight:600;
     margin-bottom:15px;
     cursor:pointer
@@ -179,8 +194,10 @@ input[type=tel], input[type=text], input[type=url], select {
     padding:0 15px;
     color:var(--c-text);
     background:var(--c-surface);
-    border-radius:0;
-    -webkit-appearance:none
+    border:1px solid var(--c-border);
+    border-radius:var(--r-md);
+    -webkit-appearance:none;
+    appearance:none
 }
 
 button, input[type=button], input[type=reset], input[type=submit] {
@@ -188,21 +205,26 @@ button, input[type=button], input[type=reset], input[type=submit] {
     font-family:inherit;
     font-size:inherit;
     padding:0 15px;
-    border-radius:0;
+    border:1px solid var(--c-line-2);
+    border-radius:var(--r-md);
     -webkit-appearance:none;
-    text-transform:uppercase;
+    appearance:none;
     cursor:pointer;
-    color:#fff;
-    background:var(--c-text);
-    -webkit-transition:background-color var(--t-fast) var(--ease);
-    transition:background-color var(--t-fast) var(--ease)
+    color:var(--c-text);
+    background:var(--c-surface);
+    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+        border-color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+        border-color var(--t-fast) var(--ease)
 }
 button:hover, input[type=button]:hover, input[type=reset]:hover, input[type=submit]:hover {
-    background-color:var(--c-ink)
+    background-color:var(--c-fill);
+    border-color:var(--c-border-hover);
+    color:var(--c-ink)
 }
 
 select {
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="#5e6c75" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>');
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="%23798572" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>');
     background-repeat:no-repeat;
     background-position:right 1rem center
 }
