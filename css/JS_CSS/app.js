@@ -136,7 +136,7 @@
 
     function linkItemHtml(item, g, i) {
         return '<li class="nv-item" draggable="true" data-g="' + g + '" data-i="' + i + '">' +
-            '<a class="nv-link" href="' + esc(item.url) + '" target="_blank" rel="noopener" title="' +
+            '<a class="nv-link site-btn" href="' + esc(item.url) + '" target="_blank" rel="noopener" title="' +
             esc(item.name + " — " + item.url) + '">' +
             '<span class="nv-name">' + esc(item.name) + "</span></a>" +
             '<span class="nv-tools">' +
