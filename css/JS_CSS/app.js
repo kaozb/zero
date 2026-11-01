@@ -16,8 +16,6 @@
     var Store = window.NavStore
     if (!Store) return
 
-    /* 每行放多少个链接；超出后新起一行且不再重复分类名 */
-    var PER_ROW = 8
     var SRCH_KEY = "nav_srch_v1"
     var TOAST_MS = 2200
 
@@ -138,7 +136,7 @@
 
     function linkItemHtml(item, g, i) {
         return '<li class="nv-item" draggable="true" data-g="' + g + '" data-i="' + i + '">' +
-            '<a href="' + esc(item.url) + '" target="_blank" rel="noopener" title="' +
+            '<a class="nv-link" href="' + esc(item.url) + '" target="_blank" rel="noopener" title="' +
             esc(item.name + " — " + item.url) + '">' +
             '<span class="nv-name">' + esc(item.name) + "</span></a>" +
             '<span class="nv-tools">' +
@@ -154,26 +152,25 @@
         var list = Store.all()
         var html = ""
 
+        /* 一个分类一行：左侧分类名固定栏，右侧链接交给 CSS 网格自动换行 */
         list.forEach(function (group, g) {
-            /* 空分类单独一行，作为拖拽落点 */
+            html += '<div class="nv-group" data-g="' + g + '">'
+            html += '<div class="nv-cat" data-g="' + g + '">' + esc(group.tag) + catToolsHtml(g) + "</div>"
+
             if (!group.link.length) {
-                html += '<ul class="nv-empty-row" data-g="' + g + '">' +
-                    '<li class="nv-cat" data-g="' + g + '">' + esc(group.tag) + catToolsHtml(g) + "</li>" +
+                html += '<ul class="nv-links">' +
                     '<li class="nv-empty" data-g="' + g + '">' +
-                    '<span class="nv-empty-hint">空分类，拖一个链接进来或点击右上角齿轮后「新增网址」</span>' +
+                    '<span class="nv-empty-hint">空分类，拖一个链接进来，或点击右上角齿轮后「新增网址」</span>' +
                     "</li></ul>"
-                return
-            }
-            /* 每 PER_ROW 个一组；分类名只出现在每组首行 */
-            for (var c = 0; c < group.link.length; c += PER_ROW) {
-                html += "<ul>"
-                html += '<li class="nv-cat" data-g="' + g + '" draggable="false">' +
-                    (c === 0 ? esc(group.tag) + catToolsHtml(g) : "") + "</li>"
-                group.link.slice(c, c + PER_ROW).forEach(function (item, k) {
-                    html += linkItemHtml(item, g, c + k)
+            } else {
+                html += '<ul class="nv-links">'
+                group.link.forEach(function (item, i) {
+                    html += linkItemHtml(item, g, i)
                 })
                 html += "</ul>"
             }
+
+            html += "</div>"
         })
 
         if (!list.length) {
@@ -235,13 +232,22 @@
             drag = null
         })
 
-        /* 悬停在某个链接上：按鼠标在元素左/右半边决定插到前面还是后面 */
+        /* 从元素自身或所属行读取分类下标 */
+        function rowList(el) {
+            var ul = el.closest("ul")
+            if (ul && info.contains(ul)) return ul
+            /* 拖到左侧分类名上时，落到它对应的链接网格里 */
+            var group = el.closest(".nv-group")
+            var list = group && $(".nv-links", group)
+            return list && info.contains(list) ? list : null
+        }
+
         info.addEventListener("dragover", function (e) {
             if (!drag) return
             var target = e.target.closest(".nv-item")
             var empty = e.target.closest(".nv-empty")
-            var ul = e.target.closest("ul")
-            if (!ul || !info.contains(ul)) return
+            var ul = rowList(e.target)
+            if (!ul) return
 
             e.preventDefault()
             if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
@@ -259,8 +265,8 @@
 
         info.addEventListener("drop", function (e) {
             if (!drag) return
-            var ul = e.target.closest("ul")
-            if (!ul || !info.contains(ul)) return
+            var ul = rowList(e.target)
+            if (!ul) return
             e.preventDefault()
             e.stopPropagation()
 

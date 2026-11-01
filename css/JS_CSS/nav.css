@@ -1,291 +1,383 @@
 /* ---------------------------------------------------------------
- * nav.css — 页面外壳、页头、搜索区、链接列表、小屏适配
+ * nav.css — 页面外壳、页头、搜索区、链接网格、小屏适配
  *
- * 视觉对齐 codebuddy2api 的风格：
- *   · 主卡片是玻璃材质（半透明渐变 + 白高光描边 + backdrop blur）
- *   · 搜索引擎切换是胶囊分段控件（selected 底色滑动，不是下划线）
- *   · 链接悬停只用半透明白底提亮，不做位移和投影
+ * 视觉参考 0x3.com：
+ *   · 灰色页面 + 白色内容卡片，2px 圆角，无阴影无玻璃
+ *   · 页头左侧是大字号站点名，右侧为齿轮 / 主题两个图标
+ *   · 搜索框浅灰底、右侧无边框提交键，搜索引擎切换是带下划线的文字标签
+ *   · 链接区：左侧 10% 分类名（手机 15%），右侧 6 列文字网格（手机 3 列）
+ *     每项只有文字，悬停给一层浅灰底，不做位移和投影
  * --------------------------------------------------------------- */
 
 /* ========================================================== 页面外壳 */
 
 #site-main {
-    max-width:85%;
-    margin:50px auto;
-    position:relative;
-    /* 玻璃卡片：亮面在左上，暗端在右下，叠在页面的光晕底色上 */
-    background:linear-gradient(135deg,
-        color-mix(in srgb, var(--c-surface) 70%, transparent),
-        color-mix(in srgb, var(--c-surface-tint) 52%, transparent));
-    border:1px solid var(--c-highlight);
-    border-radius:26px;
-    box-shadow:var(--sh-3), var(--sh-hairline);
-    -webkit-backdrop-filter:blur(22px) saturate(155%);
-    backdrop-filter:blur(22px) saturate(155%)
-}
-/* 卡片顶部一条渐隐高光，强化"浮起"的观感 */
-#site-main::before {
-    content:'';
-    position:absolute;
-    top:0;
-    left:6%;
-    right:6%;
-    height:1px;
-    z-index:2;
-    pointer-events:none;
-    background:linear-gradient(90deg, transparent, var(--c-highlight), transparent)
+    max-width:1130px;
+    margin:16px auto;
+    background:var(--c-main);
+    border-radius:var(--r-md);
+    overflow:hidden
 }
 
 /* ============================================================== 页头 */
 
-#site-header {
-    height:150px
+#site-header .container {
+    height:150px;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center
 }
+
 #header-logo {
-    margin-top:61px
+    font-size:38px;
+    line-height:1;
+    letter-spacing:.01em;
+    color:var(--c-text-2);
+    /* 图标靠右：让齿轮把剩余空间吃掉 */
+    -webkit-user-select:none;
+    user-select:none
+}
+
+#nav-gear,
+#nav-theme {
+    width:36px;
+    height:36px;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center;
+    -webkit-justify-content:center;
+    justify-content:center;
+    font-size:19px;
+    line-height:1;
+    color:var(--c-muted);
+    cursor:pointer;
+    border-radius:var(--r-md);
+    -webkit-transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease)
+}
+#nav-gear {
+    margin-left:auto
+}
+#nav-theme {
+    margin-left:4px
+}
+#nav-gear:hover,
+#nav-theme:hover {
+    color:var(--c-text);
+    background:var(--c-block)
 }
 
 /* ============================================================ 搜索区 */
 
-.headline {
-    text-align:center;
-    padding:130px 0
+.search-bar {
+    padding:12px 0 40px
 }
 .headline-content {
-    max-width:650px;
+    max-width:640px;
     margin:0 auto
 }
-.search-bar {
-    padding:24px 0 76px
-}
 
-/* 引擎标签：胶囊分段控件。外层是凹槽轨道，选中项垫一块 selected 底色 */
-.search-tab {
-    max-width:470px;
-    margin:0 auto 24px;
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    flex-direction:row;
-    justify-content:center;
-    gap:2px;
-    padding:3px;
-    border-radius:var(--r-pill);
-    background:var(--c-card);
-    border:1px solid var(--c-highlight);
-    box-shadow:inset 0 1px 3px rgba(45, 37, 24, .07), inset 0 -1px 0 var(--c-highlight);
-    -webkit-tap-highlight-color:transparent
-}
-.search-tab span {
-    height:28px;
-    padding:0 12px;
-    display:inline-flex;
-    align-items:center;
-    font-size:12px;
-    line-height:1;
-    color:var(--c-text-2);
-    border-radius:var(--r-pill);
-    cursor:pointer;
-    white-space:nowrap;
-    overflow:hidden;
-    -webkit-transition:background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
-    transition:background-color var(--t-base) var(--ease), color var(--t-base) var(--ease)
-}
-.search-tab span:hover {
-    background:var(--c-hover-fill);
-    color:var(--c-ink)
-}
-.search-tab span.active {
-    background:var(--c-selected);
-    color:var(--c-strong);
-    font-weight:600;
-    box-shadow:inset 0 1px 0 var(--c-highlight)
-}
-
-/* 搜索表单：米白底 + 细描边，聚焦时叠暖色光环 */
+/* 搜索框：整条浅灰底，输入区透明，提交键悬停变深 */
 .search-form {
-    position:relative;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
     max-width:470px;
+    height:48px;
     margin:0 auto;
     overflow:hidden;
+    background:var(--c-search);
     border-radius:var(--r-md);
-    /* 用真实 border 而非 inset 阴影：线条更锐利，对比不足时也能看清输入框范围 */
-    border:1px solid var(--c-border);
-    -webkit-transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
-    transition:border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease)
+    border:1px solid transparent;
+    -webkit-transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
 }
 .search-form:hover {
-    border-color:var(--c-border-hover)
+    border-color:var(--c-line)
 }
 .search-form:focus-within {
-    border-color:var(--c-accent);
-    box-shadow:var(--ring)
+    border-color:var(--c-muted);
+    box-shadow:0 0 0 3px var(--c-ring)
 }
 .search-form input[type=search] {
-    max-width:470px;
-    width:74%;
-    height:46px;
-    background:var(--c-surface);
+    -webkit-box-flex:1;
+    -webkit-flex:1;
+    flex:1;
+    min-width:0;
+    height:48px;
+    padding:0 16px;
+    font-size:15px;
+    color:var(--c-text);
+    background:transparent;
     border:0;
-    border-radius:var(--r-md) 0 0 var(--r-md);
-    overflow:hidden
+    border-radius:0
 }
 .search-form input[type=search]::placeholder {
     color:var(--c-muted-2)
 }
 .search-form input[type=submit] {
-    max-width:130px;
-    width:26%;
-    height:46px;
+    -webkit-flex:0 0 72px;
+    flex:0 0 72px;
+    width:72px;
+    height:48px;
+    padding:0;
+    font-size:14px;
+    letter-spacing:.02em;
+    color:var(--c-text-2);
+    background:transparent;
     border:0;
-    border-radius:0 var(--r-md) var(--r-md) 0;
-    letter-spacing:.04em;
-    color:var(--c-on-primary);
-    background:linear-gradient(140deg, var(--c-primary), var(--c-primary-hover));
-    box-shadow:inset 0 1px 0 rgba(255, 255, 255, .33), 0 5px 14px rgba(120, 85, 40, .18)
-}
-.search-form input[type=submit]:hover {
-    color:var(--c-on-primary);
-    background:var(--c-primary-hover);
-    border-color:var(--c-primary-hover)
-}
-
-/* ========================================================== 链接列表 */
-
-.works {
-    background:transparent
-}
-.work-link {
-    min-height:500px;
-    font-size:16px;
-    opacity:0;
-    padding:40px 0 45px;
-    -webkit-transition:opacity var(--t-base) var(--ease);
-    transition:opacity var(--t-base) var(--ease)
-}
-.work-link .container {
-    width:80%
-}
-
-.work-link .info ul {
-    line-height:32px;
-    display:flex;
-    flex-wrap:nowrap;
-    overflow:hidden;
-    /* 行内上下留白，让每一组链接有"呼吸感" */
-    padding:12px 14px;
-    margin:2px 0;
-    position:relative
-}
-
-/* 每行 8 列，首列留给分类名（占 11%） */
-.work-link .info li {
-    flex:0 0 calc((100% - 11%) / 8);
-    max-width:calc((100% - 11%) / 8);
-    min-width:0;
-    padding:5px 0;
-    display:inline-flex;
-    white-space:nowrap;
-    justify-content:center;
-    overflow:hidden
-}
-.work-link .info li:first-child {
-    flex:0 0 11%;
-    max-width:11%;
-    justify-content:flex-start;
-    color:var(--c-muted);
-    font-size:14px
-}
-
-.work-link .info a {
-    display:inline-block;
-    max-width:100%;
-    padding:5px 14px;
-    margin:1px 0;
-    border-radius:var(--r-md);
-    overflow:hidden;
-    text-overflow:ellipsis;
+    border-radius:0;
     -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
     transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)
 }
-/* 悬停：半透明白底提亮 + 文字转深棕，给一个"轻反馈" */
-.work-link .info a:hover {
-    background:var(--c-hover-fill);
-    color:var(--c-strong)
+.search-form input[type=submit]:hover {
+    color:var(--c-on-dark);
+    background:var(--c-text-2)
+}
+
+/* 引擎标签：直接照搬 0x3 的分类条——纯文字、选中项底部 2px 下划线 */
+.search-tab {
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-justify-content:center;
+    justify-content:center;
+    margin-top:24px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    -webkit-tap-highlight-color:transparent
+}
+.search-tab::-webkit-scrollbar {
+    display:none
+}
+.search-tab span {
+    -webkit-flex:0 0 auto;
+    flex:0 0 auto;
+    padding:8px 14px;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--c-muted);
+    white-space:nowrap;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    -webkit-transition:color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease)
+}
+.search-tab span:hover {
+    color:var(--c-text)
+}
+.search-tab span.active {
+    color:var(--c-text);
+    border-bottom-color:var(--c-text)
+}
+
+/* ========================================================== 链接网格 */
+
+.work-link {
+    font-size:14px;
+    opacity:0;
+    -webkit-transition:opacity var(--t-base) var(--ease);
+    transition:opacity var(--t-base) var(--ease)
+}
+.work-link .info {
+    padding:0 0 56px
+}
+
+/* 一行 = 左分类名 10% + 右链接 90% */
+.nv-group {
+    position:relative;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center;
+    margin-bottom:16px
+}
+.nv-group:last-child {
+    margin-bottom:0
+}
+
+.nv-cat {
+    -webkit-flex:0 0 10%;
+    flex:0 0 10%;
+    max-width:10%;
+    min-width:0;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center;
+    -webkit-flex-wrap:wrap;
+    flex-wrap:wrap;
+    gap:2px;
+    padding:8px 12px 8px 0;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--c-muted);
+    word-break:break-all
+}
+
+.nv-links {
+    -webkit-flex:0 0 90%;
+    flex:0 0 90%;
+    max-width:90%;
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    min-width:0
+}
+
+.nv-item {
+    position:relative;
+    display:-webkit-box;
+    display:-webkit-flex;
+    display:flex;
+    -webkit-align-items:center;
+    align-items:center;
+    min-width:0;
+    padding:8px;
+    border-radius:var(--r-md);
+    -webkit-transition:background-color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease)
+}
+.nv-item:hover {
+    background:var(--c-hover)
+}
+
+.nv-link {
+    display:block;
+    -webkit-flex:1;
+    flex:1;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:14px;
+    line-height:1.5;
+    color:var(--c-text)
+}
+.nv-name {
+    display:block;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap
+}
+
+.nv-empty {
+    grid-column:1 / -1;
+    padding:8px;
+    font-size:13px;
+    color:var(--c-muted-2)
+}
+.nv-blank {
+    padding:60px 0;
+    text-align:center;
+    color:var(--c-muted-2);
+    font-size:14px
 }
 
 /* ========================================================== 小屏适配 */
 
-@media screen and (max-width:1024px) {
-    .container {
-        width:90%
+@media screen and (max-width:834px) {
+    #site-header .container {
+        height:108px
     }
-    #site-main {
-        margin:0;
-        /* 解除桌面版 85% 宽度上限并保持通栏，否则卡片会靠左留出一条死白 */
-        max-width:100%;
-        border-radius:0
+    .search-bar {
+        padding:12px 0 32px
     }
-    /* 平板及以下每行只放 4 个，分类名占第一格。
-       8 列布局在窄屏会把格子压到几十像素，链接文字会被整体裁没。
-       注意 max-width 必须同步覆盖，否则会残留桌面版的 11.125% 上限；
-       ul 也要放开换行，否则 9 个格子挤在一行里被 overflow 裁掉。 */
-    .work-link .info ul {
-        flex-wrap:wrap
-    }
-    .work-link .info li {
-        flex:0 0 25%;
-        max-width:25%
-    }
-    .work-link .info li:first-child {
-        flex:0 0 25%;
-        max-width:25%
+    .work-link .info {
+        padding-bottom:48px
     }
 }
 
-@media screen and (max-width:768px) {
-    .container {
-        width:70%
+@media screen and (max-width:600px) {
+    #site-main {
+        margin:0;
+        border-radius:0
     }
-    #site-header {
-        height:90px
+    #site-header .container {
+        height:80px
     }
     #header-logo {
-        margin-top:36px
+        font-size:34px
     }
-    .headline {
-        padding:80px 0
+    #nav-gear,
+    #nav-theme {
+        width:32px;
+        height:32px;
+        font-size:18px
+    }
+
+    .search-bar {
+        padding:4px 0 28px
     }
     .headline-content {
         max-width:100%
     }
-    .search-bar {
-        padding-bottom:60px
+    .search-form {
+        max-width:100%
     }
-    .work-link {
-        padding:30px 0;
+    .search-form input[type=search] {
+        font-size:16px
+    }
+    /* 标签条改成可横向滑动，左右各留出一点，避免第一项贴边 */
+    .search-tab {
+        -webkit-justify-content:flex-start;
+        justify-content:flex-start;
+        margin-top:16px;
+        margin-left:-6px;
+        margin-right:-6px;
+        padding:0 6px
+    }
+    .search-tab span {
+        padding:8px 12px;
         font-size:14px
     }
-    .work-link .container {
-        width:85%
+
+    /* 手机：分类 15% + 链接 85%，每行 3 个，字号放大到 15px 保证看得清 */
+    .nv-group {
+        -webkit-align-items:flex-start;
+        align-items:flex-start;
+        margin-bottom:14px
+    }
+    .nv-cat {
+        -webkit-flex:0 0 15%;
+        flex:0 0 15%;
+        max-width:15%;
+        padding:8px 8px 8px 0;
+        font-size:15px
+    }
+    .nv-links {
+        -webkit-flex:0 0 85%;
+        flex:0 0 85%;
+        max-width:85%;
+        grid-template-columns:repeat(3, 1fr);
+        margin:-4px 0
+    }
+    .nv-item {
+        padding:7px;
+        margin:4px 0;
+        min-height:40px
+    }
+    .nv-link {
+        font-size:15px
+    }
+    .nv-empty,
+    .nv-blank {
+        font-size:14px
+    }
+    .nv-empty {
+        padding:8px 7px
     }
 }
 
-/* 更窄的屏幕维持每行 4 个、分类名单独占满一行 */
-@media screen and (max-width:480px) {
-    .container {
-        width:90%
-    }
-    .work-link .info ul {
-        padding:10px;
-        flex-wrap:wrap
-    }
-    .work-link .info li {
-        flex:0 0 25%;
-        padding:0
-    }
-    .work-link .info li:first-child {
-        flex:0 0 100%;
-        max-width:100%
+/* 极窄屏放 2 列，再窄也保证每个链接能露出足够字数 */
+@media screen and (max-width:380px) {
+    .nv-links {
+        grid-template-columns:repeat(2, 1fr)
     }
 }

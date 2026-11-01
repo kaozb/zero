@@ -1,218 +1,174 @@
 /* ---------------------------------------------------------------
  * editor.css — 编辑模式的工具栏、弹窗、拖拽态、toast
- * 配色统一走 base.css 里的设计令牌（玻璃质感 + 米白/暖棕主色）
+ *
+ * 与 0x3 的灰白扁平风统一：白底面板、1px 灰线、2px 圆角、极轻投影。
+ * 手机端的编辑/删除按钮改为排在文字下方，不再绝对定位盖住链接名。
  * --------------------------------------------------------------- */
 
-/* ======================================================= 列表现状的改造 */
+/* ========================================================= 拖拽状态 */
 
-.work-link .info li {
-    position:relative;
-    /* 覆盖 nav.css 的 overflow:hidden，否则拖拽落点指示线会被裁掉 */
-    overflow:visible
-}
-.work-link .info li.nv-item {
-    cursor:default
-}
-.work-link .info li.nv-dragging {
+.nv-item.nv-dragging {
     opacity:.35
 }
-
-/* 拖拽落点：给整项加底色 + 内侧描边，比只靠 1px 细线更容易看清 */
-.work-link .info li.nv-drop-before,
-.work-link .info li.nv-drop-after {
-    background:var(--c-accent-soft);
-    border-radius:var(--r-xs);
-    box-shadow:inset 0 0 0 1px rgba(190, 150, 90, .5)
+.nv-item.nv-drop-before,
+.nv-item.nv-drop-after {
+    background:var(--c-block);
+    box-shadow:inset 2px 0 0 var(--c-text-2)
 }
-.work-link .info li.nv-drop-before::before,
-.work-link .info li.nv-drop-after::after {
-    content:'';
-    position:absolute;
-    top:0;
-    bottom:0;
-    width:3px;
-    z-index:2;
-    background:var(--c-accent);
-    border-radius:var(--r-pill)
-}
-.work-link .info li.nv-drop-before::before {
-    left:0
-}
-.work-link .info li.nv-drop-after::after {
-    right:0
+.nv-item.nv-drop-after {
+    box-shadow:inset -2px 0 0 var(--c-text-2)
 }
 
-.work-link .info .nv-name {
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap
-}
+/* =================================================== 编辑 / 删除按钮 */
 
-/* 悬停时露出的编辑/删除按钮（网址与分类共用同一套右上角浮层样式） */
-.work-link .info .nv-tools,
-.work-link .info .nv-cat-tools {
-    position:absolute;
-    top:2px;
-    right:2px;
+/* 桌面端：按钮紧跟文字右侧，和所属链接紧挨在一起，不会让人误认成下一列 */
+.nv-tools,
+.nv-cat-tools {
     display:none;
+    -webkit-flex:0 0 auto;
+    flex:0 0 auto;
+    margin-left:2px;
+    -webkit-align-items:center;
     align-items:center;
-    gap:2px;
-    padding:0 2px;
-    border-radius:var(--r-xs);
-    background:var(--c-pop-bg)
+    gap:0
 }
-.work-link .info li.nv-item:hover .nv-tools,
-.work-link .info ul:hover .nv-cat-tools {
+
+.nv-item:hover .nv-tools,
+.nv-group:hover .nv-cat-tools,
+body.nv-edit-mode .nv-tools,
+body.nv-edit-mode .nv-cat-tools {
+    display:-webkit-inline-box;
+    display:-webkit-inline-flex;
     display:inline-flex
 }
-/* 进入编辑模式后常显，不必悬停 */
-body.nv-edit-mode .work-link .info .nv-tools,
-body.nv-edit-mode .work-link .info .nv-cat-tools {
-    display:inline-flex
-}
-/* 未进入编辑模式时，按钮不显示 */
-body:not(.nv-edit-mode) .work-link .info .nv-tools,
-body:not(.nv-edit-mode) .work-link .info .nv-cat-tools {
+body:not(.nv-edit-mode) .nv-tools,
+body:not(.nv-edit-mode) .nv-cat-tools {
     display:none!important
 }
-.work-link .info .nv-tool,
-.work-link .info .nv-cat-edit,
-.work-link .info .nv-cat-del {
-    display:inline-block;
-    width:18px;
-    height:18px;
-    line-height:18px;
-    padding:0;
-    text-align:center;
+/* 编辑模式里链接不撑满整格，按钮紧随名称，文字过长时照样省略 */
+body.nv-edit-mode .nv-item .nv-link {
+    -webkit-flex:0 1 auto;
+    flex:0 1 auto
+}
+
+.nv-tool,
+.nv-cat-edit,
+.nv-cat-del {
+    display:-webkit-inline-box;
+    display:-webkit-inline-flex;
+    display:inline-flex;
+    -webkit-align-items:center;
+    align-items:center;
+    -webkit-justify-content:center;
+    justify-content:center;
+    width:20px;
+    height:20px;
     font-size:12px;
     color:var(--c-muted);
-    border-radius:var(--r-xs)
+    border-radius:var(--r-md);
+    -webkit-transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+    transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease)
 }
-.work-link .info .nv-tool:hover,
-.work-link .info .nv-cat-edit:hover {
-    color:var(--c-ink);
-    background:var(--c-line)
+.nv-tool:hover,
+.nv-cat-edit:hover {
+    color:var(--c-text);
+    background:var(--c-block)
 }
-.work-link .info .nv-tool-del:hover,
-.work-link .info .nv-cat-del:hover {
+.nv-tool-del:hover,
+.nv-cat-del:hover {
     color:var(--c-danger)
 }
 
-/* 分类名格子，同时作为右上角浮层的定位参照 */
-.work-link .info .nv-cat {
-    position:relative
-}
-/* 分类文字作为分节标题：略小、字距拉开、颜色压深，和链接项拉开层级 */
-.work-link .info li.nv-cat {
-    font-size:13px;
-    font-weight:600;
-    color:var(--c-text-2);
-    letter-spacing:.06em
-}
-
-/* 空分类占位行 */
-.work-link .info .nv-empty {
-    flex:1 1 auto!important;
-    max-width:none!important;
-    justify-content:flex-start
-}
-.work-link .info .nv-empty-hint {
-    font-size:13px;
-    color:var(--c-muted-2)
-}
-.work-link .info li.nv-empty.nv-drop-before {
-    background:var(--c-fill);
-    border-radius:var(--r-xs)
-}
-.work-link .info .nv-blank {
-    padding:60px 0;
-    text-align:center;
-    color:var(--c-muted-2);
-    font-size:14px
+/* 空分类那一行：分类名与提示并排 */
+.nv-empty.nv-drop-before {
+    background:var(--c-block);
+    border-radius:var(--r-md)
 }
 
 /* ============================================================ 工具栏 */
 
 #nav-toolbar {
     position:fixed;
-    /* 与页头右边缘对齐（#site-main 左右各留 7.5%），展开在齿轮下方 */
-    right:7.5%;
-    /* 页面顶部 50px 外边距 + 齿轮偏移 60px + 齿轮高度 32px */
-    top:150px;
+    /* 与白卡右边缘内边距对齐 */
+    right:max(24px, calc((100vw - 1130px) / 2 + 40px));
+    top:122px;
     z-index:20;
     display:none;
+    -webkit-flex-direction:column;
     flex-direction:column;
+    -webkit-align-items:stretch;
     align-items:stretch;
-    gap:var(--sp-1);
-    padding:7px;
-    /* 玻璃浮层：更实的底 + 轻模糊，保证菜单文字可读 */
-    background:linear-gradient(135deg,
-        color-mix(in srgb, var(--c-surface) 88%, transparent),
-        color-mix(in srgb, var(--c-surface-tint) 80%, transparent));
-    border:1px solid var(--c-highlight);
-    border-radius:var(--r-lg);
-    box-shadow:var(--sh-3), var(--sh-hairline);
-    -webkit-backdrop-filter:blur(16px) saturate(155%);
-    backdrop-filter:blur(16px) saturate(155%)
+    gap:2px;
+    padding:6px;
+    background:var(--c-main);
+    border:1px solid var(--c-line);
+    border-radius:var(--r-md);
+    box-shadow:var(--sh-2)
 }
-/* 只有点击右上角齿轮进入编辑模式后才显示工具栏 */
 body.nv-edit-mode #nav-toolbar {
+    display:-webkit-box;
+    display:-webkit-flex;
     display:flex
 }
 .nv-sep {
     width:auto;
     height:1px;
-    background:var(--c-line-2)
+    margin:2px 0;
+    background:var(--c-line-soft)
 }
 .nv-btn {
     height:32px;
-    padding:0 13px;
+    padding:0 12px;
     font-size:13px;
-    font-weight:500;
+    font-weight:400;
     text-align:left;
     white-space:nowrap;
     color:var(--c-text);
     background:transparent;
-    border:1px solid transparent;
-    border-radius:var(--r-md);
-    cursor:pointer;
-    -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
-    transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease)
+    border:0;
+    border-radius:var(--r-md)
 }
 .nv-btn:hover {
-    color:var(--c-ink);
-    background:var(--c-fill)
+    background:var(--c-block);
+    color:var(--c-text)
 }
 .nv-btn .fa {
-    margin-right:6px;
+    width:16px;
+    margin-right:7px;
     color:var(--c-muted)
 }
 .nv-btn:hover .fa {
     color:var(--c-text-2)
 }
 .nv-btn-primary {
-    color:var(--c-on-primary);
-    background:linear-gradient(140deg, var(--c-primary), var(--c-primary-hover));
-    border-color:var(--c-primary-hover);
-    box-shadow:inset 0 1px 0 rgba(255, 255, 255, .33), 0 5px 14px rgba(120, 85, 40, .18)
+    color:var(--c-on-dark);
+    background:var(--c-text-2)
 }
 .nv-btn-primary:hover {
-    color:var(--c-on-primary);
-    background:var(--c-primary-hover)
+    color:var(--c-on-dark);
+    background:var(--c-text)
+}
+.nv-btn-primary .fa {
+    color:var(--c-on-dark)
 }
 .nv-btn-ghost {
     color:var(--c-muted)
 }
 .nv-btn-ghost:hover {
-    color:var(--c-ink);
-    background:var(--c-fill)
+    color:var(--c-text)
 }
 .nv-btn-danger {
     color:var(--c-danger)
 }
 .nv-btn-danger:hover {
-    color:var(--c-on-primary);
+    color:var(--c-on-dark);
     background:var(--c-danger)
+}
+.nv-btn-danger .fa {
+    color:var(--c-danger)
+}
+.nv-btn-danger:hover .fa {
+    color:var(--c-on-dark)
 }
 
 /* ============================================================== 弹窗 */
@@ -232,36 +188,32 @@ body.nv-locked {
 .nv-modal-mask {
     position:absolute;
     inset:0;
-    background:var(--c-veil);
-    -webkit-backdrop-filter:blur(2px);
-    backdrop-filter:blur(2px)
+    background:var(--c-veil)
 }
-/* 弹窗面板：更实的玻璃，叠在遮罩上仍然通透 */
 .nv-modal-panel {
     position:relative;
-    width:560px;
-    max-width:92vw;
+    width:520px;
+    max-width:calc(100vw - 32px);
     max-height:88vh;
-    margin:6vh auto;
+    margin:8vh auto;
+    display:-webkit-box;
+    display:-webkit-flex;
     display:flex;
+    -webkit-flex-direction:column;
     flex-direction:column;
-    background:linear-gradient(135deg,
-        color-mix(in srgb, var(--c-surface) 96%, transparent),
-        color-mix(in srgb, var(--c-surface-tint) 88%, transparent));
-    border:1px solid var(--c-highlight);
-    border-radius:var(--r-xl);
-    box-shadow:var(--sh-4), var(--sh-hairline);
+    background:var(--c-main);
+    border:1px solid var(--c-line);
+    border-radius:var(--r-md);
+    box-shadow:var(--sh-2);
     overflow:hidden;
-    -webkit-backdrop-filter:blur(22px) saturate(155%);
-    backdrop-filter:blur(22px) saturate(155%);
-    -webkit-animation:nv-pop .18s var(--ease-out);
-    animation:nv-pop .18s var(--ease-out)
+    -webkit-animation:nv-pop .18s var(--ease);
+    animation:nv-pop .18s var(--ease)
 }
 @keyframes nv-pop {
     from {
         opacity:0;
-        -webkit-transform:translateY(10px) scale(.99);
-        transform:translateY(10px) scale(.99)
+        -webkit-transform:translateY(8px);
+        transform:translateY(8px)
     }
     to {
         opacity:1;
@@ -270,22 +222,26 @@ body.nv-locked {
     }
 }
 .nv-modal-head {
+    display:-webkit-box;
+    display:-webkit-flex;
     display:flex;
+    -webkit-align-items:center;
     align-items:center;
+    -webkit-justify-content:space-between;
     justify-content:space-between;
     padding:18px 22px;
-    border-bottom:1px solid var(--c-line-2)
+    border-bottom:1px solid var(--c-line-soft)
 }
 .nv-modal-head h3 {
     margin:0;
-    font-size:17px;
-    font-weight:600;
-    color:var(--c-ink)
+    font-size:16px;
+    font-weight:500;
+    color:var(--c-text)
 }
 .nv-close {
-    font-size:24px;
+    font-size:22px;
     line-height:1;
-    color:var(--c-muted-2);
+    color:var(--c-muted);
     cursor:pointer;
     -webkit-transition:color var(--t-fast) var(--ease);
     transition:color var(--t-fast) var(--ease)
@@ -298,18 +254,21 @@ body.nv-locked {
     overflow-y:auto
 }
 .nv-modal-foot {
+    display:-webkit-box;
+    display:-webkit-flex;
     display:flex;
+    -webkit-justify-content:flex-end;
     justify-content:flex-end;
-    gap:var(--sp-2);
+    gap:8px;
     padding:14px 22px;
-    border-top:1px solid var(--c-line-2)
+    border-top:1px solid var(--c-line-soft)
 }
 
 /* ============================================================ 表单项 */
 
 .nv-field {
     display:block;
-    margin-bottom:var(--sp-4)
+    margin-bottom:16px
 }
 .nv-field:last-child {
     margin-bottom:0
@@ -318,55 +277,38 @@ body.nv-locked {
     display:block;
     margin-bottom:6px;
     font-size:13px;
-    font-weight:600;
+    font-weight:500;
     color:var(--c-text-2);
     cursor:default
 }
 .nv-field input[type=text],
-.nv-field input[type=search] {
+.nv-field input[type=search],
+.nv-field select {
     width:100%;
     height:42px;
     padding:0 12px;
     font-size:14px;
     color:var(--c-text);
-    background:var(--c-surface);
-    border:1px solid var(--c-border);
+    background:var(--c-input);
+    border:1px solid var(--c-line);
     border-radius:var(--r-md);
-    /* 只过渡边框与光环这类"交互反馈"属性。
-       背景色不在这里过渡：否则切主题时会和 .theme-anim 抢同一属性而慢半拍。 */
     -webkit-transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
     transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
 }
 .nv-field input[type=text]:hover,
-.nv-field input[type=search]:hover {
-    border-color:var(--c-border-hover)
+.nv-field input[type=search]:hover,
+.nv-field select:hover {
+    border-color:var(--c-muted-2)
 }
 .nv-field input[type=text]::placeholder,
 .nv-field input[type=search]::placeholder {
     color:var(--c-muted-2)
 }
 .nv-field input[type=text]:focus,
-.nv-field input[type=search]:focus {
-    border-color:var(--c-accent);
-    box-shadow:var(--ring)
-}
-.nv-field select {
-    height:42px;
-    padding:0 12px;
-    font-size:14px;
-    color:var(--c-text);
-    background-color:var(--c-surface);
-    border:1px solid var(--c-border);
-    border-radius:var(--r-md);
-    -webkit-transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
-    transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease)
-}
-.nv-field select:hover {
-    border-color:var(--c-border-hover)
-}
+.nv-field input[type=search]:focus,
 .nv-field select:focus {
-    border-color:var(--c-accent);
-    box-shadow:var(--ring)
+    border-color:var(--c-muted);
+    box-shadow:0 0 0 3px var(--c-ring)
 }
 
 /* ============================================================== 提示 */
@@ -379,18 +321,18 @@ body.nv-locked {
     max-width:80vw;
     padding:10px 18px;
     font-size:13px;
-    color:var(--c-on-primary);
-    background:var(--c-primary);
+    color:var(--c-on-dark);
+    background:var(--c-text-2);
     border-radius:var(--r-md);
-    box-shadow:var(--sh-3);
+    box-shadow:var(--sh-2);
     opacity:0;
     visibility:hidden;
     -webkit-transform:translate(-50%, 10px);
     transform:translate(-50%, 10px);
-    -webkit-transition:opacity var(--t-base) var(--ease-out), visibility var(--t-base) var(--ease-out),
-        -webkit-transform var(--t-base) var(--ease-out);
-    transition:opacity var(--t-base) var(--ease-out), visibility var(--t-base) var(--ease-out),
-        transform var(--t-base) var(--ease-out)
+    -webkit-transition:opacity var(--t-base) var(--ease), visibility var(--t-base) var(--ease),
+        -webkit-transform var(--t-base) var(--ease);
+    transition:opacity var(--t-base) var(--ease), visibility var(--t-base) var(--ease),
+        transform var(--t-base) var(--ease)
 }
 #nv-toast.show {
     opacity:1;
@@ -399,68 +341,73 @@ body.nv-locked {
     transform:translate(-50%, 0)
 }
 
-/* ======================================================== 右上角齿轮 */
+/* ======================================================== 齿轮状态 */
 
-#nav-gear {
-    cursor:pointer;
-    margin-top:60px;
-    /* 齿轮在最右，左边与主题按钮的间距由 #nav-theme 的 margin-left 负责 */
-    /* 加大可点击区域，避免误点到旁边 */
-    width:32px;
-    height:32px;
-    display:-webkit-box;
-    display:-webkit-flex;
-    display:flex;
-    -webkit-align-items:center;
-    align-items:center;
-    -webkit-justify-content:center;
-    justify-content:center;
-    font-size:16px;
-    line-height:1;
-    color:var(--c-muted);
-    border-radius:50%;
-    -webkit-transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
-    transition:color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease)
+body.nv-edit-mode #nav-gear {
+    color:var(--c-text);
+    background:var(--c-block)
 }
-#nav-gear:hover {
-    color:var(--c-ink);
-    background:var(--c-fill)
+body.nv-edit-mode #nav-gear .fa {
+    -webkit-transform:rotate(90deg);
+    transform:rotate(90deg)
 }
 #nav-gear .fa {
     display:block;
     -webkit-transition:-webkit-transform var(--t-base) var(--ease);
     transition:transform var(--t-base) var(--ease)
 }
-/* 编辑模式激活时齿轮高亮 + 旋转 */
-body.nv-edit-mode #nav-gear {
-    color:var(--c-accent)
-}
-body.nv-edit-mode #nav-gear .fa {
-    -webkit-transform:rotate(90deg);
-    transform:rotate(90deg)
-}
 
 /* ========================================================== 小屏适配 */
 
-@media screen and (max-width:768px) {
+@media screen and (max-width:834px) {
     #nav-toolbar {
-        /* 小屏 #site-main 无外边距，容器 90% 宽 -> 右边缘约在 10% 处 */
-        right:10%;
-        top:74px;
-        padding:6px;
-        gap:5px
+        right:max(20px, calc((100vw - 1130px) / 2 + 32px));
+        top:92px
     }
-    .nv-btn {
-        height:30px;
-        padding:0 10px;
-        font-size:12px
+}
+
+@media screen and (max-width:768px) {
+    /* 手机上不悬停，编辑按钮直接排在文字下方，彻底避免遮挡 */
+    .nv-tools {
+        width:100%;
+        margin-left:0;
+        margin-top:2px;
+        -webkit-justify-content:flex-start;
+        justify-content:flex-start
+    }
+    body.nv-edit-mode .nv-item {
+        -webkit-flex-direction:column;
+        flex-direction:column;
+        -webkit-align-items:stretch;
+        align-items:stretch
+    }
+    body.nv-edit-mode .nv-item .nv-link {
+        -webkit-flex:1;
+        flex:1
+    }
+    .nv-tool,
+    .nv-cat-edit,
+    .nv-cat-del {
+        width:24px;
+        height:24px;
+        font-size:13px
+    }
+    .nv-cat-tools {
+        width:100%;
+        margin-top:2px
     }
     .nv-modal-panel {
-        width:92vw;
+        width:calc(100vw - 32px);
         margin:4vh auto
     }
-    #nav-gear {
-        margin-top:34px;
-        font-size:15px
+    #nav-toolbar {
+        top:96px;
+        right:16px
+    }
+}
+
+@media screen and (max-width:600px) {
+    #nav-toolbar {
+        top:56px
     }
 }
