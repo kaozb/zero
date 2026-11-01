@@ -155,7 +155,7 @@
         /* 一个分类一行：左侧分类名固定栏，右侧链接交给 CSS 网格自动换行 */
         list.forEach(function (group, g) {
             html += '<div class="nv-group" data-g="' + g + '">'
-            html += '<div class="nv-cat" data-g="' + g + '">' + esc(group.tag) + catToolsHtml(g) + "</div>"
+            html += '<div class="nv-cat" data-g="' + g + '"><span class="nv-cat-name">' + esc(group.tag) + "</span>" + catToolsHtml(g) + "</div>"
 
             if (!group.link.length) {
                 html += '<ul class="nv-links">' +
