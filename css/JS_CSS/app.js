@@ -70,6 +70,24 @@
     var searchForm = $(".search-form")
     var searchInput = $(".search-keyword")
     var searchTabs = $(".search-tab")
+    var segThumb = searchTabs ? $(".seg-thumb", searchTabs) : null
+
+    /* 让滑块贴合当前选中的引擎标签 */
+    function syncSegThumb() {
+        if (!searchTabs || !segThumb) return
+        var active = $(".active", searchTabs)
+        if (!active) return
+        var ar = active.getBoundingClientRect()
+        if (!ar.width) return
+        segThumb.style.width = ar.width + "px"
+        segThumb.style.height = ar.height + "px"
+        /* 先归零再量一次滑块自身的原点：浏览器按哪种口径算容器原点，
+           这里就按哪种口径对齐，避免边框 / 内边距带来的偏移 */
+        segThumb.style.transform = "translate(0,0)"
+        var tr = segThumb.getBoundingClientRect()
+        segThumb.style.transform = "translate(" + (ar.left - tr.left) + "px," +
+            (ar.top - tr.top) + "px)"
+    }
 
     function applyEngine(key) {
         var cfg = ENGINES[key]
@@ -98,6 +116,7 @@
                 tab.classList.toggle("active", tab.classList.contains(key))
             })
         }
+        syncSegThumb()
     }
 
     if (searchTabs) {
@@ -119,6 +138,10 @@
         if (!saved || !ENGINES[saved]) saved = "bing"
         applyEngine(saved)
     })()
+
+    /* 字体加载完 / 窗口尺寸变化后，滑块要重新贴合一次 */
+    window.addEventListener("resize", syncSegThumb)
+    window.addEventListener("load", syncSegThumb)
 
     /* --------------------------------------------------- 2. 链接列表渲染 */
 
@@ -152,10 +175,15 @@
         var list = Store.all()
         var html = ""
 
-        /* 一个分类一行：左侧分类名固定栏，右侧链接交给 CSS 网格自动换行 */
+        /* 一个分类 = 一张玻璃卡片：卡头是分类名，主体是链接瓦片网格 */
         list.forEach(function (group, g) {
-            html += '<div class="nv-group" data-g="' + g + '">'
-            html += '<div class="nv-cat" data-g="' + g + '"><span class="nv-cat-name">' + esc(group.tag) + "</span>" + catToolsHtml(g) + "</div>"
+            html += '<div class="nv-group glass" data-g="' + g + '">'
+            html += '<div class="nv-cat" data-g="' + g + '">' +
+                '<span class="nv-cat-dot"></span>' +
+                '<span class="nv-cat-name">' + esc(group.tag) + "</span>" +
+                '<span class="nv-cat-count">' + group.link.length + "</span>" +
+                catToolsHtml(g) +
+                "</div>"
 
             if (!group.link.length) {
                 html += '<ul class="nv-links">' +
@@ -179,6 +207,54 @@
 
         info.innerHTML = html
         if (workLink) workLink.style.opacity = "1"
+        observeReveal()
+    }
+
+    /* ------------------------------------------------- 卡片入场渐显 */
+
+    var revealObserver = null
+    var revealed = []
+
+    function observeReveal() {
+        if (!info) return
+        /* 重新渲染后旧的观察目标已经失效，先摘掉 */
+        revealed.forEach(function (el) {
+            if (revealObserver) revealObserver.unobserve(el)
+        })
+        revealed = []
+
+        var groups = $all(".nv-group", info)
+        if (!groups.length) return
+
+        var reduced = window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        if (reduced || !("IntersectionObserver" in window)) {
+            return
+        }
+
+        if (!revealObserver) {
+            revealObserver = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return
+                    entry.target.classList.add("is-anim")
+                    revealObserver.unobserve(entry.target)
+                })
+            }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 })
+        }
+
+        groups.forEach(function (el, i) {
+            /* 同屏的卡片依次错开入场，像液面上一圈圈荡开的波纹 */
+            el.style.setProperty("--d", (i % 6) * 45 + "ms")
+            var r = el.getBoundingClientRect()
+            if (r.top < window.innerHeight && r.bottom > 0) {
+                /* 首屏内的卡片直接入场，不用等观察器 */
+                el.classList.add("is-anim")
+            } else {
+                /* 屏幕之外的等滚到时再入场 */
+                revealObserver.observe(el)
+                revealed.push(el)
+            }
+        })
     }
 
     /* Store 在数据变化后回调这里刷新视图 */

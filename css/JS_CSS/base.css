@@ -1,12 +1,12 @@
 /* ---------------------------------------------------------------
  * base.css — 设计令牌 + reset + 排版 + 表单控件
  *
- * 视觉参考 0x3.com：灰白极简、扁平、无渐变无玻璃
- *   · 页面底色 #ededed，内容区白底，区块浅灰 #f6f6f6
- *   · 圆角极小（2px），靠留白与细分隔线分层，不靠阴影
- *   · 正文色 #2d2d2d / 次级 #888，白天与夜间两套中性灰
+ * 视觉语言：液态玻璃（Liquid Glass）
+ *   · 一套令牌贯穿全站：表面、描边、阴影、模糊、圆角全部成体系
+ *   · 颜色用「有色底 + 模糊玻璃」而非「白底 + 灰线」分层
+ *   · 所有半透明表面统一走 --glass-* 系列，避免各文件各写一套
  * 令牌集中在这里定义，颜色 / 圆角 / 间距 / 缓动都通过 var() 引用。
- * 必须在 nav.css、editor.css、theme.css 之前引入。
+ * 必须在 glass.css、nav.css、button.css、editor.css、theme.css 之前引入。
  * --------------------------------------------------------------- */
 
 /* ============================================================ 令牌 */
@@ -16,44 +16,74 @@
     --font-base:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
         "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 
-    /* ------------------------------------------------ 颜色 · 中性阶 */
-    --c-text:#2d2d2d;                        /* 一级文字 */
-    --c-text-2:#4c4c4c;                      /* 二级文字 / 图标 */
-    --c-muted:#888;                          /* 弱化文字、分类名 */
-    --c-muted-2:#9a9a9a;                     /* 占位符 */
+    /* ------------------------------------------------ 颜色 · 底色场 */
+    /* 页面底色是一块会流动的彩色画布，玻璃才有东西可以折射 */
+    --bg-base:#e9eefb;
+    --bg-veil:rgba(255, 255, 255, .85);       /* 顶部柔光 */
+    --bg-1:rgba(122,158,255,.85);              /* 蓝 */
+    --bg-2:rgba(199,142,255,.8);               /* 紫 */
+    --bg-3:rgba(86,222,196,.75);               /* 青 */
+    --bg-4:rgba(255,160,197,.72);              /* 粉 */
 
-    /* ------------------------------------------------ 颜色 · 表面 */
-    --c-page:#ededed;                        /* 页面底色 */
-    --c-main:#fff;                           /* 内容卡片 */
-    --c-block:#f6f6f6;                       /* 区块 / 搜索框 / 悬停底 */
-    --c-hover:#dfdfdf;                       /* 链接项悬停底 */
-    --c-input:#fff;                          /* 弹窗输入框 */
-    --c-line:#d0d0d0;                        /* 常规描边 */
-    --c-line-soft:#e8e8e8;                   /* 分隔线 */
-    --c-search:#f6f6f6;                      /* 搜索框底色 */
+    /* ------------------------------------------------ 颜色 · 玻璃表面 */
+    --glass-bg:rgba(255, 255, 255, .32);       /* 通用面板 */
+    --glass-bg-2:rgba(255, 255, 255, .5);      /* 更实的面板（弹窗 / 输入） */
+    --glass-bg-3:rgba(255, 255, 255, .16);     /* 更透的面板（内层） */
+    --glass-blur:30px;                         /* 背景模糊半径 */
+    --glass-sat:180%;                          /* 背景饱和度提升 */
+    --glass-line:rgba(255, 255, 255, .4);      /* 描边 */
+    --glass-rim:rgba(255, 255, 255, .92);      /* 顶部高光棱 */
+    --glass-rim-2:rgba(255, 255, 255, .18);    /* 底部回光棱 */
+    --glass-sh:rgba(24, 38, 86, .2);           /* 环境阴影 */
+    --glass-sh-soft:rgba(24, 38, 86, .1);
+
+    /* ------------------------------------------------ 颜色 · 文字 */
+    --c-text:#161d36;                          /* 一级文字 */
+    --c-text-2:#414d73;                        /* 二级文字 / 图标 */
+    --c-muted:#78859f;                         /* 弱化文字、分类名 */
+    --c-muted-2:#9aa5bf;                       /* 占位符 */
+    --c-hair:rgba(24, 38, 86, .1);             /* 玻璃内部分隔线 */
+
+    /* ------------------------------------------------ 颜色 · 强调 */
+    --accent:#3d78f6;
+    --accent-2:#7b5cf6;
+    --accent-3:#12b7c6;
+    --accent-grad:linear-gradient(118deg, #3d78f6 0%, #7b5cf6 52%, #12b7c6 100%);
+    --accent-glow:rgba(61, 120, 246, .38);
+    --accent-soft:rgba(61, 120, 246, .12);
 
     /* ------------------------------------------------ 颜色 · 功能 */
-    --c-danger:#de8971;
-    --c-success:#96bb7c;
-    --c-on-dark:#fff;                        /* 深色块上的文字 */
-    --c-veil:rgba(0, 0, 0, .48);             /* 弹窗遮罩 */
-    --c-ring:rgba(0, 0, 0, .06);             /* 聚焦光环 */
+    --c-danger:#e0524c;
+    --c-success:#0f9d6c;
+    --c-on-dark:#fff;
+
+    /* ------------------------------------------------ 颜色 · 瓦片（链接） */
+    --tile-bg:rgba(255, 255, 255, .42);
+    --tile-bg-hover:rgba(255, 255, 255, .68);
+    --tile-line:rgba(255, 255, 255, .55);
+    --tile-rim:rgba(255, 255, 255, .9);
+    --tile-sh:rgba(24, 38, 86, .16);
 
     /* ------------------------------------------------ 圆角 */
-    --r-xs:8px;
-    --r-sm:10px;
-    --r-md:14px;
-    --r-lg:16px;
-    --r-xl:20px;
+    --r-xs:10px;
+    --r-sm:14px;
+    --r-md:18px;
+    --r-lg:24px;
+    --r-xl:30px;
+    --r-pill:999px;
 
     /* ------------------------------------------------ 阴影 */
-    --sh-1:0 1px 3px rgba(0, 0, 0, .05);
-    --sh-2:0 4px 16px rgba(0, 0, 0, .1);
+    --sh-1:0 2px 10px -6px var(--glass-sh);
+    --sh-2:0 20px 44px -28px var(--glass-sh);
+    --sh-3:0 36px 72px -32px rgba(24, 38, 86, .34);
 
     /* ------------------------------------------------ 缓动与时长 */
     --ease:cubic-bezier(.2, .8, .2, 1);
-    --t-fast:.12s;
-    --t-base:.2s;
+    --ease-spring:cubic-bezier(.34, 1.46, .64, 1);   /* 带回弹，用于液态位移 */
+    --ease-liquid:cubic-bezier(.4, 0, .2, 1);
+    --t-fast:.16s;
+    --t-base:.3s;
+    --t-slow:.6s;
 }
 
 /* ============================================================ reset */
@@ -69,7 +99,8 @@
 
 html {
     -webkit-text-size-adjust:100%;
-    text-size-adjust:100%
+    text-size-adjust:100%;
+    scroll-behavior:smooth
 }
 
 body {
@@ -77,16 +108,17 @@ body {
     color:var(--c-text);
     font-size:14px;
     line-height:1.6;
-    background:var(--c-page);
+    background:var(--bg-base);
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
-    -webkit-transition:background-color .3s var(--ease);
-    transition:background-color .3s var(--ease)
+    min-height:100vh;
+    -webkit-transition:background-color .35s var(--ease);
+    transition:background-color .35s var(--ease)
 }
 
 ::selection {
     color:var(--c-on-dark);
-    background:var(--c-text-2)
+    background:var(--accent)
 }
 
 img {
@@ -106,7 +138,7 @@ ul, ol {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-weight:500;
+    font-weight:600;
     color:var(--c-text);
     margin-bottom:15px
 }
@@ -124,15 +156,16 @@ label {
 
 .container {
     width:100%;
-    max-width:1130px;
+    max-width:1180px;
     margin:0 auto;
-    padding:0 40px;
+    padding:0 24px;
     position:relative
 }
 
 .float-left {
     float:left
 }
+
 .float-right {
     float:right
 }
@@ -142,53 +175,82 @@ label {
 input[type=email], input[type=number], input[type=password], input[type=search],
 input[type=tel], input[type=text], input[type=url], select {
     width:100%;
-    height:42px;
-    font-family:inherit;
-    font-size:14px;
-    padding:0 12px;
-    color:var(--c-text);
-    background:var(--c-input);
-    border:1px solid var(--c-line);
-    border-radius:var(--r-md);
-    -webkit-appearance:none;
-    appearance:none
-}
-
-button, input[type=button], input[type=reset], input[type=submit] {
-    height:42px;
+    height:44px;
     font-family:inherit;
     font-size:14px;
     padding:0 14px;
-    border:1px solid var(--c-line);
+    color:var(--c-text);
+    background:var(--glass-bg-2);
+    border:1px solid var(--glass-line);
+    border-radius:var(--r-md);
+    -webkit-appearance:none;
+    appearance:none;
+    -webkit-backdrop-filter:blur(10px) saturate(150%);
+    backdrop-filter:blur(10px) saturate(150%);
+    box-shadow:inset 0 1px 0 var(--glass-rim);
+    -webkit-transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+        background-color var(--t-fast) var(--ease);
+    transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+        background-color var(--t-fast) var(--ease)
+}
+
+input::placeholder, textarea::placeholder {
+    color:var(--c-muted-2)
+}
+
+input[type=email]:focus, input[type=number]:focus, input[type=password]:focus,
+input[type=search]:focus, input[type=tel]:focus, input[type=text]:focus,
+input[type=url]:focus, select:focus {
+    border-color:var(--accent);
+    box-shadow:inset 0 1px 0 var(--glass-rim), 0 0 0 4px var(--accent-soft)
+}
+
+button, input[type=button], input[type=reset], input[type=submit] {
+    height:44px;
+    font-family:inherit;
+    font-size:14px;
+    padding:0 16px;
+    border:1px solid var(--glass-line);
     border-radius:var(--r-md);
     -webkit-appearance:none;
     appearance:none;
     cursor:pointer;
     color:var(--c-text);
-    background:var(--c-main);
+    background:var(--glass-bg-2);
+    -webkit-backdrop-filter:blur(10px) saturate(150%);
+    backdrop-filter:blur(10px) saturate(150%);
+    box-shadow:inset 0 1px 0 var(--glass-rim);
     -webkit-transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
-        border-color var(--t-fast) var(--ease);
+        border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring),
+        box-shadow var(--t-fast) var(--ease);
     transition:background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
-        border-color var(--t-fast) var(--ease)
+        border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring),
+        box-shadow var(--t-fast) var(--ease)
 }
+
 button:hover, input[type=button]:hover, input[type=reset]:hover, input[type=submit]:hover {
-    background-color:var(--c-block)
+    background-color:var(--glass-bg-3)
+}
+
+button:active, input[type=button]:active, input[type=submit]:active {
+    transform:scale(.97)
 }
 
 select {
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="%23888888" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>');
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="%2378859f" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>');
     background-repeat:no-repeat;
-    background-position:right 1rem center
+    background-position:right 1rem center;
+    padding-right:34px
 }
 
 textarea {
     width:100%;
     line-height:1.6;
-    background:var(--c-input);
+    background:var(--glass-bg-2);
     min-height:120px;
     color:var(--c-text);
     padding:12px;
-    border:1px solid var(--c-line);
+    border:1px solid var(--glass-line);
     border-radius:var(--r-md)
 }
 
@@ -196,12 +258,29 @@ textarea {
 
 @media screen and (max-width:834px) {
     .container {
-        padding:0 32px
+        padding:0 20px
     }
 }
 
 @media screen and (max-width:600px) {
     .container {
-        padding:0 20px
+        padding:0 16px
+    }
+}
+
+/* ==================================================== 动效降级 */
+
+@media (prefers-reduced-motion:reduce) {
+    html {
+        scroll-behavior:auto
+    }
+
+    *, :after, :before {
+        -webkit-animation-duration:.01ms !important;
+        animation-duration:.01ms !important;
+        -webkit-animation-iteration-count:1 !important;
+        animation-iteration-count:1 !important;
+        -webkit-transition-duration:.01ms !important;
+        transition-duration:.01ms !important
     }
 }

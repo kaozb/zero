@@ -1,113 +1,126 @@
 /* ---------------------------------------------------------------
- * button.css — 链接按钮（参考 kaozb/localnet 的拟物风格）
+ * button.css — 网址瓦片（玻璃）
  *
- * 按钮底色与所在卡片背景一致（--c-main），仅靠双阴影产生凸起：
- *   浅色：高光 #FFFFFF / 阴影 #C3CBD9；深色：高光 #34415A / 阴影 #141A24
- *   文字统一淡蓝色（浅色 #6D9EEB / 深色 #8AB4F8）；按下时阴影翻转内凹
- * 分类标签：普通文字，黑色加粗，不做插槽造型。
- *
- * 每个链接渲染时带 site-btn 类，因此所有网址自动套用这套按钮样式。
- * 分类标签为普通文字（黑色加粗），不做插槽造型。
+ * 每条网址是一块独立的玻璃小片：半透明底 + 背景模糊 + 顶部高光棱。
+ * 悬停时整块向上浮起、透光度提高，底部透出一道渐变色条。
+ * 编辑模式下右侧让出位置给编辑 / 删除按钮。
  * --------------------------------------------------------------- */
 
-:root {
-    --b-bg:var(--c-main);
-    --b-hi:#FFFFFF;
-    --b-lo:#C3CBD9;
-    --b-text:#6D9EEB;
-    --b-text-hover:#5B8FD9;
-    --b-radius:16px;
-    --b-shadow:-3px -3px 7px var(--b-hi), 3px 3px 7px var(--b-lo);
-    --b-shadow-hover:-4px -4px 9px var(--b-hi), 4px 4px 9px var(--b-lo);
-    --b-shadow-active:inset 3px 3px 6px var(--b-lo), inset -3px -3px 6px var(--b-hi)
+.nv-item {
+    position:relative;
+    min-width:0;
+    border-radius:var(--r-md)
 }
 
-/* 格子改成按钮之间的留白，去掉原来的整格悬停底色 */
-.work-link .info .nv-item,
-.work-link .info .nv-item:hover {
-    padding:5px;
-    background:transparent
-}
-
-/* 分类标签：普通文字，黑色加粗（深色下近白），不带任何底色造型 */
-.nv-cat-name {
-    color:#111;
-    font-weight:700
-}
-
-/* 按钮本体：凸起 → 悬停更凸 → 按下内凹 */
+/* 瓦片本体 */
 .site-btn {
+    position:relative;
     display:-webkit-box;
     display:-webkit-flex;
     display:flex;
     width:100%;
     height:46px;
-    padding:0 14px;
+    padding:0 12px;
     -webkit-align-items:center;
     align-items:center;
     -webkit-justify-content:center;
     justify-content:center;
     overflow:hidden;
-    border-radius:var(--b-radius);
-    background:var(--b-bg);
-    color:var(--b-text);
+    border-radius:var(--r-md);
     font-size:14px;
     font-weight:500;
     line-height:1.4;
     text-align:center;
-    box-shadow:var(--b-shadow);
-    -webkit-transition:box-shadow .16s ease, color .16s ease;
-    transition:box-shadow .16s ease, color .16s ease;
+    color:var(--c-text);
+    background:var(--tile-bg);
+    border:1px solid var(--tile-line);
+    -webkit-backdrop-filter:blur(10px) saturate(150%);
+    backdrop-filter:blur(10px) saturate(150%);
+    box-shadow:inset 0 1px 0 var(--tile-rim), 0 10px 20px -16px var(--tile-sh);
+    -webkit-transition:background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+        box-shadow var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring),
+        color var(--t-fast) var(--ease);
+    transition:background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+        box-shadow var(--t-fast) var(--ease), transform var(--t-fast) var(--ease-spring),
+        color var(--t-fast) var(--ease);
     -webkit-tap-highlight-color:transparent
 }
+
+/* 表面斜向高光：让平面玻璃有弧度 */
+.site-btn::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(150deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 46%)
+}
+
+/* 悬停时底部透出的渐变色条 */
+.site-btn::after {
+    content:"";
+    position:absolute;
+    left:0;
+    top:50%;
+    width:3px;
+    height:0;
+    -webkit-transform:translateY(-50%);
+    transform:translateY(-50%);
+    border-radius:0 3px 3px 0;
+    background:var(--accent-grad);
+    -webkit-transition:height var(--t-base) var(--ease-spring);
+    transition:height var(--t-base) var(--ease-spring)
+}
+
 .site-btn .nv-name {
+    position:relative;
+    z-index:1;
     display:block;
     max-width:100%;
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap
 }
+
 .site-btn:hover {
-    color:var(--b-text-hover);
-    box-shadow:var(--b-shadow-hover)
+    color:var(--c-text);
+    background:var(--tile-bg-hover);
+    border-color:rgba(255, 255, 255, .8);
+    -webkit-transform:translateY(-2px);
+    transform:translateY(-2px);
+    box-shadow:inset 0 1px 0 rgba(255, 255, 255, .98), 0 16px 28px -18px var(--tile-sh)
 }
+.site-btn:hover::after {
+    height:58%
+}
+
 .site-btn:active {
-    color:var(--b-text-hover);
-    box-shadow:var(--b-shadow-active)
+    -webkit-transform:translateY(0) scale(.975);
+    transform:translateY(0) scale(.975)
 }
+
 .site-btn:focus-visible {
-    outline:2px solid var(--b-text);
+    outline:2px solid var(--accent);
     outline-offset:2px
 }
 
-/* 编辑模式下按钮让出右侧的编辑 / 删除按钮，仍占满剩余宽度 */
-body.nv-edit-mode .work-link .info .nv-item .site-btn {
-    -webkit-flex:1 1 auto;
-    flex:1 1 auto
+/* 编辑模式下给右侧按钮让位 */
+body.nv-edit-mode .site-btn {
+    padding-right:62px;
+    -webkit-justify-content:flex-start;
+    justify-content:flex-start
 }
 
-/* 手机端按钮略矮一点，字号保持 15px 保证可读 */
+/* ========================================================== 小屏适配 */
+
 @media screen and (max-width:600px) {
     .site-btn {
         height:44px;
-        padding:0 10px;
-        font-size:15px;
-        --b-radius:13px
+        font-size:15px
     }
-    .work-link .info .nv-item,
-    .work-link .info .nv-item:hover {
-        padding:4px
-    }
-}
 
-/* 深色主题：同一套拟物关系，换成夜间的三档灰蓝 */
-html.dark {
-    --b-bg:var(--c-main);
-    --b-hi:#34415A;
-    --b-lo:#141A24;
-    --b-text:#8AB4F8;
-    --b-text-hover:#AECBFA
-}
-html.dark .nv-cat-name {
-    color:#f2f2f2
+    /* 编辑模式下瓦片拉宽，给悬浮的编辑按钮留出位置 */
+    body.nv-edit-mode .nv-links {
+        grid-template-columns:repeat(auto-fill, minmax(190px, 1fr))
+    }
 }

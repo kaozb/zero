@@ -1,10 +1,10 @@
 /* ---------------------------------------------------------------
- * theme.css — 夜间（深色）模式 + 页头主题切换按钮
+ * theme.css — 夜间（深色）模式
  *
- * 颜色取自 0x3 的深色方案：页面 #161616、内容卡 #222、区块 #1c1c1c，
- * 文字提亮成 #ddd，全部保持中性灰、无彩色倾向。
- *
- * 通过 <html class="dark"> 切换。所有覆盖只改令牌，不动具体组件。
+ * 深色下玻璃不是"把白色调暗"，而是换一套基底：
+ *   底色场变成深蓝夜色 + 冷色极光，玻璃是薄薄一层白，
+ *   顶部高光棱减弱（夜里没有强反光），环境阴影变黑变深。
+ * 所有覆盖只改令牌，不动具体组件。
  * --------------------------------------------------------------- */
 
 /* ==================================================== 主题切换按钮 */
@@ -25,67 +25,88 @@
 html.dark {
     color-scheme:dark;
 
-    /* ------------------------------------------------ 中性阶 */
-    --c-text:#ddd;
-    --c-text-2:#ababab;
-    --c-muted:#aaa;
-    --c-muted-2:#8a8a8a;
+    /* ------------------------------------------------ 底色场 */
+    --bg-base:#070a17;
+    --bg-veil:rgba(96, 122, 220, .16);
+    --bg-1:rgba(56, 94, 226, .72);
+    --bg-2:rgba(120, 52, 216, .66);
+    --bg-3:rgba(0, 146, 156, .52);
+    --bg-4:rgba(194, 46, 114, .48);
 
-    /* ------------------------------------------------ 表面 */
-    --c-page:#161616;
-    --c-main:#222;
-    --c-block:#1c1c1c;
-    --c-hover:#2c2c2c;
-    --c-input:#3c3c3c;
-    --c-line:#2c2c2c;
-    --c-line-soft:#2c2c2c;
-    --c-search:#282828;
+    /* ------------------------------------------------ 玻璃表面 */
+    --glass-bg:rgba(255, 255, 255, .07);
+    --glass-bg-2:rgba(255, 255, 255, .13);
+    --glass-bg-3:rgba(255, 255, 255, .045);
+    --glass-blur:34px;
+    --glass-sat:150%;
+    --glass-line:rgba(255, 255, 255, .14);
+    --glass-rim:rgba(255, 255, 255, .24);
+    --glass-rim-2:rgba(255, 255, 255, .04);
+    --glass-sh:rgba(0, 0, 0, .62);
+    --glass-sh-soft:rgba(0, 0, 0, .38);
+
+    /* ------------------------------------------------ 文字 */
+    --c-text:#eef2fb;
+    --c-text-2:#b6c1dc;
+    --c-muted:#8996b8;
+    --c-muted-2:#6c799b;
+    --c-hair:rgba(255, 255, 255, .1);
+
+    /* ------------------------------------------------ 强调 */
+    --accent:#6a9bff;
+    --accent-2:#9b7cff;
+    --accent-3:#2fd0dc;
+    --accent-grad:linear-gradient(118deg, #5b8dff 0%, #9b6cff 52%, #23c3d0 100%);
+    --accent-glow:rgba(91, 141, 255, .42);
+    --accent-soft:rgba(107, 155, 255, .16);
 
     /* ------------------------------------------------ 功能色 */
-    --c-danger:#de8971;
-    --c-success:#96bb7c;
-    --c-on-dark:#161616;
-    --c-veil:rgba(0, 0, 0, .7);
-    --c-ring:rgba(255, 255, 255, .08);
+    --c-danger:#ff6b63;
+    --c-success:#22c98c;
 
-    /* ------------------------------------------------ 阴影 */
-    --sh-1:0 1px 3px rgba(0, 0, 0, .3);
-    --sh-2:0 4px 16px rgba(0, 0, 0, .45)
+    /* ------------------------------------------------ 瓦片 */
+    --tile-bg:rgba(255, 255, 255, .07);
+    --tile-bg-hover:rgba(255, 255, 255, .14);
+    --tile-line:rgba(255, 255, 255, .12);
+    --tile-rim:rgba(255, 255, 255, .22);
+    --tile-sh:rgba(0, 0, 0, .5);
 }
 
-/* 深色下 toast 用中灰底 + 亮字，避免白底刺眼 */
-html.dark #nv-toast {
-    color:var(--c-text);
-    background:#4a4a4a
+/* 深色下顶部那层白色柔光改成冷色，避免夜里发灰 */
+html.dark .liquid-bg {
+    background:
+        radial-gradient(120% 80% at 50% -20%, var(--bg-veil), transparent 60%),
+        var(--bg-base)
 }
 
-/* 深色下保存键悬停为淡蓝底 + 深字，保证对比度 */
-html.dark .nv-btn-primary:hover {
-    color:var(--c-page)
-}
-html.dark .nv-btn-primary:hover .fa {
-    color:var(--c-page)
+/* 深色下噪点更淡，否则整页发灰 */
+html.dark .liquid-bg .grain {
+    opacity:.03
 }
 
-/* select 的下拉箭头在深色底上要提亮 */
+/* 深色下 select 的下拉箭头要提亮 */
 html.dark select {
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="%23aaaaaa" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>')
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="9" height="12" viewBox="0 0 9 12"><path fill="%23b6c1dc" d="M0.722,4.823L-0.01,4.1,4.134-.01,4.866,0.716Zm7.555,0L9.01,4.1,4.866-.01l-0.732.726ZM0.722,7.177L-0.01,7.9,4.134,12.01l0.732-.726Zm7.555,0L9.01,7.9,4.866,12.01l-0.732-.726Z"/></svg>')
 }
 
 /* 切换主题时整页颜色过渡，避免生硬闪变。
    只在切换的瞬间由 JS 加 .theme-anim，避免这条规则常驻后覆盖组件交互过渡。 */
 html.theme-anim body,
-html.theme-anim #site-main,
-html.theme-anim .work-link .info,
-html.theme-anim .search-tab span,
+html.theme-anim .liquid-bg,
+html.theme-anim .topbar,
 html.theme-anim .search-form,
-html.theme-anim .search-form input[type=search],
+html.theme-anim .search-tab,
+html.theme-anim .nv-group,
+html.theme-anim .site-btn,
+html.theme-anim .icon-btn,
 html.theme-anim #nav-toolbar,
 html.theme-anim .nv-modal-panel,
+html.theme-anim .nv-modal-mask,
 html.theme-anim #nv-toast,
 html.theme-anim .nv-field input[type=text],
-html.theme-anim .nv-field input[type=search],
 html.theme-anim .nv-field select {
-    -webkit-transition:background-color .28s var(--ease), color .28s var(--ease) !important;
-    transition:background-color .28s var(--ease), color .28s var(--ease) !important
+    -webkit-transition:background-color .32s var(--ease), color .32s var(--ease),
+        border-color .32s var(--ease), box-shadow .32s var(--ease) !important;
+    transition:background-color .32s var(--ease), color .32s var(--ease),
+        border-color .32s var(--ease), box-shadow .32s var(--ease) !important
 }
